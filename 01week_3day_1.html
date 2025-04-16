@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introduction to Containerization</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Introduction to Containerization</h1>
+        <p class="subtitle">Week 1 - Wednesday Morning: Full Stack Web Development with Python</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Understanding Containerization</h2>
+            
+            <p>Imagine moving to a new house. You could transport your belongings in random bags and boxes of different sizes, creating a chaotic moving process. Or, you could use standardized shipping containers that fit perfectly on trucks, trains, and ships. Containerization in software follows a similar principle—packaging applications and their dependencies in a standardized way that works consistently across different environments.</p>
+            
+            <p>Before containerization, deploying applications was often painful and unpredictable. Developers would encounter the dreaded "it works on my machine" problem, where code ran perfectly in development but failed in production due to subtle environmental differences. Containerization solves this by bundling an application with everything it needs to run correctly, creating a consistent environment from development through production.</p>
+            
+            <h3>The Evolution of Application Deployment</h3>
+            <p>To understand why containerization matters, let's look at how application deployment has evolved:</p>
+            
+            <h4>Traditional Deployment</h4>
+            <p>In the early days of computing, applications ran directly on physical servers:</p>
+            <ul>
+                <li>Each application needed its own server</li>
+                <li>Resources were often underutilized</li>
+                <li>Scaling required buying new hardware</li>
+                <li>Different applications might require different operating system versions</li>
+                <li>Dependency conflicts were common</li>
+                <li>Configuration was manual and error-prone</li>
+                <li>Deployment was slow and expensive</li>
+            </ul>
+            
+            <h4>Virtual Machines</h4>
+            <p>Virtualization improved resource utilization by running multiple isolated operating systems on a single physical server:</p>
+            <ul>
+                <li>Each VM includes a full operating system</li>
+                <li>Better resource utilization than physical servers</li>
+                <li>Good isolation between applications</li>
+                <li>Still relatively heavy (gigabytes in size)</li>
+                <li>Slow to start (minutes)</li>
+                <li>Licensing costs for multiple OS instances</li>
+                <li>Management complexity</li>
+            </ul>
+            
+            <h4>Containers</h4>
+            <p>Containers provide a lightweight alternative to VMs:</p>
+            <ul>
+                <li>Share the host's OS kernel</li>
+                <li>Include only the application and its dependencies</li>
+                <li>Lightweight (megabytes, not gigabytes)</li>
+                <li>Start almost instantly (seconds, not minutes)</li>
+                <li>Consistent environment across development and production</li>
+                <li>Efficient resource utilization</li>
+                <li>Highly portable across different infrastructure</li>
+            </ul>
+            
+            <div style="text-align: center; margin: 20px 0;">
+                <img src="https://www.docker.com/sites/default/files/d8/2018-11/container-vm-whatcontainer_2.png" alt="Containers vs VMs" style="max-width: 90%; height: auto;">
+                <p><small>Image: Docker, Inc.</small></p>
+            </div>
+            
+            <h3>Key Benefits of Containerization</h3>
+            <p>Containerization offers numerous advantages for modern application development:</p>
+            
+            <h4>Consistency</h4>
+            <p>Containers ensure that applications run the same way in every environment—development, testing, staging, and production. This eliminates the "it works on my machine" problem and makes deployments more predictable.</p>
+            
+            <p><strong>Example:</strong> A developer using Python 3.10 on macOS, a tester using Windows, and a production Linux server can all run exactly the same containerized application with identical dependencies and configuration.</p>
+            
+            <h4>Isolation</h4>
+            <p>Containers isolate applications from each other, preventing dependency conflicts. Each container has its own filesystem, processes, and network interfaces.</p>
+            
+            <p><strong>Example:</strong> One application requiring Python 3.8 and another requiring Python 3.10 can run side by side on the same server without interference.</p>
+            
+            <h4>Portability</h4>
+            <p>Containers can run on any system that supports the container runtime, making them highly portable across different infrastructure.</p>
+            
+            <p><strong>Example:</strong> The same container can run on a developer's laptop, a corporate data center, or cloud providers like AWS, Google Cloud, or Azure.</p>
+            
+            <h4>Scalability</h4>
+            <p>Containers are lightweight and start quickly, making them ideal for scaling applications horizontally based on demand.</p>
+            
+            <p><strong>Example:</strong> During high traffic periods, you can spin up additional containers in seconds to handle the load, then scale back down when traffic decreases.</p>
+            
+            <h4>Resource Efficiency</h4>
+            <p>Containers share the host OS kernel, making them more resource-efficient than virtual machines.</p>
+            
+            <p><strong>Example:</strong> A single server might run dozens or even hundreds of containers, compared to just a handful of VMs.</p>
+            
+            <h4>DevOps Enablement</h4>
+            <p>Containers support modern DevOps practices by enabling continuous integration/continuous delivery (CI/CD) pipelines and infrastructure as code.</p>
+            
+            <p><strong>Example:</strong> Developers can define container configurations in code, test them automatically, and deploy them to production through an automated pipeline.</p>
+        </section>
+
+        <section>
+            <h2>Introduction to Docker</h2>
+            
+            <p>Docker is the most popular containerization platform, providing tools and services to build, run, and manage containers. While other container technologies exist (like containerd, CRI-O, and Podman), Docker popularized containers and remains the standard for most development workflows.</p>
+            
+            <h3>A Brief History of Docker</h3>
+            <p>Docker was introduced in 2013 by Solomon Hykes at dotCloud, a platform-as-a-service company. Originally an internal project, Docker became so popular that dotCloud rebranded as Docker, Inc. Some key milestones:</p>
+            <ul>
+                <li><strong>2013</strong>: Docker is released as an open-source project</li>
+                <li><strong>2014</strong>: Google, Microsoft, Amazon, and others announce Docker support</li>
+                <li><strong>2015</strong>: Docker Compose and Docker Swarm are introduced</li>
+                <li><strong>2017</strong>: Docker donates containerd (its core container runtime) to the Cloud Native Computing Foundation (CNCF)</li>
+                <li><strong>2020</strong>: Docker Compose specification becomes open source</li>
+            </ul>
+            
+            <p>Docker's simplicity and developer-friendly approach drove rapid adoption, transforming how applications are built, shipped, and run.</p>
+            
+            <h3>What Problems Does Docker Solve?</h3>
+            
+            <h4>The "It Works on My Machine" Problem</h4>
+            <p>Docker eliminates environment inconsistencies by packaging applications with their dependencies. If it works in a Docker container on a developer's machine, it will work the same way in production.</p>
+            
+            <p><strong>Real-world scenario:</strong> A developer adds a new library to a project but forgets to update the requirements.txt file. In a traditional setup, the application would fail when deployed to production. With Docker, the dependency is included in the container image, so the deployment works consistently.</p>
+            
+            <h4>Dependency Management</h4>
+            <p>Docker isolates application dependencies, preventing conflicts between different applications or different versions of the same dependency.</p>
+            
+            <p><strong>Real-world scenario:</strong> One application needs Python package A version 1.0, while another needs version 2.0, which has breaking changes. Without Docker, these applications might conflict. With Docker, each runs in its own container with its specific dependencies.</p>
+            
+            <h4>Environment Parity</h4>
+            <p>Docker ensures that development, testing, and production environments are identical, reducing deployment surprises.</p>
+            
+            <p><strong>Real-world scenario:</strong> A developer using Windows, a tester using macOS, and a production Linux server might encounter platform-specific issues. Docker provides a consistent Linux environment across all three platforms.</p>
+            
+            <h4>Microservices Architecture</h4>
+            <p>Docker facilitates breaking applications into smaller, independently deployable services, each running in its own container.</p>
+            
+            <p><strong>Real-world scenario:</strong> A monolithic e-commerce application can be broken down into separate services for user authentication, product catalog, shopping cart, and payment processing, each in its own container.</p>
+            
+            <h3>Docker Core Philosophy</h3>
+            <p>Docker embodies several key principles:</p>
+            <ul>
+                <li><strong>Build once, run anywhere</strong>: Create a container image once and run it on any Docker-compatible system</li>
+                <li><strong>Immutable infrastructure</strong>: Containers should be treated as immutable—instead of modifying containers, create new ones</li>
+                <li><strong>Declarative configuration</strong>: Infrastructure defined as code, making it reproducible and version-controlled</li>
+                <li><strong>Separation of concerns</strong>: Developers focus on applications inside containers, operations teams focus on running containers</li>
+                <li><strong>Developer experience</strong>: Simple, intuitive tools that make containerization accessible to all developers</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Docker Architecture</h2>
+            
+            <p>Understanding Docker's architecture helps you use it effectively and troubleshoot issues when they arise.</p>
+            
+            <h3>Docker Engine Components</h3>
+            <p>Docker Engine is the core of Docker, consisting of three main components:</p>
+            
+            <h4>Docker Daemon (dockerd)</h4>
+            <p>The Docker daemon is a background service that manages Docker objects such as images, containers, networks, and volumes. It listens for Docker API requests and handles all container-related operations.</p>
+            
+            <p>Think of the daemon as the factory manager that oversees the creation, running, and management of containers.</p>
+            
+            <h4>REST API</h4>
+            <p>Docker provides a RESTful API that programs can use to interact with the daemon. This API defines the interfaces that programs can use to talk to the daemon and instruct it what to do.</p>
+            
+            <p>This API is what enables different tools and interfaces to communicate with Docker using a standardized protocol.</p>
+            
+            <h4>Docker CLI</h4>
+            <p>The command-line interface (CLI) is what most users interact with directly. It sends commands to the Docker daemon through the REST API.</p>
+            
+            <p>When you run commands like <code>docker run</code> or <code>docker build</code>, you're using the CLI to send instructions to the daemon.</p>
+            
+            <div style="text-align: center; margin: 20px 0;">
+                <img src="https://docs.docker.com/engine/images/architecture.svg" alt="Docker Architecture" style="max-width: 90%; height: auto;">
+                <p><small>Image: Docker, Inc.</small></p>
+            </div>
+            
+            <h3>Docker Objects</h3>
+            <p>Docker manages several types of objects:</p>
+            
+            <h4>Images</h4>
+            <p>An image is a read-only template containing instructions for creating a Docker container. Think of it as a snapshot or blueprint of an application and its environment. Images are often based on other images with additional customization.</p>
+            
+            <p>For example, you might start with a Python base image, then add your application code, specific Python packages, and configuration files to create your custom image.</p>
+            
+            <p>Images are built from instructions in a Dockerfile, which we'll explore in detail later.</p>
+            
+            <h4>Containers</h4>
+            <p>A container is a runnable instance of an image—what the image becomes in memory when executed. You can create, start, stop, move, or delete containers using the Docker API or CLI.</p>
+            
+            <p>Containers are:</p>
+            <ul>
+                <li><strong>Isolated</strong>: Each container has its own filesystem, CPU, memory, process space, and more</li>
+                <li><strong>Lightweight</strong>: They share the host kernel rather than including a full OS</li>
+                <li><strong>Portable</strong>: They can run anywhere Docker runs, regardless of the underlying infrastructure</li>
+                <li><strong>Controlled</strong>: You can limit their resources (CPU, memory, network, etc.)</li>
+            </ul>
+            
+            <p>By default, a container is relatively well isolated from other containers and its host machine, though this isolation can be configured.</p>
+            
+            <h4>Volumes</h4>
+            <p>Volumes are persistent data storage mechanisms for containers. Since containers are ephemeral by design (their file systems are temporary), volumes provide a way to store data that persists beyond the container lifecycle.</p>
+            
+            <p>Think of volumes as external hard drives that you can attach to containers. Multiple containers can share the same volume, and the volume continues to exist even when no container is using it.</p>
+            
+            <h4>Networks</h4>
+            <p>Docker's networking subsystem allows containers to communicate with each other and with the outside world. By default, Docker creates several network drivers, including:</p>
+            <ul>
+                <li><strong>bridge</strong>: The default network driver, allowing containers on the same host to communicate</li>
+                <li><strong>host</strong>: Removes network isolation between container and host</li>
+                <li><strong>none</strong>: Disables networking for a container</li>
+                <li><strong>overlay</strong>: Connects multiple Docker daemons across hosts (used in Docker Swarm)</li>
+                <li><strong>macvlan</strong>: Assigns a MAC address to a container, making it appear as a physical device on the network</li>
+            </ul>
+            
+            <h3>Docker Registry</h3>
+            <p>A Docker registry stores Docker images. Docker Hub is a public registry that anyone can use, but many organizations set up private registries using software like Docker Registry, Nexus, or Harbor, or cloud services like Amazon ECR or Google Container Registry.</p>
+            
+            <p>When you run <code>docker pull</code> or <code>docker run</code>, the required images are pulled from your configured registry. When you run <code>docker push</code>, your image is pushed to the configured registry.</p>
+            
+            <p>Think of a registry as a GitHub for Docker images—a place to store, share, and collaborate on container images.</p>
+        </section>
+
+        <section>
+            <h2>Installing Docker</h2>
+            
+            <p>Let's get Docker installed on your system so we can start working with containers. Docker Desktop provides a user-friendly package that includes the Docker Engine, Docker CLI, Docker Compose, and other tools.</p>
+            
+            <h3>System Requirements</h3>
+            <p>Before installing Docker, ensure your system meets these requirements:</p>
+            
+            <h4>Windows</h4>
+            <ul>
+                <li><strong>Windows 10 64-bit</strong>: Home, Pro, Enterprise, or Education (Build 18362 or later)</li>
+                <li><strong>Windows 11 64-bit</strong>: Home or Pro</li>
+                <li><strong>Hardware requirements</strong>:
+                    <ul>
+                        <li>4 GB RAM minimum</li>
+                        <li>Virtualization enabled in BIOS/UEFI</li>
+                        <li>Windows Subsystem for Linux 2 (WSL 2) for Windows 10 Home</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h4>macOS</h4>
+            <ul>
+                <li><strong>macOS versions</strong>: 10.15 (Catalina) or newer</li>
+                <li><strong>Hardware</strong>: 2010 or newer Mac with Intel or Apple Silicon processor</li>
+                <li><strong>RAM</strong>: 4 GB minimum</li>
+            </ul>
+            
+            <h4>Linux</h4>
+            <ul>
+                <li><strong>Supported distributions</strong>: Ubuntu, Debian, Fedora, CentOS, and others</li>
+                <li><strong>RAM</strong>: 4 GB minimum</li>
+                <li><strong>Kernel</strong>: Linux kernel version 3.10 or higher</li>
+            </ul>
+            
+            <h3>Installation Instructions</h3>
+            
+            <h4>Windows</h4>
+            <ol>
+                <li>Download Docker Desktop from <a href="https://www.docker.com/products/docker-desktop" target="_blank">https://www.docker.com/products/docker-desktop</a></li>
+                <li>Double-click the installer to run it</li>
+                <li>Follow the installation wizard</li>
+                <li>Enable WSL 2 if prompted</li>
+                <li>Start Docker Desktop from the Start menu</li>
+                <li>The Docker whale icon in the system tray will indicate Docker is running</li>
+            </ol>
+            
+            <h4>macOS</h4>
+            <ol>
+                <li>Download Docker Desktop for Mac from <a href="https://www.docker.com/products/docker-desktop" target="_blank">https://www.docker.com/products/docker-desktop</a></li>
+                <li>Open the downloaded .dmg file</li>
+                <li>Drag Docker.app to the Applications folder</li>
+                <li>Open Docker from the Applications folder</li>
+                <li>Allow the system extension if prompted</li>
+                <li>The Docker whale icon in the menu bar will indicate Docker is running</li>
+            </ol>
+            
+            <h4>Linux</h4>
+            <p>Docker Desktop is available for some Linux distributions, but you can also install Docker Engine directly. Here's a generic process for Ubuntu:</p>
+            <pre><code># Uninstall old versions
+sudo apt-get remove docker docker-engine docker.io containerd runc
+
+# Set up the repository
+sudo apt-get update
+sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+
+# Add Docker's official GPG key
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+# Set up the stable repository
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Install Docker Engine
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+
+# Add your user to the docker group to run Docker without sudo
+sudo usermod -aG docker $USER
+newgrp docker</code></pre>
+            
+            <p>For other Linux distributions, refer to the <a href="https://docs.docker.com/engine/install/" target="_blank">official Docker documentation</a>.</p>
+            
+            <h3>Verifying Your Installation</h3>
+            <p>To verify that Docker is installed correctly and running:</p>
+            
+            <pre><code># Check Docker version
+docker --version
+
+# Run a simple test container
+docker run hello-world</code></pre>
+            
+            <p>The <code>hello-world</code> container is a simple test image that displays a message and exits. If you see a message like "Hello from Docker!", your installation is working correctly.</p>
+            
+            <p>The output explains the steps Docker took to run the container:</p>
+            <ol>
+                <li>The Docker client contacted the Docker daemon</li>
+                <li>The Docker daemon pulled the "hello-world" image from Docker Hub</li>
+                <li>The Docker daemon created a new container from that image</li>
+                <li>The Docker daemon streamed the output to the Docker client</li>
+                <li>The Docker client sent the output to your terminal</li>
+            </ol>
+            
+            <h3>Docker Desktop Overview</h3>
+            <p>If you installed Docker Desktop, let's explore its interface:</p>
+            
+            <ol>
+                <li>Start Docker Desktop if it's not already running</li>
+                <li>Open the Docker Desktop application (click the Docker icon in your system tray/menu bar)</li>
+                <li>Review the main Dashboard, which shows:
+                    <ul>
+                        <li>Running containers</li>
+                        <li>Available images</li>
+                        <li>Volumes</li>
+                        <li>Recent activity</li>
+                    </ul>
+                </li>
+                <li>Explore the Settings/Preferences:
+                    <ul>
+                        <li><strong>General</strong>: Start Docker at login, automatically check for updates</li>
+                        <li><strong>Resources</strong>: Allocate CPU, memory, disk, etc.</li>
+                        <li><strong>Docker Engine</strong>: Advanced configuration via JSON</li>
+                        <li><strong>Kubernetes</strong>: Enable/disable Kubernetes cluster</li>
+                    </ul>
+                </li>
+            </ol>
+            
+            <p>Docker Desktop provides a graphical interface for managing Docker resources, but we'll focus on the command line for most operations, as it's more powerful and script-friendly.</p>
+        </section>
+
+        <section>
+            <h2>Basic Docker Commands</h2>
+            
+            <p>Now that Docker is installed, let's learn some essential commands to manage images and containers.</p>
+            
+            <h3>Getting Help</h3>
+            <p>Docker's CLI includes comprehensive help documentation:</p>
+            
+            <pre><code># Get general help
+docker --help
+
+# Get help for a specific command
+docker run --help</code></pre>
+            
+            <h3>Working with Images</h3>
+            
+            <h4>Pulling Images</h4>
+            <p>To download an image from a registry (like Docker Hub):</p>
+            
+            <pre><code># Basic syntax
+docker pull [OPTIONS] NAME[:TAG|@DIGEST]
+
+# Examples
+docker pull python:3.10-slim
+docker pull nginx:latest
+docker pull ubuntu:20.04</code></pre>
+            
+            <p>If you don't specify a tag, Docker assumes you want the <code>latest</code> tag, but it's a best practice to always specify a specific version tag for reproducibility.</p>
+            
+            <h4>Listing Images</h4>
+            <p>To see what images are available on your system:</p>
+            
+            <pre><code>docker images
+# or
+docker image ls</code></pre>
+            
+            <p>This shows all local images with their repository name, tag, image ID, creation date, and size.</p>
+            
+            <h4>Searching for Images</h4>
+            <p>To search Docker Hub for images:</p>
+            
+            <pre><code>docker search nginx</code></pre>
+            
+            <p>This searches Docker Hub for images matching the given name and shows information about each result, including a brief description and whether it's an official image.</p>
+            
+            <h4>Image Details</h4>
+            <p>To see detailed information about an image:</p>
+            
+            <pre><code>docker image inspect python:3.10-slim</code></pre>
+            
+            <p>This shows detailed metadata about the image, including its layers, configuration, and environment variables.</p>
+            
+            <h4>Removing Images</h4>
+            <p>To remove an image from your local system:</p>
+            
+            <pre><code>docker rmi python:3.9
+# or
+docker image rm python:3.9</code></pre>
+            
+            <p>You can specify multiple images to remove at once, and you can use image IDs instead of names and tags.</p>
+            
+            <h3>Working with Containers</h3>
+            
+            <h4>Running Containers</h4>
+            <p>The <code>docker run</code> command creates and starts a container from an image:</p>
+            
+            <pre><code># Basic syntax
+docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
+
+# Examples
+docker run nginx  # Run an Nginx web server in the foreground
+docker run -d nginx  # Run in detached mode (background)
+docker run -p 8080:80 nginx  # Map port 80 in the container to port 8080 on the host
+docker run --name my-nginx nginx  # Give the container a name
+docker run -e VARIABLE=value nginx  # Set environment variables
+docker run -v /host/path:/container/path nginx  # Mount a volume</code></pre>
+            
+            <p>Some common options for <code>docker run</code>:</p>
+            <ul>
+                <li><code>-d, --detach</code>: Run container in the background</li>
+                <li><code>-p, --publish</code>: Map container ports to host ports</li>
+                <li><code>--name</code>: Assign a name to the container</li>
+                <li><code>-e, --env</code>: Set environment variables</li>
+                <li><code>-v, --volume</code>: Bind mount a volume</li>
+                <li><code>--rm</code>: Automatically remove the container when it exits</li>
+                <li><code>-it</code>: Allocate a pseudo-TTY and keep STDIN open (for interactive sessions)</li>
+                <li><code>--network</code>: Connect to a network</li>
+            </ul>
+            
+            <h4>Listing Containers</h4>
+            <pre><code># List running containers
+docker ps
+
+# List all containers (including stopped ones)
+docker ps -a
+
+# Show container sizes
+docker ps -s</code></pre>
+            
+            <h4>Container Lifecycle Commands</h4>
+            <pre><code># Stop a running container
+docker stop container_id_or_name
+
+# Start a stopped container
+docker start container_id_or_name
+
+# Restart a container
+docker restart container_id_or_name
+
+# Pause container processes
+docker pause container_id_or_name
+
+# Unpause container processes
+docker unpause container_id_or_name
+
+# Remove a container (must be stopped first)
+docker rm container_id_or_name
+
+# Force remove a running container
+docker rm -f container_id_or_name</code></pre>
+            
+            <p>You can use container IDs or names interchangeably. Container IDs can be abbreviated to the first few characters as long as they're unique.</p>
+            
+            <h4>Container Information and Logs</h4>
+            <pre><code># View logs from a container
+docker logs container_id_or_name
+
+# Follow log output in real time
+docker logs -f container_id_or_name
+
+# Show detailed container information
+docker inspect container_id_or_name
+
+# Show container resource usage statistics
+docker stats container_id_or_name</code></pre>
+            
+            <h4>Executing Commands in Running Containers</h4>
+            <pre><code># Run a command in a running container
+docker exec container_id_or_name command
+
+# Get an interactive shell in a running container
+docker exec -it container_id_or_name bash</code></pre>
+            
+            <p>The <code>exec</code> command is particularly useful for debugging, running database migrations, or accessing a shell inside a container.</p>
+            
+            <h3>Cleaning Up</h3>
+            <p>Docker can accumulate many unused objects over time. These commands help manage disk space:</p>
+            
+            <pre><code># Remove all stopped containers
+docker container prune
+
+# Remove unused images
+docker image prune
+
+# Remove unused volumes
+docker volume prune
+
+# Remove unused networks
+docker network prune
+
+# Remove all unused objects (containers, images, networks, volumes)
+docker system prune
+
+# Show disk usage
+docker system df</code></pre>
+        </section>
+
+        <section>
+            <h2>Practical Docker Examples</h2>
+            
+            <p>Let's apply what we've learned with some practical examples using Docker with Python.</p>
+            
+            <h3>Example 1: Running a Python Script in a Container</h3>
+            <p>Let's create a simple Python script and run it in a Docker container.</p>
+            
+            <ol>
+                <li>Create a directory for the example:
+                    <pre><code>mkdir docker-python-example
+cd docker-python-example</code></pre>
+                </li>
+                <li>Create a Python script named <code>hello.py</code>:
+                    <pre><code>print("Hello, Docker!")
+print("Python is running in a container.")</code></pre>
+                </li>
+                <li>Run the script in a Python container:
+                    <pre><code>docker run -v "$(pwd):/app" -w /app python:3.10-slim python hello.py</code></pre>
+                </li>
+            </ol>
+            
+            <p>In this example:</p>
+            <ul>
+                <li><code>-v "$(pwd):/app"</code> mounts the current directory to <code>/app</code> in the container</li>
+                <li><code>-w /app</code> sets the working directory inside the container to <code>/app</code></li>
+                <li><code>python:3.10-slim</code> is the image to use</li>
+                <li><code>python hello.py</code> is the command to run inside the container</li>
+            </ul>
+            
+            <h3>Example 2: Running a Python Web Server</h3>
+            <p>Let's create a simple Flask web application and run it in a container.</p>
+            
+            <ol>
+                <li>Create a directory for the example:
+                    <pre><code>mkdir flask-docker-example
+cd flask-docker-example</code></pre>
+                </li>
+                <li>Create a requirements.txt file:
+                    <pre><code>flask==2.0.1</code></pre>
+                </li>
+                <li>Create a Python file named <code>app.py</code>:
+                    <pre><code>from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return 'Hello, Docker Flask!'
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)</code></pre>
+                </li>
+                <li>Run the application in a container:
+                    <pre><code>docker run -it --rm -p 5000:5000 -v "$(pwd):/app" -w /app python:3.10-slim bash -c "pip install -r requirements.txt && python app.py"</code></pre>
+                </li>
+                <li>Open a web browser and navigate to <code>http://localhost:5000</code> to see the Flask application running</li>
+            </ol>
+            
+            <p>In this example:</p>
+            <ul>
+                <li><code>-it</code> makes the container interactive and allocates a pseudo-TTY</li>
+                <li><code>--rm</code> removes the container when it stops</li>
+                <li><code>-p 5000:5000</code> maps port 5000 in the container to port 5000 on the host</li>
+                <li><code>bash -c "..."</code> runs a shell command that installs dependencies and starts the app</li>
+            </ul>
+            
+            <p>Note that we're mounting our code into the container and installing dependencies each time. This works for development but isn't ideal for production. In the next section, we'll learn how to create custom images that include our code and dependencies.</p>
+            
+            <h3>Example 3: Interactive Python Shell</h3>
+            <p>Docker can provide an isolated environment for experimenting with Python:</p>
+            <h3>Example 3: Interactive Python Shell</h3>
+            <p>Docker can provide an isolated environment for experimenting with Python:</p>
+            
+            <pre><code>docker run -it --rm python:3.10-slim python</code></pre>
+            
+            <p>This launches an interactive Python shell inside a container. You can use it to test Python code or explore packages without installing them on your system.</p>
+            
+            <p>To run a Python shell with additional packages installed:</p>
+            
+            <pre><code>docker run -it --rm python:3.10-slim bash -c "pip install numpy pandas matplotlib && python"</code></pre>
+            
+            <p>When you exit the Python shell, the container will be automatically removed thanks to the <code>--rm</code> flag, keeping your system clean.</p>
+            
+            <h3>Example 4: Working with Python Packages</h3>
+            <p>We can use Docker to experiment with Python packages without cluttering our local environment:</p>
+            
+            <pre><code># Create a temporary container with Jupyter Notebook
+docker run -it --rm -p 8888:8888 python:3.10-slim bash -c "pip install jupyter numpy pandas matplotlib && jupyter notebook --ip=0.0.0.0 --port=8888 --allow-root --no-browser"</code></pre>
+            
+            <p>This command installs Jupyter and common data science packages, then starts a Jupyter Notebook server. The output will include a URL with a token that you can open in your browser to access Jupyter.</p>
+            
+            <p>This approach is great for exploring new packages or testing code without installing anything on your host system.</p>
+        </section>
+
+        <section>
+            <h2>Image Tags and Versioning</h2>
+            
+            <p>Docker images use tags to identify different versions. Understanding tagging conventions helps you choose the right image for your needs.</p>
+            
+            <h3>Anatomy of an Image Reference</h3>
+            <p>A full Docker image reference has this format:</p>
+            
+            <pre><code>registry/namespace/repository:tag@digest</code></pre>
+            
+            <p>Where:</p>
+            <ul>
+                <li><strong>registry</strong>: Where the image is stored (e.g., docker.io, ghcr.io, registry.company.com)</li>
+                <li><strong>namespace</strong>: The user or organization that owns the image</li>
+                <li><strong>repository</strong>: The name of the image</li>
+                <li><strong>tag</strong>: The specific version or variant of the image</li>
+                <li><strong>digest</strong>: A unique identifier for the exact image content (optional)</li>
+            </ul>
+            
+            <p>For example:</p>
+            <ul>
+                <li><code>python:3.10-slim</code> - Official Python 3.10 slim image from Docker Hub</li>
+                <li><code>docker.io/library/python:3.10-slim</code> - Full reference to the same image</li>
+                <li><code>ghcr.io/username/myapp:1.0.0</code> - Version 1.0.0 of myapp from GitHub Container Registry</li>
+            </ul>
+            
+            <h3>Common Tagging Patterns</h3>
+            <p>Image tags follow several common patterns:</p>
+            
+            <h4>Version Tags</h4>
+            <ul>
+                <li><code>latest</code>: The default tag when none is specified, typically pointing to the most recent version</li>
+                <li><code>3</code>, <code>3.10</code>, <code>3.10.5</code>: Version numbers with varying specificity</li>
+                <li><code>1.0.0</code>, <code>2.1.3</code>: Semantic versioning (major.minor.patch)</li>
+                <li><code>20.04</code>, <code>22.04</code>: Date-based versions (common for Ubuntu)</li>
+            </ul>
+            
+            <h4>Variant Tags</h4>
+            <ul>
+                <li><code>slim</code>: Smaller image with minimal packages</li>
+                <li><code>alpine</code>: Based on Alpine Linux, very small</li>
+                <li><code>bullseye</code>, <code>bookworm</code>: Based on specific Debian releases</li>
+                <li><code>buster-slim</code>: Combination of version and variant</li>
+            </ul>
+            
+            <h4>Stage Tags</h4>
+            <ul>
+                <li><code>stable</code>: Production-ready version</li>
+                <li><code>beta</code>, <code>alpha</code>: Pre-release versions</li>
+                <li><code>edge</code>: Latest development version</li>
+                <li><code>nightly</code>: Built from the latest source code each night</li>
+            </ul>
+            
+            <h3>Choosing the Right Tag</h3>
+            <p>When selecting an image tag, consider these factors:</p>
+            
+            <h4>Stability vs. Features</h4>
+            <ul>
+                <li>More specific tags (<code>3.10.5</code>) provide greater stability but may lack the latest features</li>
+                <li>Less specific tags (<code>3</code>, <code>latest</code>) get updates more frequently but may introduce breaking changes</li>
+            </ul>
+            
+            <h4>Size vs. Completeness</h4>
+            <ul>
+                <li>Full images include more tools and libraries but are larger</li>
+                <li>Slim or Alpine variants are much smaller but may lack development tools</li>
+            </ul>
+            
+            <h4>Best Practices for Tags</h4>
+            <ul>
+                <li>Avoid using <code>latest</code> in production for better reproducibility</li>
+                <li>Use specific version tags for production environments</li>
+                <li>Consider using digests for maximum reproducibility</li>
+                <li>Document which image tags your application uses</li>
+                <li>Test when upgrading to new image tags</li>
+            </ul>
+            
+            <h3>Common Python Image Variants</h3>
+            <p>For Python development, several common image variants are available:</p>
+            
+            <h4>python:3.10</h4>
+            <ul>
+                <li>Full-featured image with development tools</li>
+                <li>Includes build dependencies, Git, and other utilities</li>
+                <li>Based on Debian</li>
+                <li>Size: ~900MB</li>
+                <li>Good for: Development environments, complex applications</li>
+            </ul>
+            
+            <h4>python:3.10-slim</h4>
+            <ul>
+                <li>Minimal Python environment</li>
+                <li>Lacks many build tools but includes essential Python functionality</li>
+                <li>Based on Debian, but with fewer packages</li>
+                <li>Size: ~120MB</li>
+                <li>Good for: Production environments, simpler applications</li>
+            </ul>
+            
+            <h4>python:3.10-alpine</h4>
+            <ul>
+                <li>Extremely minimal Python environment</li>
+                <li>Based on Alpine Linux instead of Debian</li>
+                <li>Uses musl instead of glibc (may cause compatibility issues)</li>
+                <li>Size: ~45MB</li>
+                <li>Good for: Microservices, situations where size is critical</li>
+                <li>Challenges: More difficult to build packages that need compilation</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Managing Container State</h2>
+            
+            <p>Docker containers are designed to be ephemeral, but often you need to persist data or share it between containers. Let's explore how to manage container state.</p>
+            
+            <h3>Container Lifecycle and State</h3>
+            <p>By default, a container's filesystem is ephemeral—changes made inside a container are lost when the container is removed. This follows the "immutable infrastructure" principle but presents challenges for:</p>
+            <ul>
+                <li>Data persistence (databases, user uploads, etc.)</li>
+                <li>Configuration that shouldn't be baked into images</li>
+                <li>Sharing data between containers</li>
+                <li>Accessing host files from containers</li>
+            </ul>
+            
+            <h3>Docker Volumes</h3>
+            <p>Volumes are the preferred mechanism for persisting data generated by and used by Docker containers. They are completely managed by Docker and offer several advantages:</p>
+            <ul>
+                <li>Easier to back up or migrate than bind mounts</li>
+                <li>Can be managed using Docker CLI commands</li>
+                <li>Work on both Linux and Windows containers</li>
+                <li>Can be shared safely among multiple containers</li>
+                <li>Volume drivers let you store volumes on remote hosts or cloud providers</li>
+            </ul>
+            
+            <h4>Creating and Using Volumes</h4>
+            <pre><code># Create a named volume
+docker volume create my_data
+
+# List volumes
+docker volume ls
+
+# Run a container with a volume
+docker run -v my_data:/app/data nginx
+
+# Inspect a volume
+docker volume inspect my_data</code></pre>
+            
+            <p>In the example above, the container can read and write to the <code>/app/data</code> directory, and the data will persist even after the container is removed.</p>
+            
+            <h3>Bind Mounts</h3>
+            <p>Bind mounts map a host directory or file directly into a container. They're useful during development for immediate code changes without rebuilding.</p>
+            
+            <pre><code># Mount the current directory to /app in the container
+docker run -v "$(pwd)":/app nginx</code></pre>
+            
+            <p>Bind mounts have some limitations:</p>
+            <ul>
+                <li>They rely on the host's filesystem structure</li>
+                <li>Less portable between hosts than volumes</li>
+                <li>Potential security risks if containers can modify host files</li>
+            </ul>
+            
+            <h3>Environment Variables</h3>
+            <p>Environment variables are another way to inject configuration into containers:</p>
+            
+            <pre><code># Set a single environment variable
+docker run -e DEBUG=true nginx
+
+# Set multiple environment variables
+docker run -e DEBUG=true -e LOG_LEVEL=info nginx
+
+# Use an environment file
+docker run --env-file .env nginx</code></pre>
+            
+            <p>Environment variables are commonly used for:</p>
+            <ul>
+                <li>Configuration settings</li>
+                <li>Connection strings</li>
+                <li>Feature flags</li>
+                <li>Application behavior control</li>
+            </ul>
+            
+            <h3>Docker Networking</h3>
+            <p>Docker creates isolated network environments for containers but provides several options for container communication:</p>
+            
+            <h4>Default Bridge Network</h4>
+            <p>By default, containers connect to a bridge network where they can communicate with each other using container names or IPs:</p>
+            
+            <pre><code># Run two containers on the default bridge network
+docker run -d --name web nginx
+docker run -d --name app python:3.10-slim
+
+# Test connectivity from the app container to the web container
+docker exec app ping web</code></pre>
+            
+            <h4>Custom Networks</h4>
+            <p>Custom networks provide better isolation and name resolution:</p>
+            
+            <pre><code># Create a custom network
+docker network create my_network
+
+# Run containers on the custom network
+docker run -d --name web --network my_network nginx
+docker run -d --name app --network my_network python:3.10-slim</code></pre>
+            
+            <h4>Host Network</h4>
+            <p>For maximum performance, containers can use the host's network directly:</p>
+            
+            <pre><code>docker run --network host nginx</code></pre>
+            
+            <p>This removes network isolation between the container and the host, allowing the container to use the host's network interfaces directly.</p>
+            
+            <h3>Data Persistence Patterns</h3>
+            <p>Different scenarios call for different data persistence approaches:</p>
+            
+            <h4>Database Data</h4>
+            <pre><code># Create a volume for PostgreSQL data
+docker volume create pgdata
+
+# Run PostgreSQL with the volume
+docker run -d --name postgres -e POSTGRES_PASSWORD=secret -v pgdata:/var/lib/postgresql/data postgres</code></pre>
+            
+            <h4>Application Code During Development</h4>
+            <pre><code># Mount local code for development
+docker run -d --name flask-app -v "$(pwd)":/app -w /app python:3.10-slim python app.py</code></pre>
+            
+            <h4>Shared Configuration</h4>
+            <pre><code># Create a volume for shared configuration
+docker volume create config
+
+# Create configuration in the volume
+docker run --rm -v config:/config alpine sh -c "echo 'key=value' > /config/app.conf"
+
+# Use the configuration in another container
+docker run -v config:/app/config python:3.10-slim python -c "open('/app/config/app.conf').read()"</code></pre>
+            
+            <p>These patterns help manage the tension between Docker's ephemeral container model and the need for persistent or shared state in real applications.</p>
+        </section>
+
+        <section>
+            <h2>Hands-On Exercise: Docker Basics</h2>
+            
+            <p>Let's consolidate what we've learned with a comprehensive exercise.</p>
+            
+            <h3>Exercise: Running a Python Web Application in Docker</h3>
+            
+            <h4>Objective</h4>
+            <p>Create, run, and manage a simple Python web application in Docker containers.</p>
+            
+            <h4>Part 1: Create a Simple Flask Application</h4>
+            <ol>
+                <li>Create a new directory for your project:
+                    <pre><code>mkdir docker-flask-exercise
+cd docker-flask-exercise</code></pre>
+                </li>
+                <li>Create a requirements.txt file:
+                    <pre><code>flask==2.0.1</code></pre>
+                </li>
+                <li>Create an app.py file:
+                    <pre><code>from flask import Flask, render_template
+import os
+import socket
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    hostname = socket.gethostname()
+    return render_template('index.html', hostname=hostname)
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)</code></pre>
+                </li>
+                <li>Create a templates directory and an index.html file inside it:
+                    <pre><code>mkdir templates
+cat > templates/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Docker Flask Exercise</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hello from Docker!</h1>
+        <p>This page is served from a Docker container.</p>
+        <p>Container hostname: {{ hostname }}</p>
+    </div>
+</body>
+</html>
+EOF</code></pre>
+                </li>
+            </ol>
+            
+            <h4>Part 2: Run the Application with Volume Mounts</h4>
+            <ol>
+                <li>Run the Flask application in a container with volume mounts:
+                    <pre><code>docker run -it --rm -p 5000:5000 -v "$(pwd):/app" -w /app python:3.10-slim bash -c "pip install -r requirements.txt && python app.py"</code></pre>
+                </li>
+                <li>Open a web browser and visit <a href="http://localhost:5000">http://localhost:5000</a></li>
+                <li>Make a change to the templates/index.html file (e.g., change the heading or add a paragraph)</li>
+                <li>Refresh the browser to see your changes reflected immediately</li>
+            </ol>
+            
+            <h4>Part 3: Run with Environment Variables</h4>
+            <ol>
+                <li>Stop the running container (Ctrl+C)</li>
+                <li>Run the container again with a different port using an environment variable:
+                    <pre><code>docker run -it --rm -p 8080:8080 -e PORT=8080 -v "$(pwd):/app" -w /app python:3.10-slim bash -c "pip install -r requirements.txt && python app.py"</code></pre>
+                </li>
+                <li>Visit <a href="http://localhost:8080">http://localhost:8080</a> to see the application running on the new port</li>
+            </ol>
+            
+            <h4>Part 4: Create a Named Volume for Dependencies</h4>
+            <ol>
+                <li>Stop the running container (Ctrl+C)</li>
+                <li>Create a named volume for Python packages:
+                    <pre><code>docker volume create python-packages</code></pre>
+                </li>
+                <li>Run the container with the volume to avoid reinstalling packages each time:
+                    <pre><code>docker run -it --rm -p 5000:5000 -v "$(pwd):/app" -v python-packages:/usr/local/lib/python3.10/site-packages -w /app python:3.10-slim bash -c "pip install -r requirements.txt && python app.py"</code></pre>
+                </li>
+                <li>Stop the container and run it again—notice that the packages don't need to be reinstalled</li>
+            </ol>
+            
+            <h4>Part 5: Run Multiple Containers with Networking</h4>
+            <ol>
+                <li>Create a custom network:
+                    <pre><code>docker network create flask-net</code></pre>
+                </li>
+                <li>Run a container in detached mode on this network:
+                    <pre><code>docker run -d --name flask-app1 --network flask-net -v "$(pwd):/app" -v python-packages:/usr/local/lib/python3.10/site-packages -w /app -p 5001:5000 python:3.10-slim bash -c "pip install -r requirements.txt && python app.py"</code></pre>
+                </li>
+                <li>Run a second container on the same network:
+                    <pre><code>docker run -d --name flask-app2 --network flask-net -v "$(pwd):/app" -v python-packages:/usr/local/lib/python3.10/site-packages -w /app -p 5002:5000 python:3.10-slim bash -c "pip install -r requirements.txt && python app.py"</code></pre>
+                </li>
+                <li>Verify both containers are running:
+                    <pre><code>docker ps</code></pre>
+                </li>
+                <li>Visit both applications in your browser:
+                    <ul>
+                        <li><a href="http://localhost:5001">http://localhost:5001</a></li>
+                        <li><a href="http://localhost:5002">http://localhost:5002</a></li>
+                    </ul>
+                </li>
+                <li>Test network communication between containers:
+                    <pre><code>docker exec flask-app1 ping flask-app2</code></pre>
+                </li>
+            </ol>
+            
+            <h4>Part 6: Container Management</h4>
+            <ol>
+                <li>List running containers:
+                    <pre><code>docker ps</code></pre>
+                </li>
+                <li>View logs from a container:
+                    <pre><code>docker logs flask-app1</code></pre>
+                </li>
+                <li>Execute a command in a running container:
+                    <pre><code>docker exec flask-app1 python -c "import platform; print(platform.python_version())"</code></pre>
+                </li>
+                <li>Stop a container:
+                    <pre><code>docker stop flask-app2</code></pre>
+                </li>
+                <li>Start it again:
+                    <pre><code>docker start flask-app2</code></pre>
+                </li>
+                <li>Clean up all containers:
+                    <pre><code>docker stop flask-app1 flask-app2
+docker rm flask-app1 flask-app2</code></pre>
+                </li>
+            </ol>
+            
+            <h3>Reflection Questions</h3>
+            <ul>
+                <li>How did mounting the application code as a volume affect development?</li>
+                <li>What are the advantages of using named volumes for dependencies?</li>
+                <li>How did container networking allow the containers to communicate?</li>
+                <li>What challenges might you face when deploying this application to production?</li>
+                <li>How could you improve this setup for a real-world application?</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Summary and Next Steps</h2>
+            
+            <p>In this session, we've covered the fundamentals of containerization and Docker:</p>
+            <ul>
+                <li>Understanding containerization concepts and benefits</li>
+                <li>Docker architecture and components</li>
+                <li>Installing and configuring Docker</li>
+                <li>Basic Docker commands for images and containers</li>
+                <li>Working with volumes, environment variables, and networks</li>
+                <li>Running Python applications in Docker</li>
+            </ul>
+            
+            <p>You now have the foundation to use Docker for development and to prepare for more advanced topics.</p>
+            
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li>Containers provide consistency, isolation, and portability for applications</li>
+                <li>Docker simplifies creating and managing containers</li>
+                <li>Images are read-only templates for containers</li>
+                <li>Containers are ephemeral by design, requiring explicit mechanisms for persistence</li>
+                <li>Volumes and bind mounts allow data to persist beyond container lifecycles</li>
+                <li>Docker's networking capabilities enable multi-container applications</li>
+            </ul>
+            
+            <h3>Preview of Upcoming Topics</h3>
+            <p>In our next session, we'll build on these foundations to cover:</p>
+            <ul>
+                <li>Creating custom Docker images with Dockerfiles</li>
+                <li>Building multi-container applications with Docker Compose</li>
+                <li>Best practices for Dockerizing Python applications</li>
+                <li>Container optimization techniques</li>
+                <li>Docker in production environments</li>
+            </ul>
+            
+            <h3>Additional Resources</h3>
+            <ul>
+                <li><a href="https://docs.docker.com/get-started/" target="_blank">Docker Getting Started Guide</a></li>
+                <li><a href="https://docs.docker.com/engine/reference/commandline/cli/" target="_blank">Docker Command Reference</a></li>
+                <li><a href="https://hub.docker.com/_/python" target="_blank">Official Python Docker Images</a></li>
+                <li><a href="https://testdriven.io/blog/dockerizing-flask-with-postgres-gunicorn-and-nginx/" target="_blank">Dockerizing Flask Applications</a></li>
+                <li><a href="https://www.youtube.com/playlist?list=PLhW3qG5bs-L99pQsZ74f-LC-tOEsBp2rK" target="_blank">Docker Tutorial for Beginners (YouTube Playlist)</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Full Stack Python Web Development Course</p>
+    </footer>
+</body>
+</html>

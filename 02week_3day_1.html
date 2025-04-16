@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Integration with SQLAlchemy</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Database Integration with SQLAlchemy</h1>
+        <p class="subtitle">Week 2 - Wednesday: Full Stack Web Development with Python</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Introduction to Databases in Web Applications</h2>
+            <p>Welcome to our third day of Week 2! Yesterday, we explored Flask, the web framework that we'll use throughout this course. Today, we'll focus on database integration with SQLAlchemy, enabling our application to persistently store and retrieve data.</p>
+            
+            <p>Databases are a critical component of most web applications. They provide persistent storage for user accounts, content, configuration settings, and other application data. Without a database, our application would lose all its data whenever it restarts.</p>
+            
+            <h3>Types of Databases</h3>
+            <p>There are several types of databases, each with its own strengths and use cases:</p>
+            
+            <ul>
+                <li><strong>Relational Databases (SQL)</strong>: Store data in tables with predefined schemas and relationships between them (PostgreSQL, MySQL, SQLite)</li>
+                <li><strong>NoSQL Databases</strong>: Store data in more flexible formats like documents, key-value pairs, or graphs (MongoDB, Redis, Neo4j)</li>
+                <li><strong>Time-Series Databases</strong>: Optimized for time-stamped data (InfluxDB, TimescaleDB)</li>
+                <li><strong>In-Memory Databases</strong>: Store data in memory for faster access (Redis, Memcached)</li>
+            </ul>
+            
+            <p>For our blog application, we'll use a relational database (PostgreSQL) because:</p>
+            <ul>
+                <li>The data we're working with naturally fits into a tabular structure</li>
+                <li>We need to establish relationships between different types of data (users, posts, comments)</li>
+                <li>ACID (Atomicity, Consistency, Isolation, Durability) properties ensure data integrity</li>
+                <li>SQL is a powerful and widely-used query language</li>
+            </ul>
+            
+            <h3>Database Access in Python</h3>
+            <p>There are several ways to work with databases in Python:</p>
+            <ul>
+                <li><strong>Raw SQL</strong>: Writing SQL queries directly</li>
+                <li><strong>Database API</strong>: Using database-specific Python libraries (psycopg2, sqlite3)</li>
+                <li><strong>Object-Relational Mapping (ORM)</strong>: Using a library that maps database tables to Python classes (SQLAlchemy, Django ORM)</li>
+            </ul>
+            
+            <p>In this course, we'll use SQLAlchemy, which is an ORM that allows us to work with databases using Python objects rather than writing SQL queries directly.</p>
+        </section>
+
+        <section>
+            <h2>Introduction to SQLAlchemy</h2>
+            
+            <p>SQLAlchemy is a powerful and flexible ORM (Object-Relational Mapping) library for Python. It provides a full suite of well-known enterprise-level persistence patterns, designed for efficient and high-performing database access.</p>
+            
+            <h3>What is an ORM?</h3>
+            <p>An ORM is a programming technique that converts data between incompatible type systems in object-oriented programming languages. This creates a "virtual object database" that can be used from within the programming language.</p>
+            
+            <p>Instead of writing raw SQL queries like:</p>
+            <pre><code>
+SELECT * FROM users WHERE username = 'john' AND is_active = True;
+            </code></pre>
+            
+            <p>With an ORM, you can write Python code like:</p>
+            <pre><code>
+User.query.filter_by(username='john', is_active=True).all()
+            </code></pre>
+            
+            <h3>Benefits of Using an ORM</h3>
+            <ul>
+                <li><strong>Productivity</strong>: Work with familiar Python constructs instead of writing SQL</li>
+                <li><strong>Maintainability</strong>: Changes to your data model require only changes to your Python code</li>
+                <li><strong>Database Independence</strong>: Switch between different database systems with minimal code changes</li>
+                <li><strong>Security</strong>: Built-in protection against SQL injection attacks</li>
+                <li><strong>Type Safety</strong>: Catch data type errors at compile time rather than runtime</li>
+            </ul>
+            
+            <h3>SQLAlchemy Architecture</h3>
+            <p>SQLAlchemy consists of two main components:</p>
+            <ul>
+                <li><strong>Core</strong>: A SQL abstraction toolkit that provides a set of tools for working with databases without the ORM</li>
+                <li><strong>ORM</strong>: A higher-level interface that maps Python classes to database tables</li>
+            </ul>
+            
+            <p>In this course, we'll primarily use the ORM, but it's good to be aware of the Core for situations where you need more control or performance.</p>
+            
+            <h3>Flask-SQLAlchemy</h3>
+            <p>Flask-SQLAlchemy is an extension for Flask that simplifies using SQLAlchemy with Flask. It provides useful defaults and extra helpers that make it easier to accomplish common tasks.</p>
+            
+            <p>Features of Flask-SQLAlchemy include:</p>
+            <ul>
+                <li>Simple setup and configuration</li>
+                <li>Session management integrated with Flask's request lifecycle</li>
+                <li>Simplified querying syntax</li>
+                <li>Support for multiple databases</li>
+                <li>Signals for event handling</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Setting Up Flask-SQLAlchemy</h2>
+            
+            <p>Let's set up Flask-SQLAlchemy in our project:</p>
+            
+            <h3>Installation</h3>
+            <pre><code>
+pip install flask-sqlalchemy
+            </code></pre>
+            
+            <p>If you're using PostgreSQL, you'll also need the psycopg2 package:</p>
+            <pre><code>
+pip install psycopg2-binary
+            </code></pre>
+            
+            <h3>Configuration</h3>
+            <p>In your Flask application, you'll need to configure SQLAlchemy with your database connection information:</p>
+            
+            <pre><code>
+# Example with SQLite (for development)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+
+# Example with PostgreSQL (for production)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://username:password@localhost/dbname'
+
+# Disable track modifications (reduces overhead)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize SQLAlchemy
+db = SQLAlchemy(app)
+            </code></pre>
+            
+            <p>With the application factory pattern, you would initialize it as follows:</p>
+            
+            <pre><code>
+# app/__init__.py
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
+# Create extension object
+db = SQLAlchemy()
+
+def create_app():
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    # Initialize the extension with the app
+    db.init_app(app)
+    
+    # Import models to ensure they're known to SQLAlchemy
+    from app import models
+    
+    # ... rest of the application setup ...
+    
+    return app
+            </code></pre>
+            
+            <h3>Database URLs</h3>
+            <p>SQLAlchemy uses database URLs to connect to different types of databases. The format is:</p>
+            <pre><code>
+dialect+driver://username:password@host:port/database
+            </code></pre>
+            
+            <p>Examples:</p>
+            <ul>
+                <li><code>sqlite:///app.db</code> - SQLite database stored in the app.db file</li>
+                <li><code>postgresql://user:pass@localhost/mydb</code> - PostgreSQL database</li>
+                <li><code>mysql://user:pass@localhost/mydb</code> - MySQL database</li>
+                <li><code>oracle://user:pass@127.0.0.1:1521/mydb</code> - Oracle database</li>
+            </ul>
+            
+            <p>In production, it's common to store the database URL in an environment variable:</p>
+            <pre><code>
+import os
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Defining Models</h2>
+            
+            <p>In SQLAlchemy, database tables are represented as Python classes, with each instance of the class representing a row in the table.</p>
+            
+            <h3>Basic Model Definition</h3>
+            <p>Here's how to define a simple User model:</p>
+            
+            <pre><code>
+from app import db
+from datetime import datetime
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'&lt;User {self.username}&gt;'
+            </code></pre>
+            
+            <p>In this example:</p>
+            <ul>
+                <li><code>db.Model</code> is the base class for all models</li>
+                <li><code>db.Column</code> defines a column in the table</li>
+                <li>Column attributes like <code>primary_key</code>, <code>unique</code>, and <code>nullable</code> define constraints</li>
+                <li>The <code>__repr__</code> method defines how the object is represented when printed</li>
+            </ul>
+            
+            <h3>Column Types</h3>
+            <p>SQLAlchemy provides many column types for different kinds of data:</p>
+            <ul>
+                <li><code>db.Integer</code>: Regular integer</li>
+                <li><code>db.String(length)</code>: Variable-length string with a maximum length</li>
+                <li><code>db.Text</code>: Unlimited-length text</li>
+                <li><code>db.DateTime</code>: Date and time</li>
+                <li><code>db.Float</code>: Floating-point number</li>
+                <li><code>db.Boolean</code>: Boolean (true/false)</li>
+                <li><code>db.PickleType</code>: Stores a pickled Python object</li>
+                <li><code>db.LargeBinary</code>: Stores large binary data</li>
+            </ul>
+            
+            <h3>Column Options</h3>
+            <p>Common options for columns include:</p>
+            <ul>
+                <li><code>primary_key</code>: Marks the column as the primary key</li>
+                <li><code>unique</code>: Ensures values in the column are unique</li>
+                <li><code>nullable</code>: Determines whether NULL values are allowed</li>
+                <li><code>default</code>: Default value if none is provided</li>
+                <li><code>index</code>: Creates an index on the column for faster queries</li>
+                <li><code>server_default</code>: Default value set by the database server</li>
+            </ul>
+            
+            <h3>Model Methods</h3>
+            <p>You can add custom methods to your models to encapsulate functionality:</p>
+            
+            <pre><code>
+from werkzeug.security import generate_password_hash, check_password_hash
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128))
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+    def is_active(self):
+        # Custom logic to determine if user is active
+        return True
+            </code></pre>
+            
+            <h3>Table Names</h3>
+            <p>By default, SQLAlchemy generates table names by converting the class name from CamelCase to snake_case. You can override this with the <code>__tablename__</code> attribute:</p>
+            
+            <pre><code>
+class User(db.Model):
+    __tablename__ = 'app_users'  # Custom table name
+    # ... column definitions ...
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Model Relationships</h2>
+            
+            <p>One of the key features of relational databases is the ability to define relationships between tables. SQLAlchemy provides several ways to define these relationships in your models.</p>
+            
+            <h3>One-to-Many Relationships</h3>
+            <p>A one-to-many relationship exists when one record in a table can be associated with one or more records in another table. For example, one user can have many blog posts.</p>
+            
+            <pre><code>
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    posts = db.relationship('Post', backref='author', lazy='dynamic')
+
+class Post(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+            </code></pre>
+            
+            <p>In this example:</p>
+            <ul>
+                <li><code>db.relationship</code> defines the relationship on the "one" side</li>
+                <li><code>db.ForeignKey</code> creates a foreign key constraint on the "many" side</li>
+                <li><code>backref</code> creates a back-reference that allows accessing the user from a post (<code>post.author</code>)</li>
+                <li><code>lazy='dynamic'</code> returns a query object instead of loading all related objects at once</li>
+            </ul>
+            
+            <h3>Many-to-Many Relationships</h3>
+            <p>A many-to-many relationship exists when records in both tables can be associated with multiple records in the other table. For example, a post can have many tags, and a tag can be used in many posts.</p>
+            
+            <p>Many-to-many relationships typically require an association table:</p>
+            
+            <pre><code>
+# Association table (no model class needed)
+post_tags = db.Table('post_tags',
+    db.Column('post_id', db.Integer, db.ForeignKey('post.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
+
+class Post(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    tags = db.relationship('Tag', secondary=post_tags, backref=db.backref('posts', lazy='dynamic'))
+
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+            </code></pre>
+            
+            <p>In this example:</p>
+            <ul>
+                <li><code>db.Table</code> creates an association table without a model class</li>
+                <li><code>secondary</code> parameter specifies the association table</li>
+                <li>The relationship can be accessed from both sides (<code>post.tags</code> and <code>tag.posts</code>)</li>
+            </ul>
+            
+            <h3>One-to-One Relationships</h3>
+            <p>A one-to-one relationship exists when a record in one table can be associated with exactly one record in another table. For example, a user might have one profile.</p>
+            
+            <pre><code>
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    profile = db.relationship('Profile', backref='user', uselist=False)
+
+class Profile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    bio = db.Column(db.Text)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True, nullable=False)
+            </code></pre>
+            
+            <p>In this example:</p>
+            <ul>
+                <li><code>uselist=False</code> ensures that the relationship returns a single object rather than a list</li>
+                <li><code>unique=True</code> on the foreign key ensures that each user can have only one profile</li>
+            </ul>
+            
+            <h3>Relationship Options</h3>
+            <p>SQLAlchemy's <code>relationship</code> function has many options to control how the relationship behaves:</p>
+            <ul>
+                <li><code>backref</code>: Creates a back-reference from the related object</li>
+                <li><code>lazy</code>: Controls how related objects are loaded ('select', 'joined', 'subquery', 'dynamic')</li>
+                <li><code>cascade</code>: Specifies operations that should cascade to related objects</li>
+                <li><code>order_by</code>: Specifies the default ordering of related objects</li>
+            </ul>
+            
+            <pre><code>
+class User(db.Model):
+    # ...
+    posts = db.relationship('Post', backref='author', lazy='dynamic',
+                            cascade='all, delete-orphan', order_by='Post.created_at.desc()')
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Creating and Migrating the Database</h2>
+            
+            <p>Once you've defined your models, you need to create the corresponding tables in the database. There are two main approaches: direct creation and migrations.</p>
+            
+            <h3>Direct Creation</h3>
+            <p>For development or simple applications, you can create tables directly from your models:</p>
+            
+            <pre><code>
+from app import db, create_app
+
+app = create_app()
+with app.app_context():
+    db.create_all()
+            </code></pre>
+            
+            <p>This command creates tables for all models that don't already exist. However, it doesn't update existing tables if your models change, which can lead to data loss or inconsistencies.</p>
+            
+            <h3>Database Migrations with Flask-Migrate</h3>
+            <p>For production applications, it's better to use database migrations, which allow you to evolve your database schema over time. Flask-Migrate is an extension that integrates Alembic (SQLAlchemy's migration framework) with Flask.</p>
+            
+            <p>Installation:</p>
+            <pre><code>
+pip install flask-migrate
+            </code></pre>
+            
+            <p>Setup in your application factory:</p>
+            <pre><code>
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+
+db = SQLAlchemy()
+migrate = Migrate()
+
+def create_app():
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    db.init_app(app)
+    migrate.init_app(app, db)
+    
+    # ... rest of the application setup ...
+    
+    return app
+            </code></pre>
+            
+            <p>Using Flask-Migrate via the Flask CLI:</p>
+            <ol>
+                <li>Initialize the migration repository:
+                <pre><code>flask db init</code></pre>
+                </li>
+                
+                <li>Create a migration for your current models:
+                <pre><code>flask db migrate -m "Initial migration"</code></pre>
+                </li>
+                
+                <li>Apply the migration to the database:
+                <pre><code>flask db upgrade</code></pre>
+                </li>
+                
+                <li>When you change your models, create a new migration:
+                <pre><code>flask db migrate -m "Add user roles"</code></pre>
+                </li>
+                
+                <li>Apply the new migration:
+                <pre><code>flask db upgrade</code></pre>
+                </li>
+                
+                <li>To revert to a previous version:
+                <pre><code>flask db downgrade</code></pre>
+                </li>
+            </ol>
+            
+            <p>Migrations are essential for managing schema changes in a production environment without losing data.</p>
+        </section>
+
+        <section>
+            <h2>CRUD Operations with SQLAlchemy</h2>
+            
+            <p>CRUD stands for Create, Read, Update, and Delete—the four basic operations for persistent storage. Let's explore how to perform these operations with SQLAlchemy.</p>
+            
+            <h3>Create</h3>
+            <p>To create a new record, instantiate a model class, add it to the session, and commit the transaction:</p>
+            
+            <pre><code>
+from app import db
+from app.models import User
+
+# Create a new user
+new_user = User(username='john', email='john@example.com')
+db.session.add(new_user)
+db.session.commit()
+
+# Create multiple users at once
+users = [
+    User(username='alice', email='alice@example.com'),
+    User(username='bob', email='bob@example.com')
+]
+db.session.add_all(users)
+db.session.commit()
+            </code></pre>
+            
+            <h3>Read</h3>
+            <p>To retrieve records from the database, use query methods:</p>
+            
+            <pre><code>
+# Get all users
+all_users = User.query.all()
+
+# Get a user by primary key
+user = User.query.get(1)
+
+# Get the first user with a specific username
+user = User.query.filter_by(username='john').first()
+
+# More complex filtering with filter()
+users = User.query.filter(User.email.endswith('@example.com')).all()
+
+# Order results
+users = User.query.order_by(User.username).all()
+
+# Limit results
+recent_users = User.query.order_by(User.created_at.desc()).limit(5).all()
+
+# Pagination
+page = User.query.paginate(page=1, per_page=10)
+users = page.items
+            </code></pre>
+            
+            <h3>Update</h3>
+            <p>To update a record, retrieve it, modify its attributes, and commit the transaction:</p>
+            
+            <pre><code>
+# Update a user's email
+user = User.query.get(1)
+user.email = 'newemail@example.com'
+db.session.commit()
+
+# Bulk update
+User.query.filter_by(is_active=False).update({User.is_active: True})
+db.session.commit()
+            </code></pre>
+            
+            <h3>Delete</h3>
+            <p>To delete a record, retrieve it, delete it from the session, and commit the transaction:</p>
+            
+            <pre><code>
+# Delete a user
+user = User.query.get(1)
+db.session.delete(user)
+db.session.commit()
+
+# Bulk delete
+User.query.filter(User.created_at < some_date).delete()
+db.session.commit()
+            </code></pre>
+            
+            <h3>Working with Sessions</h3>
+            <p>The session is a workspace for your database operations:</p>
+            <ul>
+                <li>Changes to objects in the session are not reflected in the database until you call <code>db.session.commit()</code></li>
+                <li>If there's an error, you can call <code>db.session.rollback()</code> to discard changes</li>
+                <li>Flask-SQLAlchemy automatically creates a session for each request and removes it at the end</li>
+            </ul>
+            
+            <pre><code>
+try:
+    user = User(username='john', email='john@example.com')
+    db.session.add(user)
+    db.session.commit()
+except Exception as e:
+    db.session.rollback()
+    print(f"Error: {e}")
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Querying Relationships</h2>
+            
+            <p>SQLAlchemy makes it easy to work with related objects through relationships.</p>
+            
+            <h3>Accessing Related Objects</h3>
+            <p>You can access related objects through the relationship attribute:</p>
+            
+            <pre><code>
+# Get all posts by a user
+user = User.query.get(1)
+posts = user.posts.all()  # Using lazy='dynamic'
+
+# Get a user's first post
+first_post = user.posts.first()
+
+# Get the author of a post
+post = Post.query.get(1)
+author = post.author
+            </code></pre>
+            
+            <h3>Querying Based on Related Objects</h3>
+            <p>You can also use relationships in queries:</p>
+            
+            <pre><code>
+# Get all posts by users with gmail addresses
+posts = Post.query.join(Post.author).filter(User.email.endswith('@gmail.com')).all()
+
+# Get all users who have written a post with "Flask" in the title
+users = User.query.join(User.posts).filter(Post.title.contains('Flask')).all()
+
+# Get all users who have at least one post
+users = User.query.join(User.posts).group_by(User.id).all()
+            </code></pre>
+            
+            <h3>Eager Loading</h3>
+            <p>By default, SQLAlchemy loads related objects only when you access them (lazy loading). This can lead to the "N+1 query problem" where accessing related objects for each result in a collection results in many database queries.</p>
+            
+            <p>You can use eager loading to load related objects in a single query:</p>
+            
+            <pre><code>
+# Load users with their posts in a single query
+users = User.query.options(db.joinedload(User.posts)).all()
+
+# Load posts with their authors in a single query
+posts = Post.query.options(db.joinedload(Post.author)).all()
+            </code></pre>
+            
+            <h3>Working with Many-to-Many Relationships</h3>
+            <p>For many-to-many relationships, you can access related objects in the same way:</p>
+            
+            <pre><code>
+# Add a tag to a post
+tag = Tag.query.filter_by(name='Flask').first()
+post = Post.query.get(1)
+post.tags.append(tag)
+db.session.commit()
+
+# Remove a tag from a post
+post.tags.remove(tag)
+db.session.commit()
+
+# Get all posts with a specific tag
+posts = Tag.query.filter_by(name='Flask').first().posts.all()
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Applying SQLAlchemy to Our Blog Application</h2>
+            
+            <p>Now let's apply what we've learned to our blog application by implementing its database models.</p>
+            
+            <h3>User Model</h3>
+            <p>First, let's create a comprehensive User model:</p>
+            
+            <pre><code>
+# app/models/user.py
+from app import db
+from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
+
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(128))
+    name = db.Column(db.String(64))
+    bio = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    is_admin = db.Column(db.Boolean, default=False)
+    
+    # Relationships
+    posts = db.relationship('Post', backref='author', lazy='dynamic', cascade='all, delete-orphan')
+    comments = db.relationship('Comment', backref='author', lazy='dynamic', cascade='all, delete-orphan')
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+    def __repr__(self):
+        return f'&lt;User {self.username}&gt;'
+            </code></pre>
+            
+            <h3>Post Model</h3>
+            <p>Next, let's create a Post model for blog posts:</p>
+            
+            <pre><code>
+# app/models/post.py
+from app import db
+from datetime import datetime
+from slugify import slugify
+
+post_tags = db.Table('post_tags',
+    db.Column('post_id', db.Integer, db.ForeignKey('post.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
+
+class Post(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    slug = db.Column(db.String(120), unique=True, nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    summary = db.Column(db.String(200))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    published = db.Column(db.Boolean, default=True)
+    
+    # Foreign keys
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Relationships
+    comments = db.relationship('Comment', backref='post', lazy='dynamic', cascade='all, delete-orphan')
+    tags = db.relationship('Tag', secondary=post_tags, backref=db.backref('posts', lazy='dynamic'))
+    
+    def __init__(self, *args, **kwargs):
+        if 'slug' not in kwargs:
+            kwargs['slug'] = slugify(kwargs.get('title', ''))
+        super().__init__(*args, **kwargs)
+    
+    def __repr__(self):
+        return f'&lt;Post {self.title}&gt;'
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Foreign keys
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
+    
+    def __repr__(self):
+        return f'&lt;Comment {self.id}&gt;'
+
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    slug = db.Column(db.String(70), unique=True, nullable=False)
+    
+    def __init__(self, *args, **kwargs):
+        if 'slug' not in kwargs:
+            kwargs['slug'] = slugify(kwargs.get('name', ''))
+        super().__init__(*args, **kwargs)
+    
+    def __repr__(self):
+        return f'&lt;Tag {self.name}&gt;'
+            </code></pre>

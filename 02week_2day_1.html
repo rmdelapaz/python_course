@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Basics and Routing</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Flask Basics and Routing</h1>
+        <p class="subtitle">Week 2 - Tuesday: Full Stack Web Development with Python</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Introduction to Flask</h2>
+            <p>Welcome to our second day of Week 2! Yesterday, we refreshed our Python knowledge and set up our development environment. Today, we'll dive into Flask, the web framework that will power our application.</p>
+            
+            <p>Flask is a lightweight, flexible "micro" web framework for Python. Created by Armin Ronacher in 2010, it has become one of the most popular web frameworks in the Python ecosystem due to its simplicity and flexibility.</p>
+            
+            <h3>What is a Web Framework?</h3>
+            <p>A web framework is a collection of libraries and tools that simplify common web development tasks, such as:</p>
+            <ul>
+                <li>Routing: Directing HTTP requests to the appropriate code</li>
+                <li>Request handling: Parsing HTTP requests and forming responses</li>
+                <li>Template rendering: Generating HTML dynamically</li>
+                <li>Authentication: Managing user login, sessions, and permissions</li>
+                <li>Database interactions: Storing and retrieving data</li>
+                <li>Form handling: Processing user input</li>
+            </ul>
+            
+            <p>Flask provides the core functionality (routing, request handling) and can be extended with a wide range of extensions for additional features.</p>
+            
+            <h3>Flask vs. Other Python Frameworks</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Framework</th>
+                        <th>Philosophy</th>
+                        <th>Best for</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Flask</td>
+                        <td>Minimalist, explicit, flexible</td>
+                        <td>Small to medium projects, APIs, learning web development</td>
+                    </tr>
+                    <tr>
+                        <td>Django</td>
+                        <td>"Batteries included", opinionated</td>
+                        <td>Large projects, rapid development, complex data models</td>
+                    </tr>
+                    <tr>
+                        <td>FastAPI</td>
+                        <td>Modern, async-first, API-focused</td>
+                        <td>High-performance APIs, microservices</td>
+                    </tr>
+                    <tr>
+                        <td>Pyramid</td>
+                        <td>Flexible, start simple and grow</td>
+                        <td>Applications that might grow in complexity over time</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p>We're using Flask because it provides a good balance between simplicity and power, making it ideal for learning web development fundamentals while still being capable of building real-world applications.</p>
+        </section>
+
+        <section>
+            <h2>Flask Core Concepts</h2>
+            
+            <h3>The Application Object</h3>
+            <p>The central component of any Flask application is the application object, an instance of the <code>Flask</code> class. This object represents your web application and provides various methods for configuring and running it.</p>
+            
+            <pre><code>
+from flask import Flask
+
+# Create an application object
+app = Flask(__name__)
+
+# Define a route
+@app.route('/')
+def hello_world():
+    return 'Hello, World!'
+
+# Run the application
+if __name__ == '__main__':
+    app.run(debug=True)
+            </code></pre>
+            
+            <p>In this example:</p>
+            <ul>
+                <li><code>Flask(__name__)</code> creates a new Flask instance, with <code>__name__</code> as the module name</li>
+                <li><code>@app.route('/')</code> is a decorator that registers the function as a route handler</li>
+                <li><code>hello_world()</code> is a view function that returns a response</li>
+                <li><code>app.run(debug=True)</code> starts the development server with debugging enabled</li>
+            </ul>
+            
+            <h3>Routes and Views</h3>
+            <p>In web frameworks, a "route" is a URL pattern that the application handles, and a "view" is a function that processes requests to that route and returns a response.</p>
+            
+            <p>Flask uses decorators to connect routes to view functions:</p>
+            
+            <pre><code>
+@app.route('/about')
+def about():
+    return 'About Page'
+
+@app.route('/contact')
+def contact():
+    return 'Contact Page'
+            </code></pre>
+            
+            <h3>Dynamic Routes</h3>
+            <p>Routes can include dynamic parts that are passed as arguments to the view function:</p>
+            
+            <pre><code>
+@app.route('/user/&lt;username&gt;')
+def show_user_profile(username):
+    return f'User: {username}'
+
+@app.route('/post/&lt;int:post_id&gt;')
+def show_post(post_id):
+    return f'Post: {post_id}'
+            </code></pre>
+            
+            <p>Flask supports these converter types:</p>
+            <ul>
+                <li><code>string</code>: (default) accepts any text without a slash</li>
+                <li><code>int</code>: accepts integers</li>
+                <li><code>float</code>: accepts floating point values</li>
+                <li><code>path</code>: like string but also accepts slashes</li>
+                <li><code>uuid</code>: accepts UUID strings</li>
+            </ul>
+            
+            <h3>HTTP Methods</h3>
+            <p>Flask routes can specify which HTTP methods they handle:</p>
+            
+            <pre><code>
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        # Handle form submission
+        return 'Form submitted'
+    else:
+        # Show login form
+        return 'Please log in'
+            </code></pre>
+            
+            <p>By default, a route only handles GET requests. To handle POST (for form submissions), PUT, DELETE, or other methods, you need to specify them explicitly.</p>
+        </section>
+
+        <section>
+            <h2>Request and Response Objects</h2>
+            
+            <p>Flask provides request and response objects to handle HTTP interactions.</p>
+            
+            <h3>The Request Object</h3>
+            <p>The <code>request</code> object contains all the information sent by the client (browser) to your application:</p>
+            
+            <pre><code>
+from flask import request
+
+@app.route('/search')
+def search():
+    query = request.args.get('q', '')
+    return f'Search results for: {query}'
+
+@app.route('/submit', methods=['POST'])
+def submit():
+    # Access form data
+    username = request.form.get('username')
+    password = request.form.get('password')
+    
+    # Process the data
+    return f'Received username: {username}'
+            </code></pre>
+            
+            <p>Common attributes and methods of the request object include:</p>
+            <ul>
+                <li><code>request.method</code>: The HTTP method (GET, POST, etc.)</li>
+                <li><code>request.args</code>: Query string parameters (from the URL)</li>
+                <li><code>request.form</code>: Form data (from POST requests)</li>
+                <li><code>request.cookies</code>: Cookie data</li>
+                <li><code>request.files</code>: Uploaded files</li>
+                <li><code>request.headers</code>: HTTP headers</li>
+                <li><code>request.json</code>: JSON data (from API requests)</li>
+            </ul>
+            
+            <h3>Responses</h3>
+            <p>Flask offers several ways to create responses:</p>
+            
+            <pre><code>
+from flask import render_template, redirect, url_for, jsonify
+
+@app.route('/')
+def index():
+    # Return a string
+    return 'Hello, World!'
+
+@app.route('/template')
+def template_example():
+    # Return a rendered template
+    return render_template('index.html', title='Home')
+
+@app.route('/redirect')
+def redirect_example():
+    # Redirect to another route
+    return redirect(url_for('index'))
+
+@app.route('/api/data')
+def api_data():
+    # Return JSON
+    data = {'name': 'Alice', 'age': 30}
+    return jsonify(data)
+            </code></pre>
+            
+            <p>You can also set response codes and headers:</p>
+            
+            <pre><code>
+@app.route('/not-found')
+def not_found():
+    # Return a 404 response
+    return 'Page not found', 404
+
+@app.route('/download')
+def download():
+    # Return a response with custom headers
+    response = make_response('File content')
+    response.headers['Content-Disposition'] = 'attachment; filename=report.txt'
+    return response
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Templates and Jinja2</h2>
+            
+            <p>While you can return strings directly from view functions, real web applications need HTML pages. Flask uses Jinja2, a template engine, to generate HTML dynamically.</p>
+            
+            <h3>Template Basics</h3>
+            <p>Templates are files that contain static content (HTML) with placeholders for dynamic content. The <code>render_template()</code> function replaces these placeholders with actual values.</p>
+            
+            <pre><code>
+from flask import render_template
+
+@app.route('/hello/&lt;name&gt;')
+def hello(name):
+    return render_template('hello.html', name=name)
+            </code></pre>
+            
+            <p>The template file (hello.html) might look like this:</p>
+            
+            <pre><code>
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Hello Page&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Hello, {{ name }}!&lt;/h1&gt;
+    &lt;p&gt;Welcome to our website.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </code></pre>
+            
+            <p>In this example, <code>{{ name }}</code> is a placeholder that Jinja2 replaces with the value of the <code>name</code> variable passed to <code>render_template()</code>.</p>
+            
+            <h3>Template Syntax</h3>
+            <p>Jinja2 supports various control structures and expressions:</p>
+            
+            <h4>Variables</h4>
+            <pre><code>
+{{ variable }}
+{{ user.name }}
+{{ user['name'] }}
+{{ get_user_name() }}
+            </code></pre>
+            
+            <h4>Conditionals</h4>
+            <pre><code>
+{% if user %}
+    Hello, {{ user.name }}!
+{% else %}
+    Hello, stranger!
+{% endif %}
+            </code></pre>
+            
+            <h4>Loops</h4>
+            <pre><code>
+&lt;ul&gt;
+{% for item in items %}
+    &lt;li&gt;{{ item }}&lt;/li&gt;
+{% endfor %}
+&lt;/ul&gt;
+            </code></pre>
+            
+            <h4>Template Inheritance</h4>
+            <p>Jinja2 supports template inheritance, allowing you to create a base template with common elements and extend it in child templates:</p>
+            
+            <p>Base template (base.html):</p>
+            <pre><code>
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;{% block title %}Default Title{% endblock %}&lt;/title&gt;
+    &lt;link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;header&gt;
+        &lt;h1&gt;My Website&lt;/h1&gt;
+        &lt;nav&gt;
+            &lt;ul&gt;
+                &lt;li&gt;&lt;a href="{{ url_for('index') }}"&gt;Home&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href="{{ url_for('about') }}"&gt;About&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href="{{ url_for('contact') }}"&gt;Contact&lt;/a&gt;&lt;/li&gt;
+            &lt;/ul&gt;
+        &lt;/nav&gt;
+    &lt;/header&gt;
+    
+    &lt;main&gt;
+        {% block content %}{% endblock %}
+    &lt;/main&gt;
+    
+    &lt;footer&gt;
+        &lt;p&gt;&copy; 2025 My Website&lt;/p&gt;
+    &lt;/footer&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </code></pre>
+            
+            <p>Child template (about.html):</p>
+            <pre><code>
+{% extends 'base.html' %}
+
+{% block title %}About Us{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;About Us&lt;/h2&gt;
+    &lt;p&gt;We are a company dedicated to...&lt;/p&gt;
+{% endblock %}
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Static Files</h2>
+            
+            <p>Web applications typically include static files like CSS stylesheets, JavaScript files, and images. Flask serves these from a special directory named <code>static</code>.</p>
+            
+            <h3>Serving Static Files</h3>
+            <p>To reference static files in your templates, use the <code>url_for()</code> function with the special endpoint 'static':</p>
+            
+            <pre><code>
+&lt;!-- In a template -->
+&lt;link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"&gt;
+&lt;script src="{{ url_for('static', filename='js/script.js') }}"&gt;&lt;/script&gt;
+&lt;img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo"&gt;
+            </code></pre>
+            
+            <p>The <code>url_for()</code> function generates the correct URL to the static file, taking into account your application's URL root path.</p>
+            
+            <h3>Organizing Static Files</h3>
+            <p>A common structure for the static directory is:</p>
+            
+            <pre><code>
+static/
+├── css/
+│   ├── style.css
+│   └── bootstrap.min.css
+├── js/
+│   ├── script.js
+│   └── jquery.min.js
+└── images/
+    ├── logo.png
+    └── background.jpg
+            </code></pre>
+            
+            <p>This organization keeps your static files well-organized and easy to manage.</p>
+        </section>
+
+        <section>
+            <h2>Flask Application Factory Pattern</h2>
+            
+            <p>In our project setup last week, we used the "application factory" pattern, which is a recommended approach for structuring Flask applications. Let's explore this pattern in more detail.</p>
+            
+            <h3>What is the Application Factory Pattern?</h3>
+            <p>The application factory pattern involves creating a function that creates and configures the Flask application object, rather than creating it globally. This approach has several advantages:</p>
+            <ul>
+                <li>It allows for different configurations based on the environment (development, testing, production)</li>
+                <li>It enables better testing since you can create multiple instances of the application with different settings</li>
+                <li>It organizes your application initialization code in one place</li>
+            </ul>
+            
+            <h3>Implementing the Application Factory</h3>
+            <p>Here's a simplified version of the application factory we created in our project:</p>
+            
+            <pre><code>
+# app/__init__.py
+import os
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
+# Initialize extensions
+db = SQLAlchemy()
+
+def create_app(test_config=None):
+    """Application factory function."""
+    # Create and configure the app
+    app = Flask(__name__, instance_relative_config=True)
+    
+    # Set default configuration
+    app.config.from_mapping(
+        SECRET_KEY='dev',
+        SQLALCHEMY_DATABASE_URI=os.environ.get('DATABASE_URL', 'sqlite:///blog.db'),
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    )
+    
+    if test_config is None:
+        # Load the instance config, if it exists, when not testing
+        app.config.from_pyfile('config.py', silent=True)
+    else:
+        # Load the test config if passed in
+        app.config.from_mapping(test_config)
+    
+    # Ensure the instance folder exists
+    try:
+        os.makedirs(app.instance_path)
+    except OSError:
+        pass
+    
+    # Initialize extensions with app
+    db.init_app(app)
+    
+    # Register blueprints
+    from app.views import main, auth
+    app.register_blueprint(main.bp)
+    app.register_blueprint(auth.bp)
+    
+    return app
+            </code></pre>
+            
+            <p>To use this factory, you typically create a separate module that imports and calls it:</p>
+            
+            <pre><code>
+# run.py or wsgi.py
+from app import create_app
+
+app = create_app()
+
+if __name__ == '__main__':
+    app.run(debug=True)
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Blueprints</h2>
+            
+            <p>Blueprints are a way to organize your Flask application by grouping related routes and other code. They're particularly useful for larger applications with many routes.</p>
+            
+            <h3>What are Blueprints?</h3>
+            <p>A blueprint is a collection of routes, templates, static files, and other components that can be registered on an application. It's like a mini-application within your main application.</p>
+            
+            <h3>Creating and Using Blueprints</h3>
+            <p>Here's how to create and use a blueprint:</p>
+            
+            <pre><code>
+# app/views/main.py
+from flask import Blueprint, render_template
+
+# Create a blueprint
+bp = Blueprint('main', __name__)
+
+# Define routes for this blueprint
+@bp.route('/')
+def index():
+    return render_template('index.html')
+
+@bp.route('/about')
+def about():
+    return render_template('about.html')
+            </code></pre>
+            
+            <p>Then, register the blueprint in your application factory:</p>
+            
+            <pre><code>
+# app/__init__.py (in create_app function)
+from app.views import main
+app.register_blueprint(main.bp)
+            </code></pre>
+            
+            <h3>Blueprint URL Prefixes</h3>
+            <p>You can add a URL prefix when registering a blueprint, which will be prepended to all routes in that blueprint:</p>
+            
+            <pre><code>
+# Creating a blueprint with a URL prefix
+bp = Blueprint('auth', __name__, url_prefix='/auth')
+
+# A route defined as '/login' will be accessible at '/auth/login'
+@bp.route('/login')
+def login():
+    return render_template('auth/login.html')
+            </code></pre>
+            
+            <p>Registering this blueprint:</p>
+            
+            <pre><code>
+# app/__init__.py (in create_app function)
+from app.views import auth
+app.register_blueprint(auth.bp)
+            </code></pre>
+            
+            <h3>Blueprint Templates and Static Files</h3>
+            <p>Blueprints can have their own templates and static files in separate directories:</p>
+            
+            <pre><code>
+# Creating a blueprint with template and static directories
+bp = Blueprint('admin', __name__,
+               template_folder='templates',
+               static_folder='static',
+               url_prefix='/admin')
+            </code></pre>
+            
+            <p>With this structure, you can organize your templates and static files by blueprint:</p>
+            
+            <pre><code>
+app/
+├── views/
+│   ├── admin/
+│   │   ├── templates/
+│   │   │   └── admin/
+│   │   │       ├── dashboard.html
+│   │   │       └── users.html
+│   │   └── static/
+│   │       └── css/
+│   │           └── admin.css
+│   ├── main.py
+│   └── admin.py
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Error Handling</h2>
+            
+            <p>Proper error handling is crucial for a good user experience. Flask provides several ways to handle errors gracefully.</p>
+            
+            <h3>Error Handlers</h3>
+            <p>You can register functions to handle specific HTTP error codes:</p>
+            
+            <pre><code>
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('500.html'), 500
+            </code></pre>
+            
+            <p>In a blueprint, you can register error handlers that will only apply to routes within that blueprint:</p>
+            
+            <pre><code>
+@bp.errorhandler(404)
+def blueprint_page_not_found(e):
+    return render_template('my_blueprint/404.html'), 404
+            </code></pre>
+            
+            <h3>Application-Level Error Handling</h3>
+            <p>For application-wide error handling, you can register error handlers in your application factory:</p>
+            
+            <pre><code>
+def create_app():
+    app = Flask(__name__)
+    
+    # ... other setup code ...
+    
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template('404.html'), 404
+    
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        return render_template('500.html'), 500
+    
+    return app
+            </code></pre>
+            
+            <h3>Custom Error Pages</h3>
+            <p>Create custom error pages in your templates directory:</p>
+            
+            <pre><code>
+&lt;!-- templates/404.html -->
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found{% endblock %}
+
+{% block content %}
+    &lt;h1&gt;Page Not Found&lt;/h1&gt;
+    &lt;p&gt;The page you requested does not exist.&lt;/p&gt;
+    &lt;p&gt;&lt;a href="{{ url_for('main.index') }}"&gt;Return to homepage&lt;/a&gt;&lt;/p&gt;
+{% endblock %}
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>URL Generation</h2>
+            
+            <p>Flask provides the <code>url_for()</code> function to generate URLs to your routes. This is preferable to hardcoding URLs because:</p>
+            <ul>
+                <li>It's more maintainable: if you change your URL structure, you only need to update your route definitions</li>
+                <li>It handles URL building correctly, including escaping special characters</li>
+                <li>It accounts for your application being mounted in a subdirectory</li>
+            </ul>
+            
+            <h3>Basic URL Generation</h3>
+            <pre><code>
+from flask import url_for
+
+@app.route('/')
+def index():
+    # Generate URL to the 'about' route
+    about_url = url_for('about')
+    return f'&lt;a href="{about_url}"&gt;About&lt;/a&gt;'
+
+@app.route('/about')
+def about():
+    return 'About Page'
+            </code></pre>
+            
+            <h3>URLs with Parameters</h3>
+            <pre><code>
+@app.route('/user/&lt;username&gt;')
+def user_profile(username):
+    return f'Profile for {username}'
+
+@app.route('/')
+def index():
+    # Generate URL to a user profile
+    profile_url = url_for('user_profile', username='alice')
+    return f'&lt;a href="{profile_url}"&gt;Alice\'s Profile&lt;/a&gt;'
+            </code></pre>
+            
+            <h3>URLs in Templates</h3>
+            <p>The <code>url_for()</code> function is available in templates without importing it:</p>
+            
+            <pre><code>
+&lt;!-- In a template -->
+&lt;nav&gt;
+    &lt;ul&gt;
+        &lt;li&gt;&lt;a href="{{ url_for('index') }}"&gt;Home&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="{{ url_for('about') }}"&gt;About&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="{{ url_for('user_profile', username='alice') }}"&gt;Alice's Profile&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/nav&gt;
+            </code></pre>
+            
+            <h3>URLs for Blueprints</h3>
+            <p>When generating URLs for routes in blueprints, prefix the route name with the blueprint name:</p>
+            
+            <pre><code>
+# For a route in the 'main' blueprint
+url_for('main.index')
+
+# For a route in the 'auth' blueprint
+url_for('auth.login')
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Hands-On Exercise: Building a Flask Application</h2>
+            
+            <p>Let's put our knowledge into practice by building a simple Flask application from scratch.</p>
+            
+            <h3>Project Setup</h3>
+            <ol>
+                <li>Create a new directory for your project:
+                <pre><code>mkdir flask_demo
+cd flask_demo</code></pre>
+                </li>
+                
+                <li>Create a virtual environment and activate it:
+                <pre><code>python -m venv venv
+# On Windows
+venv\Scripts\activate
+# On macOS/Linux
+source venv/bin/activate</code></pre>
+                </li>
+                
+                <li>Install Flask:
+                <pre><code>pip install flask</code></pre>
+                </li>
+                
+                <li>Create a basic directory structure:
+                <pre><code>mkdir -p app/templates app/static/css</code></pre>
+                </li>
+            </ol>
+            
+            <h3>Application Files</h3>
+            <p>Create the following files:</p>
+            
+            <h4>app/__init__.py</h4>
+            <pre><code>
+from flask import Flask
+
+def create_app():
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = 'your-secret-key'
+    
+    # Register blueprints
+    from app.routes import main_bp
+    app.register_blueprint(main_bp)
+    
+    return app
+            </code></pre>
+            
+            <h4>app/routes.py</h4>
+            <pre><code>
+from flask import Blueprint, render_template, request, redirect, url_for, flash
+
+main_bp = Blueprint('main', __name__)
+
+# Sample data (in a real app, this would come from a database)
+posts = [
+    {
+        'id': 1,
+        'title': 'First Post',
+        'content': 'This is the content of the first post.',
+        'author': 'Alice'
+    },
+    {
+        'id': 2,
+        'title': 'Second Post',
+        'content': 'This is the content of the second post.',
+        'author': 'Bob'
+    }
+]
+
+@main_bp.route('/')
+def index():
+    return render_template('index.html', posts=posts)
+
+@main_bp.route('/about')
+def about():
+    return render_template('about.html')
+
+@main_bp.route('/post/&lt;int:post_id&gt;')
+def post(post_id):
+    # Find the post with the given id
+    post = next((p for p in posts if p['id'] == post_id), None)
+    if post is None:
+        return render_template('404.html'), 404
+    return render_template('post.html', post=post)
+
+@main_bp.route('/contact', methods=['GET', 'POST'])
+def contact():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        email = request.form.get('email')
+        message = request.form.get('message')
+        
+        # In a real app, you would store this in a database or send an email
+        flash(f'Thank you {name}, your message has been sent!')
+        return redirect(url_for('main.index'))
+    
+    return render_template('contact.html')
+
+@main_bp.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+            </code></pre>
+            
+            <h4>run.py</h4>
+            <pre><code>
+from app import create_app
+
+app = create_app()
+
+if __name__ == '__main__':
+    app.run(debug=True)
+            </code></pre>
+            
+            <h3>Templates</h3>
+            <p>Create the following template files:</p>
+            
+            <h4>app/templates/base.html</h4>
+            <pre><code>
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;{% block title %}Flask Demo{% endblock %}&lt;/title&gt;
+    &lt;link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;header&gt;
+        &lt;h1&gt;Flask Demo&lt;/h1&gt;
+        &lt;nav&gt;
+            &lt;ul&gt;
+                &lt;li&gt;&lt;a href="{{ url_for('main.index') }}"&gt;Home&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href="{{ url_for('main.about') }}"&gt;About&lt;/a&gt;&lt;/li&gt;
+                &lt;li&gt;&lt;a href="{{ url_for('main.contact') }}"&gt;Contact&lt;/a&gt;&lt;/li&gt;
+            &lt;/ul&gt;
+        &lt;/nav&gt;
+    &lt;/header&gt;
+    
+    &lt;main&gt;
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                &lt;div class="flash-messages"&gt;
+                    {% for message in messages %}
+                        &lt;div class="flash-message"&gt;{{ message }}&lt;/div&gt;
+                    {% endfor %}
+                &lt;/div&gt;
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    &lt;/main&gt;
+    
+    &lt;footer&gt;
+        &lt;p&gt;&copy; 2025 Flask Demo&lt;/p&gt;
+    &lt;/footer&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </code></pre>
+            
+            <h4>app/templates/index.html</h4>
+            <pre><code>
+{% extends 'base.html' %}
+
+{% block title %}Home - Flask Demo{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Welcome to Flask Demo&lt;/h2&gt;
+    &lt;p&gt;This is a simple Flask application demonstrating routing and templates.&lt;/p&gt;
+    
+    &lt;h3&gt;Recent Posts&lt;/h3&gt;
+    {% if posts %}
+        &lt;ul class="post-list"&gt;
+            {% for post in posts %}
+                &lt;li&gt;
+                    &lt;h4&gt;&lt;a href="{{ url_for('main.post', post_id=post.id) }}"&gt;{{ post.title }}&lt;/a&gt;&lt;/h4&gt;
+                    &lt;p&gt;By {{ post.author }}&lt;/p&gt;
+                &lt;/li&gt;
+            {% endfor %}
+        &lt;/ul&gt;
+    {% else %}
+        &lt;p&gt;No posts available.&lt;/p&gt;
+    {% endif %}
+{% endblock %}
+            </code></pre>
+            
+            <h4>app/templates/about.html</h4>
+            <pre><code>
+{% extends 'base.html' %}
+
+{% block title %}About - Flask Demo{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;About Flask Demo&lt;/h2&gt;
+    &lt;p&gt;This is a demo application built as part of the Full Stack Web Development with Python course.&lt;/p&gt;
+    &lt;p&gt;Flask is a lightweight WSGI web application framework. It is designed to make getting started quick and easy, with the ability to scale up to complex applications.&lt;/p&gt;
+{% endblock %}
+            </code></pre>
+            
+            <h4>app/templates/post.html</h4>
+            <pre><code>
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }} - Flask Demo{% endblock %}
+
+{% block content %}
+    &lt;article&gt;
+        &lt;h2&gt;{{ post.title }}&lt;/h2&gt;
+        &lt;p class="post-meta"&gt;By {{ post.author }}&lt;/p&gt;
+        &lt;div class="post-content"&gt;
+            &lt;p&gt;{{ post.content }}&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/article&gt;
+    &lt;p&gt;&lt;a href="{{ url_for('main.index') }}"&gt;&larr; Back to home&lt;/a&gt;&lt;/p&gt;
+{% endblock %}
+            </code></pre>
+            
+            <h4>app/templates/contact.html</h4>
+            <pre><code>
+{% extends 'base.html' %}
+
+{% block title %}Contact - Flask Demo{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Contact Us&lt;/h2&gt;
+    &lt;form method="post"&gt;
+        &lt;div class="form-group"&gt;
+            &lt;label for="name"&gt;Name:&lt;/label&gt;
+            &lt;input type="text" id="name" name="name" required&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            &lt;label for="email"&gt;Email:&lt;/label&gt;
+            &lt;input type="email" id="email" name="email" required&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            &lt;label for="message"&gt;Message:&lt;/label&gt;
+            &lt;textarea id="message" name="message" rows="5" required&gt;&lt;/textarea&gt;
+        &lt;/div&gt;
+        
+        &lt;button type="submit"&gt;Send Message&lt;/button&gt;
+    &lt;/form&gt;
+{% endblock %}
+            </code></pre>
+            
+            <h4>app/templates/404.html</h4>
+            <pre><code>
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found - Flask Demo{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Page Not Found&lt;/h2&gt;
+    &lt;p&gt;The page you requested does not exist.&lt;/p&gt;
+    &lt;p&gt;&lt;a href="{{ url_for('main.index') }}"&gt;Return to homepage&lt;/a&gt;&lt;/p&gt;
+{% endblock %}
+            </code></pre>
+            
+            <h4>app/static/css/style.css</h4>
+            <pre><code>
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+header, footer {
+    background-color: #f4f4f4;
+    padding: 1rem;
+    text-align: center;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+nav a {
+    text-decoration: none;
+    color: #333;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.flash-messages {
+    margin-bottom: 1rem;
+}
+
+.flash-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.post-list {
+    list-style: none;
+    padding: 0;
+}
+
+.post-list li {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #ddd;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0069d9;
+}
+            </code></pre>
+            
+            <h3>Running the Application</h3>
+            <ol>
+                <li>Run the application:
+                <pre><code>python run.py</code></pre>
+                </li>
+                
+                <li>Open your browser and navigate to <a href="http://127.0.0.1:5000" target="_blank">http://127.0.0.1:5000</a></li>
+                <li>Explore the different routes and features of the application</li>
+            </ol>
+            
+            <h3>Challenge: Extend the Application</h3>
+            <p>Try extending the application with these features:</p>
+            <ol>
+                <li>Add a new route for viewing posts by author</li>
+                <li>Implement a simple search functionality for posts</li>
+                <li>Add a form for creating new posts</li>
+                <li>Implement error handling for other HTTP error codes (400, 403, 500)</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Flask Extensions</h2>
+            
+            <p>Flask follows a minimalist philosophy, providing only the essential features for a web framework. For additional functionality, Flask relies on extensions—libraries that integrate with Flask to provide specific features.</p>
+            
+            <h3>Popular Flask Extensions</h3>
+            <ul>
+                <li><strong>Flask-SQLAlchemy</strong>: Adds SQLAlchemy support to Flask, providing an ORM for database interactions</li>
+                <li><strong>Flask-Migrate</strong>: Handles database migrations using Alembic</li>
+                <li><strong>Flask-Login</strong>: Manages user authentication and session management</li>
+                <li><strong>Flask-WTF</strong>: Integrates WTForms for form validation and CSRF protection</li>
+                <li><strong>Flask-RESTful</strong>: Simplifies building REST APIs</li>
+                <li><strong>Flask-Admin</strong>: Adds an admin interface for managing database models</li>
+                <li><strong>Flask-Mail</strong>: Provides email sending capabilities</li>
+                <li><strong>Flask-Caching</strong>: Adds caching support to speed up your application</li>
+            </ul>
+            
+            <h3>Using Extensions</h3>
+            <p>Most Flask extensions follow a similar pattern:</p>
+            
+            <pre><code>
+# Install the extension
+# pip install flask-sqlalchemy
+
+# Import the extension
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
+# Create the Flask application
+app = Flask(__name__)
+
+# Configure the extension
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize the extension with the app
+db = SQLAlchemy(app)
+
+# Use the extension
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+            </code></pre>
+            
+            <p>When using the application factory pattern, you typically initialize extensions in two steps:</p>
+            
+            <pre><code>
+# Creating the extension object
+db = SQLAlchemy()
+
+# Later, initializing it with the app
+def create_app():
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+    
+    db.init_app(app)
+    
+    # ... rest of the application setup ...
+    
+    return app
+            </code></pre>
+            
+            <p>This approach allows for better testability and flexibility in your application.</p>
+        </section>
+
+        <section>
+            <h2>Flask in Production</h2>
+            
+            <p>Flask's built-in development server is not suitable for production. For production deployments, you'll need a proper WSGI server and possibly other components.</p>
+            
+            <h3>WSGI Servers</h3>
+            <p>Popular WSGI servers for Flask applications include:</p>
+            <ul>
+                <li><strong>Gunicorn</strong>: A pre-fork worker model WSGI server</li>
+                <li><strong>uWSGI</strong>: A fast, self-healing, and configurable WSGI server</li>
+                <li><strong>Waitress</strong>: A pure Python WSGI server with no dependencies</li>
+            </ul>
+            
+            <h3>Reverse Proxies</h3>
+            <p>In production, it's common to put a reverse proxy (like Nginx or Apache) in front of your WSGI server to handle tasks like:</p>
+            <ul>
+                <li>SSL/TLS termination</li>
+                <li>Load balancing</li>
+                <li>Static file serving</li>
+                <li>Request buffering</li>
+                <li>Compression</li>
+            </ul>
+            
+            <h3>Production Configuration</h3>
+            <p>For production, you'll want to adjust your Flask configuration:</p>
+            
+            <pre><code>
+def create_app():
+    app = Flask(__name__)
+    
+    # Load configuration based on environment
+    if app.config['ENV'] == 'production':
+        app.config.from_object('config.ProductionConfig')
+    else:
+        app.config.from_object('config.DevelopmentConfig')
+    
+    # ... rest of the setup ...
+    
+    return app
+            </code></pre>
+            
+            <p>Common production settings include:</p>
+            <ul>
+                <li>Setting <code>DEBUG</code> to <code>False</code></li>
+                <li>Using a strong, random <code>SECRET_KEY</code></li>
+                <li>Configuring proper logging</li>
+                <li>Setting appropriate cache headers</li>
+                <li>Enabling HTTPS-only cookies</li>
+            </ul>
+            
+            <h3>Deployment Options</h3>
+            <p>There are several ways to deploy Flask applications:</p>
+            <ul>
+                <li><strong>Docker</strong>: Containerize your application for consistent deployments</li>
+                <li><strong>Platform as a Service (PaaS)</strong>: Services like Heroku, Google App Engine, or PythonAnywhere</li>
+                <li><strong>Virtual Private Server (VPS)</strong>: Manually set up your application on a VPS</li>
+                <li><strong>Serverless</strong>: Deploy as serverless functions using services like AWS Lambda</li>
+            </ul>
+            
+            <p>In our course, we'll focus on Docker-based deployments, as we've already set up our application with Docker.</p>
+        </section>
+
+        <section>
+            <h2>Flask Best Practices</h2>
+            
+            <p>As you develop Flask applications, following these best practices will help you create maintainable, secure, and performant applications:</p>
+            
+            <h3>Project Structure</h3>
+            <ul>
+                <li>Use the application factory pattern for better testability</li>
+                <li>Organize routes with blueprints to improve maintainability</li>
+                <li>Use package-based structure for larger applications</li>
+                <li>Keep configuration in a separate module</li>
+            </ul>
+            
+            <h3>Security</h3>
+            <ul>
+                <li>Use a strong, random <code>SECRET_KEY</code></li>
+                <li>Protect against CSRF attacks using Flask-WTF</li>
+                <li>Sanitize user input to prevent XSS attacks</li>
+                <li>Use Flask-Login for secure session management</li>
+                <li>Store passwords securely using proper hashing (e.g., with Werkzeug's <code>generate_password_hash</code>)</li>
+                <li>Use HTTPS in production</li>
+            </ul>
+            
+            <h3>Performance</h3>
+            <ul>
+                <li>Use caching where appropriate (Flask-Caching)</li>
+                <li>Optimize database queries (eager loading, indexing)</li>
+                <li>Serve static files through a CDN or reverse proxy</li>
+                <li>Use pagination for large data sets</li>
+                <li>Consider async features for I/O-bound operations</li>
+            </ul>
+            
+            <h3>Testing</h3>
+            <ul>
+                <li>Write tests for your routes and models</li>
+                <li>Use pytest for efficient testing</li>
+                <li>Set up a CI/CD pipeline for automated testing</li>
+                <li>Use test fixtures to set up test data</li>
+            </ul>
+            
+            <h3>Documentation</h3>
+            <ul>
+                <li>Add docstrings to your functions and classes</li>
+                <li>Document your API endpoints</li>
+                <li>Maintain a README.md with setup instructions</li>
+                <li>Comment complex code sections</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Next Steps</h2>
+            
+            <p>Today, we've covered the fundamentals of Flask, including routing, templates, static files, and application structure. These concepts form the foundation of Flask web development.</p>
+            
+            <p>Tomorrow, we'll build on this foundation by exploring database integration with SQLAlchemy, which will allow us to store and retrieve data for our blog application.</p>
+            
+            <h3>Tomorrow: Database Integration with SQLAlchemy</h3>
+            <ul>
+                <li>Introduction to SQLAlchemy and ORM concepts</li>
+                <li>Defining database models</li>
+                <li>Creating and migrating the database</li>
+                <li>Performing CRUD operations</li>
+                <li>Relationships between models</li>
+                <li>Querying and filtering data</li>
+            </ul>
+            
+            <h3>Preparation</h3>
+            <p>To prepare for tomorrow's session:</p>
+            <ol>
+                <li>Review the Flask application we created today</li>
+                <li>Explore the Flask-SQLAlchemy documentation at <a href="https://flask-sqlalchemy.palletsprojects.com/" target="_blank">https://flask-sqlalchemy.palletsprojects.com/</a></li>
+                <li>Make sure your development environment is set up and working</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Today's Assignment: Flask Routing</h2>
+            
+            <p>To reinforce what we've learned today, complete the following exercises:</p>
+            
+            <h3>Exercise 1: Flask Basics</h3>
+            <ol>
+                <li>Create a new Flask application with at least 5 routes, including:</li>
+                <ul>
+                    <li>A home page</li>
+                    <li>An about page</li>
+                    <li>A route with a dynamic parameter (e.g., <code>/user/&lt;username&gt;</code>)</li>
+                    <li>A route that handles both GET and POST methods</li>
+                    <li>A route that redirects to another route</li>
+                </ul>
+                <li>Use templates for each page with a common base template</li>
+                <li>Include at least one static CSS file for styling</li>
+            </ol>
+            
+            <h3>Exercise 2: Blueprint Organization</h3>
+            <ol>
+                <li>Refactor your application to use blueprints:</li>
+                <ul>
+                    <li>Create a "main" blueprint for general pages</li>
+                    <li>Create a "user" blueprint for user-related routes</li>
+                    <li>Add a URL prefix to the "user" blueprint</li>
+                </ul>
+                <li>Update your templates to use the correct <code>url_for()</code> calls with blueprint prefixes</li>
+            </ol>
+            
+            <h3>Exercise 3: Error Handling</h3>
+            <ol>
+                <li>Implement custom error pages for:</li>
+                <ul>
+                    <li>404 (Not Found)</li>
+                    <li>500 (Internal Server Error)</li>
+                </ul>
+                <li>Add a route that deliberately raises an exception to test your 500 error handler</li>
+                <li>Make sure your error pages maintain the same look and feel as your main site</li>
+            </ol>
+            
+            <h3>Bonus Challenge: Flash Messages and Forms</h3>
+            <ol>
+                <li>Create a contact form with fields for name, email, and message</li>
+                <li>Validate the form data (all fields required, email should be a valid format)</li>
+                <li>Use flash messages to confirm form submission</li>
+                <li>Redirect after form submission to avoid the "form resubmission" problem</li>
+            </ol>
+            
+            <p>Submit your code as a GitHub repository before tomorrow's session.</p>
+        </section>
+
+        <section>
+            <h2>Additional Resources</h2>
+            
+            <h3>Flask Documentation</h3>
+            <ul>
+                <li><a href="https://flask.palletsprojects.com/" target="_blank">Flask Documentation</a></li>
+                <li><a href="https://jinja.palletsprojects.com/" target="_blank">Jinja2 Documentation</a></li>
+                <li><a href="https://werkzeug.palletsprojects.com/" target="_blank">Werkzeug Documentation</a></li>
+                <li><a href="https://click.palletsprojects.com/" target="_blank">Click Documentation</a> (Used by Flask CLI)</li>
+            </ul>
+            
+            <h3>Tutorials and Books</h3>
+            <ul>
+                <li><a href="https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world" target="_blank">The Flask Mega-Tutorial</a> by Miguel Grinberg</li>
+                <li><a href="https://hackersandslackers.com/series/build-flask-apps/" target="_blank">Building Flask Apps</a> by Hackers and Slackers</li>
+                <li>"Flask Web Development" by Miguel Grinberg</li>
+                <li>"Mastering Flask" by Jack Stouffer</li>
+            </ul>
+            
+            <h3>Videos</h3>
+            <ul>
+                <li><a href="https://www.youtube.com/playlist?list=PLLjmbh6XPGK4ISY747FUHXEl9lBxre4mM" target="_blank">Flask Tutorial</a> by Corey Schafer</li>
+                <li><a href="https://www.youtube.com/playlist?list=PLQVvvaa0QuDc_owjTbIY4rbgXOFkUYOUB" target="_blank">Flask Web Development Tutorials</a> by sentdex</li>
+            </ul>
+            
+            <h3>Tools and Extensions</h3>
+            <ul>
+                <li><a href="https://github.com/pallets/flask" target="_blank">Flask on GitHub</a></li>
+                <li><a href="https://pythonhosted.org/Flask-Extension-Registry/" target="_blank">Flask Extension Registry</a></li>
+                <li><a href="https://pypi.org/search/?q=flask" target="_blank">Flask packages on PyPI</a></li>
+            </ul>
+        </section>
+        
+        <section>
+            <h2>Conclusion</h2>
+            
+            <p>Today, we've explored the fundamentals of Flask, learning how to create routes, handle requests, generate responses, and render templates. We've also discussed best practices for structuring Flask applications using the application factory pattern and blueprints.</p>
+            
+            <p>Flask's simplicity and flexibility make it an excellent choice for learning web development with Python. The concepts we've covered today will serve as the foundation for the rest of our course as we build a complete web application.</p>
+            
+            <p>Remember that the best way to learn Flask is by building projects. Don't hesitate to experiment with the framework, try new features, and refer to the documentation when you encounter challenges.</p>
+            
+            <p>Tomorrow, we'll explore database integration with SQLAlchemy, which will allow us to store and retrieve data for our blog application. This will bring us one step closer to building a fully functional web application.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Full Stack Python Web Development Course</p>
+    </footer>
+</body>
+</html>

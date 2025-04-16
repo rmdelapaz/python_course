@@ -1,0 +1,2004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Compose & Multi-Container Applications</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Docker Compose & Multi-Container Applications</h1>
+        <p class="subtitle">Week 1 - Thursday Morning: Full Stack Web Development with Python</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Introduction to Docker Compose</h2>
+            
+            <p>In our previous sessions, we've learned how to create and run individual Docker containers. However, most real-world applications consist of multiple interconnected services. For example, a typical web application might include:</p>
+            <ul>
+                <li>A web server (Nginx)</li>
+                <li>An application server (Flask/Django)</li>
+                <li>A database (PostgreSQL, MySQL, MongoDB)</li>
+                <li>A cache (Redis)</li>
+                <li>A message queue (RabbitMQ)</li>
+                <li>And potentially many other services</li>
+            </ul>
+            
+            <p>Managing all these containers individually would be tedious and error-prone. That's where Docker Compose comes in.</p>
+            
+            <h3>What is Docker Compose?</h3>
+            <p>Docker Compose is a tool for defining and running multi-container Docker applications. With Compose, you use a YAML file to configure your application's services, networks, and volumes. Then, with a single command, you create and start all the services from your configuration.</p>
+            
+            <p>Think of Docker Compose as an orchestra conductor. Just as a conductor coordinates many musicians to play a symphony, Docker Compose coordinates multiple containers to run as a unified application.</p>
+            
+            <h3>Key Benefits of Docker Compose</h3>
+            <ul>
+                <li><strong>Single configuration file</strong>: Define your entire application stack in one place</li>
+                <li><strong>Simple commands</strong>: Start, stop, and rebuild services with one command</li>
+                <li><strong>Environment consistency</strong>: Ensure everyone on the team uses the same setup</li>
+                <li><strong>Service isolation</strong>: Each component runs in its own container but can communicate</li>
+                <li><strong>Dependency management</strong>: Define service dependencies and startup order</li>
+                <li><strong>Volume sharing</strong>: Easily share data between containers and with the host</li>
+                <li><strong>Environment variable management</strong>: Configure services with environment variables</li>
+                <li><strong>Development to production parity</strong>: Use similar configurations across environments</li>
+            </ul>
+            
+            <h3>When to Use Docker Compose</h3>
+            <p>Docker Compose is ideal for:</p>
+            <ul>
+                <li><strong>Development environments</strong>: Set up local environments that match production</li>
+                <li><strong>Automated testing</strong>: Create and destroy isolated testing environments</li>
+                <li><strong>Single-host deployments</strong>: Run multi-container applications on a single server</li>
+                <li><strong>Demonstrations and tutorials</strong>: Package complex setups for easy sharing</li>
+                <li><strong>CI/CD pipelines</strong>: Test multi-container applications in continuous integration</li>
+            </ul>
+            
+            <p>For larger-scale production deployments across multiple hosts, container orchestration systems like Kubernetes or Docker Swarm are typically used instead of or in addition to Docker Compose.</p>
+        </section>
+
+        <section>
+            <h2>Installing and Setting Up Docker Compose</h2>
+            
+            <p>Docker Compose is included with Docker Desktop for Windows and macOS. If you installed Docker Desktop as instructed earlier, you already have Docker Compose.</p>
+            
+            <p>For Linux users, Docker Compose might need to be installed separately:</p>
+            
+            <pre><code># Install Docker Compose on Linux
+sudo curl -L "https://github.com/docker/compose/releases/download/v2.18.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Verify installation
+docker-compose --version</code></pre>
+            
+            <p>Starting with Docker Compose V2, the command is also available as <code>docker compose</code> (without the hyphen). Both forms work the same way, but the new form is recommended for future compatibility.</p>
+            
+            <h3>Docker Compose File Versions</h3>
+            <p>Docker Compose has several file format versions, each supporting different features:</p>
+            <ul>
+                <li><strong>Version 1</strong>: Legacy format, not recommended for new projects</li>
+                <li><strong>Version 2</strong>: Added named volumes, network concepts, and improved dependency handling</li>
+                <li><strong>Version 3</strong>: Added support for Docker Swarm, deploy configuration, and better extensibility</li>
+                <li><strong>Version 3+</strong>: Various incremental improvements and additional features</li>
+            </ul>
+            
+            <p>For most use cases, version 3.x is recommended as it provides a good balance of features and compatibility. In this course, we'll use version 3.</p>
+        </section>
+
+        <section>
+            <h2>Docker Compose YAML Configuration</h2>
+            
+            <p>The core of Docker Compose is the <code>docker-compose.yml</code> file, which defines your application's services, networks, volumes, and other configuration. Let's explore the structure of this file:</p>
+            
+            <h3>Basic Structure</h3>
+            <p>Here's a minimal <code>docker-compose.yml</code> file:</p>
+            
+            <pre><code>version: '3'
+
+services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+  
+  app:
+    build: .
+    volumes:
+      - .:/app</code></pre>
+            
+            <p>This simple configuration defines two services: a web server using the nginx:alpine image and an application built from the current directory.</p>
+            
+            <h3>Key Components</h3>
+            
+            <h4>version</h4>
+            <p>The <code>version</code> key specifies which Compose file format version you're using. This affects which features are available:</p>
+            <pre><code>version: '3'  # Use Compose file format version 3</code></pre>
+            
+            <h4>services</h4>
+            <p>The <code>services</code> section defines the containers that make up your application. Each service is a separate container that can be configured with various options:</p>
+            
+            <pre><code>services:
+  web:  # Service name (used for DNS resolution between containers)
+    image: nginx:alpine  # Docker image to use
+    build: ./web  # Alternative to 'image': build from a Dockerfile
+    ports:
+      - "8080:80"  # Port mapping (host:container)
+    volumes:
+      - ./html:/usr/share/nginx/html  # Volume mounting
+    environment:
+      - NGINX_HOST=example.com  # Environment variables
+    depends_on:
+      - app  # Service dependencies</code></pre>
+            
+            <h4>volumes</h4>
+            <p>The <code>volumes</code> section defines named volumes that can be mounted into containers:</p>
+            
+            <pre><code>volumes:
+  db_data:  # Named volume that can be referenced by services
+    driver: local  # Optional volume driver configuration</code></pre>
+            
+            <h4>networks</h4>
+            <p>The <code>networks</code> section defines custom networks for your containers:</p>
+            
+            <pre><code>networks:
+  frontend:  # Network name
+    driver: bridge  # Network driver (bridge, overlay, etc.)
+  backend:
+    driver: bridge</code></pre>
+            
+            <h3>Service Configuration Options</h3>
+            <p>Services have many configuration options. Here are some of the most common:</p>
+            
+            <h4>image</h4>
+            <p>Specifies the Docker image to use for the service:</p>
+            <pre><code>image: python:3.10-slim</code></pre>
+            
+            <h4>build</h4>
+            <p>Specifies how to build the image for the service:</p>
+            <pre><code># Simple form: build from current directory
+build: .
+
+# Expanded form: more build options
+build:
+  context: ./app  # Build context directory
+  dockerfile: Dockerfile.dev  # Custom Dockerfile name
+  args:  # Build arguments
+    APP_ENV: development</code></pre>
+            
+            <h4>ports</h4>
+            <p>Maps container ports to host ports:</p>
+            <pre><code>ports:
+  - "8080:80"  # HOST:CONTAINER
+  - "443:443"</code></pre>
+            
+            <h4>volumes</h4>
+            <p>Mounts volumes to the container:</p>
+            <pre><code>volumes:
+  - ./app:/app  # Bind mount: HOST_PATH:CONTAINER_PATH
+  - db_data:/var/lib/postgresql/data  # Named volume: VOLUME_NAME:CONTAINER_PATH
+  - /tmp  # Anonymous volume: CONTAINER_PATH</code></pre>
+            
+            <h4>environment</h4>
+            <p>Sets environment variables in the container:</p>
+            <pre><code>environment:
+  - DEBUG=true
+  - DATABASE_URL=postgres://user:pass@db:5432/dbname</code></pre>
+            
+            <p>Alternatively, you can use the object syntax:</p>
+            <pre><code>environment:
+  DEBUG: 'true'
+  DATABASE_URL: postgres://user:pass@db:5432/dbname</code></pre>
+            
+            <h4>env_file</h4>
+            <p>Loads environment variables from a file:</p>
+            <pre><code>env_file:
+  - .env
+  - .env.dev</code></pre>
+            
+            <h4>depends_on</h4>
+            <p>Expresses dependency between services, controlling startup order:</p>
+            <pre><code>depends_on:
+  - db
+  - redis</code></pre>
+            
+            <p>Note: <code>depends_on</code> only affects startup order, not readiness. It ensures that services start in the correct sequence but doesn't wait for them to be "ready" (e.g., a database might start but take time to initialize).</p>
+            
+            <h4>restart</h4>
+            <p>Configures the restart policy for the container:</p>
+            <pre><code>restart: always  # Always restart the container
+restart: on-failure  # Restart only if the container exits with an error
+restart: unless-stopped  # Always restart unless manually stopped
+restart: "no"  # Never automatically restart</code></pre>
+            
+            <h4>networks</h4>
+            <p>Connects the service to specific networks:</p>
+            <pre><code>networks:
+  - frontend
+  - backend</code></pre>
+            
+            <h4>healthcheck</h4>
+            <p>Configures a health check for the container:</p>
+            <pre><code>healthcheck:
+  test: ["CMD", "curl", "-f", "http://localhost"]
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s</code></pre>
+            
+            <h4>deploy</h4>
+            <p>Configures deployment options (used with Docker Swarm):</p>
+            <pre><code>deploy:
+  replicas: 3
+  resources:
+    limits:
+      cpus: '0.5'
+      memory: 512M</code></pre>
+        </section>
+
+        <section>
+            <h2>Docker Compose Commands</h2>
+            
+            <p>Docker Compose provides a set of commands for managing your multi-container applications. Let's explore the most useful ones:</p>
+            
+            <h3>Starting and Stopping Services</h3>
+            
+            <h4>docker-compose up</h4>
+            <p>Builds, (re)creates, starts, and attaches to containers for a service:</p>
+            <pre><code># Start all services defined in docker-compose.yml
+docker-compose up
+
+# Start in detached mode (run containers in the background)
+docker-compose up -d
+
+# Start specific services only
+docker-compose up web db
+
+# Force recreation of containers
+docker-compose up --force-recreate
+
+# Build images before starting containers
+docker-compose up --build</code></pre>
+            
+            <h4>docker-compose down</h4>
+            <p>Stops and removes containers, networks, volumes, and images created by <code>up</code>:</p>
+            <pre><code># Stop and remove containers and networks
+docker-compose down
+
+# Also remove volumes
+docker-compose down -v
+
+# Also remove images
+docker-compose down --rmi all</code></pre>
+            
+            <h4>docker-compose start/stop/restart</h4>
+            <p>Control existing containers without creating or removing them:</p>
+            <pre><code># Start existing containers
+docker-compose start
+
+# Stop running containers
+docker-compose stop
+
+# Restart running containers
+docker-compose restart
+
+# Start/stop/restart specific services
+docker-compose start web
+docker-compose stop db
+docker-compose restart redis</code></pre>
+            
+            <h3>Managing Services</h3>
+            
+            <h4>docker-compose ps</h4>
+            <p>Lists containers:</p>
+            <pre><code># List all containers
+docker-compose ps
+
+# List running containers
+docker-compose ps --services</code></pre>
+            
+            <h4>docker-compose logs</h4>
+            <p>Views output from containers:</p>
+            <pre><code># View logs from all services
+docker-compose logs
+
+# Follow log output (stream logs)
+docker-compose logs -f
+
+# View logs from specific services
+docker-compose logs web db
+
+# Show last N lines of logs
+docker-compose logs --tail=100</code></pre>
+            
+            <h4>docker-compose exec</h4>
+            <p>Executes a command in a running container:</p>
+            <pre><code># Get a shell in a container
+docker-compose exec web bash
+
+# Run a Python script in a container
+docker-compose exec app python manage.py migrate
+
+# Run a one-off command
+docker-compose exec db psql -U postgres</code></pre>
+            
+            <h4>docker-compose run</h4>
+            <p>Runs a one-time command against a service, creating a new container:</p>
+            <pre><code># Run a command in a new container
+docker-compose run web npm test
+
+# Run a command with specific options
+docker-compose run --rm app python manage.py createsuperuser</code></pre>
+            
+            <p>The difference between <code>exec</code> and <code>run</code> is that <code>exec</code> runs a command in an already running container, while <code>run</code> creates a new container to run the command.</p>
+            
+            <h3>Building and Managing Images</h3>
+            
+            <h4>docker-compose build</h4>
+            <p>Builds or rebuilds services:</p>
+            <pre><code># Build all services
+docker-compose build
+
+# Build specific services
+docker-compose build web api
+
+# Build without using cache
+docker-compose build --no-cache
+
+# Pull the latest base images before building
+docker-compose build --pull</code></pre>
+            
+            <h4>docker-compose pull</h4>
+            <p>Pulls service images:</p>
+            <pre><code># Pull all images
+docker-compose pull
+
+# Pull specific services
+docker-compose pull web db</code></pre>
+            
+            <h3>Utility Commands</h3>
+            
+            <h4>docker-compose config</h4>
+            <p>Validates and displays the Compose configuration:</p>
+            <pre><code># Validate configuration
+docker-compose config
+
+# Display resolved configuration
+docker-compose config --resolve-image-digests</code></pre>
+            
+            <h4>docker-compose top</h4>
+            <p>Displays the running processes:</p>
+            <pre><code>docker-compose top</code></pre>
+        </section>
+
+        <section>
+            <h2>Creating a Multi-Container Application</h2>
+            
+            <p>Let's build a practical example of a multi-container application using Docker Compose. We'll create a simple web application with a Flask backend, a PostgreSQL database, and an Nginx reverse proxy.</p>
+            
+            <h3>Project Structure</h3>
+            <p>Here's how our project will be organized:</p>
+            
+            <pre><code>compose-demo/
+├── docker-compose.yml
+├── app/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── app.py
+│   └── templates/
+│       └── index.html
+├── nginx/
+│   ├── Dockerfile
+│   └── nginx.conf
+└── .env</code></pre>
+            
+            <h3>Step 1: Create the Project Directory Structure</h3>
+            <pre><code>mkdir -p compose-demo/app/templates compose-demo/nginx
+cd compose-demo</code></pre>
+            
+            <h3>Step 2: Create the Flask Application</h3>
+            
+            <p>First, let's create the Flask application:</p>
+            
+            <p>app/requirements.txt:</p>
+            <pre><code>flask==2.0.1
+psycopg2-binary==2.9.1
+gunicorn==20.1.0</code></pre>
+            
+            <p>app/app.py:</p>
+            <pre><code>from flask import Flask, render_template, request, jsonify
+import os
+import time
+import psycopg2
+from psycopg2.extras import RealDictCursor
+
+app = Flask(__name__)
+
+def get_db_connection():
+    # Connect to the PostgreSQL database
+    conn = psycopg2.connect(
+        host=os.environ.get('DB_HOST', 'db'),
+        database=os.environ.get('DB_NAME', 'postgres'),
+        user=os.environ.get('DB_USER', 'postgres'),
+        password=os.environ.get('DB_PASSWORD', 'postgres')
+    )
+    conn.autocommit = True
+    return conn
+
+def init_db():
+    # Initialize the database schema if it doesn't exist
+    tries = 0
+    max_tries = 10
+    while tries < max_tries:
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Create visits table if it doesn't exist
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS visits (
+                    id SERIAL PRIMARY KEY,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    path VARCHAR(255) NOT NULL,
+                    user_agent TEXT
+                )
+            ''')
+            
+            cursor.close()
+            conn.close()
+            print("Database initialized successfully")
+            return
+        except psycopg2.OperationalError as e:
+            tries += 1
+            print(f"Database connection attempt {tries}/{max_tries} failed: {e}")
+            time.sleep(1)
+    
+    print("Failed to initialize database after multiple attempts")
+
+@app.before_first_request
+def setup():
+    init_db()
+
+@app.route('/')
+def index():
+    # Record this visit
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO visits (path, user_agent) VALUES (%s, %s)",
+            (request.path, request.user_agent.string)
+        )
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error recording visit: {e}")
+    
+    # Get visit count
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT COUNT(*) as count FROM visits")
+        visit_count = cursor.fetchone()['count']
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error getting visit count: {e}")
+        visit_count = "Unknown"
+    
+    return render_template('index.html', visit_count=visit_count)
+
+@app.route('/health')
+def health():
+    return jsonify(status="healthy")
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)</code></pre>
+            
+            <p>app/templates/index.html:</p>
+            <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Docker Compose Demo&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .stat {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Docker Compose Multi-Container Demo&lt;/h1&gt;
+    
+    &lt;div class="container"&gt;
+        &lt;p&gt;This page is served by a Flask application behind an Nginx reverse proxy, with data stored in PostgreSQL.&lt;/p&gt;
+        
+        &lt;p&gt;All three components are running as separate containers, orchestrated by Docker Compose.&lt;/p&gt;
+        
+        &lt;h2&gt;Visit Statistics&lt;/h2&gt;
+        &lt;p&gt;This page has been visited &lt;span class="stat"&gt;{{ visit_count }}&lt;/span&gt; times.&lt;/p&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            
+            <p>app/Dockerfile:</p>
+            <pre><code>FROM python:3.10-slim
+
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Expose port for the application
+EXPOSE 5000
+
+# Run gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]</code></pre>
+            
+            <h3>Step 3: Create the Nginx Configuration</h3>
+            
+            <p>nginx/nginx.conf:</p>
+            <pre><code>server {
+    listen 80;
+    server_name localhost;
+
+    location / {
+        proxy_pass http://app:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code></pre>
+            
+            <p>nginx/Dockerfile:</p>
+            <pre><code>FROM nginx:alpine
+
+# Remove default Nginx config
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy custom Nginx config
+COPY nginx.conf /etc/nginx/conf.d/</code></pre>
+            
+            <h3>Step 4: Create the Environment File</h3>
+            
+            <p>.env:</p>
+            <pre><code>DB_HOST=db
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=postgres</code></pre>
+            
+            <h3>Step 5: Create the Docker Compose File</h3>
+            
+            <p>docker-compose.yml:</p>
+            <pre><code>version: '3'
+
+services:
+  nginx:
+    build: ./nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      - app
+    networks:
+      - frontend
+
+  app:
+    build: ./app
+    volumes:
+      - ./app:/app
+    environment:
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+    depends_on:
+      - db
+    networks:
+      - frontend
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  db:
+    image: postgres:14-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    networks:
+      - backend
+
+networks:
+  frontend:
+  backend:
+
+volumes:
+  postgres_data:</code></pre>
+            
+            <h3>Step 6: Run the Application</h3>
+            
+            <pre><code># Start all services in detached mode
+docker-compose up -d
+
+# View logs
+docker-compose logs -f</code></pre>
+            
+            <p>Open your browser and navigate to <a href="http://localhost:8080">http://localhost:8080</a> to see the application running. Each time you refresh the page, the visit counter should increment.</p>
+            
+            <h3>Understanding the Multi-Container Setup</h3>
+            
+            <p>Let's break down our Docker Compose configuration:</p>
+            
+            <h4>Services</h4>
+            <ul>
+                <li><strong>nginx</strong>: Acts as a reverse proxy, forwarding requests to the Flask application</li>
+                <li><strong>app</strong>: The Flask application that handles requests and communicates with the database</li>
+                <li><strong>db</strong>: A PostgreSQL database for storing visit data</li>
+            </ul>
+            
+            <h4>Networks</h4>
+            <ul>
+                <li><strong>frontend</strong>: Connects the nginx service to the app service</li>
+                <li><strong>backend</strong>: Connects the app service to the db service</li>
+            </ul>
+            
+            <p>This network segmentation enhances security: the nginx service can't directly access the database, and the database isn't exposed to the outside world.</p>
+            
+            <h4>Volumes</h4>
+            <ul>
+                <li><strong>postgres_data</strong>: A named volume that persists the database data</li>
+                <li><strong>./app:/app</strong>: A bind mount that allows code changes without rebuilding the image during development</li>
+            </ul>
+            
+            <h4>Environment Variables</h4>
+            <p>We're using environment variables from the .env file to configure the services. Docker Compose automatically loads variables from a file named .env in the same directory as the docker-compose.yml file.</p>
+            
+            <h4>Dependencies</h4>
+            <p>We're using <code>depends_on</code> to ensure services start in the correct order:</p>
+            <ul>
+                <li>nginx depends on app</li>
+                <li>app depends on db</li>
+            </ul>
+            
+            <p>Note that <code>depends_on</code> only ensures startup order, not service readiness. That's why our Flask application has retry logic when connecting to the database.</p>
+            
+            <h4>Healthchecks</h4>
+            <p>The app service includes a healthcheck that periodically checks if the application is responding properly. This is useful for monitoring and can be used by orchestration systems to determine if a service needs to be restarted.</p>
+        </section>
+
+        <section>
+            <h2>Advanced Docker Compose Features</h2>
+            
+            <p>Now that we've covered the basics of Docker Compose, let's explore some advanced features that can enhance your multi-container applications.</p>
+            
+            <h3>Using Multiple Compose Files</h3>
+            <p>Docker Compose allows you to split your configuration across multiple files, which is useful for different environments or extending a base configuration:</p>
+            
+            <h4>Base Configuration</h4>
+            <p>docker-compose.yml (common configuration for all environments):</p>
+            <pre><code>version: '3'
+
+services:
+  app:
+    build: ./app
+    depends_on:
+      - db
+  
+  db:
+    image: postgres:14-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:</code></pre>
+            
+            <h4>Development Configuration</h4>
+            <p>docker-compose.override.yml (default override file, typically used for development):</p>
+            <pre><code>version: '3'
+
+services:
+  app:
+    volumes:
+      - ./app:/app
+    environment:
+      - DEBUG=true
+    ports:
+      - "5000:5000"
+  
+  db:
+    ports:
+      - "5432:5432"</code></pre>
+            
+            <h4>Production Configuration</h4>
+            <p>docker-compose.prod.yml:</p>
+            <pre><code>version: '3'
+
+services:
+  app:
+    restart: always
+    environment:
+      - DEBUG=false
+  
+  db:
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+    
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - app</code></pre>
+            
+            <p>To use multiple Compose files, specify them with the <code>-f</code> flag:</p>
+            <pre><code># Development (uses docker-compose.yml and docker-compose.override.yml by default)
+docker-compose up
+
+# Production
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d</code></pre>
+            
+            <h3>Extending Services</h3>
+            <p>You can use the <code>extends</code> keyword to share common configuration between services:</p>
+            
+            <h4>Base Service Definition</h4>
+            <p>common-services.yml:</p>
+            <pre><code>version: '3'
+
+services:
+  base-service:
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"</code></pre>
+            
+            <h4>Extended Services</h4>
+            <p>docker-compose.yml:</p>
+            <pre><code>version: '3'
+
+services:
+  app:
+    extends:
+      file: common-services.yml
+      service: base-service
+    build: ./app
+    
+  db:
+    extends:
+      file: common-services.yml
+      service: base-service
+    image: postgres:14-alpine</code></pre>
+            
+    <h3>Profiles</h3>
+    <p>Profiles allow you to selectively enable services for different use cases:</p>
+    
+    <pre><code>version: '3'
+
+services:
+app:
+build: ./app
+
+db:
+image: postgres:14-alpine
+
+pgadmin:
+image: dpage/pgadmin4
+profiles:
+- debug
+ports:
+- "5050:80"
+
+test-runner:
+build: ./tests
+profiles:
+- test
+depends_on:
+- app
+- db</code></pre>
+    
+    <p>With this configuration, the pgadmin and test-runner services won't start by default. To start them, you need to specify the corresponding profile:</p>
+    
+    <pre><code># Start only the app and db services
+docker-compose up
+
+# Start app, db, and pgadmin services
+docker-compose --profile debug up
+
+# Start app, db, and test-runner services
+docker-compose --profile test up
+
+# Start all services
+docker-compose --profile debug --profile test up</code></pre>
+    
+    <h3>Environment Variable Substitution</h3>
+    <p>Docker Compose can substitute environment variables in your Compose file:</p>
+    
+    <pre><code>version: '3'
+
+services:
+app:
+image: myapp:${APP_VERSION:-latest}
+ports:
+- "${APP_PORT:-8000}:8000"
+environment:
+- DEBUG=${DEBUG:-false}
+- API_KEY=${API_KEY:?API key is required}</code></pre>
+    
+    <p>You can use several forms of variable substitution:</p>
+    <ul>
+        <li><code>${VARIABLE}</code>: Substitutes the value of VARIABLE</li>
+        <li><code>${VARIABLE:-default}</code>: Substitutes the value of VARIABLE if set, otherwise uses "default"</li>
+        <li><code>${VARIABLE:?error}</code>: Substitutes the value of VARIABLE if set, otherwise shows an error message and exits</li>
+    </ul>
+    
+    <p>Environment variables can come from:</p>
+    <ul>
+        <li>The shell environment where Compose is run</li>
+        <li>A .env file in the same directory as the Compose file</li>
+        <li>A file specified with the <code>--env-file</code> flag</li>
+    </ul>
+    
+    <h3>External Networks and Volumes</h3>
+    <p>You can reference networks and volumes that are created outside of Compose:</p>
+    
+    <pre><code>version: '3'
+
+services:
+app:
+image: myapp
+networks:
+- existing-network
+volumes:
+- existing-volume:/data
+
+networks:
+existing-network:
+external: true
+
+volumes:
+existing-volume:
+external: true</code></pre>
+    
+    <p>This is useful when you want to connect your services to networks or volumes that are managed separately.</p>
+    
+    <h3>Resource Limits</h3>
+    <p>You can limit the resources (CPU, memory) used by containers:</p>
+    
+    <pre><code>version: '3'
+
+services:
+app:
+image: myapp
+deploy:
+resources:
+limits:
+  cpus: '0.5'
+  memory: 512M
+reservations:
+  cpus: '0.25'
+  memory: 256M</code></pre>
+    
+    <p>These limits help prevent a single container from consuming all available resources.</p>
+    
+    <h3>Healthchecks</h3>
+    <p>Healthchecks let Docker determine if a container is healthy:</p>
+    
+    <pre><code>version: '3'
+
+services:
+app:
+image: myapp
+healthcheck:
+test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+interval: 30s
+timeout: 10s
+retries: 3
+start_period: 40s</code></pre>
+    
+    <p>Healthchecks are especially useful when combined with restart policies and orchestration systems.</p>
+</section>
+
+<section>
+    <h2>Common Docker Compose Patterns for Python Development</h2>
+    
+    <p>Let's explore some common patterns and best practices for using Docker Compose in Python development projects.</p>
+    
+    <h3>Flask/Django with Database</h3>
+    <p>This is a typical setup for Python web applications:</p>
+    
+    <pre><code>version: '3'
+
+services:
+web:
+build: .
+command: python manage.py runserver 0.0.0.0:8000
+volumes:
+- .:/app
+ports:
+- "8000:8000"
+depends_on:
+- db
+environment:
+- DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+
+db:
+image: postgres:14-alpine
+volumes:
+- postgres_data:/var/lib/postgresql/data
+environment:
+- POSTGRES_PASSWORD=postgres
+
+volumes:
+postgres_data:</code></pre>
+    
+    <h3>Development vs. Production</h3>
+    <p>Using separate Compose files for different environments:</p>
+    
+    <h4>Base Configuration (docker-compose.yml)</h4>
+    <pre><code>version: '3'
+
+services:
+web:
+build: .
+depends_on:
+- db
+
+db:
+image: postgres:14-alpine
+volumes:
+- postgres_data:/var/lib/postgresql/data
+
+volumes:
+postgres_data:</code></pre>
+    
+    <h4>Development (docker-compose.override.yml)</h4>
+    <pre><code>version: '3'
+
+services:
+web:
+command: python manage.py runserver 0.0.0.0:8000
+volumes:
+- .:/app
+ports:
+- "8000:8000"
+environment:
+- DEBUG=True
+- DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+
+db:
+environment:
+- POSTGRES_PASSWORD=postgres
+ports:
+- "5432:5432"</code></pre>
+    
+    <h4>Production (docker-compose.prod.yml)</h4>
+    <pre><code>version: '3'
+
+services:
+web:
+command: gunicorn myapp.wsgi:application --bind 0.0.0.0:8000
+restart: always
+environment:
+- DEBUG=False
+- DATABASE_URL=postgres://postgres:${DB_PASSWORD}@db:5432/postgres
+
+db:
+restart: always
+environment:
+- POSTGRES_PASSWORD=${DB_PASSWORD}
+
+nginx:
+image: nginx:alpine
+ports:
+- "80:80"
+volumes:
+- ./nginx/conf.d:/etc/nginx/conf.d
+- ./static:/usr/share/nginx/html/static
+depends_on:
+- web
+restart: always</code></pre>
+    
+    <h3>Testing Setup</h3>
+    <p>Using Docker Compose for testing:</p>
+    
+    <pre><code>version: '3'
+
+services:
+web:
+build: .
+command: python manage.py runserver 0.0.0.0:8000
+volumes:
+- .:/app
+ports:
+- "8000:8000"
+depends_on:
+- db
+environment:
+- DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+
+db:
+image: postgres:14-alpine
+environment:
+- POSTGRES_PASSWORD=postgres
+
+test:
+build: .
+command: pytest
+volumes:
+- .:/app
+depends_on:
+- db
+environment:
+- DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+- TESTING=True
+profiles:
+- test</code></pre>
+    
+    <p>Run tests with: <code>docker-compose --profile test up test</code></p>
+    
+    <h3>Celery Worker Setup</h3>
+    <p>For applications that need background processing:</p>
+    
+    <pre><code>version: '3'
+
+services:
+web:
+build: .
+command: python manage.py runserver 0.0.0.0:8000
+volumes:
+- .:/app
+ports:
+- "8000:8000"
+depends_on:
+- db
+- redis
+environment:
+- DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+- CELERY_BROKER_URL=redis://redis:6379/0
+
+db:
+image: postgres:14-alpine
+environment:
+- POSTGRES_PASSWORD=postgres
+
+redis:
+image: redis:alpine
+
+worker:
+build: .
+command: celery -A myapp worker --loglevel=info
+volumes:
+- .:/app
+depends_on:
+- db
+- redis
+environment:
+- DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+- CELERY_BROKER_URL=redis://redis:6379/0</code></pre>
+    
+    <h3>Jupyter Notebook Development</h3>
+    <p>For data science projects:</p>
+    
+    <pre><code>version: '3'
+
+services:
+jupyter:
+build: .
+command: jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser --allow-root
+volumes:
+- .:/app
+ports:
+- "8888:8888"
+depends_on:
+- db
+environment:
+- DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+
+db:
+image: postgres:14-alpine
+volumes:
+- postgres_data:/var/lib/postgresql/data
+environment:
+- POSTGRES_PASSWORD=postgres
+
+volumes:
+postgres_data:</code></pre>
+</section>
+
+<section>
+    <h2>Practical Exercise: Docker Compose</h2>
+    
+    <p>Let's build a practical Flask application with Redis for caching and Postgres for persistence. This example will show how different services can work together in a Docker Compose environment.</p>
+    
+    <h3>Exercise: URL Shortener Service</h3>
+    <p>We'll create a simple URL shortener service that:</p>
+    <ol>
+        <li>Allows users to submit long URLs</li>
+        <li>Generates short codes for these URLs</li>
+        <li>Stores URL mappings in a PostgreSQL database</li>
+        <li>Caches frequent lookups in Redis</li>
+    </ol>
+    
+    <h3>Step 1: Project Setup</h3>
+    <pre><code>mkdir -p url-shortener/app
+cd url-shortener</code></pre>
+    
+    <h3>Step 2: Create the Application</h3>
+    
+    <p>app/requirements.txt:</p>
+    <pre><code>flask==2.0.1
+psycopg2-binary==2.9.1
+redis==4.1.0
+gunicorn==20.1.0</code></pre>
+    
+    <p>app/app.py:</p>
+    <pre><code>from flask import Flask, request, redirect, render_template, jsonify
+import os
+import time
+import redis
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import string
+import random
+import hashlib
+
+app = Flask(__name__)
+
+# Connect to Redis
+redis_client = redis.Redis(
+host=os.environ.get('REDIS_HOST', 'redis'),
+port=os.environ.get('REDIS_PORT', 6379),
+db=0
+)
+
+def get_db_connection():
+# Connect to the PostgreSQL database
+conn = psycopg2.connect(
+host=os.environ.get('DB_HOST', 'db'),
+database=os.environ.get('DB_NAME', 'postgres'),
+user=os.environ.get('DB_USER', 'postgres'),
+password=os.environ.get('DB_PASSWORD', 'postgres')
+)
+conn.autocommit = True
+return conn
+
+def init_db():
+# Initialize the database schema if it doesn't exist
+tries = 0
+max_tries = 10
+while tries < max_tries:
+try:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Create urls table if it doesn't exist
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS urls (
+            id SERIAL PRIMARY KEY,
+            short_code VARCHAR(10) UNIQUE NOT NULL,
+            original_url TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            access_count INTEGER DEFAULT 0
+        )
+    ''')
+    
+    cursor.close()
+    conn.close()
+    print("Database initialized successfully")
+    return
+except psycopg2.OperationalError as e:
+    tries += 1
+    print(f"Database connection attempt {tries}/{max_tries} failed: {e}")
+    time.sleep(1)
+
+print("Failed to initialize database after multiple attempts")
+
+@app.before_first_request
+def setup():
+init_db()
+
+def generate_short_code(url, length=6):
+# Generate a unique short code for a URL
+hash_object = hashlib.md5(url.encode())
+hash_hex = hash_object.hexdigest()
+
+# Use the hash as a seed for randomization
+random.seed(hash_hex)
+
+# Generate a random code
+chars = string.ascii_letters + string.digits
+short_code = ''.join(random.choice(chars) for _ in range(length))
+
+return short_code
+
+@app.route('/')
+def index():
+return render_template('index.html')
+
+@app.route('/shorten', methods=['POST'])
+def shorten():
+original_url = request.form.get('url')
+if not original_url:
+return jsonify({'error': 'URL is required'}), 400
+
+# Check if URL already exists in database
+conn = get_db_connection()
+cursor = conn.cursor(cursor_factory=RealDictCursor)
+cursor.execute("SELECT short_code FROM urls WHERE original_url = %s", (original_url,))
+existing = cursor.fetchone()
+
+if existing:
+short_code = existing['short_code']
+else:
+# Generate a new short code
+short_code = generate_short_code(original_url)
+
+# Store in database
+cursor.execute(
+    "INSERT INTO urls (short_code, original_url) VALUES (%s, %s)",
+    (short_code, original_url)
+)
+
+cursor.close()
+conn.close()
+
+# Store in Redis cache
+redis_client.set(f"url:{short_code}", original_url, ex=3600)  # Expire after 1 hour
+
+# Return the short URL
+short_url = request.host_url + short_code
+return jsonify({'short_url': short_url, 'short_code': short_code})
+
+@app.route('/<short_code>')
+def redirect_to_url(short_code):
+# Try to get URL from cache
+cached_url = redis_client.get(f"url:{short_code}")
+
+if cached_url:
+original_url = cached_url.decode('utf-8')
+# Increment access count in background
+try:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE urls SET access_count = access_count + 1 WHERE short_code = %s",
+        (short_code,)
+    )
+    cursor.close()
+    conn.close()
+except Exception as e:
+    print(f"Error updating access count: {e}")
+
+return redirect(original_url)
+
+# If not in cache, look up in database
+conn = get_db_connection()
+cursor = conn.cursor(cursor_factory=RealDictCursor)
+cursor.execute(
+"SELECT original_url FROM urls WHERE short_code = %s",
+(short_code,)
+)
+result = cursor.fetchone()
+
+if result:
+original_url = result['original_url']
+
+# Update access count
+cursor.execute(
+    "UPDATE urls SET access_count = access_count + 1 WHERE short_code = %s",
+    (short_code,)
+)
+
+# Store in cache for future requests
+redis_client.set(f"url:{short_code}", original_url, ex=3600)  # Expire after 1 hour
+
+cursor.close()
+conn.close()
+return redirect(original_url)
+
+cursor.close()
+conn.close()
+return render_template('not_found.html'), 404
+
+@app.route('/stats')
+def stats():
+conn = get_db_connection()
+cursor = conn.cursor(cursor_factory=RealDictCursor)
+cursor.execute(
+"SELECT short_code, original_url, access_count, created_at FROM urls ORDER BY access_count DESC LIMIT 10"
+)
+top_urls = cursor.fetchall()
+cursor.close()
+conn.close()
+
+return render_template('stats.html', top_urls=top_urls)
+
+@app.route('/health')
+def health():
+# Check database connection
+db_healthy = False
+try:
+conn = get_db_connection()
+cursor = conn.cursor()
+cursor.execute("SELECT 1")
+cursor.close()
+conn.close()
+db_healthy = True
+except Exception as e:
+print(f"Database health check failed: {e}")
+
+# Check Redis connection
+redis_healthy = False
+try:
+redis_client.ping()
+redis_healthy = True
+except Exception as e:
+print(f"Redis health check failed: {e}")
+
+if db_healthy and redis_healthy:
+return jsonify({'status': 'healthy', 'services': {'db': 'up', 'redis': 'up'}}), 200
+else:
+return jsonify({
+    'status': 'unhealthy', 
+    'services': {
+        'db': 'up' if db_healthy else 'down', 
+        'redis': 'up' if redis_healthy else 'down'
+    }
+}), 503
+
+if __name__ == '__main__':
+app.run(host='0.0.0.0', port=5000, debug=True)</code></pre>
+    
+    <p>Create the templates directory:</p>
+    <pre><code>mkdir -p app/templates</code></pre>
+    
+    <p>app/templates/index.html:</p>
+    <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;URL Shortener&lt;/title&gt;
+&lt;style&gt;
+body {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    line-height: 1.6;
+}
+h1 {
+    color: #2c3e50;
+    text-align: center;
+}
+.container {
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.form-group {
+    margin-bottom: 15px;
+}
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #2980b9;
+}
+.result {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #e8f4fc;
+    border-radius: 4px;
+    display: none;
+}
+.short-url {
+    font-weight: bold;
+    color: #3498db;
+}
+.nav {
+    text-align: center;
+    margin-top: 20px;
+}
+.nav a {
+    margin: 0 10px;
+    color: #3498db;
+    text-decoration: none;
+}
+.nav a:hover {
+    text-decoration: underline;
+}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;URL Shortener&lt;/h1&gt;
+
+&lt;div class="container"&gt;
+&lt;div class="form-group"&gt;
+    &lt;label for="url"&gt;Enter a long URL to shorten:&lt;/label&gt;
+    &lt;input type="text" id="url" name="url" placeholder="https://example.com/very/long/url/that/needs/shortening"&gt;
+&lt;/div&gt;
+
+&lt;button id="shorten-btn"&gt;Shorten URL&lt;/button&gt;
+
+&lt;div class="result" id="result"&gt;
+    &lt;p&gt;Your shortened URL:&lt;/p&gt;
+    &lt;p&gt;&lt;a href="#" class="short-url" id="short-url" target="_blank"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="nav"&gt;
+&lt;a href="/stats"&gt;View Statistics&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+document.getElementById('shorten-btn').addEventListener('click', function() {
+    const url = document.getElementById('url').value;
+    if (!url) {
+        alert('Please enter a URL');
+        return;
+    }
+    
+    // Send request to the server
+    const formData = new FormData();
+    formData.append('url', url);
+    
+    fetch('/shorten', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+        
+        const shortUrl = data.short_url;
+        document.getElementById('short-url').textContent = shortUrl;
+        document.getElementById('short-url').href = shortUrl;
+        document.getElementById('result').style.display = 'block';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while shortening the URL');
+    });
+});
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+    
+    <p>app/templates/stats.html:</p>
+    <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;URL Shortener Statistics&lt;/title&gt;
+&lt;style&gt;
+body {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    line-height: 1.6;
+}
+h1 {
+    color: #2c3e50;
+    text-align: center;
+}
+.container {
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+th {
+    background-color: #3498db;
+    color: white;
+}
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+.nav {
+    text-align: center;
+    margin-top: 20px;
+}
+.nav a {
+    margin: 0 10px;
+    color: #3498db;
+    text-decoration: none;
+}
+.nav a:hover {
+    text-decoration: underline;
+}
+.url-cell {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.date-cell {
+    white-space: nowrap;
+}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;URL Shortener Statistics&lt;/h1&gt;
+
+&lt;div class="container"&gt;
+&lt;h2&gt;Top 10 Most Accessed URLs&lt;/h2&gt;
+
+{% if top_urls %}
+&lt;table&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;Short Code&lt;/th&gt;
+            &lt;th&gt;Original URL&lt;/th&gt;
+            &lt;th&gt;Access Count&lt;/th&gt;
+            &lt;th&gt;Created At&lt;/th&gt;
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        {% for url in top_urls %}
+        &lt;tr&gt;
+            &lt;td&gt;&lt;a href="/{{ url.short_code }}" target="_blank"&gt;{{ url.short_code }}&lt;/a&gt;&lt;/td&gt;
+            &lt;td class="url-cell" title="{{ url.original_url }}"&gt;{{ url.original_url }}&lt;/td&gt;
+            &lt;td&gt;{{ url.access_count }}&lt;/td&gt;
+            &lt;td class="date-cell"&gt;{{ url.created_at.strftime('%Y-%m-%d %H:%M') }}&lt;/td&gt;
+        &lt;/tr&gt;
+        {% endfor %}
+    &lt;/tbody&gt;
+&lt;/table&gt;
+{% else %}
+&lt;p&gt;No URLs have been shortened yet.&lt;/p&gt;
+{% endif %}
+&lt;/div&gt;
+
+&lt;div class="nav"&gt;
+&lt;a href="/"&gt;Back to Shortener&lt;/a&gt;
+&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+    
+    <p>app/templates/not_found.html:</p>
+    <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;URL Not Found&lt;/title&gt;
+&lt;style&gt;
+body {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    line-height: 1.6;
+    text-align: center;
+}
+h1 {
+    color: #e74c3c;
+}
+.container {
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+.nav {
+    margin-top: 20px;
+}
+.nav a {
+    color: #3498db;
+    text-decoration: none;
+}
+.nav a:hover {
+    text-decoration: underline;
+}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;404 - URL Not Found&lt;/h1&gt;
+
+&lt;div class="container"&gt;
+&lt;p&gt;The shortened URL you requested does not exist.&lt;/p&gt;
+&lt;p&gt;It may have been mistyped or expired.&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;div class="nav"&gt;
+&lt;a href="/"&gt;Go to URL Shortener&lt;/a&gt;
+&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+    
+    <p>app/Dockerfile:</p>
+    <pre><code>FROM python:3.10-slim
+
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+PYTHONUNBUFFERED=1
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Expose port for the application
+EXPOSE 5000
+
+# Run the application with Gunicorn in production, Flask's development server in development
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]</code></pre>
+    
+<h3>Step 3: Create the Docker Compose Configuration</h3>
+            
+<p>docker-compose.yml:</p>
+            <pre><code>version: '3'
+
+services:
+  app:
+    build: ./app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app:/app
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - DB_HOST=db
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - REDIS_HOST=redis
+    depends_on:
+      - db
+      - redis
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  db:
+    image: postgres:14-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis_data:/data
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:</code></pre>
+            
+            <h3>Step 4: Run the Application</h3>
+            
+            <pre><code># Build and start all services in detached mode
+docker-compose up -d
+
+# View logs
+docker-compose logs -f</code></pre>
+            
+            <p>Open your browser and navigate to <a href="http://localhost:5000">http://localhost:5000</a> to use the URL shortener application.</p>
+            
+            <h3>Understanding the Multi-Container Architecture</h3>
+            
+            <p>Our URL shortener application demonstrates several key Docker Compose concepts:</p>
+            
+            <h4>Service Separation</h4>
+            <p>The application is divided into three distinct services, each with its own responsibility:</p>
+            <ul>
+                <li><strong>app</strong>: The Flask application that handles HTTP requests and business logic</li>
+                <li><strong>db</strong>: A PostgreSQL database for persistent storage of URL mappings</li>
+                <li><strong>redis</strong>: A Redis cache for faster lookup of frequently accessed URLs</li>
+            </ul>
+            
+            <p>This separation allows each component to be scaled, updated, or replaced independently.</p>
+            
+            <h4>Service Discovery</h4>
+            <p>Docker Compose sets up automatic DNS resolution between containers. The application can connect to the database using the service name "db" as the hostname, and to Redis using the service name "redis" as the hostname.</p>
+            
+            <h4>Environment Configuration</h4>
+            <p>Environment variables are used to configure the services, making the setup flexible and adaptable to different environments.</p>
+            
+            <h4>Volume Management</h4>
+            <p>Named volumes (<code>postgres_data</code> and <code>redis_data</code>) ensure that data persists even when containers are stopped or removed. This is crucial for maintaining database and cache data across restarts.</p>
+            
+            <h4>Development-Friendly Setup</h4>
+            <p>The volume mount <code>./app:/app</code> allows for live code changes during development. You can modify the Python code and templates, and the changes will be reflected immediately without rebuilding the container.</p>
+            
+            <h4>Health Checks</h4>
+            <p>Each service includes a health check configuration, allowing Docker to monitor the health of the containers and restart them if necessary.</p>
+            
+            <h3>Exercise Extensions</h3>
+            
+            <h4>Add Nginx as a Reverse Proxy</h4>
+            <p>Extend the Docker Compose configuration to include Nginx as a reverse proxy in front of the Flask application:</p>
+            
+            <p>Create nginx/nginx.conf:</p>
+            <pre><code>server {
+    listen 80;
+    server_name localhost;
+
+    location / {
+        proxy_pass http://app:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code></pre>
+            
+            <p>Create nginx/Dockerfile:</p>
+            <pre><code>FROM nginx:alpine
+
+# Remove default Nginx config
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy custom Nginx config
+COPY nginx.conf /etc/nginx/conf.d/</code></pre>
+            
+            <p>Update docker-compose.yml to include the Nginx service:</p>
+            <pre><code>  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    restart: always</code></pre>
+            
+            <p>Update the app service's ports configuration to only expose the port to other services, not to the host:</p>
+            <pre><code>  app:
+    # ... other configuration
+    # Replace this line:
+    # ports:
+    #   - "5000:5000"
+    # With this:
+    expose:
+      - "5000"
+    # ... rest of configuration</code></pre>
+            
+            <h4>Add Development and Production Configurations</h4>
+            <p>Split your Docker Compose configuration into base, development, and production files:</p>
+            
+            <p>docker-compose.yml (base configuration):</p>
+            <pre><code>version: '3'
+
+services:
+  app:
+    build: ./app
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DB_HOST=db
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - REDIS_HOST=redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  db:
+    image: postgres:14-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:</code></pre>
+            
+            <p>docker-compose.override.yml (development configuration, used by default):</p>
+            <pre><code>version: '3'
+
+services:
+  app:
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app:/app
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - DB_PASSWORD=postgres
+    command: flask run --host=0.0.0.0 --port=5000 --reload
+
+  db:
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"</code></pre>
+            
+            <p>docker-compose.prod.yml (production configuration):</p>
+            <pre><code>version: '3'
+
+services:
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    restart: always
+
+  app:
+    expose:
+      - "5000"
+    environment:
+      - FLASK_ENV=production
+      - DB_PASSWORD=${DB_PASSWORD}
+    command: gunicorn --bind 0.0.0.0:5000 app:app
+    restart: always
+
+  db:
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    restart: always
+
+  redis:
+    restart: always</code></pre>
+            
+            <p>Run development configuration (default):</p>
+            <pre><code>docker-compose up -d</code></pre>
+            
+            <p>Run production configuration:</p>
+            <pre><code>DB_PASSWORD=secure_password docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d</code></pre>
+        </section>
+
+        <section>
+            <h2>Summary and Next Steps</h2>
+            
+            <p>In this session, we've explored Docker Compose for orchestrating multi-container applications:</p>
+            <ul>
+                <li>Understanding the purpose and benefits of Docker Compose</li>
+                <li>Creating YAML configuration files for multi-container applications</li>
+                <li>Configuring services, networks, and volumes</li>
+                <li>Using Docker Compose commands to manage applications</li>
+                <li>Implementing advanced features like environment variables, healthchecks, and profiles</li>
+                <li>Building practical multi-container applications with Python</li>
+            </ul>
+            
+            <p>Docker Compose provides a powerful yet simple way to define and run multi-container Docker applications, making it an essential tool in your development workflow.</p>
+            
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li>Docker Compose simplifies the management of multi-container applications</li>
+                <li>YAML configuration files make it easy to define complex application stacks</li>
+                <li>Services can communicate with each other using their service names</li>
+                <li>Volume management ensures data persistence across container restarts</li>
+                <li>Environment variables and configuration files enable flexible deployments</li>
+                <li>Docker Compose is ideal for development, testing, and simple production environments</li>
+            </ul>
+            
+            <h3>Preview of Tomorrow's Session</h3>
+            <p>Tomorrow, we'll focus on Project Setup and Integration, where we'll:</p>
+            <ul>
+                <li>Set up a complete development environment for a Python web application</li>
+                <li>Integrate Git, Docker, and Docker Compose into our workflow</li>
+                <li>Configure our development environment for efficient collaboration</li>
+                <li>Prepare for the Python fundamentals portion of the course</li>
+                <li>Start building the foundation for our course project</li>
+            </ul>
+            
+            <h3>Additional Resources</h3>
+            <ul>
+                <li><a href="https://docs.docker.com/compose/" target="_blank">Docker Compose Documentation</a></li>
+                <li><a href="https://docs.docker.com/compose/compose-file/" target="_blank">Compose File Reference</a></li>
+                <li><a href="https://testdriven.io/blog/dockerizing-flask-with-postgres-gunicorn-and-nginx/" target="_blank">Dockerizing Flask with Postgres, Gunicorn, and Nginx</a></li>
+                <li><a href="https://docs.docker.com/compose/production/" target="_blank">Docker Compose in Production</a></li>
+                <li><a href="https://docs.docker.com/compose/extends/" target="_blank">Share Compose Configurations Between Files and Projects</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Full Stack Python Web Development Course</p>
+    </footer>
+</body>
+</html>

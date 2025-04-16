@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Custom Docker Images with Dockerfiles</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Building Custom Docker Images with Dockerfiles</h1>
+        <p class="subtitle">Week 1 - Wednesday Afternoon: Full Stack Web Development with Python</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Introduction to Dockerfiles</h2>
+            
+            <p>This morning, we used existing Docker images and mounted our code into containers. While this approach works for development, it's not ideal for sharing or deploying applications. For that, we need to create custom images that package our application code, dependencies, and configuration together.</p>
+            
+            <p>A Dockerfile is a text file that contains instructions for building a Docker image. Think of it as a recipe for creating your application environment. Each instruction in a Dockerfile creates a layer in the image, allowing Docker to cache parts of the build process for efficiency.</p>
+            
+            <h3>Why Create Custom Images?</h3>
+            <ul>
+                <li><strong>Reproducibility</strong>: Custom images ensure consistent environments across development, testing, and production</li>
+                <li><strong>Distribution</strong>: Images can be shared via registries like Docker Hub</li>
+                <li><strong>Efficiency</strong>: Pre-built images start faster than containers that need to install dependencies</li>
+                <li><strong>Documentation</strong>: Dockerfiles serve as executable documentation of your application's environment</li>
+                <li><strong>Standardization</strong>: Teams can follow consistent patterns for building applications</li>
+            </ul>
+            
+            <h3>Dockerfile Basics</h3>
+            <p>Let's explore the structure of a Dockerfile by creating a simple example for a Python web application:</p>
+            
+            <pre><code># Use an official Python runtime as a base image
+FROM python:3.10-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY . /app/
+
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Make port 5000 available to the world outside this container
+EXPOSE 5000
+
+# Define environment variable
+ENV NAME World
+
+# Run app.py when the container launches
+CMD ["python", "app.py"]</code></pre>
+            
+            <p>This Dockerfile defines a complete environment for a Python application. Let's break down each instruction:</p>
+        </section>
+
+        <section>
+            <h2>Dockerfile Instructions</h2>
+            
+            <h3>FROM</h3>
+            <p>The <code>FROM</code> instruction initializes a new build stage and sets the base image:</p>
+            <pre><code>FROM python:3.10-slim</code></pre>
+            
+            <p>Every Dockerfile must start with a <code>FROM</code> instruction. It specifies the parent image from which you're building. Some key points:</p>
+            <ul>
+                <li>Images are available from Docker Hub or private registries</li>
+                <li>You can use <code>FROM scratch</code> to create a completely empty base image</li>
+                <li>You can use specific tags like <code>:3.10-slim</code> for version control</li>
+                <li>Choose base images that balance size, features, and security</li>
+            </ul>
+            
+            <h3>WORKDIR</h3>
+            <p>The <code>WORKDIR</code> instruction sets the working directory for subsequent instructions:</p>
+            <pre><code>WORKDIR /app</code></pre>
+            
+            <p>This is equivalent to running <code>cd /app</code> in the container. If the directory doesn't exist, Docker creates it. Best practices:</p>
+            <ul>
+                <li>Always use absolute paths for <code>WORKDIR</code></li>
+                <li>Use <code>WORKDIR</code> instead of a series of <code>RUN cd ...</code> commands</li>
+                <li>Keep paths consistent throughout the Dockerfile</li>
+                <li>Avoid placing files in system directories like <code>/</code> or <code>/root</code></li>
+            </ul>
+            
+            <h3>COPY and ADD</h3>
+            <p>The <code>COPY</code> instruction copies files from your build context to the container:</p>
+            <pre><code>COPY requirements.txt /app/
+COPY . /app/</code></pre>
+            
+            <p>The <code>ADD</code> instruction is similar but has additional features:</p>
+            <pre><code># ADD can handle URLs
+ADD https://example.com/file.txt /app/
+
+# ADD automatically extracts tar archives
+ADD project.tar.gz /app/</code></pre>
+            
+            <p>Best practices:</p>
+            <ul>
+                <li>Use <code>COPY</code> for simple file copying (more explicit)</li>
+                <li>Use <code>ADD</code> only when its additional features are needed</li>
+                <li>Copy only what you need, not the entire directory</li>
+                <li>Use multiple <code>COPY</code> commands to leverage caching (more on this later)</li>
+            </ul>
+            
+            <h3>RUN</h3>
+            <p>The <code>RUN</code> instruction executes commands in a new layer on top of the current image:</p>
+            <pre><code>RUN pip install --no-cache-dir -r requirements.txt</code></pre>
+            
+            <p>You can use either shell form (<code>RUN command</code>) or exec form (<code>RUN ["executable", "param1", "param2"]</code>). Best practices:</p>
+            <ul>
+                <li>Combine related commands with <code>&&</code> to reduce layers</li>
+                <li>Clean up after installations to keep images smaller</li>
+                <li>Use <code>--no-cache-dir</code> with pip to avoid storing package cache</li>
+                <li>Pin package versions for reproducibility</li>
+            </ul>
+            
+            <h3>EXPOSE</h3>
+            <p>The <code>EXPOSE</code> instruction informs Docker that the container listens on specific network ports:</p>
+            <pre><code>EXPOSE 5000</code></pre>
+            
+            <p>This is a form of documentation—it doesn't actually publish the port. You still need to use <code>-p</code> when running the container to publish the port. Key points:</p>
+            <ul>
+                <li><code>EXPOSE</code> is documentation, not configuration</li>
+                <li>You can expose multiple ports: <code>EXPOSE 80 443</code></li>
+                <li>You can specify TCP or UDP: <code>EXPOSE 53/udp</code></li>
+                <li>Always document your exposed ports in the Dockerfile</li>
+            </ul>
+            
+            <h3>ENV</h3>
+            <p>The <code>ENV</code> instruction sets environment variables:</p>
+            <pre><code>ENV NAME World
+ENV PYTHONUNBUFFERED=1 DEBUG=false</code></pre>
+            
+            <p>These variables are available to processes running in the container. Best practices:</p>
+            <ul>
+                <li>Use <code>ENV</code> for variables that should persist in the image</li>
+                <li>Group related environment variables in a single <code>ENV</code> instruction</li>
+                <li>Use environment variables to make your image more configurable</li>
+                <li>Don't store secrets in <code>ENV</code> (they'll be visible in the image history)</li>
+            </ul>
+            
+            <h3>CMD and ENTRYPOINT</h3>
+            <p>The <code>CMD</code> instruction provides defaults for executing a container:</p>
+            <pre><code>CMD ["python", "app.py"]</code></pre>
+            
+            <p>The <code>ENTRYPOINT</code> instruction configures the container to run as an executable:</p>
+            <pre><code>ENTRYPOINT ["python"]
+CMD ["app.py"]</code></pre>
+            
+            <p>Key differences:</p>
+            <ul>
+                <li><code>CMD</code> can be overridden by command-line arguments to <code>docker run</code></li>
+                <li><code>ENTRYPOINT</code> is always executed, and command-line arguments are appended</li>
+                <li>When used together, <code>ENTRYPOINT</code> defines the executable and <code>CMD</code> provides default arguments</li>
+            </ul>
+            
+            <p>Best practices:</p>
+            <ul>
+                <li>Use exec form (<code>["executable", "param1"]</code>) rather than shell form (<code>command param1</code>)</li>
+                <li>Have only one <code>CMD</code> or <code>ENTRYPOINT</code> per Dockerfile (the last one wins)</li>
+                <li>Use <code>ENTRYPOINT</code> for containers that should always run the same executable</li>
+                <li>Use <code>CMD</code> for containers with variable command-line arguments</li>
+            </ul>
+            
+            <h3>Other Useful Instructions</h3>
+            
+            <h4>LABEL</h4>
+            <p>Add metadata to your image:</p>
+            <pre><code>LABEL maintainer="yourname@example.com"
+LABEL version="1.0" description="Python Web Application"</code></pre>
+            
+            <h4>USER</h4>
+            <p>Set the user and group for <code>RUN</code>, <code>CMD</code>, and <code>ENTRYPOINT</code> instructions:</p>
+            <pre><code>RUN useradd -m appuser
+USER appuser</code></pre>
+            
+            <h4>ARG</h4>
+            <p>Define build-time variables that can be passed with <code>--build-arg</code>:</p>
+            <pre><code>ARG VERSION=latest
+FROM python:${VERSION}</code></pre>
+            
+            <h4>HEALTHCHECK</h4>
+            <p>Tell Docker how to test if the container is still working:</p>
+            <pre><code>HEALTHCHECK --interval=5m --timeout=3s \
+  CMD curl -f http://localhost/ || exit 1</code></pre>
+        </section>
+
+        <section>
+            <h2>Building Images with Dockerfiles</h2>
+            
+            <p>Now that we understand Dockerfile instructions, let's see how to build images from them.</p>
+            
+            <h3>The Docker Build Context</h3>
+            <p>When you run <code>docker build</code>, the current directory (or specified path) becomes the "build context." All files in the build context are sent to the Docker daemon for building the image.</p>
+            
+            <p>The build context is important because:</p>
+            <ul>
+                <li>Only files in the build context can be <code>COPY</code> or <code>ADD</code> to the image</li>
+                <li>Large build contexts slow down the build process</li>
+                <li>Sensitive files might be accidentally included</li>
+            </ul>
+            
+            <p>To control what files are included in the build context, use a <code>.dockerignore</code> file.</p>
+            
+            <h3>The .dockerignore File</h3>
+            <p>Similar to <code>.gitignore</code>, the <code>.dockerignore</code> file specifies patterns of files and directories to exclude from the build context:</p>
+            
+            <pre><code># Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+
+# Development environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Testing
+tests/
+.coverage
+htmlcov/</code></pre>
+            
+            <p>A good <code>.dockerignore</code> file improves build performance and prevents unnecessary cache invalidation.</p>
+            
+            <h3>Building an Image</h3>
+            <p>To build an image from a Dockerfile:</p>
+            
+            <pre><code>docker build -t myapp:1.0 .</code></pre>
+            
+            <p>This command builds an image from the Dockerfile in the current directory (.) and tags (-t) it with the name "myapp" and tag "1.0". Some useful options:</p>
+            <ul>
+                <li><code>-t, --tag</code>: Name and optionally a tag in the name:tag format</li>
+                <li><code>-f, --file</code>: Name of the Dockerfile (if not "Dockerfile" in the build context)</li>
+                <li><code>--no-cache</code>: Build from scratch without using cached layers</li>
+                <li><code>--build-arg</code>: Set build-time variables</li>
+                <li><code>--pull</code>: Always attempt to pull a newer version of the base image</li>
+            </ul>
+            
+            <h3>Understanding the Build Process</h3>
+            <p>When Docker builds an image:</p>
+            <ol>
+                <li>It sends the build context to the Docker daemon</li>
+                <li>It creates a temporary container for each instruction</li>
+                <li>It executes the instruction in the container</li>
+                <li>It commits the changes as a new image layer</li>
+                <li>It removes the temporary container</li>
+                <li>It uses the resulting image for the next instruction</li>
+            </ol>
+            
+            <p>This process continues until all instructions are executed or an error occurs.</p>
+            
+            <h3>Layer Caching</h3>
+            <p>Docker caches layers to speed up subsequent builds. If an instruction hasn't changed, Docker reuses the cached layer instead of rebuilding it. To leverage caching effectively:</p>
+            <ul>
+                <li>Put instructions that change less frequently earlier in the Dockerfile</li>
+                <li>Group related operations in a single <code>RUN</code> instruction</li>
+                <li>Use multi-stage builds for complex build processes</li>
+            </ul>
+            
+            <p>For example, install dependencies before copying application code:</p>
+            
+            <pre><code># Good: Dependencies change less often than application code
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+
+# Bad: Any code change invalidates the dependency cache
+COPY . .
+RUN pip install --no-cache-dir -r requirements.txt</code></pre>
+        </section>
+
+        <section>
+            <h2>Dockerizing Python Applications</h2>
+            
+            <p>Let's apply what we've learned to create a proper Dockerfile for a Python web application. We'll use Flask as an example.</p>
+            
+            <h3>Basic Python Application Dockerfile</h3>
+            <p>Here's a simple but comprehensive Dockerfile for a Flask application:</p>
+            
+            <pre><code># Use official Python image as base
+FROM python:3.10-slim
+
+# Set working directory
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Expose the port the app runs on
+EXPOSE 5000
+
+# Command to run the application
+CMD ["python", "app.py"]</code></pre>
+            
+            <p>Let's examine the environment variables:</p>
+            <ul>
+                <li><code>PYTHONDONTWRITEBYTECODE=1</code>: Prevents Python from writing .pyc files</li>
+                <li><code>PYTHONUNBUFFERED=1</code>: Ensures Python output is sent straight to the terminal without buffering</li>
+                <li><code>PIP_NO_CACHE_DIR=1</code>: Prevents pip from caching downloaded packages</li>
+            </ul>
+            
+            <h3>Production-Ready Python Dockerfile</h3>
+            <p>For a more production-ready setup, we might use Gunicorn as a WSGI server:</p>
+            
+            <pre><code>FROM python:3.10-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# Install system dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt gunicorn
+
+# Create non-root user
+RUN useradd -m appuser
+USER appuser
+
+# Copy application code (with correct ownership)
+COPY --chown=appuser:appuser . .
+
+# Expose the port
+EXPOSE 8000
+
+# Run with Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]</code></pre>
+            
+            <p>This Dockerfile includes several production best practices:</p>
+            <ul>
+                <li>Installing system dependencies properly with cleanup</li>
+                <li>Using a non-root user for security</li>
+                <li>Using Gunicorn instead of the Flask development server</li>
+                <li>Setting proper file ownership with <code>--chown</code></li>
+            </ul>
+            
+            <h3>Handling Dependencies</h3>
+            <p>For Python applications, managing dependencies correctly is crucial:</p>
+            
+            <h4>Using requirements.txt</h4>
+            <pre><code># requirements.txt with pinned versions
+flask==2.0.1
+requests==2.26.0
+sqlalchemy==1.4.23</code></pre>
+            
+            <h4>Using Pipenv</h4>
+            <pre><code>FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install pipenv
+RUN pip install pipenv
+
+# Copy Pipfile and Pipfile.lock
+COPY Pipfile Pipfile.lock ./
+
+# Install dependencies
+RUN pipenv install --deploy --system
+
+# Copy application code
+COPY . .
+
+CMD ["python", "app.py"]</code></pre>
+            
+            <h4>Using Poetry</h4>
+            <pre><code>FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install poetry
+RUN pip install poetry
+
+# Copy pyproject.toml and poetry.lock
+COPY pyproject.toml poetry.lock ./
+
+# Install dependencies
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi
+
+# Copy application code
+COPY . .
+
+CMD ["python", "app.py"]</code></pre>
+            
+            <h3>Common Python Docker Patterns</h3>
+            
+            <h4>Development vs. Production</h4>
+            <p>Use multi-stage builds or multiple Dockerfiles for different environments:</p>
+            
+            <pre><code># Dockerfile.dev
+FROM python:3.10-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5000", "--reload"]
+
+# Dockerfile.prod
+FROM python:3.10-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt gunicorn
+COPY . .
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]</code></pre>
+            
+            <h4>Using Build Arguments</h4>
+            <p>Use <code>ARG</code> to customize builds:</p>
+            
+            <pre><code>FROM python:3.10-slim
+
+ARG APP_ENV=production
+ENV APP_ENV=${APP_ENV}
+
+WORKDIR /app
+COPY requirements.txt .
+
+# Install different dependencies based on environment
+RUN if [ "$APP_ENV" = "development" ] ; then \
+        pip install --no-cache-dir -r requirements.txt ; \
+    else \
+        pip install --no-cache-dir -r requirements.txt gunicorn ; \
+    fi
+
+COPY . .
+
+# Use different commands based on environment
+CMD if [ "$APP_ENV" = "development" ] ; then \
+        flask run --host=0.0.0.0 --port=5000 --reload ; \
+    else \
+        gunicorn --bind 0.0.0.0:5000 app:app ; \
+    fi</code></pre>
+            
+            <p>Build with <code>docker build --build-arg APP_ENV=development -t myapp:dev .</code></p>
+            
+            <h4>Using Environment Files</h4>
+            <p>Keep environment-specific variables in .env files:</p>
+            
+            <pre><code># .env.dev
+DEBUG=true
+LOG_LEVEL=debug
+
+# .env.prod
+DEBUG=false
+LOG_LEVEL=info</code></pre>
+            
+            <p>Use with <code>docker run --env-file .env.dev myapp:latest</code></p>
+        </section>
+
+        <section>
+            <h2>Building Efficient Docker Images</h2>
+            
+            <p>Docker image efficiency matters for several reasons:</p>
+            <ul>
+                <li>Smaller images build, push, and pull faster</li>
+                <li>Smaller images use less disk space</li>
+                <li>Smaller images often have fewer security vulnerabilities</li>
+                <li>Efficient caching speeds up development workflows</li>
+            </ul>
+            
+            <h3>Layer Optimization</h3>
+            <p>Each instruction in a Dockerfile creates a layer. To minimize image size:</p>
+            <ul>
+                <li>Combine related operations in a single <code>RUN</code> instruction</li>
+                <li>Clean up in the same layer where you create temporary files</li>
+                <li>Use <code>.dockerignore</code> to exclude unnecessary files</li>
+            </ul>
+            
+            <pre><code># Bad: Three layers, no cleanup
+RUN apt-get update
+RUN apt-get install -y python3-dev
+RUN apt-get clean
+
+# Good: Single layer with cleanup
+RUN apt-get update && \
+    apt-get install -y python3-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*</code></pre>
+            
+            <h3>Multi-Stage Builds</h3>
+            <p>Multi-stage builds allow you to use multiple <code>FROM</code> statements in a Dockerfile. Each <code>FROM</code> instruction starts a new build stage. You can selectively copy artifacts from one stage to another, leaving behind everything you don't want in the final image.</p>
+            
+            <pre><code># Stage 1: Build dependencies
+FROM python:3.10 AS builder
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
+
+# Stage 2: Runtime image
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Copy wheels from builder stage
+COPY --from=builder /app/wheels /wheels
+RUN pip install --no-cache /wheels/*
+
+# Copy application code
+COPY . .
+
+CMD ["python", "app.py"]</code></pre>
+            
+            <p>This approach is particularly useful when:</p>
+            <ul>
+                <li>Your build process requires tools that aren't needed at runtime</li>
+                <li>You want to keep your final image as small as possible</li>
+                <li>You're building compiled extensions or assets</li>
+            </ul>
+            
+            <h3>Using Appropriate Base Images</h3>
+            <p>Choose the right base image for your needs:</p>
+            
+            <h4>python:3.10 (Debian-based)</h4>
+            <ul>
+                <li>Full-featured with development tools</li>
+                <li>Good for complex builds that need compilers</li>
+                <li>Large (~900MB)</li>
+            </ul>
+            
+            <h4>python:3.10-slim (Debian-based)</h4>
+            <ul>
+                <li>Minimal Python environment</li>
+                <li>Good balance of size and compatibility</li>
+                <li>Medium (~120MB)</li>
+            </ul>
+            
+            <h4>python:3.10-alpine</h4>
+            <ul>
+                <li>Ultra-minimal Alpine Linux base</li>
+                <li>Very small (~45MB)</li>
+                <li>Uses musl instead of glibc (can cause compatibility issues)</li>
+                <li>Requires extra work for compiled extensions</li>
+            </ul>
+            
+            <h3>Python-Specific Optimizations</h3>
+            <p>Some optimizations specific to Python applications:</p>
+            
+            <h4>Prevent .pyc Files</h4>
+            <pre><code>ENV PYTHONDONTWRITEBYTECODE=1</code></pre>
+            
+            <h4>Use pip Efficiently</h4>
+            <pre><code>RUN pip install --no-cache-dir --no-compile --upgrade pip && \
+    pip install --no-cache-dir --no-compile -r requirements.txt</code></pre>
+            
+            <h4>Remove pip Cache</h4>
+            <pre><code>RUN pip install -r requirements.txt && \
+    rm -rf /root/.cache/pip</code></pre>
+            
+            <h4>Compile Python Bytecode in Advance</h4>
+            <pre><code>RUN python -m compileall .</code></pre>
+            
+            <h3>Security Best Practices</h3>
+            <p>Some security-focused optimizations:</p>
+            
+            <h4>Run as Non-Root User</h4>
+            <pre><code>RUN useradd -m appuser
+USER appuser</code></pre>
+            
+            <h4>Use Specific Versions</h4>
+            <pre><code>FROM python:3.10.5-slim  # Instead of python:3</code></pre>
+            
+            <h4>Scan Images for Vulnerabilities</h4>
+            <pre><code>docker scan myapp:latest</code></pre>
+            
+            <h4>Minimize Installed Packages</h4>
+            <pre><code>RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*</code></pre>
+        </section>
+
+        <section>
+            <h2>Practical Exercise: Dockerizing a Python Application</h2>
+            
+            <p>Let's apply what we've learned by Dockerizing a simple Flask application.</p>
+            
+            <h3>Exercise: Create a Docker Image for a Flask App</h3>
+            
+            <h4>Step 1: Create the Application</h4>
+            <p>First, create a directory for our project:</p>
+            
+            <pre><code>mkdir flask-docker-app
+cd flask-docker-app</code></pre>
+            
+            <p>Create the following files:</p>
+            
+            <p>requirements.txt:</p>
+            <pre><code>flask==2.0.1</code></pre>
+            
+            <p>app.py:</p>
+            <pre><code>from flask import Flask, jsonify, render_template
+import os
+import socket
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/api/info')
+def info():
+    return jsonify({
+        'hostname': socket.gethostname(),
+        'environment': os.environ.get('APP_ENV', 'development'),
+        'python_version': os.environ.get('PYTHON_VERSION', 'unknown')
+    })
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+</code></pre>
+            
+            <p>Create a templates directory and an index.html file:</p>
+            
+            <pre><code>mkdir templates</code></pre>
+            
+            <p>templates/index.html:</p>
+            <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Docker Flask App&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9f7fe;
+            border-left: 4px solid #2196F3;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="container"&gt;
+        &lt;h1&gt;Flask Application in Docker&lt;/h1&gt;
+        &lt;p&gt;This is a simple Flask application running in a Docker container.&lt;/p&gt;
+        
+        &lt;div class="info" id="info"&gt;
+            Loading server information...
+        &lt;/div&gt;
+    &lt;/div&gt;
+    
+    &lt;script&gt;
+        // Fetch server information
+        fetch('/api/info')
+            .then(response => response.json())
+            .then(data => {
+                const infoElement = document.getElementById('info');
+                infoElement.innerHTML = `
+                    &lt;h3&gt;Server Information:&lt;/h3&gt;
+                    &lt;ul&gt;
+                        &lt;li&gt;&lt;strong&gt;Hostname:&lt;/strong&gt; ${data.hostname}&lt;/li&gt;
+                        &lt;li&gt;&lt;strong&gt;Environment:&lt;/strong&gt; ${data.environment}&lt;/li&gt;
+                        &lt;li&gt;&lt;strong&gt;Python Version:&lt;/strong&gt; ${data.python_version}&lt;/li&gt;
+                    &lt;/ul&gt;
+                `;
+            })
+            .catch(error => {
+                console.error('Error fetching server info:', error);
+                document.getElementById('info').innerHTML = 'Error loading server information.';
+            });
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            
+<h4>Step 2: Create a .dockerignore File</h4>
+            <p>.dockerignore:</p>
+            <pre><code># Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Logs
+*.log</code></pre>
+            
+            <h4>Step 3: Create a Dockerfile</h4>
+            <p>Dockerfile:</p>
+            <pre><code>FROM python:3.10-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHON_VERSION=3.10 \
+    APP_ENV=production
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Expose the port
+EXPOSE 5000
+
+# Run the application
+CMD ["python", "app.py"]</code></pre>
+            
+            <h4>Step 4: Build the Docker Image</h4>
+            <pre><code>docker build -t flask-docker-app:latest .</code></pre>
+            
+            <p>This command builds the image and tags it as "flask-docker-app:latest".</p>
+            
+            <h4>Step 5: Run the Container</h4>
+            <pre><code>docker run -p 5000:5000 flask-docker-app:latest</code></pre>
+            
+            <p>Visit <a href="http://localhost:5000">http://localhost:5000</a> in your browser to see the application running.</p>
+            
+            <h4>Step 6: Modify the Environment Variables</h4>
+            <pre><code>docker run -p 5000:5000 -e APP_ENV=development -e PORT=5000 flask-docker-app:latest</code></pre>
+            
+            <p>Refresh the browser to see the updated environment information.</p>
+            
+            <h4>Step 7: Create a Production-Ready Version</h4>
+            <p>Let's create a more production-ready Dockerfile named Dockerfile.prod:</p>
+            
+            <pre><code>FROM python:3.10-slim AS builder
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt gunicorn
+
+# Second stage
+FROM python:3.10-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHON_VERSION=3.10 \
+    APP_ENV=production
+
+# Create non-root user
+RUN useradd -m appuser
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies
+COPY --from=builder /app/wheels /wheels
+RUN pip install --no-cache-dir /wheels/*
+
+# Copy application code
+COPY --chown=appuser:appuser . .
+
+# Switch to non-root user
+USER appuser
+
+# Expose the port
+EXPOSE 5000
+
+# Run the application with Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]</code></pre>
+            
+            <p>Build the production image:</p>
+            <pre><code>docker build -f Dockerfile.prod -t flask-docker-app:prod .</code></pre>
+            
+            <p>Run the production container:</p>
+            <pre><code>docker run -p 5000:5000 flask-docker-app:prod</code></pre>
+            
+            <h3>Reflection Questions</h3>
+            <ul>
+                <li>How does the production Dockerfile differ from the development version?</li>
+                <li>What security improvements does the production version include?</li>
+                <li>How does the multi-stage build reduce the image size?</li>
+                <li>What other optimizations could you make for a real-world application?</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Sharing Docker Images</h2>
+            
+            <p>Once you've built a Docker image, you might want to share it with others or deploy it to other environments. Docker provides several ways to share images.</p>
+            
+            <h3>Docker Hub</h3>
+            <p>Docker Hub is the default public registry for Docker images. To push an image to Docker Hub:</p>
+            
+            <ol>
+                <li>Sign up for a Docker Hub account at <a href="https://hub.docker.com/" target="_blank">hub.docker.com</a></li>
+                <li>Log in to Docker Hub from your terminal:
+                    <pre><code>docker login</code></pre>
+                </li>
+                <li>Tag your image with your Docker Hub username:
+                    <pre><code>docker tag flask-docker-app:latest yourusername/flask-docker-app:latest</code></pre>
+                </li>
+                <li>Push the image to Docker Hub:
+                    <pre><code>docker push yourusername/flask-docker-app:latest</code></pre>
+                </li>
+            </ol>
+            
+            <p>Once pushed, anyone can pull your image with:</p>
+            <pre><code>docker pull yourusername/flask-docker-app:latest</code></pre>
+            
+            <h3>Private Registries</h3>
+            <p>For proprietary or sensitive applications, you might want to use a private registry:</p>
+            
+            <h4>Docker Hub Private Repositories</h4>
+            <p>Docker Hub offers private repositories with paid plans. Usage is the same as public repositories, but access is restricted to authorized users.</p>
+            
+            <h4>Docker Registry</h4>
+            <p>You can run your own registry server:</p>
+            
+            <pre><code># Run a local registry
+docker run -d -p 5000:5000 --name registry registry:2
+
+# Tag an image for the local registry
+docker tag flask-docker-app:latest localhost:5000/flask-docker-app:latest
+
+# Push to the local registry
+docker push localhost:5000/flask-docker-app:latest</code></pre>
+            
+            <h4>Cloud Provider Registries</h4>
+            <p>Major cloud providers offer container registries:</p>
+            <ul>
+                <li><strong>AWS</strong>: Amazon Elastic Container Registry (ECR)</li>
+                <li><strong>Google Cloud</strong>: Google Container Registry (GCR)</li>
+                <li><strong>Azure</strong>: Azure Container Registry (ACR)</li>
+                <li><strong>GitHub</strong>: GitHub Container Registry (GHCR)</li>
+            </ul>
+            
+            <h3>Saving and Loading Images</h3>
+            <p>For offline sharing or backup, you can save Docker images to files:</p>
+            
+            <pre><code># Save an image to a tar archive
+docker save -o flask-app.tar flask-docker-app:latest
+
+# Load an image from a tar archive
+docker load -i flask-app.tar</code></pre>
+            
+            <p>This is useful for transferring images to machines without internet access or for archiving specific versions of your images.</p>
+            
+            <h3>Image Tagging Best Practices</h3>
+            <p>A good tagging strategy helps manage image versions:</p>
+            
+            <h4>Semantic Versioning</h4>
+            <pre><code>docker tag myapp:latest myapp:1.0.0
+docker tag myapp:latest myapp:1.0
+docker tag myapp:latest myapp:1</code></pre>
+            
+            <h4>Git-Based Tagging</h4>
+            <pre><code># Tag with Git commit hash
+docker tag myapp:latest myapp:$(git rev-parse --short HEAD)
+
+# Tag with Git branch and commit hash
+docker tag myapp:latest myapp:$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)</code></pre>
+            
+            <h4>Environment-Based Tagging</h4>
+            <pre><code>docker tag myapp:latest myapp:dev
+docker tag myapp:latest myapp:staging
+docker tag myapp:latest myapp:prod</code></pre>
+            
+            <h4>Date-Based Tagging</h4>
+            <pre><code>docker tag myapp:latest myapp:$(date +%Y%m%d)</code></pre>
+            
+            <p>Choose a tagging strategy that works for your team and workflow, and be consistent with it.</p>
+        </section>
+
+        <section>
+            <h2>Docker in Development Workflows</h2>
+            
+            <p>Docker can significantly improve development workflows by ensuring consistency and reducing environment-related issues.</p>
+            
+            <h3>Docker for Development</h3>
+            <p>Key benefits of using Docker during development:</p>
+            <ul>
+                <li><strong>Consistency</strong>: Everyone has the same environment, regardless of their local setup</li>
+                <li><strong>Isolation</strong>: Projects don't interfere with each other</li>
+                <li><strong>Dependency management</strong>: No more "works on my machine" problems</li>
+                <li><strong>Service simulation</strong>: Easily spin up databases, caches, and other services</li>
+                <li><strong>Portability</strong>: Work from any machine with the same setup</li>
+            </ul>
+            
+            <h3>Development-Specific Docker Patterns</h3>
+            
+            <h4>Volume Mounts for Live Reloading</h4>
+            <p>Mount your local source code into the container for immediate feedback:</p>
+            
+            <pre><code>docker run -v "$(pwd):/app" -p 5000:5000 python:3.10-slim bash -c "cd /app && pip install -r requirements.txt && python app.py"</code></pre>
+            
+            <h4>Development-Specific Dockerfile</h4>
+            <p>Create a separate Dockerfile.dev with development tools and configurations:</p>
+            
+            <pre><code>FROM python:3.10-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FLASK_ENV=development \
+    FLASK_DEBUG=1
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install development tools
+RUN pip install --no-cache-dir pytest flake8 black isort
+
+# Don't copy code - we'll mount it at runtime
+# COPY . .
+
+EXPOSE 5000
+
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5000", "--reload"]</code></pre>
+            
+            <p>Run with:</p>
+            <pre><code>docker build -f Dockerfile.dev -t myapp:dev .
+docker run -v "$(pwd):/app" -p 5000:5000 myapp:dev</code></pre>
+            
+            <h4>Docker for Testing</h4>
+            <p>Use Docker to run tests in the same environment as production:</p>
+            
+            <pre><code>docker run -v "$(pwd):/app" myapp:dev pytest</code></pre>
+            
+            <h4>Docker for Linting and Formatting</h4>
+            <pre><code>docker run -v "$(pwd):/app" myapp:dev black .
+docker run -v "$(pwd):/app" myapp:dev flake8 .</code></pre>
+            
+            <h3>Debugging in Containers</h3>
+            <p>Debugging applications running in containers requires some specific approaches:</p>
+            
+            <h4>Using Print Statements</h4>
+            <p>The simplest approach is to use print statements and monitor container logs:</p>
+            
+            <pre><code># Add print statements to your code
+print(f"Debug: variable = {variable}")
+
+# View container logs
+docker logs container_id
+
+# Follow logs in real-time
+docker logs -f container_id</code></pre>
+            
+            <h4>Interactive Debugging</h4>
+            <p>For more complex issues, connect to a running container:</p>
+            
+            <pre><code># Start a shell in a running container
+docker exec -it container_id bash
+
+# Run Python in the container
+docker exec -it container_id python
+
+# Run a specific Python script with arguments
+docker exec -it container_id python script.py arg1 arg2</code></pre>
+            
+            <h4>Using Remote Debuggers</h4>
+            <p>For IDE integration, use remote debuggers:</p>
+            
+            <pre><code># Install debugpy
+pip install debugpy
+
+# Add to your code
+import debugpy
+debugpy.listen(("0.0.0.0", 5678))
+debugpy.wait_for_client()
+debugpy.breakpoint()</code></pre>
+            
+            <p>Run your container with port 5678 exposed:</p>
+            <pre><code>docker run -p 5000:5000 -p 5678:5678 myapp:dev</code></pre>
+            
+            <p>Then connect your IDE's debugger to localhost:5678.</p>
+            
+            <h3>VS Code Docker Integration</h3>
+            <p>Visual Studio Code has excellent Docker integration through its Docker extension:</p>
+            <ul>
+                <li>View and manage containers, images, volumes, and networks</li>
+                <li>Build, run, and debug Dockerized applications</li>
+                <li>Generate Dockerfiles and Docker Compose files</li>
+                <li>Attach to running containers</li>
+                <li>View container logs</li>
+            </ul>
+            
+            <p>With the "Remote - Containers" extension, you can even develop inside a container, with VS Code's full feature set available.</p>
+        </section>
+
+        <section>
+            <h2>Summary and Next Steps</h2>
+            
+            <p>In this session, we've covered the essentials of building custom Docker images with Dockerfiles:</p>
+            <ul>
+                <li>Understanding Dockerfile instructions and their purpose</li>
+                <li>Building images from Dockerfiles</li>
+                <li>Optimizing Docker images for size, security, and performance</li>
+                <li>Dockerizing Python applications with best practices</li>
+                <li>Sharing Docker images through registries</li>
+                <li>Using Docker effectively in development workflows</li>
+            </ul>
+            
+            <p>You now have the knowledge to create custom Docker images for your Python applications, making them more portable, consistent, and deployable.</p>
+            
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li>Dockerfiles provide a declarative way to define application environments</li>
+                <li>Layer order matters for build efficiency due to Docker's caching mechanism</li>
+                <li>Multi-stage builds help create smaller, more secure production images</li>
+                <li>Different Python base images offer tradeoffs between size and features</li>
+                <li>Volume mounts allow for efficient development workflows with Docker</li>
+                <li>Docker Hub and other registries enable sharing and distribution of images</li>
+            </ul>
+            
+            <h3>Preview of Tomorrow's Session</h3>
+            <p>Tomorrow, we'll explore Docker Compose, which allows us to define and run multi-container applications. We'll learn how to:</p>
+            <ul>
+                <li>Define application services in a declarative YAML format</li>
+                <li>Manage multiple containers as a single application</li>
+                <li>Configure networks, volumes, and environment variables</li>
+                <li>Set up complete development environments</li>
+                <li>Orchestrate container startup, shutdown, and dependencies</li>
+            </ul>
+            
+            <h3>Additional Resources</h3>
+            <ul>
+                <li><a href="https://docs.docker.com/engine/reference/builder/" target="_blank">Dockerfile Reference</a></li>
+                <li><a href="https://docs.docker.com/develop/develop-images/dockerfile_best-practices/" target="_blank">Dockerfile Best Practices</a></li>
+                <li><a href="https://pythonspeed.com/docker/" target="_blank">Python Docker Production Guide</a></li>
+                <li><a href="https://hub.docker.com/_/python" target="_blank">Official Python Docker Images</a></li>
+                <li><a href="https://testdriven.io/blog/dockerizing-flask-with-postgres-gunicorn-and-nginx/" target="_blank">Dockerizing Flask with PostgreSQL, Gunicorn, and Nginx</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Full Stack Python Web Development Course</p>
+    </footer>
+</body>
+</html>

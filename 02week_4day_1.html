@@ -1,0 +1,2204 @@
+{% if posts.has_prev %}
+                    &lt;li class="page-item"&gt;
+                        &lt;a class="page-link" href="{{ url_for('main.user_profile', username=user.username, page=posts.prev_num) }}"&gt;Previous&lt;/a&gt;
+                    &lt;/li&gt;
+                {% else %}
+                    &lt;li class="page-item disabled"&gt;
+                        &lt;span class="page-link"&gt;Previous&lt;/span&gt;
+                    &lt;/li&gt;
+                {% endif %}
+                
+                {% for page_num in posts.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num == posts.page %}
+                            &lt;li class="page-item active"&gt;
+                                &lt;span class="page-link"&gt;{{ page_num }}&lt;/span&gt;
+                            &lt;/li&gt;
+                        {% else %}
+                            &lt;li class="page-item"&gt;
+                                &lt;a class="page-link" href="{{ url_for('main.user_profile', username=user.username, page=page_num) }}"&gt;{{ page_num }}&lt;/a&gt;
+                            &lt;/li&gt;
+                        {% endif %}
+                    {% else %}
+                        &lt;li class="page-item disabled"&gt;
+                            &lt;span class="page-link"&gt;...&lt;/span&gt;
+                        &lt;/li&gt;
+                    {% endif %}
+                {% endfor %}
+                
+                {% if posts.has_next %}
+                    &lt;li class="page-item"&gt;
+                        &lt;a class="page-link" href="{{ url_for('main.user_profile', username=user.username, page=posts.next_num) }}"&gt;Next&lt;/a&gt;
+                    &lt;/li&gt;
+                {% else %}
+                    &lt;li class="page-item disabled"&gt;
+                        &lt;span class="page-link"&gt;Next&lt;/span&gt;
+                    &lt;/li&gt;
+                {% endif %}
+            &lt;/ul&gt;
+        &lt;/nav&gt;
+    {% else %}
+        &lt;p&gt;This user hasn't published any posts yet.&lt;/p&gt;
+    {% endif %}
+{% endblock %}
+            </code></pre>
+            
+            <h3>Edit Profile Form</h3>
+            <p>Create a form for users to edit their profile information:</p>
+            
+            <pre><code>
+# app/forms/user.py
+from flask_wtf import FlaskForm
+from wtforms import StringField, TextAreaField, SubmitField
+from wtforms.validators import DataRequired, Email, Length, ValidationError
+from app.models.user import User
+from flask_login import current_user
+
+class EditProfileForm(FlaskForm):
+    name = StringField('Name', validators=[Length(max=64)])
+    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
+    bio = TextAreaField('Bio', validators=[Length(max=500)])
+    submit = SubmitField('Save Changes')
+    
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user is not None and user.id != current_user.id:
+            raise ValidationError('Please use a different email address.')
+            </code></pre>
+            
+            <h3>Edit Profile View</h3>
+            <pre><code>
+# app/views/main.py
+@bp.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    form = EditProfileForm()
+    
+    if form.validate_on_submit():
+        current_user.name = form.name.data
+        current_user.email = form.email.data
+        current_user.bio = form.bio.data
+        db.session.commit()
+        flash('Your profile has been updated.')
+        return redirect(url_for('main.user_profile', username=current_user.username))
+    elif request.method == 'GET':
+        form.name.data = current_user.name
+        form.email.data = current_user.email
+        form.bio.data = current_user.bio
+    
+    return render_template('edit_profile.html', form=form)
+            </code></pre>
+            
+            <h4>edit_profile.html</h4>
+            <pre><code>
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile - Blog{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Edit Profile&lt;/h2&gt;
+    &lt;form method="post" novalidate&gt;
+        {{ form.hidden_tag() }}
+        &lt;div class="form-group"&gt;
+            {{ form.name.label }}
+            {{ form.name(class="form-control") }}
+            {% for error in form.name.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.email.label }}
+            {{ form.email(class="form-control") }}
+            {% for error in form.email.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.bio.label }}
+            {{ form.bio(class="form-control", rows=5) }}
+            {% for error in form.bio.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group mt-3"&gt;
+            {{ form.submit(class="btn btn-primary") }}
+            &lt;a href="{{ url_for('main.user_profile', username=current_user.username) }}" class="btn btn-secondary"&gt;Cancel&lt;/a&gt;
+        &lt;/div&gt;
+    &lt;/form&gt;
+{% endblock %}
+            </code></pre>
+            
+            <h3>Change Password</h3>
+            <p>Let's also implement a feature for users to change their password:</p>
+            
+            <pre><code>
+# app/forms/auth.py (add this class)
+class ChangePasswordForm(FlaskForm):
+    current_password = PasswordField('Current Password', validators=[DataRequired()])
+    new_password = PasswordField('New Password', validators=[
+        DataRequired(),
+        Length(min=8, message='Password must be at least 8 characters long')
+    ])
+    confirm_password = PasswordField(
+        'Confirm New Password', validators=[DataRequired(), EqualTo('new_password', message='Passwords must match')]
+    )
+    submit = SubmitField('Change Password')
+            </code></pre>
+            
+            <pre><code>
+# app/views/auth.py (add this route)
+@bp.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    form = ChangePasswordForm()
+    
+    if form.validate_on_submit():
+        if not current_user.check_password(form.current_password.data):
+            flash('Current password is incorrect.')
+            return redirect(url_for('auth.change_password'))
+        
+        current_user.set_password(form.new_password.data)
+        db.session.commit()
+        flash('Your password has been changed.')
+        return redirect(url_for('main.user_profile', username=current_user.username))
+    
+    return render_template('auth/change_password.html', form=form)
+            </code></pre>
+            
+            <h4>auth/change_password.html</h4>
+            <pre><code>
+{% extends 'base.html' %}
+
+{% block title %}Change Password - Blog{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Change Password&lt;/h2&gt;
+    &lt;form method="post" novalidate&gt;
+        {{ form.hidden_tag() }}
+        &lt;div class="form-group"&gt;
+            {{ form.current_password.label }}
+            {{ form.current_password(class="form-control") }}
+            {% for error in form.current_password.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.new_password.label }}
+            {{ form.new_password(class="form-control") }}
+            {% for error in form.new_password.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.confirm_password.label }}
+            {{ form.confirm_password(class="form-control") }}
+            {% for error in form.confirm_password.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group mt-3"&gt;
+            {{ form.submit(class="btn btn-primary") }}
+            &lt;a href="{{ url_for('main.user_profile', username=current_user.username) }}" class="btn btn-secondary"&gt;Cancel&lt;/a&gt;
+        &lt;/div&gt;
+    &lt;/form&gt;
+{% endblock %}
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Implementing "Remember Me" Functionality</h2>
+            
+            <p>The "Remember Me" feature allows users to stay logged in across browser sessions. Flask-Login makes this easy to implement:</p>
+            
+            <pre><code>
+@bp.route('/login', methods=['GET', 'POST'])
+def login():
+    # ... other code ...
+    
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid username or password')
+            return redirect(url_for('auth.login'))
+        
+        # The remember parameter controls whether the session cookie expires
+        # when the browser is closed or remains for a longer period
+        login_user(user, remember=form.remember_me.data)
+        
+        # ... redirect logic ...
+            </code></pre>
+            
+            <p>When <code>remember=True</code>, Flask-Login sets a long-term cookie that persists even after the browser is closed. The duration of this cookie is controlled by the <code>REMEMBER_COOKIE_DURATION</code> configuration option:</p>
+            
+            <pre><code>
+# app/__init__.py
+from datetime import timedelta
+
+def create_app():
+    # ... other setup ...
+    
+    # Set the remember cookie to expire after 14 days
+    app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=14)
+    
+    # ... rest of the setup ...
+            </code></pre>
+            
+            <p>You can also set other cookie-related options:</p>
+            <ul>
+                <li><code>REMEMBER_COOKIE_NAME</code>: The name of the cookie (default is 'remember_token')</li>
+                <li><code>REMEMBER_COOKIE_SECURE</code>: Whether the cookie should be transmitted over HTTPS only</li>
+                <li><code>REMEMBER_COOKIE_HTTPONLY</code>: Whether the cookie should be accessible by JavaScript</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Password Reset</h2>
+            
+            <p>A password reset feature is essential for any authentication system. Let's implement it using email-based token verification:</p>
+            
+            <h3>Generate Reset Tokens</h3>
+            <p>First, let's add methods to the User model to generate and verify password reset tokens:</p>
+            
+            <pre><code>
+# app/models/user.py
+from time import time
+import jwt
+from flask import current_app
+
+class User(UserMixin, db.Model):
+    # ... existing code ...
+    
+    def get_reset_password_token(self, expires_in=600):
+        return jwt.encode(
+            {'reset_password': self.id, 'exp': time() + expires_in},
+            current_app.config['SECRET_KEY'],
+            algorithm='HS256'
+        )
+    
+    @staticmethod
+    def verify_reset_password_token(token):
+        try:
+            id = jwt.decode(
+                token,
+                current_app.config['SECRET_KEY'],
+                algorithms=['HS256']
+            )['reset_password']
+        except:
+            return None
+        return User.query.get(id)
+            </code></pre>
+            
+            <h3>Password Reset Forms</h3>
+            <pre><code>
+# app/forms/auth.py (add these classes)
+class RequestPasswordResetForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Request Password Reset')
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[
+        DataRequired(),
+        Length(min=8, message='Password must be at least 8 characters long')
+    ])
+    password2 = PasswordField(
+        'Confirm Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')]
+    )
+    submit = SubmitField('Reset Password')
+            </code></pre>
+            
+            <h3>Email Functionality</h3>
+            <p>We'll need a way to send emails. Let's use Flask-Mail:</p>
+            
+            <pre><code>
+# Install Flask-Mail
+pip install flask-mail
+
+# app/__init__.py
+from flask_mail import Mail
+
+mail = Mail()
+
+def create_app():
+    # ... other setup ...
+    
+    app.config['MAIL_SERVER'] = 'smtp.example.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = ('Blog Admin', 'noreply@example.com')
+    
+    mail.init_app(app)
+    
+    # ... rest of the setup ...
+            </code></pre>
+            
+            <pre><code>
+# app/email.py
+from flask import render_template
+from flask_mail import Message
+from app import mail
+from threading import Thread
+from flask import current_app
+
+def send_async_email(app, msg):
+    with app.app_context():
+        mail.send(msg)
+
+def send_email(subject, recipients, text_body, html_body):
+    msg = Message(subject, recipients=recipients)
+    msg.body = text_body
+    msg.html = html_body
+    
+    # Send email asynchronously to avoid blocking
+    Thread(target=send_async_email, args=(current_app._get_current_object(), msg)).start()
+
+def send_password_reset_email(user):
+    token = user.get_reset_password_token()
+    send_email(
+        'Reset Your Password',
+        [user.email],
+        render_template('email/reset_password.txt', user=user, token=token),
+        render_template('email/reset_password.html', user=user, token=token)
+    )
+            </code></pre>
+            
+            <h3>Password Reset Views</h3>
+            <pre><code>
+# app/views/auth.py (add these routes)
+@bp.route('/reset_password_request', methods=['GET', 'POST'])
+def reset_password_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    form = RequestPasswordResetForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            send_password_reset_email(user)
+        flash('Check your email for instructions to reset your password.')
+        return redirect(url_for('auth.login'))
+    
+    return render_template('auth/reset_password_request.html', form=form)
+
+@bp.route('/reset_password/&lt;token&gt;', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    user = User.verify_reset_password_token(token)
+    if not user:
+        flash('Invalid or expired reset token.')
+        return redirect(url_for('auth.login'))
+    
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        db.session.commit()
+        flash('Your password has been reset.')
+        return redirect(url_for('auth.login'))
+    
+    return render_template('auth/reset_password.html', form=form)
+            </code></pre>
+            
+            <h3>Password Reset Templates</h3>
+            <h4>auth/reset_password_request.html</h4>
+            <pre><code>
+{% extends 'base.html' %}
+
+{% block title %}Reset Password - Blog{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Reset Password&lt;/h2&gt;
+    &lt;form method="post" novalidate&gt;
+        {{ form.hidden_tag() }}
+        &lt;div class="form-group"&gt;
+            {{ form.email.label }}
+            {{ form.email(class="form-control") }}
+            {% for error in form.email.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group mt-3"&gt;
+            {{ form.submit(class="btn btn-primary") }}
+        &lt;/div&gt;
+    &lt;/form&gt;
+{% endblock %}
+            </code></pre>
+            
+            <h4>auth/reset_password.html</h4>
+            <pre><code>
+{% extends 'base.html' %}
+
+{% block title %}Reset Password - Blog{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Reset Password&lt;/h2&gt;
+    &lt;form method="post" novalidate&gt;
+        {{ form.hidden_tag() }}
+        &lt;div class="form-group"&gt;
+            {{ form.password.label }}
+            {{ form.password(class="form-control") }}
+            {% for error in form.password.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.password2.label }}
+            {{ form.password2(class="form-control") }}
+            {% for error in form.password2.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group mt-3"&gt;
+            {{ form.submit(class="btn btn-primary") }}
+        &lt;/div&gt;
+    &lt;/form&gt;
+{% endblock %}
+            </code></pre>
+            
+            <h4>email/reset_password.html</h4>
+            <pre><code>
+&lt;p&gt;Dear {{ user.username }},&lt;/p&gt;
+&lt;p&gt;
+    To reset your password, 
+    &lt;a href="{{ url_for('auth.reset_password', token=token, _external=True) }}"&gt;click here&lt;/a&gt;.
+&lt;/p&gt;
+&lt;p&gt;Alternatively, you can paste the following link in your browser's address bar:&lt;/p&gt;
+&lt;p&gt;{{ url_for('auth.reset_password', token=token, _external=True) }}&lt;/p&gt;
+&lt;p&gt;If you have not requested a password reset, simply ignore this message.&lt;/p&gt;
+&lt;p&gt;Sincerely,&lt;/p&gt;
+&lt;p&gt;The Blog Team&lt;/p&gt;
+            </code></pre>
+            
+            <h4>email/reset_password.txt</h4>
+            <pre><code>
+Dear {{ user.username }},
+
+To reset your password, click the following link:
+
+{{ url_for('auth.reset_password', token=token, _external=True) }}
+
+If you have not requested a password reset, simply ignore this message.
+
+Sincerely,
+The Blog Team
+            </code></pre>
+            
+            <h3>Add Link to Login Template</h3>
+            <p>Add a "Forgot Password" link to the login template:</p>
+            
+            <pre><code>
+&lt;!-- In auth/login.html, after the form --&gt;
+&lt;p&gt;
+    Forgot your password? 
+    &lt;a href="{{ url_for('auth.reset_password_request') }}"&gt;Click to reset&lt;/a&gt;
+&lt;/p&gt;
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>User Roles and Permissions</h2>
+            
+            <p>For many applications, you'll want to implement different user roles with varying permissions. Here's a simple approach:</p>
+            
+            <h3>Role Model</h3>
+            <pre><code>
+# app/models/user.py
+class Role(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), unique=True)
+    description = db.Column(db.String(255))
+    
+    users = db.relationship('User', backref='role', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'&lt;Role {self.name}&gt;'
+
+class User(UserMixin, db.Model):
+    # ... existing columns ...
+    role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
+    
+    # ... existing methods ...
+    
+    def has_permission(self, permission):
+        if self.role:
+            # Simple implementation - you could expand this with more complex logic
+            return self.role.name == permission
+        return False
+    
+    @property
+    def is_admin(self):
+        return self.has_permission('admin')
+            </code></pre>
+            
+            <h3>Initialize Roles</h3>
+            <pre><code>
+# app/data.py (add this function)
+def create_roles():
+    roles = [
+        {'name': 'user', 'description': 'Regular user'},
+        {'name': 'editor', 'description': 'Can edit content'},
+        {'name': 'admin', 'description': 'Administrator with full access'}
+    ]
+    
+    for role_data in roles:
+        role = Role.query.filter_by(name=role_data['name']).first()
+        if role is None:
+            role = Role(name=role_data['name'], description=role_data['description'])
+            db.session.add(role)
+    
+    db.session.commit()
+            </code></pre>
+            
+            <h3>Role-Based Access Control</h3>
+            <p>Create a decorator to check for specific roles:</p>
+            
+            <pre><code>
+# app/decorators.py
+from functools import wraps
+from flask import abort
+from flask_login import current_user
+
+def role_required(role_name):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated or not current_user.has_permission(role_name):
+                abort(403)
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+# Use in views
+@bp.route('/admin/dashboard')
+@login_required
+@role_required('admin')
+def admin_dashboard():
+    # Only users with admin role can access this
+    return render_template('admin/dashboard.html')
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Hands-On Exercise: Implementing Authentication</h2>
+            
+            <p>Let's put everything together and implement authentication in our blog application:</p>
+            
+            <h3>Step 1: Set Up Flask-Login</h3>
+            <ol>
+                <li>Install Flask-Login and Flask-WTF:
+                <pre><code>pip install flask-login flask-wtf email-validator</code></pre>
+                </li>
+                
+                <li>Update app/__init__.py to initialize Flask-Login</li>
+                
+                <li>Make sure your User model inherits from UserMixin and has the necessary methods</li>
+                
+                <li>Add the user loader function</li>
+            </ol>
+            
+            <h3>Step 2: Create Authentication Forms</h3>
+            <ol>
+                <li>Create app/forms/auth.py with LoginForm and RegistrationForm</li>
+                
+                <li>Implement validation logic for the forms</li>
+            </ol>
+            
+            <h3>Step 3: Implement Authentication Views</h3>
+            <ol>
+                <li>Create app/views/auth.py with register, login, and logout routes</li>
+                
+                <li>Create the corresponding templates in app/templates/auth/</li>
+                
+                <li>Update the navigation in your base template to show different links for authenticated users</li>
+            </ol>
+            
+            <h3>Step 4: Protect Routes</h3>
+            <ol>
+                <li>Add @login_required to routes that require authentication (e.g., creating posts)</li>
+                
+                <li>Use current_user in templates to show/hide elements based on authentication status</li>
+            </ol>
+            
+            <h3>Step 5: Add User Profile Pages</h3>
+            <ol>
+                <li>Implement user_profile view and template</li>
+                
+                <li>Create form and view for editing profiles</li>
+            </ol>
+            
+            <h3>Testing Your Implementation</h3>
+            <ol>
+                <li>Start your application:
+                <pre><code>flask run</code></pre>
+                </li>
+                
+                <li>Register a new account</li>
+                
+                <li>Log in with the new account</li>
+                
+                <li>Verify that protected routes work properly</li>
+                
+                <li>Test logging out</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Authentication Best Practices</h2>
+            
+            <p>As you implement authentication in your applications, keep these best practices in mind:</p>
+            
+            <h3>Security</h3>
+            <ul>
+                <li><strong>Use HTTPS</strong>: Always use HTTPS in production to encrypt data in transit</li>
+                <li><strong>Hash passwords</strong>: Never store plain text passwords; use proper hashing algorithms</li>
+                <li><strong>Rate limiting</strong>: Implement rate limiting on login attempts to prevent brute force attacks</li>
+                <li><strong>Secure cookies</strong>: Set secure and HttpOnly flags on session cookies</li>
+                <li><strong>CSRF protection</strong>: Use Flask-WTF's CSRF protection for all forms</li>
+                <li><strong>Content Security Policy (CSP)</strong>: Implement CSP headers to prevent XSS attacks</li>
+                <li><strong>Keep dependencies updated</strong>: Regularly update your dependencies to address security vulnerabilities</li>
+            </ul>
+            
+            <h3>User Experience</h3>
+            <ul>
+                <li><strong>Clear error messages</strong>: Provide clear but not overly specific error messages (avoid leaking information)</li>
+                <li><strong>Remember Me</strong>: Allow users to stay logged in across sessions</li>
+                <li><strong>Password recovery</strong>: Implement a secure password reset flow</li>
+                <li><strong>Progressive enhancement</strong>: Ensure forms work without JavaScript but are enhanced with it</li>
+                <li><strong>Validation feedback</strong>: Provide immediate feedback on form inputs</li>
+            </ul>
+            
+            <h3>Implementation</h3>
+            <ul>
+                <li><strong>Separation of concerns</strong>: Keep authentication logic separate from application logic</li>
+                <li><strong>Use extensions</strong>: Leverage well-tested extensions like Flask-Login rather than building from scratch</li>
+                <li><strong>Test thoroughly</strong>: Write tests for all authentication flows, including edge cases</li>
+                <li><strong>Environment variables</strong>: Store sensitive configuration (e.g., secret keys, email credentials) in environment variables</li>
+                <li><strong>Logging</strong>: Log authentication events for security auditing</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Next Steps</h2>
+            
+            <p>Today, we've covered user authentication with Flask-Login, learning how to implement registration, login, profile management, and password reset functionality. These features are essential for almost any web application that requires user accounts.</p>
+            
+            <p>Tomorrow, we'll build on this foundation by exploring forms and validation in more detail, which will allow us to implement features like creating and editing blog posts with proper validation.</p>
+            
+            <h3>Tomorrow: Forms and Validation</h3>
+            <ul>
+                <li>Advanced form handling with Flask-WTF</li>
+                <li>Custom form validators</li>
+                <li>Dynamic forms</li>
+                <li>File uploads</li>
+                <li>AJAX form submission</li>
+                <li>Form macros for reusable components</li>
+            </ul>
+            
+            <h3>Preparation</h3>
+            <p>To prepare for tomorrow's session:</p>
+            <ol>
+                <li>Review the forms we've created today</li>
+                <li>Explore the Flask-WTF documentation at <a href="https://flask-wtf.readthedocs.io/" target="_blank">https://flask-wtf.readthedocs.io/</a></li>
+                <li>Make sure your authentication system is working correctly</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Today's Assignment: User Authentication</h2>
+            
+            <p>To reinforce what we've learned today, complete the following exercises:</p>
+            
+            <h3>Exercise 1: Implement Authentication</h3>
+            <ol>
+                <li>Set up Flask-Login in your blog application</li>
+                <li>Create registration and login forms with proper validation</li>
+                <li>Implement login, registration, and logout functionality</li>
+                <li>Protect relevant routes with @login_required</li>
+                <li>Update templates to show different content for authenticated users</li>
+            </ol>
+            
+            <h3>Exercise 2: User Profiles</h3>
+            <ol<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Authentication</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>User Authentication</h1>
+        <p class="subtitle">Week 2 - Thursday: Full Stack Web Development with Python</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Introduction to Authentication</h2>
+            <p>Welcome to our fourth day of Week 2! So far, we've covered Python fundamentals, Flask basics, and database integration with SQLAlchemy. Today, we'll focus on user authentication, which is essential for almost any web application.</p>
+            
+            <p>Authentication is the process of verifying the identity of a user. In web applications, this typically involves users providing credentials (like a username and password) and the application validating those credentials. Once authenticated, users can access protected resources and perform actions specific to their account.</p>
+            
+            <h3>Why Authentication Matters</h3>
+            <p>Authentication is a fundamental security feature for several reasons:</p>
+            <ul>
+                <li><strong>Privacy:</strong> Ensuring users can only access their own data</li>
+                <li><strong>Security:</strong> Preventing unauthorized access to protected resources</li>
+                <li><strong>Personalization:</strong> Tailoring the user experience based on preferences and history</li>
+                <li><strong>Accountability:</strong> Tracking who performs specific actions in the system</li>
+                <li><strong>Authorization:</strong> Controlling what different users can do based on their roles</li>
+            </ul>
+            
+            <h3>Authentication vs. Authorization</h3>
+            <p>Though often used interchangeably, authentication and authorization are distinct concepts:</p>
+            <ul>
+                <li><strong>Authentication:</strong> Verifying who the user is (identity)</li>
+                <li><strong>Authorization:</strong> Determining what the user is allowed to do (permissions)</li>
+            </ul>
+            
+            <p>In other words, authentication confirms "you are who you say you are," while authorization determines "you are allowed to do what you're trying to do."</p>
+            
+            <h3>Types of Authentication</h3>
+            <p>There are several authentication methods used in web applications:</p>
+            <ul>
+                <li><strong>Username/Password:</strong> The most common method, where users provide credentials known only to them</li>
+                <li><strong>Multi-Factor Authentication (MFA):</strong> Requiring multiple forms of verification (something you know, something you have, something you are)</li>
+                <li><strong>OAuth:</strong> Using a third-party service (like Google or Facebook) to authenticate users</li>
+                <li><strong>Token-Based:</strong> Using tokens (like JWT) to maintain authenticated sessions</li>
+                <li><strong>Biometric:</strong> Using fingerprints, facial recognition, or other physical characteristics</li>
+            </ul>
+            
+            <p>For our blog application, we'll implement username/password authentication using Flask-Login, an extension that provides user session management for Flask applications.</p>
+        </section>
+
+        <section>
+            <h2>Authentication Flow</h2>
+            
+            <p>Before diving into implementation, let's understand the typical authentication flow in a web application:</p>
+            
+            <h3>Registration Flow</h3>
+            <ol>
+                <li>User fills out a registration form with username, email, password, etc.</li>
+                <li>Application validates the input (username/email not taken, password meets requirements)</li>
+                <li>Application securely hashes the password (never store plain text passwords!)</li>
+                <li>Application stores the user information in the database</li>
+                <li>User is redirected to login page or automatically logged in</li>
+            </ol>
+            
+            <h3>Login Flow</h3>
+            <ol>
+                <li>User enters their username/email and password</li>
+                <li>Application retrieves the user record from the database using the username/email</li>
+                <li>Application hashes the provided password and compares it with the stored hash</li>
+                <li>If the hashes match, the application creates a session for the user</li>
+                <li>The session ID is stored in a cookie on the user's browser</li>
+                <li>User is redirected to the protected part of the application</li>
+            </ol>
+            
+            <h3>Authentication Persistence</h3>
+            <ol>
+                <li>On subsequent requests, the browser sends the session cookie to the server</li>
+                <li>Application verifies the session ID and retrieves the associated user</li>
+                <li>If valid, the request proceeds with the user context; otherwise, the user is redirected to login</li>
+                <li>When the user logs out, the session is invalidated</li>
+            </ol>
+            
+            <p>This flow ensures that users are properly authenticated and that their sessions persist between requests, providing a seamless experience while maintaining security.</p>
+        </section>
+
+        <section>
+            <h2>Password Security</h2>
+            
+            <p>Password security is crucial for protecting user accounts. Here are some best practices:</p>
+            
+            <h3>Password Hashing</h3>
+            <p>Never store plain text passwords in your database. Instead, use a cryptographic hash function designed for passwords, such as bcrypt, Argon2, or PBKDF2. These functions:</p>
+            <ul>
+                <li>Convert passwords to fixed-length strings that cannot be reversed</li>
+                <li>Include a random "salt" to prevent rainbow table attacks</li>
+                <li>Are intentionally slow to compute, making brute-force attacks impractical</li>
+            </ul>
+            
+            <p>In Flask, we can use the Werkzeug security utilities for password hashing:</p>
+            
+            <pre><code>
+from werkzeug.security import generate_password_hash, check_password_hash
+
+# Hashing a password
+password_hash = generate_password_hash('my_password')
+
+# Verifying a password
+is_correct = check_password_hash(password_hash, 'my_password')  # True
+is_correct = check_password_hash(password_hash, 'wrong_password')  # False
+            </code></pre>
+            
+            <h3>Password Requirements</h3>
+            <p>Enforce strong password policies to protect your users:</p>
+            <ul>
+                <li>Minimum length (at least 8 characters, preferably 12+)</li>
+                <li>Mix of uppercase and lowercase letters, numbers, and special characters</li>
+                <li>Avoid common passwords (e.g., "password123", "qwerty")</li>
+                <li>Avoid personal information (e.g., username, email)</li>
+            </ul>
+            
+            <p>However, be careful not to make requirements so strict that users resort to writing down their passwords or using the same password across multiple sites.</p>
+            
+            <h3>Password Reset</h3>
+            <p>Implement a secure password reset flow:</p>
+            <ol>
+                <li>User requests a password reset by providing their email</li>
+                <li>Application generates a unique, time-limited token</li>
+                <li>Token is sent to the user's email with a reset link</li>
+                <li>User clicks the link and sets a new password</li>
+                <li>Application verifies the token, then updates the password</li>
+            </ol>
+            
+            <p>Never send passwords in emails, and ensure password reset tokens expire after a short time (e.g., 1 hour).</p>
+        </section>
+
+        <section>
+            <h2>Introduction to Flask-Login</h2>
+            
+            <p>Flask-Login is an extension that provides user session management for Flask. It handles the common tasks of logging in, logging out, and remembering users' sessions over extended periods.</p>
+            
+            <h3>Features of Flask-Login</h3>
+            <ul>
+                <li>Store the active user's ID in the session</li>
+                <li>Restrict views to logged-in users</li>
+                <li>Remember users across sessions</li>
+                <li>Protect against cookie theft</li>
+                <li>Integration with Flask's blueprints</li>
+            </ul>
+            
+            <h3>Installation</h3>
+            <pre><code>
+pip install flask-login
+            </code></pre>
+            
+            <h3>Basic Setup</h3>
+            <p>To integrate Flask-Login into your application, you need to:</p>
+            
+            <ol>
+                <li>Initialize the LoginManager</li>
+                <li>Provide a user loader function</li>
+                <li>Make your User model compatible with Flask-Login</li>
+                <li>Set up login/logout views</li>
+            </ol>
+            
+            <p>Let's look at each step in detail.</p>
+            
+            <h4>Step 1: Initialize the LoginManager</h4>
+            <pre><code>
+# app/__init__.py
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
+
+db = SQLAlchemy()
+login_manager = LoginManager()
+
+def create_app():
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = 'your-secret-key'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+    
+    db.init_app(app)
+    
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'  # The name of the login view
+    login_manager.login_message = 'Please log in to access this page.'
+    
+    # Register blueprints and other setup...
+    
+    return app
+            </code></pre>
+            
+            <h4>Step 2: Provide a User Loader Function</h4>
+            <p>Flask-Login needs to know how to load a user given an ID. The user loader function takes a user ID and returns the corresponding user object:</p>
+            
+            <pre><code>
+# app/models/user.py
+from app import db, login_manager
+from flask_login import UserMixin
+
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128))
+    
+    # ... other columns and methods ...
+
+@login_manager.user_loader
+def load_user(id):
+    return User.query.get(int(id))
+            </code></pre>
+            
+            <h4>Step 3: Make Your User Model Compatible with Flask-Login</h4>
+            <p>The User model must implement certain properties and methods required by Flask-Login. The easiest way is to inherit from UserMixin, which provides default implementations:</p>
+            
+            <pre><code>
+from flask_login import UserMixin
+
+class User(UserMixin, db.Model):
+    # ... columns and methods ...
+            </code></pre>
+            
+            <p>UserMixin provides:</p>
+            <ul>
+                <li><code>is_authenticated</code>: True for logged-in users</li>
+                <li><code>is_active</code>: True for users allowed to log in</li>
+                <li><code>is_anonymous</code>: False for regular users</li>
+                <li><code>get_id()</code>: Returns a unique identifier for the user</li>
+            </ul>
+            
+            <h4>Step 4: Set Up Login/Logout Views</h4>
+            <pre><code>
+# app/views/auth.py
+from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask_login import login_user, logout_user, login_required, current_user
+from app import db
+from app.models.user import User
+from werkzeug.security import check_password_hash
+
+bp = Blueprint('auth', __name__, url_prefix='/auth')
+
+@bp.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        remember = 'remember' in request.form
+        
+        user = User.query.filter_by(username=username).first()
+        
+        if user is None or not check_password_hash(user.password_hash, password):
+            flash('Invalid username or password')
+            return redirect(url_for('auth.login'))
+        
+        login_user(user, remember=remember)
+        
+        next_page = request.args.get('next')
+        if not next_page or not next_page.startswith('/'):
+            next_page = url_for('main.index')
+        
+        return redirect(next_page)
+    
+    return render_template('auth/login.html')
+
+@bp.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('main.index'))
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Creating Registration and Login Forms</h2>
+            
+            <p>Let's create the forms for user registration and login. We'll use Flask-WTF, an extension that provides form validation and CSRF protection.</p>
+            
+            <h3>Installation</h3>
+            <pre><code>
+pip install flask-wtf email-validator
+            </code></pre>
+            
+            <h3>Form Classes</h3>
+            <p>Create a forms.py file in your auth module:</p>
+            
+            <pre><code>
+# app/forms/auth.py
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, BooleanField, SubmitField
+from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
+from app.models.user import User
+
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    remember_me = BooleanField('Remember Me')
+    submit = SubmitField('Sign In')
+
+class RegistrationForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
+    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
+    password = PasswordField('Password', validators=[
+        DataRequired(),
+        Length(min=8, message='Password must be at least 8 characters long')
+    ])
+    password2 = PasswordField(
+        'Confirm Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')]
+    )
+    submit = SubmitField('Register')
+    
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user is not None:
+            raise ValidationError('Please use a different username.')
+    
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user is not None:
+            raise ValidationError('Please use a different email address.')
+            </code></pre>
+            
+            <h3>Updated Auth Views</h3>
+            <p>Now, let's update our auth views to use these forms:</p>
+            
+            <pre><code>
+# app/views/auth.py
+from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask_login import login_user, logout_user, login_required, current_user
+from app import db
+from app.models.user import User
+from app.forms.auth import LoginForm, RegistrationForm
+from werkzeug.security import generate_password_hash, check_password_hash
+
+bp = Blueprint('auth', __name__, url_prefix='/auth')
+
+@bp.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(username=form.username.data, email=form.email.data)
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash('Congratulations, you are now a registered user!')
+        return redirect(url_for('auth.login'))
+    
+    return render_template('auth/register.html', form=form)
+
+@bp.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid username or password')
+            return redirect(url_for('auth.login'))
+        
+        login_user(user, remember=form.remember_me.data)
+        
+        next_page = request.args.get('next')
+        if not next_page or not next_page.startswith('/'):
+            next_page = url_for('main.index')
+        
+        return redirect(next_page)
+    
+    return render_template('auth/login.html', form=form)
+
+@bp.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('main.index'))
+            </code></pre>
+            
+            <h3>Template Updates</h3>
+            <p>Create templates for the login and registration forms:</p>
+            
+            <h4>auth/login.html</h4>
+            <pre><code>
+{% extends 'base.html' %}
+
+{% block title %}Login - Blog{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Login&lt;/h2&gt;
+    &lt;form method="post" novalidate&gt;
+        {{ form.hidden_tag() }}
+        &lt;div class="form-group"&gt;
+            {{ form.username.label }}
+            {{ form.username(class="form-control") }}
+            {% for error in form.username.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.password.label }}
+            {{ form.password(class="form-control") }}
+            {% for error in form.password.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-check"&gt;
+            {{ form.remember_me(class="form-check-input") }}
+            {{ form.remember_me.label(class="form-check-label") }}
+        &lt;/div&gt;
+        &lt;div class="form-group mt-3"&gt;
+            {{ form.submit(class="btn btn-primary") }}
+        &lt;/div&gt;
+    &lt;/form&gt;
+    &lt;p class="mt-3"&gt;
+        New User? &lt;a href="{{ url_for('auth.register') }}"&gt;Click to Register!&lt;/a&gt;
+    &lt;/p&gt;
+{% endblock %}
+            </code></pre>
+            
+            <h4>auth/register.html</h4>
+            <pre><code>
+{% extends 'base.html' %}
+
+{% block title %}Register - Blog{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Register&lt;/h2&gt;
+    &lt;form method="post" novalidate&gt;
+        {{ form.hidden_tag() }}
+        &lt;div class="form-group"&gt;
+            {{ form.username.label }}
+            {{ form.username(class="form-control") }}
+            {% for error in form.username.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.email.label }}
+            {{ form.email(class="form-control") }}
+            {% for error in form.email.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.password.label }}
+            {{ form.password(class="form-control") }}
+            {% for error in form.password.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.password2.label }}
+            {{ form.password2(class="form-control") }}
+            {% for error in form.password2.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group mt-3"&gt;
+            {{ form.submit(class="btn btn-primary") }}
+        &lt;/div&gt;
+    &lt;/form&gt;
+    &lt;p class="mt-3"&gt;
+        Already have an account? &lt;a href="{{ url_for('auth.login') }}"&gt;Click to Login!&lt;/a&gt;
+    &lt;/p&gt;
+{% endblock %}
+            </code></pre>
+            
+            <h3>Update Navigation in Base Template</h3>
+            <p>Update the navigation in your base template to show different links for authenticated users:</p>
+            
+            <pre><code>
+&lt;nav class="navbar navbar-expand-lg navbar-light bg-light"&gt;
+    &lt;div class="container"&gt;
+        &lt;a class="navbar-brand" href="{{ url_for('main.index') }}"&gt;Blog&lt;/a&gt;
+        &lt;button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"&gt;
+            &lt;span class="navbar-toggler-icon"&gt;&lt;/span&gt;
+        &lt;/button&gt;
+        &lt;div class="collapse navbar-collapse" id="navbarNav"&gt;
+            &lt;ul class="navbar-nav me-auto"&gt;
+                &lt;li class="nav-item"&gt;
+                    &lt;a class="nav-link" href="{{ url_for('main.index') }}"&gt;Home&lt;/a&gt;
+                &lt;/li&gt;
+                {% if current_user.is_authenticated %}
+                &lt;li class="nav-item"&gt;
+                    &lt;a class="nav-link" href="{{ url_for('main.create_post') }}"&gt;Create Post&lt;/a&gt;
+                &lt;/li&gt;
+                {% endif %}
+            &lt;/ul&gt;
+            &lt;ul class="navbar-nav"&gt;
+                {% if current_user.is_authenticated %}
+                &lt;li class="nav-item"&gt;
+                    &lt;a class="nav-link" href="{{ url_for('main.user_profile', username=current_user.username) }}"&gt;
+                        Profile
+                    &lt;/a&gt;
+                &lt;/li&gt;
+                &lt;li class="nav-item"&gt;
+                    &lt;a class="nav-link" href="{{ url_for('auth.logout') }}"&gt;Logout&lt;/a&gt;
+                &lt;/li&gt;
+                {% else %}
+                &lt;li class="nav-item"&gt;
+                    &lt;a class="nav-link" href="{{ url_for('auth.login') }}"&gt;Login&lt;/a&gt;
+                &lt;/li&gt;
+                &lt;li class="nav-item"&gt;
+                    &lt;a class="nav-link" href="{{ url_for('auth.register') }}"&gt;Register&lt;/a&gt;
+                &lt;/li&gt;
+                {% endif %}
+            &lt;/ul&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/nav&gt;
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Protecting Routes</h2>
+            
+            <p>One of the key features of Flask-Login is the ability to protect routes, ensuring that only authenticated users can access certain parts of your application.</p>
+            
+            <h3>Using the @login_required Decorator</h3>
+            <p>The <code>@login_required</code> decorator ensures that only authenticated users can access a view. If an unauthenticated user tries to access a protected view, they are redirected to the login page:</p>
+            
+            <pre><code>
+from flask_login import login_required, current_user
+
+@bp.route('/create', methods=['GET', 'POST'])
+@login_required
+def create_post():
+    # Only authenticated users can reach this point
+    if request.method == 'POST':
+        # Process form submission
+        pass
+    return render_template('create_post.html')
+            </code></pre>
+            
+            <h3>Using current_user in Templates and Views</h3>
+            <p>Flask-Login provides a <code>current_user</code> proxy that represents the currently logged-in user. You can use it in your views and templates to customize the user experience:</p>
+            
+            <h4>In Views</h4>
+            <pre><code>
+@bp.route('/user/&lt;username&gt;')
+def user_profile(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    posts = Post.query.filter_by(user_id=user.id).all()
+    
+    # Allow editing only if the profile belongs to the current user
+    can_edit = current_user.is_authenticated and current_user.id == user.id
+    
+    return render_template('user_profile.html', user=user, posts=posts, can_edit=can_edit)
+            </code></pre>
+            
+            <h4>In Templates</h4>
+            <pre><code>
+{% if current_user.is_authenticated %}
+    &lt;p&gt;Welcome back, {{ current_user.username }}!&lt;/p&gt;
+    
+    {% if current_user.id == post.user_id %}
+        &lt;a href="{{ url_for('main.edit_post', id=post.id) }}"&gt;Edit&lt;/a&gt;
+        &lt;a href="{{ url_for('main.delete_post', id=post.id) }}"&gt;Delete&lt;/a&gt;
+    {% endif %}
+{% else %}
+    &lt;p&gt;Please &lt;a href="{{ url_for('auth.login') }}"&gt;login&lt;/a&gt; to post comments.&lt;/p&gt;
+{% endif %}
+            </code></pre>
+            
+            <h3>Custom Decorators for Permissions</h3>
+            <p>You can create custom decorators for more granular permissions beyond simple authentication:</p>
+            
+            <pre><code>
+from functools import wraps
+from flask import abort
+from flask_login import current_user
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin:
+            abort(403)  # Forbidden
+        return f(*args, **kwargs)
+    return decorated_function
+
+@bp.route('/admin/dashboard')
+@login_required
+@admin_required
+def admin_dashboard():
+    # Only admin users can reach this point
+    return render_template('admin/dashboard.html')
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>User Profile and Settings</h2>
+            
+            <p>Now that we have user authentication in place, let's implement user profiles and settings.</p>
+            
+            <h3>User Profile Page</h3>
+            <pre><code>
+# app/views/main.py
+@bp.route('/user/&lt;username&gt;')
+def user_profile(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    page = request.args.get('page', 1, type=int)
+    posts = Post.query.filter_by(user_id=user.id, published=True).order_by(
+        Post.created_at.desc()).paginate(page=page, per_page=5, error_out=False)
+    return render_template('user_profile.html', user=user, posts=posts)
+            </code></pre>
+            
+            <h4>user_profile.html</h4>
+            <pre><code>
+{% extends 'base.html' %}
+
+{% block title %}{{ user.username }} - Blog{% endblock %}
+
+{% block content %}
+    &lt;div class="user-profile"&gt;
+        &lt;h2&gt;{{ user.username }}&lt;/h2&gt;
+        
+        {% if user.bio %}
+            &lt;p&gt;{{ user.bio }}&lt;/p&gt;
+        {% endif %}
+        
+        &lt;p&gt;Member since: {{ user.created_at.strftime('%B %d, %Y') }}&lt;/p&gt;
+        
+        {% if current_user.is_authenticated and current_user.id == user.id %}
+            &lt;p&gt;
+                &lt;a href="{{ url_for('main.edit_profile') }}" class="btn btn-primary"&gt;Edit Profile&lt;/a&gt;
+            &lt;/p&gt;
+        {% endif %}
+    &lt;/div&gt;
+    
+    &lt;h3&gt;Posts by {{ user.username }}&lt;/h3&gt;
+    
+    {% if posts.items %}
+        &lt;div class="post-list"&gt;
+            {% for post in posts.items %}
+                &lt;div class="card mb-3"&gt;
+                    &lt;div class="card-body"&gt;
+                        &lt;h5 class="card-title"&gt;
+                            &lt;a href="{{ url_for('main.post', slug=post.slug) }}"&gt;{{ post.title }}&lt;/a&gt;
+                        &lt;/h5&gt;
+                        &lt;h6 class="card-subtitle mb-2 text-muted"&gt;
+                            {{ post.created_at.strftime('%B %d, %Y') }}
+                        &lt;/h6&gt;
+                        &lt;p class="card-text"&gt;{{ post.content|truncate(200) }}&lt;/p&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        
+        &lt;nav aria-label="Page navigation"&gt;
+            &lt;ul class="pagination"&gt;
+                {% if posts.has_prev %}
+                    &lt;
+                    <li class="page-item">
+                      <a class="page-link" href="{{ url_for('main.user_profile', username=user.username, page=posts.prev_num) }}">Previous</a>
+                  </li>
+              {% else %}
+                  <li class="page-item disabled">
+                      <span class="page-link">Previous</span>
+                  </li>
+              {% endif %}
+              
+              {% for page_num in posts.iter_pages() %}
+                  {% if page_num %}
+                      {% if page_num == posts.page %}
+                          <li class="page-item active">
+                              <span class="page-link">{{ page_num }}</span>
+                          </li>
+                      {% else %}
+                          <li class="page-item">
+                              <a class="page-link" href="{{ url_for('main.user_profile', username=user.username, page=page_num) }}">{{ page_num }}</a>
+                          </li>
+                      {% endif %}
+                  {% else %}
+                      <li class="page-item disabled">
+                          <span class="page-link">...</span>
+                      </li>
+                  {% endif %}
+              {% endfor %}
+              
+              {% if posts.has_next %}
+                  <li class="page-item">
+                      <a class="page-link" href="{{ url_for('main.user_profile', username=user.username, page=posts.next_num) }}">Next</a>
+                  </li>
+              {% else %}
+                  <li class="page-item disabled">
+                      <span class="page-link">Next</span>
+                  </li>
+              {% endif %}
+          </ul>
+      </nav>
+  {% else %}
+      <p>This user hasn't published any posts yet.</p>
+  {% endif %}
+{% endblock %}
+</code></pre>
+            
+<h3>Edit Profile Form</h3>
+<p>Create a form for users to edit their profile information:</p>
+
+<pre><code>
+# app/forms/user.py
+from flask_wtf import FlaskForm
+from wtforms import StringField, TextAreaField, SubmitField
+from wtforms.validators import DataRequired, Email, Length, ValidationError
+from app.models.user import User
+from flask_login import current_user
+
+class EditProfileForm(FlaskForm):
+name = StringField('Name', validators=[Length(max=64)])
+email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
+bio = TextAreaField('Bio', validators=[Length(max=500)])
+submit = SubmitField('Save Changes')
+
+def validate_email(self, email):
+user = User.query.filter_by(email=email.data).first()
+if user is not None and user.id != current_user.id:
+raise ValidationError('Please use a different email address.')
+</code></pre>
+
+<h3>Edit Profile View</h3>
+<pre><code>
+# app/views/main.py
+@bp.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+form = EditProfileForm()
+
+if form.validate_on_submit():
+current_user.name = form.name.data
+current_user.email = form.email.data
+current_user.bio = form.bio.data
+db.session.commit()
+flash('Your profile has been updated.')
+return redirect(url_for('main.user_profile', username=current_user.username))
+elif request.method == 'GET':
+form.name.data = current_user.name
+form.email.data = current_user.email
+form.bio.data = current_user.bio
+
+return render_template('edit_profile.html', form=form)
+</code></pre>
+
+<h4>edit_profile.html</h4>
+<pre><code>
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile - Blog{% endblock %}
+
+{% block content %}
+&lt;h2&gt;Edit Profile&lt;/h2&gt;
+&lt;form method="post" novalidate&gt;
+{{ form.hidden_tag() }}
+&lt;div class="form-group"&gt;
+{{ form.name.label }}
+{{ form.name(class="form-control") }}
+{% for error in form.name.errors %}
+    &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+{% endfor %}
+&lt;/div&gt;
+&lt;div class="form-group"&gt;
+{{ form.email.label }}
+{{ form.email(class="form-control") }}
+{% for error in form.email.errors %}
+    &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+{% endfor %}
+&lt;/div&gt;
+&lt;div class="form-group"&gt;
+{{ form.bio.label }}
+{{ form.bio(class="form-control", rows=5) }}
+{% for error in form.bio.errors %}
+    &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+{% endfor %}
+&lt;/div&gt;
+&lt;div class="form-group mt-3"&gt;
+{{ form.submit(class="btn btn-primary") }}
+&lt;a href="{{ url_for('main.user_profile', username=current_user.username) }}" class="btn btn-secondary"&gt;Cancel&lt;/a&gt;
+&lt;/div&gt;
+&lt;/form&gt;
+{% endblock %}
+</code></pre>
+<h3>Change Password</h3>
+            <p>Let's also implement a feature for users to change their password:</p>
+            
+            <pre><code>
+# app/forms/auth.py (add this class)
+class ChangePasswordForm(FlaskForm):
+    current_password = PasswordField('Current Password', validators=[DataRequired()])
+    new_password = PasswordField('New Password', validators=[
+        DataRequired(),
+        Length(min=8, message='Password must be at least 8 characters long')
+    ])
+    confirm_password = PasswordField(
+        'Confirm New Password', validators=[DataRequired(), EqualTo('new_password', message='Passwords must match')]
+    )
+    submit = SubmitField('Change Password')
+            </code></pre>
+            
+            <pre><code>
+# app/views/auth.py (add this route)
+@bp.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    form = ChangePasswordForm()
+    
+    if form.validate_on_submit():
+        if not current_user.check_password(form.current_password.data):
+            flash('Current password is incorrect.')
+            return redirect(url_for('auth.change_password'))
+        
+        current_user.set_password(form.new_password.data)
+        db.session.commit()
+        flash('Your password has been changed.')
+        return redirect(url_for('main.user_profile', username=current_user.username))
+    
+    return render_template('auth/change_password.html', form=form)
+            </code></pre>
+            
+            <h4>auth/change_password.html</h4>
+            <pre><code>
+{% extends 'base.html' %}
+
+{% block title %}Change Password - Blog{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Change Password&lt;/h2&gt;
+    &lt;form method="post" novalidate&gt;
+        {{ form.hidden_tag() }}
+        &lt;div class="form-group"&gt;
+            {{ form.current_password.label }}
+            {{ form.current_password(class="form-control") }}
+            {% for error in form.current_password.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.new_password.label }}
+            {{ form.new_password(class="form-control") }}
+            {% for error in form.new_password.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.confirm_password.label }}
+            {{ form.confirm_password(class="form-control") }}
+            {% for error in form.confirm_password.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        &lt;div class="form-group mt-3"&gt;
+            {{ form.submit(class="btn btn-primary") }}
+            &lt;a href="{{ url_for('main.user_profile', username=current_user.username) }}" class="btn btn-secondary"&gt;Cancel&lt;/a&gt;
+        &lt;/div&gt;
+    &lt;/form&gt;
+{% endblock %}
+            </code></pre>
+          </section>
+
+          <section>
+              <h2>Implementing "Remember Me" Functionality</h2>
+              
+              <p>The "Remember Me" feature allows users to stay logged in across browser sessions. Flask-Login makes this easy to implement:</p>
+              
+              <pre><code>
+  @bp.route('/login', methods=['GET', 'POST'])
+  def login():
+      # ... other code ...
+      
+      if form.validate_on_submit():
+          user = User.query.filter_by(username=form.username.data).first()
+          
+          if user is None or not user.check_password(form.password.data):
+              flash('Invalid username or password')
+              return redirect(url_for('auth.login'))
+          
+          # The remember parameter controls whether the session cookie expires
+          # when the browser is closed or remains for a longer period
+          login_user(user, remember=form.remember_me.data)
+          
+          # ... redirect logic ...
+              </code></pre>
+              
+              <p>When <code>remember=True</code>, Flask-Login sets a long-term cookie that persists even after the browser is closed. The duration of this cookie is controlled by the <code>REMEMBER_COOKIE_DURATION</code> configuration option:</p>
+              
+              <pre><code>
+  # app/__init__.py
+  from datetime import timedelta
+  
+  def create_app():
+      # ... other setup ...
+      
+      # Set the remember cookie to expire after 14 days
+      app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=14)
+      
+      # ... rest of the setup ...
+              </code></pre>
+              
+              <p>You can also set other cookie-related options:</p>
+              <ul>
+                  <li><code>REMEMBER_COOKIE_NAME</code>: The name of the cookie (default is 'remember_token')</li>
+                  <li><code>REMEMBER_COOKIE_SECURE</code>: Whether the cookie should be transmitted over HTTPS only</li>
+                  <li><code>REMEMBER_COOKIE_HTTPONLY</code>: Whether the cookie should be accessible by JavaScript</li>
+              </ul>
+          </section>
+  
+          <section>
+              <h2>Password Reset</h2>
+              
+              <p>A password reset feature is essential for any authentication system. Let's implement it using email-based token verification:</p>
+              
+              <h3>Generate Reset Tokens</h3>
+              <p>First, let's add methods to the User model to generate and verify password reset tokens:</p>
+              
+              <pre><code>
+  # app/models/user.py
+  from time import time
+  import jwt
+  from flask import current_app
+  
+  class User(UserMixin, db.Model):
+      # ... existing code ...
+      
+      def get_reset_password_token(self, expires_in=600):
+          return jwt.encode(
+              {'reset_password': self.id, 'exp': time() + expires_in},
+              current_app.config['SECRET_KEY'],
+              algorithm='HS256'
+          )
+      
+      @staticmethod
+      def verify_reset_password_token(token):
+          try:
+              id = jwt.decode(
+                  token,
+                  current_app.config['SECRET_KEY'],
+                  algorithms=['HS256']
+              )['reset_password']
+          except:
+              return None
+          return User.query.get(id)
+              </code></pre>
+              
+              <h3>Password Reset Forms</h3>
+              <pre><code>
+  # app/forms/auth.py (add these classes)
+  class RequestPasswordResetForm(FlaskForm):
+      email = StringField('Email', validators=[DataRequired(), Email()])
+      submit = SubmitField('Request Password Reset')
+  
+  class ResetPasswordForm(FlaskForm):
+      password = PasswordField('New Password', validators=[
+          DataRequired(),
+          Length(min=8, message='Password must be at least 8 characters long')
+      ])
+      password2 = PasswordField(
+          'Confirm Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')]
+      )
+      submit = SubmitField('Reset Password')
+              </code></pre>
+              
+              <h3>Email Functionality</h3>
+              <p>We'll need a way to send emails. Let's use Flask-Mail:</p>
+              
+              <pre><code>
+  # Install Flask-Mail
+  pip install flask-mail
+  
+  # app/__init__.py
+  from flask_mail import Mail
+  
+  mail = Mail()
+  
+  def create_app():
+      # ... other setup ...
+      
+      app.config['MAIL_SERVER'] = 'smtp.example.com'
+      app.config['MAIL_PORT'] = 587
+      app.config['MAIL_USE_TLS'] = True
+      app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+      app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+      app.config['MAIL_DEFAULT_SENDER'] = ('Blog Admin', 'noreply@example.com')
+      
+      mail.init_app(app)
+      
+      # ... rest of the setup ...
+              </code></pre>
+              
+              <pre><code>
+  # app/email.py
+  from flask import render_template
+  from flask_mail import Message
+  from app import mail
+  from threading import Thread
+  from flask import current_app
+  
+  def send_async_email(app, msg):
+      with app.app_context():
+          mail.send(msg)
+  
+  def send_email(subject, recipients, text_body, html_body):
+      msg = Message(subject, recipients=recipients)
+      msg.body = text_body
+      msg.html = html_body
+      
+      # Send email asynchronously to avoid blocking
+      Thread(target=send_async_email, args=(current_app._get_current_object(), msg)).start()
+  
+  def send_password_reset_email(user):
+      token = user.get_reset_password_token()
+      send_email(
+          'Reset Your Password',
+          [user.email],
+          render_template('email/reset_password.txt', user=user, token=token),
+          render_template('email/reset_password.html', user=user, token=token)
+      )
+              </code></pre>
+              
+              <h3>Password Reset Views</h3>
+              <pre><code>
+  # app/views/auth.py (add these routes)
+  @bp.route('/reset_password_request', methods=['GET', 'POST'])
+  def reset_password_request():
+      if current_user.is_authenticated:
+          return redirect(url_for('main.index'))
+      
+      form = RequestPasswordResetForm()
+      if form.validate_on_submit():
+          user = User.query.filter_by(email=form.email.data).first()
+          if user:
+              send_password_reset_email(user)
+          flash('Check your email for instructions to reset your password.')
+          return redirect(url_for('auth.login'))
+      
+      return render_template('auth/reset_password_request.html', form=form)
+  
+  @bp.route('/reset_password/<token>', methods=['GET', 'POST'])
+  def reset_password(token):
+      if current_user.is_authenticated:
+          return redirect(url_for('main.index'))
+      
+      user = User.verify_reset_password_token(token)
+      if not user:
+          flash('Invalid or expired reset token.')
+          return redirect(url_for('auth.login'))
+      
+      form = ResetPasswordForm()
+      if form.validate_on_submit():
+          user.set_password(form.password.data)
+          db.session.commit()
+          flash('Your password has been reset.')
+          return redirect(url_for('auth.login'))
+      
+      return render_template('auth/reset_password.html', form=form)
+              </code></pre>
+              
+              <h3>Password Reset Templates</h3>
+              <h4>auth/reset_password_request.html</h4>
+              <pre><code>
+  {% extends 'base.html' %}
+  
+  {% block title %}Reset Password - Blog{% endblock %}
+  
+  {% block content %}
+      &lt;h2&gt;Reset Password&lt;/h2&gt;
+      &lt;form method="post" novalidate&gt;
+          {{ form.hidden_tag() }}
+          &lt;div class="form-group"&gt;
+              {{ form.email.label }}
+              {{ form.email(class="form-control") }}
+              {% for error in form.email.errors %}
+                  &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+              {% endfor %}
+          &lt;/div&gt;
+          &lt;div class="form-group mt-3"&gt;
+              {{ form.submit(class="btn btn-primary") }}
+          &lt;/div&gt;
+      &lt;/form&gt;
+  {% endblock %}
+              </code></pre>
+              
+              <h4>auth/reset_password.html</h4>
+              <pre><code>
+  {% extends 'base.html' %}
+  
+  {% block title %}Reset Password - Blog{% endblock %}
+  
+  {% block content %}
+      &lt;h2&gt;Reset Password&lt;/h2&gt;
+      &lt;form method="post" novalidate&gt;
+          {{ form.hidden_tag() }}
+          &lt;div class="form-group"&gt;
+              {{ form.password.label }}
+              {{ form.password(class="form-control") }}
+              {% for error in form.password.errors %}
+                  &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+              {% endfor %}
+          &lt;/div&gt;
+          &lt;div class="form-group"&gt;
+              {{ form.password2.label }}
+              {{ form.password2(class="form-control") }}
+              {% for error in form.password2.errors %}
+                  &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+              {% endfor %}
+          &lt;/div&gt;
+          &lt;div class="form-group mt-3"&gt;
+              {{ form.submit(class="btn btn-primary") }}
+          &lt;/div&gt;
+      &lt;/form&gt;
+  {% endblock %}
+              </code></pre>
+              
+              <h4>email/reset_password.html</h4>
+              <pre><code>
+  &lt;p&gt;Dear {{ user.username }},&lt;/p&gt;
+  &lt;p&gt;
+      To reset your password, 
+      &lt;a href="{{ url_for('auth.reset_password', token=token, _external=True) }}"&gt;click here&lt;/a&gt;.
+  &lt;/p&gt;
+  &lt;p&gt;Alternatively, you can paste the following link in your browser's address bar:&lt;/p&gt;
+  &lt;p&gt;{{ url_for('auth.reset_password', token=token, _external=True) }}&lt;/p&gt;
+  &lt;p&gt;If you have not requested a password reset, simply ignore this message.&lt;/p&gt;
+  &lt;p&gt;Sincerely,&lt;/p&gt;
+  &lt;p&gt;The Blog Team&lt;/p&gt;
+              </code></pre>
+              
+              <h4>email/reset_password.txt</h4>
+              <pre><code>
+  Dear {{ user.username }},
+  
+  To reset your password, click the following link:
+  
+  {{ url_for('auth.reset_password', token=token, _external=True) }}
+  
+  If you have not requested a password reset, simply ignore this message.
+  
+  Sincerely,
+  The Blog Team
+              </code></pre>
+              
+              <h3>Add Link to Login Template</h3>
+              <p>Add a "Forgot Password" link to the login template:</p>
+              
+              <pre><code>
+  &lt;!-- In auth/login.html, after the form --&gt;
+  &lt;p&gt;
+      Forgot your password? 
+      &lt;a href="{{ url_for('auth.reset_password_request') }}"&gt;Click to reset&lt;/a&gt;
+  &lt;/p&gt;
+              </code></pre>
+          </section>
+  
+          <section>
+              <h2>User Roles and Permissions</h2>
+              
+              <p>For many applications, you'll want to implement different user roles with varying permissions. Here's a simple approach:</p>
+              
+              <h3>Role Model</h3>
+              <pre><code>
+  # app/models/user.py
+  class Role(db.Model):
+      id = db.Column(db.Integer, primary_key=True)
+      name = db.Column(db.String(64), unique=True)
+      description = db.Column(db.String(255))
+      
+      users = db.relationship('User', backref='role', lazy='dynamic')
+      
+      def __repr__(self):
+          return f'&lt;Role {self.name}&gt;'
+  
+  class User(UserMixin, db.Model):
+      # ... existing columns ...
+      role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
+      
+      # ... existing methods ...
+      
+      def has_permission(self, permission):
+          if self.role:
+              # Simple implementation - you could expand this with more complex logic
+              return self.role.name == permission
+          return False
+      
+      @property
+      def is_admin(self):
+          return self.has_permission('admin')
+              </code></pre>
+              
+              <h3>Initialize Roles</h3>
+              <pre><code>
+  # app/data.py (add this function)
+  def create_roles():
+      roles = [
+          {'name': 'user', 'description': 'Regular user'},
+          {'name': 'editor', 'description': 'Can edit content'},
+          {'name': 'admin', 'description': 'Administrator with full access'}
+      ]
+      
+      for role_data in roles:
+          role = Role.query.filter_by(name=role_data['name']).first()
+          if role is None:
+              role = Role(name=role_data['name'], description=role_data['description'])
+              db.session.add(role)
+      
+      db.session.commit()
+              </code></pre>
+              
+              <h3>Role-Based Access Control</h3>
+              <p>Create a decorator to check for specific roles:</p>
+              
+              <pre><code>
+  # app/decorators.py
+  from functools import wraps
+  from flask import abort
+  from flask_login import current_user
+  
+  def role_required(role_name):
+      def decorator(f):
+          @wraps(f)
+          def decorated_function(*args, **kwargs):
+              if not current_user.is_authenticated or not current_user.has_permission(role_name):
+                  abort(403)
+              return f(*args, **kwargs)
+          return decorated_function
+      return decorator
+  
+  # Use in views
+  @bp.route('/admin/dashboard')
+  @login_required
+  @role_required('admin')
+  def admin_dashboard():
+      # Only users with admin role can access this
+      return render_template('admin/dashboard.html')
+              </code></pre>
+          </section>
+  
+          <section>
+              <h2>Hands-On Exercise: Implementing Authentication</h2>
+              
+              <p>Let's put everything together and implement authentication in our blog application:</p>
+              
+              <h3>Step 1: Set Up Flask-Login</h3>
+              <ol>
+                  <li>Install Flask-Login and Flask-WTF:
+                  <pre><code>pip install flask-login flask-wtf email-validator</code></pre>
+                  </li>
+                  
+                  <li>Update app/__init__.py to initialize Flask-Login</li>
+                  
+                  <li>Make sure your User model inherits from UserMixin and has the necessary methods</li>
+                  
+                  <li>Add the user loader function</li>
+              </ol>
+              
+              <h3>Step 2: Create Authentication Forms</h3>
+              <ol>
+                  <li>Create app/forms/auth.py with LoginForm and RegistrationForm</li>
+                  
+                  <li>Implement validation logic for the forms</li>
+              </ol>
+              
+              <h3>Step 3: Implement Authentication Views</h3>
+              <ol>
+                  <li>Create app/views/auth.py with register, login, and logout routes</li>
+                  
+                  <li>Create the corresponding templates in app/templates/auth/</li>
+                  
+                  <li>Update the navigation in your base template to show different links for authenticated users</li>
+              </ol>
+              
+              <h3>Step 4: Protect Routes</h3>
+              <ol>
+                  <li>Add @login_required to routes that require authentication (e.g., creating posts)</li>
+                  
+                  <li>Use current_user in templates to show/hide elements based on authentication status</li>
+              </ol>
+              
+              <h3>Step 5: Add User Profile Pages</h3>
+              <ol>
+                  <li>Implement user_profile view and template</li>
+                  
+                  <li>Create form and view for editing profiles</li>
+              </ol>
+              
+              <h3>Testing Your Implementation</h3>
+              <ol>
+                  <li>Start your application:
+                  <pre><code>flask run</code></pre>
+                  </li>
+                  
+                  <li>Register a new account</li>
+                  
+                  <li>Log in with the new account</li>
+                  
+                  <li>Verify that protected routes work properly</li>
+                  
+                  <li>Test logging out</li>
+              </ol>
+          </section>
+  
+          <section>
+              <h2>Authentication Best Practices</h2>
+              
+              <p>As you implement authentication in your applications, keep these best practices in mind:</p>
+              
+              <h3>Security</h3>
+              <ul>
+                  <li><strong>Use HTTPS</strong>: Always use HTTPS in production to encrypt data in transit</li>
+                  <li><strong>Hash passwords</strong>: Never store plain text passwords; use proper hashing algorithms</li>
+                  <li><strong>Rate limiting</strong>: Implement rate limiting on login attempts to prevent brute force attacks</li>
+                  <li><strong>Secure cookies</strong>: Set secure and HttpOnly flags on session cookies</li>
+                  <li><strong>CSRF protection</strong>: Use Flask-WTF's CSRF protection for all forms</li>
+                  <li><strong>Content Security Policy (CSP)</strong>: Implement CSP headers to prevent XSS attacks</li>
+                  <li><strong>Keep dependencies updated</strong>: Regularly update your dependencies to address security vulnerabilities</li>
+              </ul>
+              
+              <h3>User Experience</h3>
+              <ul>
+                  <li><strong>Clear error messages</strong>: Provide clear but not overly specific error messages (avoid leaking information)</li>
+                  <li><strong>Remember Me</strong>: Allow users to stay logged in across sessions</li>
+                  <li><strong>Password recovery</strong>: Implement a secure password reset flow</li>
+                  <li><strong>Progressive enhancement</strong>: Ensure forms work without JavaScript but are enhanced with it</li>
+                  <li><strong>Validation feedback</strong>: Provide immediate feedback on form inputs</li>
+              </ul>
+              
+              <h3>Implementation</h3>
+              <ul>
+                  <li><strong>Separation of concerns</strong>: Keep authentication logic separate from application logic</li>
+                  <li><strong>Use extensions</strong>: Leverage well-tested extensions like Flask-Login rather than building from scratch</li>
+                  <li><strong>Test thoroughly</strong>: Write tests for all authentication flows, including edge cases</li>
+                  <li><strong>Environment variables</strong>: Store sensitive configuration (e.g., secret keys, email credentials) in environment variables</li>
+                  <li><strong>Logging</strong>: Log authentication events for security auditing</li>
+              </ul>
+          </section>
+  
+          <section>
+              <h2>Next Steps</h2>
+              
+              <p>Today, we've covered user authentication with Flask-Login, learning how to implement registration, login, profile management, and password reset functionality. These features are essential for almost any web application that requires user accounts.</p>
+              
+              <p>Tomorrow, we'll build on this foundation by exploring forms and validation in more detail, which will allow us to implement features like creating and editing blog posts with proper validation.</p>
+              
+              <h3>Tomorrow: Forms and Validation</h3>
+              <ul>
+                  <li>Advanced form handling with Flask-WTF</li>
+                  <li>Custom form validators</li>
+                  <li>Dynamic forms</li>
+                  <li>File uploads</li>
+                  <li>AJAX form submission</li>
+                  <li>Form macros for reusable components</li>
+              </ul>
+              
+              <h3>Preparation</h3>
+              <p>To prepare for tomorrow's session:</p>
+              <ol>
+                  <li>Review the forms we've created today</li>
+                  <li>Explore the Flask-WTF documentation at <a href="https://flask-wtf.readthedocs.io/" target="_blank">https://flask-wtf.readthedocs.io/</a></li>
+                  <li>Make sure your authentication system is working correctly</li>
+              </ol>
+          </section>
+  
+          <section>
+              <h2>Today's Assignment: User Authentication</h2>
+              
+              <p>To reinforce what we've learned today, complete the following exercises:</p>
+              
+              <h3>Exercise 1: Implement Authentication</h3>
+              <ol>
+                  <li>Set up Flask-Login in your blog application</li>
+                  <li>Create registration and login forms with proper validation</li>
+                  <li>Implement login, registration, and logout functionality</li>
+                  <li>Protect relevant routes with @login_required</li>
+                  <li>Update templates to show different content for authenticated users</li>
+              </ol>
+              
+              <h3>Exercise 2: User Profiles</h3>
+              <ol>
+                  <li>Implement user profile pages that display:
+                      <ul>
+                          <li>User information (username, name, bio, date joined)</li>
+                          <li>Posts by the user</li>
+                      </ul>
+                  </li>
+                  <li>Create a form for users to edit their profile</li>
+                  <li>Add functionality for users to change their password</li>
+                  <li>Ensure that profile editing is only accessible to the user who owns the profile</li>
+              </ol>
+              
+              <h3>Exercise 3: Password Reset</h3>
+              <ol>
+                  <li>Set up Flask-Mail or use a mock email service for development</li>
+                  <li>Implement the password reset request form</li>
+                  <li>Generate and verify password reset tokens</li>
+                  <li>Create the password reset form</li>
+                  <li>Test the full password reset flow</li>
+              </ol>
+              
+              <h3>Bonus Challenge: User Roles</h3>
+              <ol>
+                  <li>Implement a Role model with at least three roles (user, editor, admin)</li>
+                  <li>Create a decorator for role-based access control</li>
+                  <li>Add an admin dashboard that's only accessible to users with the admin role</li>
+                  <li>Implement functionality for admins to manage users (view, edit, delete)</li>
+              </ol>
+              
+              <p>Submit your code as a GitHub repository before tomorrow's session.</p>
+          </section>
+  
+          <section>
+              <h2>Additional Resources</h2>
+              
+              <h3>Flask-Login Documentation</h3>
+              <ul>
+                  <li><a href="https://flask-login.readthedocs.io/en/latest/" target="_blank">Flask-Login Documentation</a></li>
+                  <li><a href="https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-v-user-logins" target="_blank">The Flask Mega-Tutorial Part V: User Logins</a> by Miguel Grinberg</li>
+              </ul>
+              
+              <h3>Flask-WTF and Forms</h3>
+              <ul>
+                  <li><a href="https://flask-wtf.readthedocs.io/en/stable/" target="_blank">Flask-WTF Documentation</a></li>
+                  <li><a href="https://wtforms.readthedocs.io/en/2.3.x/" target="_blank">WTForms Documentation</a></li>
+                  <li><a href="https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-iii-web-forms" target="_blank">The Flask Mega-Tutorial Part III: Web Forms</a> by Miguel Grinberg</li>
+              </ul>
+              
+              <h3>Password Security</h3>
+              <ul>
+                  <li><a href="https://werkzeug.palletsprojects.com/en/2.0.x/utils/#werkzeug.security.generate_password_hash" target="_blank">Werkzeug Password Hashing</a></li>
+                  <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html" target="_blank">OWASP Password Storage Cheat Sheet</a></li>
+                  <li><a href="https://auth0.com/blog/hashing-in-action-understanding-bcrypt/" target="_blank">Understanding bcrypt</a></li>
+              </ul>
+              
+              <h3>Authentication Best Practices</h3>
+              <ul>
+                  <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html" target="_blank">OWASP Authentication Cheat Sheet</a></li>
+                  <li><a href="https://auth0.com/blog/authentication-best-practices-for-your-application/" target="_blank">Authentication Best Practices for Your Application</a></li>
+                  <li><a href="https://developer.mozilla.org/en-US/docs/Web/Security/Identity_and_Auth" target="_blank">MDN Identity and Authentication</a></li>
+              </ul>
+              
+              <h3>Books</h3>
+              <ul>
+                  <li>"Flask Web Development" by Miguel Grinberg (Chapters on User Authentication)</li>
+                  <li>"Building Web Applications with Flask" by Italo Maia</li>
+                  <li>"Web Application Security" by Andrew Hoffman</li>
+              </ul>
+          </section>
+          
+          <section>
+              <h2>Conclusion</h2>
+              
+              <p>Today, we've explored user authentication with Flask-Login, covering everything from basic login/logout functionality to more advanced features like password reset and role-based access control. These concepts are fundamental to building secure web applications that can manage user accounts and protect sensitive information.</p>
+              
+              <p>We've learned how to:</p>
+              <ul>
+                  <li>Set up Flask-Login and integrate it with our Flask application</li>
+                  <li>Create secure user authentication with proper password hashing</li>
+                  <li>Protect routes using the @login_required decorator</li>
+                  <li>Implement user registration and login forms</li>
+                  <li>Manage user profiles and settings</li>
+                  <li>Build a password reset system with email verification</li>
+                  <li>Implement role-based access control</li>
+              </ul>
+              
+              <p>Remember that authentication is a critical security component of your application. Always follow best practices like using HTTPS, hashing passwords, and implementing proper access controls. Regularly review your authentication system for potential vulnerabilities and keep your dependencies updated.</p>
+              
+              <p>Tomorrow, we'll dive deeper into forms and validation, which will allow us to create more sophisticated interfaces for user input. This will be particularly useful as we continue building our blog application and implement features like creating and editing posts.</p>
+          </section>
+      </main>
+  
+      <footer>
+          <p>&copy; 2025 Full Stack Python Web Development Course</p>
+      </footer>
+  </body>
+  </html>

@@ -712,4 +712,502 @@ class Tag(db.Model):
     
     def __repr__(self):
         return f'&lt;Tag {self.name}&gt;'
-            </code></pre>
+      </code></pre>
+            
+      <h3>Query Building</h3>
+      <p>SQLAlchemy provides a powerful query building API that allows you to construct complex queries:</p>
+      
+      <pre><code>
+from sqlalchemy import and_, or_, not_
+
+# Complex filtering with and_/or_
+recent_posts = Post.query.filter(
+and_(
+  Post.published == True,
+  or_(
+      Post.title.contains('Flask'),
+      Post.title.contains('Python')
+  ),
+  not_(Post.author.has(User.username == 'admin'))
+)
+).order_by(Post.created_at.desc()).all()
+
+# Subqueries
+from sqlalchemy import func
+
+# Get users with the most posts
+user_post_counts = db.session.query(
+User,
+func.count(Post.id).label('post_count')
+).join(User.posts).group_by(User.id).order_by(func.count(Post.id).desc()).all()
+
+# Get the average number of comments per post
+avg_comments = db.session.query(
+func.avg(
+  db.session.query(func.count(Comment.id))
+  .filter(Comment.post_id == Post.id)
+  .correlate(Post)
+  .scalar_subquery()
+)
+).scalar()
+      </code></pre>
+      
+      <h3>Hybrid Properties and Expressions</h3>
+      <p>Hybrid properties and expressions allow you to define attributes that work both at the Python level and at the SQL level:</p>
+      
+      <pre><code>
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
+
+class Post(db.Model):
+# ... other columns ...
+
+@hybrid_property
+def is_recent(self):
+  return self.created_at > (datetime.utcnow() - timedelta(days=7))
+
+@is_recent.expression
+def is_recent(cls):
+  return cls.created_at > (datetime.utcnow() - timedelta(days=7))
+
+# Now you can use this in queries
+recent_posts = Post.query.filter(Post.is_recent).all()
+      </code></pre>
+      
+      <h3>Event Listeners</h3>
+      <p>SQLAlchemy provides an event system that lets you run code at various points in the model lifecycle:</p>
+      
+      <pre><code>
+from sqlalchemy import event
+
+@event.listens_for(Post, 'before_insert')
+def set_post_slug(mapper, connection, target):
+if not target.slug:
+  target.slug = slugify(target.title)
+
+@event.listens_for(db.session, 'before_commit')
+def validate_post(session):
+for obj in session.new:
+  if isinstance(obj, Post):
+      if not obj.title or not obj.content:
+          raise ValueError("Post must have a title and content")
+      </code></pre>
+      
+      <h3>Custom Query Classes</h3>
+      <p>You can create custom query classes to add reusable query methods:</p>
+      
+      <pre><code>
+from flask_sqlalchemy import BaseQuery
+
+class PostQuery(BaseQuery):
+def published(self):
+  return self.filter(Post.published == True)
+
+def recent(self, days=7):
+  return self.filter(Post.created_at > (datetime.utcnow() - timedelta(days=days)))
+
+def with_tag(self, tag_name):
+  return self.join(Post.tags).filter(Tag.name == tag_name)
+
+class Post(db.Model):
+query_class = PostQuery
+# ... column definitions ...
+
+# Now you can use these methods
+recent_published_posts = Post.query.published().recent().all()
+flask_posts = Post.query.with_tag('Flask').all()
+      </code></pre>
+    </section>
+
+    <section>
+        <h2>Hands-On Exercise: Implementing Our Database</h2>
+        
+        <p>Let's put our knowledge into practice by implementing the database for our blog application.</p>
+        
+        <h3>Step 1: Update Dependencies</h3>
+        <p>Make sure you have the necessary packages installed:</p>
+        
+        <pre><code>
+pip install flask-sqlalchemy flask-migrate python-slugify
+        </code></pre>
+        
+        <h3>Step 2: Configure SQLAlchemy</h3>
+        <p>Update your application factory in app/__init__.py:</p>
+        
+        <pre><code>
+# app/__init__.py
+import os
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+
+# Initialize extensions
+db = SQLAlchemy()
+migrate = Migrate()
+
+def create_app(test_config=None):
+"""Application factory function."""
+# Create and configure the app
+app = Flask(__name__, instance_relative_config=True)
+
+# Set default configuration
+app.config.from_mapping(
+    SECRET_KEY='dev',
+    SQLALCHEMY_DATABASE_URI=os.environ.get('DATABASE_URL', 'sqlite:///blog.db'),
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,
+)
+
+if test_config is None:
+    # Load the instance config, if it exists, when not testing
+    app.config.from_pyfile('config.py', silent=True)
+else:
+    # Load the test config if passed in
+    app.config.from_mapping(test_config)
+
+# Ensure the instance folder exists
+try:
+    os.makedirs(app.instance_path)
+except OSError:
+    pass
+
+# Initialize extensions with app
+db.init_app(app)
+migrate.init_app(app, db)
+
+# Import models to ensure they're registered with SQLAlchemy
+from app.models import user, post
+
+# Register blueprints
+from app.views import main, auth
+app.register_blueprint(main.bp)
+app.register_blueprint(auth.bp)
+
+return app
+        </code></pre>
+        
+        <h3>Step 3: Create Models</h3>
+        <p>Create the model files as shown earlier:</p>
+        <ul>
+            <li>app/models/user.py - User model</li>
+            <li>app/models/post.py - Post, Comment, and Tag models</li>
+            <li>app/models/__init__.py - Import models for easy access</li>
+        </ul>
+        
+        <h3>Step 4: Initialize and Migrate the Database</h3>
+        <p>Run the following commands to set up the database:</p>
+        
+        <pre><code>
+# Set the Flask application
+export FLASK_APP=app
+
+# Initialize the migration repository
+flask db init
+
+# Create the initial migration
+flask db migrate -m "Initial migration"
+
+# Apply the migration
+flask db upgrade
+        </code></pre>
+        
+        <h3>Step 5: Create Test Data</h3>
+        <p>Create a script to populate the database with test data:</p>
+        
+        <pre><code>
+# app/data.py
+from app import db, create_app
+from app.models.user import User
+from app.models.post import Post, Tag, Comment
+from datetime import datetime, timedelta
+
+def create_test_data():
+# Create users
+admin = User(username='admin', email='admin@example.com', is_admin=True)
+admin.set_password('password')
+
+alice = User(username='alice', email='alice@example.com')
+alice.set_password('password')
+
+bob = User(username='bob', email='bob@example.com')
+bob.set_password('password')
+
+db.session.add_all([admin, alice, bob])
+db.session.commit()
+
+# Create tags
+tags = [
+    Tag(name='Flask'),
+    Tag(name='Python'),
+    Tag(name='SQLAlchemy'),
+    Tag(name='Web Development')
+]
+db.session.add_all(tags)
+db.session.commit()
+
+# Create posts
+post1 = Post(
+    title='Getting Started with Flask',
+    content='Flask is a lightweight WSGI web application framework in Python...',
+    author=alice,
+    created_at=datetime.utcnow() - timedelta(days=5)
+)
+post1.tags.extend([tags[0], tags[1], tags[3]])
+
+post2 = Post(
+    title='Database Integration with SQLAlchemy',
+    content='SQLAlchemy is an SQL toolkit and Object-Relational Mapping (ORM) system for Python...',
+    author=bob,
+    created_at=datetime.utcnow() - timedelta(days=3)
+)
+post2.tags.extend([tags[0], tags[2]])
+
+post3 = Post(
+    title='Python Web Development Best Practices',
+    content='When developing web applications with Python, there are several best practices to follow...',
+    author=admin,
+    created_at=datetime.utcnow() - timedelta(days=1)
+)
+post3.tags.extend([tags[1], tags[3]])
+
+db.session.add_all([post1, post2, post3])
+db.session.commit()
+
+# Create comments
+comment1 = Comment(
+    content='Great introduction to Flask!',
+    author=bob,
+    post=post1
+)
+
+comment2 = Comment(
+    content='I found this very helpful.',
+    author=admin,
+    post=post1
+)
+
+comment3 = Comment(
+    content='Looking forward to more SQLAlchemy tips.',
+    author=alice,
+    post=post2
+)
+
+db.session.add_all([comment1, comment2, comment3])
+db.session.commit()
+
+print('Test data has been created!')
+
+if __name__ == '__main__':
+app = create_app()
+with app.app_context():
+    create_test_data()
+        </code></pre>
+        
+        <p>Run the script to populate the database:</p>
+        
+        <pre><code>
+python -m app.data
+        </code></pre>
+        
+        <h3>Step 6: Update Views to Use the Database</h3>
+        <p>Now that we have our models and data, update your views to query the database and display the data. Use the examples provided earlier as a guide.</p>
+        
+        <h3>Challenge: Add Search Functionality</h3>
+        <p>Implement a search route that allows users to search for posts by title or content:</p>
+        
+        <pre><code>
+@bp.route('/search')
+def search():
+query = request.args.get('q', '')
+if not query:
+    return render_template('search.html', posts=None, query=None)
+
+page = request.args.get('page', 1, type=int)
+posts = Post.query.filter(
+    Post.published == True,
+    or_(
+        Post.title.contains(query),
+        Post.content.contains(query)
+    )
+).order_by(Post.created_at.desc()).paginate(
+    page=page, per_page=5, error_out=False
+)
+
+return render_template('search.html', posts=posts, query=query)
+        </code></pre>
+    </section>
+
+    <section>
+        <h2>Database Best Practices</h2>
+        
+        <p>As you work with databases in your web applications, keep these best practices in mind:</p>
+        
+        <h3>Performance</h3>
+        <ul>
+            <li><strong>Use indexes</strong> for columns frequently used in WHERE clauses, ORDER BY, or as foreign keys</li>
+            <li><strong>Eager loading</strong> with joinedload() to avoid N+1 query problems</li>
+            <li><strong>Paginat</strong> large result sets to improve response times</li>
+            <li><strong>Consider query optimization</strong> for complex queries</li>
+            <li><strong>Profile your database queries</strong> to identify bottlenecks</li>
+        </ul>
+        
+        <h3>Security</h3>
+        <ul>
+            <li><strong>Never store passwords in plain text</strong>; use proper hashing with Werkzeug's utilities</li>
+            <li><strong>Use SQLAlchemy's parameterized queries</strong> to prevent SQL injection</li>
+            <li><strong>Implement proper access control</strong> in your application</li>
+            <li><strong>Sanitize all user input</strong> before storing it in the database</li>
+            <li><strong>Use secure connection strings</strong> with passwords stored in environment variables</li>
+        </ul>
+        
+        <h3>Data Integrity</h3>
+        <ul>
+            <li><strong>Use database constraints</strong> (unique, not null, foreign keys) to enforce rules</li>
+            <li><strong>Set up cascading deletes</strong> where appropriate to maintain referential integrity</li>
+            <li><strong>Use transactions</strong> for operations that should be atomic</li>
+            <li><strong>Implement validation</strong> at the application level</li>
+            <li><strong>Use migrations</strong> to evolve your schema safely</li>
+        </ul>
+        
+        <h3>Organization</h3>
+        <ul>
+            <li><strong>Separate your models</strong> into logical files</li>
+            <li><strong>Use descriptive names</strong> for models, columns, and relationships</li>
+            <li><strong>Add helpful methods</strong> to your models to encapsulate functionality</li>
+            <li><strong>Document your models</strong> with docstrings</li>
+            <li><strong>Use mixins</strong> to share functionality between models</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Next Steps</h2>
+        
+        <p>Today, we've covered database integration with SQLAlchemy, learning how to define models, create relationships, and perform CRUD operations. These concepts form the foundation of data management in our Flask application.</p>
+        
+        <p>Tomorrow, we'll build on this foundation by exploring user authentication with Flask-Login, which will allow users to register, log in, and access secure areas of our application.</p>
+        
+        <h3>Tomorrow: User Authentication</h3>
+        <ul>
+            <li>Introduction to authentication concepts</li>
+            <li>Setting up Flask-Login</li>
+            <li>Creating registration and login forms</li>
+            <li>Password hashing and security</li>
+            <li>User sessions and cookies</li>
+            <li>Access control with decorators</li>
+            <li>User management features</li>
+        </ul>
+        
+        <h3>Preparation</h3>
+        <p>To prepare for tomorrow's session:</p>
+        <ol>
+            <li>Review the User model we created today</li>
+            <li>Explore the Flask-Login documentation at <a href="https://flask-login.readthedocs.io/" target="_blank">https://flask-login.readthedocs.io/</a></li>
+            <li>Make sure your database models are working correctly</li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>Today's Assignment: Database Models</h2>
+        
+        <p>To reinforce what we've learned today, complete the following exercises:</p>
+        
+        <h3>Exercise 1: Implement Database Models</h3>
+        <ol>
+            <li>Create or update the following models for your blog application:</li>
+            <ul>
+                <li>User model with authentication capabilities</li>
+                <li>Post model with title, content, created_at, etc.</li>
+                <li>Comment model associated with users and posts</li>
+                <li>Tag model with a many-to-many relationship to posts</li>
+            </ul>
+            <li>Set up the appropriate relationships between models</li>
+            <li>Add at least three custom methods to your models that provide useful functionality</li>
+        </ol>
+        
+        <h3>Exercise 2: Database Operations</h3>
+        <ol>
+            <li>Create a script that populates your database with test data:</li>
+            <ul>
+                <li>At least 3 users</li>
+                <li>At least 5 posts with different authors</li>
+                <li>Several comments on different posts</li>
+                <li>At least 5 tags applied to different posts</li>
+            </ul>
+            <li>Write a script that demonstrates various query operations:</li>
+            <ul>
+                <li>Get all posts by a specific user</li>
+                <li>Get all posts with a specific tag</li>
+                <li>Get the most commented posts</li>
+                <li>Get the most active users (by post or comment count)</li>
+            </ul>
+        </ol>
+        
+        <h3>Exercise 3: Database Integration with Flask</h3>
+        <ol>
+            <li>Update or implement the following routes in your Flask application:</li>
+            <ul>
+                <li>Home page displaying recent posts</li>
+                <li>Post detail page with comments</li>
+                <li>User profile page showing their posts</li>
+                <li>Tag page showing posts with a specific tag</li>
+            </ul>
+            <li>Implement pagination for routes that display multiple posts</li>
+            <li>Add a search function that searches posts by title or content</li>
+        </ol>
+        
+        <h3>Bonus Challenge: Advanced Queries</h3>
+        <ol>
+            <li>Implement a "related posts" feature that finds posts similar to the current post based on tags</li>
+            <li>Create a "trending" feature that shows posts with the most recent comments</li>
+            <li>Implement a simple analytics system that tracks and displays view counts for posts</li>
+        </ol>
+        
+        <p>Submit your code as a GitHub repository before tomorrow's session.</p>
+    </section>
+
+    <section>
+        <h2>Additional Resources</h2>
+        
+        <h3>SQLAlchemy Documentation</h3>
+        <ul>
+            <li><a href="https://docs.sqlalchemy.org/en/14/" target="_blank">SQLAlchemy Documentation</a></li>
+            <li><a href="https://flask-sqlalchemy.palletsprojects.com/" target="_blank">Flask-SQLAlchemy Documentation</a></li>
+            <li><a href="https://alembic.sqlalchemy.org/en/latest/" target="_blank">Alembic Documentation (used by Flask-Migrate)</a></li>
+        </ul>
+        
+        <h3>Tutorials and Books</h3>
+        <ul>
+            <li><a href="https://www.sqlalchemy.org/library.html" target="_blank">SQLAlchemy Tutorials and Articles</a></li>
+            <li><a href="https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-iv-database" target="_blank">The Flask Mega-Tutorial Part IV: Database</a> by Miguel Grinberg</li>
+            <li>"Essential SQLAlchemy" by Jason Myers and Rick Copeland</li>
+            <li>"Flask Web Development" by Miguel Grinberg (Chapters on SQLAlchemy)</li>
+        </ul>
+        
+        <h3>Tools and Extensions</h3>
+        <ul>
+            <li><a href="https://github.com/sqlalchemy/sqlalchemy" target="_blank">SQLAlchemy on GitHub</a></li>
+            <li><a href="https://github.com/pallets/flask-sqlalchemy" target="_blank">Flask-SQLAlchemy on GitHub</a></li>
+            <li><a href="https://github.com/miguelgrinberg/flask-migrate" target="_blank">Flask-Migrate on GitHub</a></li>
+            <li><a href="https://sqlitebrowser.org/" target="_blank">DB Browser for SQLite</a> - GUI tool for SQLite databases</li>
+            <li><a href="https://www.pgadmin.org/" target="_blank">pgAdmin</a> - GUI tool for PostgreSQL databases</li>
+        </ul>
+    </section>
+    
+    <section>
+        <h2>Conclusion</h2>
+        
+        <p>Today, we've explored database integration with SQLAlchemy, learning how to define models, create relationships, and perform database operations. These skills are fundamental to building data-driven web applications.</p>
+        
+        <p>We've seen how SQLAlchemy's ORM allows us to work with database records as Python objects, making our code more intuitive and maintainable. We've also learned about migrations, which enable us to evolve our database schema as our application grows.</p>
+        
+        <p>The models we've created for our blog application—User, Post, Comment, and Tag—form the foundation of our application's data layer. By defining the relationships between these models, we've established a structure that accurately represents the domain of a blog.</p>
+        
+        <p>Tomorrow, we'll build on this foundation by implementing user authentication, allowing users to register, log in, and access secure areas of our application. This will bring us one step closer to having a fully functional blog application.</p>
+        
+        <p>Remember that databases are a crucial component of web applications, and mastering SQLAlchemy will greatly enhance your ability to build sophisticated Flask applications.</p>
+    </section>
+</main>
+
+<footer>
+    <p>&copy; 2025 Full Stack Python Web Development Course</p>
+</footer>
+</body>
+</html>

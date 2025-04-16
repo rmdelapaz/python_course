@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AJAX Form Submission with Flask</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>AJAX Form Submission with Flask</h1>
+        <p class="subtitle">Week 2 - Friday: Full Stack Web Development with Python</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Introduction to AJAX Form Submission</h2>
+            
+            <p>Traditional form submissions are like mailing a letter: you write your message, seal the envelope, and send it off. Then you wait at home until the reply arrives in your mailbox. During this waiting period, you can't do anything else with your mailbox – it's as if your entire house is frozen until the mail arrives.</p>
+            
+            <p>AJAX (Asynchronous JavaScript and XML) form submissions, however, are more like sending a text message. You compose your message, tap send, and continue using your phone while waiting for a reply. When the response arrives, you get a notification, but you were free to do other things in the meantime.</p>
+            
+            <p>In web terms, traditional form submissions require a full page reload, disrupting the user experience. AJAX lets us submit forms in the background, update parts of the page dynamically, and provide a smoother, more responsive interface.</p>
+
+            <h3>Why Use AJAX for Forms?</h3>
+            
+            <p>AJAX form submissions provide several significant benefits:</p>
+            
+            <ul>
+                <li><strong>Enhanced User Experience</strong>: Users can continue interacting with your application without waiting for page reloads</li>
+                <li><strong>Real-time Feedback</strong>: Provide immediate validation messages, progress indicators, and success/error notifications</li>
+                <li><strong>Partial Page Updates</strong>: Update just the relevant parts of the page instead of reloading everything</li>
+                <li><strong>Background Processing</strong>: Handle time-consuming operations without blocking the interface</li>
+                <li><strong>Reduced Server Load</strong>: Sending and receiving smaller chunks of data reduces bandwidth usage</li>
+            </ul>
+            
+            <p>Think about the best online shopping experiences you've had. When you add an item to your cart, the page doesn't reload entirely. Instead, the cart icon updates, a confirmation appears, and you continue browsing seamlessly. That's AJAX at work!</p>
+        </section>
+
+        <section>
+            <h2>Setting Up the Backend for AJAX</h2>
+            
+            <p>Before implementing AJAX on the frontend, we need to set up our Flask routes to handle AJAX requests. AJAX requests often expect JSON responses rather than HTML, so we'll create routes that return JSON data.</p>
+            
+            <h3>Creating API-Style Routes</h3>
+            
+            <p>Let's create a Flask blueprint for our API routes in a file named <code>app/views/api.py</code>:</p>
+            
+            <pre><code># app/views/api.py
+from flask import Blueprint, jsonify, request
+
+bp = Blueprint('api', __name__, url_prefix='/api')
+
+@bp.route('/contact', methods=['POST'])
+def contact():
+    # Get JSON data from the request
+    data = request.json
+    
+    # Validate the data
+    errors = {}
+    if not data.get('name'):
+        errors['name'] = 'Name is required'
+    if not data.get('email'):
+        errors['email'] = 'Email is required'
+    elif '@' not in data.get('email', ''):
+        errors['email'] = 'Invalid email format'
+    if not data.get('message'):
+        errors['message'] = 'Message is required'
+    elif len(data.get('message', '')) < 10:
+        errors['message'] = 'Message must be at least 10 characters'
+    
+    # If validation fails, return errors
+    if errors:
+        return jsonify({
+            'success': False, 
+            'errors': errors
+        }), 400
+    
+    # Process the valid data (e.g., save to database, send email)
+    # For this example, we'll just simulate processing
+    try:
+        # In a real application, you would do something like:
+        # message = Message(
+        #     name=data['name'],
+        #     email=data['email'],
+        #     content=data['message']
+        # )
+        # db.session.add(message)
+        # db.session.commit()
+        
+        # Return success response
+        return jsonify({
+            'success': True,
+            'message': 'Your message has been sent. We will respond shortly.'
+        })
+    except Exception as e:
+        # Handle errors
+        return jsonify({
+            'success': False,
+            'message': 'An error occurred while processing your request.',
+            'error': str(e)
+        }), 500</code></pre>
+            
+            <p>Don't forget to register this blueprint in your Flask application. In <code>app/__init__.py</code>:</p>
+            
+            <pre><code># app/__init__.py
+from flask import Flask
+
+def create_app():
+    app = Flask(__name__)
+    # ... other configuration ...
+    
+    # Register blueprints
+    from app.views import main, auth, api
+    app.register_blueprint(main.bp)
+    app.register_blueprint(auth.bp)
+    app.register_blueprint(api.bp)
+    
+    return app</code></pre>
+            
+            <p>Notice how our API route returns JSON responses with HTTP status codes instead of rendering HTML templates. This is ideal for AJAX requests because JavaScript can easily parse JSON data and update the page accordingly.</p>
+        </section>
+
+        <section>
+            <h2>Basic AJAX Form Submission</h2>
+            
+            <p>Now that our backend is ready, let's implement the frontend part. We'll create an HTML form and add JavaScript to handle the AJAX submission.</p>
+            
+            <p>Create a file named <code>app/templates/contact_ajax.html</code>:</p>
+            
+            <pre><code>{% extends 'base.html' %}
+
+{% block title %}Contact Us{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Contact Us&lt;/h2&gt;
+    
+    &lt;div id="form-messages" class="alert" style="display: none;"&gt;&lt;/div&gt;
+    
+    &lt;form id="contact-form" method="post" novalidate&gt;
+        &lt;div class="form-group"&gt;
+            &lt;label for="name"&gt;Name&lt;/label&gt;
+            &lt;input type="text" class="form-control" id="name" name="name" required&gt;
+            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            &lt;label for="email"&gt;Email&lt;/label&gt;
+            &lt;input type="email" class="form-control" id="email" name="email" required&gt;
+            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            &lt;label for="message"&gt;Message&lt;/label&gt;
+            &lt;textarea class="form-control" id="message" name="message" rows="5" required&gt;&lt;/textarea&gt;
+            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group mt-3"&gt;
+            &lt;button type="submit" class="btn btn-primary" id="submit-btn"&gt;Send Message&lt;/button&gt;
+            &lt;span id="loading-indicator" style="display: none;"&gt;
+                Sending... &lt;div class="spinner-border spinner-border-sm text-primary"&gt;&lt;/div&gt;
+            &lt;/span&gt;
+        &lt;/div&gt;
+    &lt;/form&gt;
+{% endblock %}
+
+{% block scripts %}
+&lt;script&gt;
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('contact-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const formMessages = document.getElementById('form-messages');
+    
+    form.addEventListener('submit', function(event) {
+        // Prevent the default form submission
+        event.preventDefault();
+        
+        // Reset previous errors
+        resetFormErrors();
+        
+        // Show loading indicator
+        submitBtn.style.display = 'none';
+        loadingIndicator.style.display = 'inline-block';
+        
+        // Collect form data
+        const formData = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            message: document.getElementById('message').value
+        };
+        
+        // Send AJAX request
+        fetch('/api/contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Hide loading indicator
+            submitBtn.style.display = 'inline-block';
+            loadingIndicator.style.display = 'none';
+            
+            if (data.success) {
+                // Show success message
+                formMessages.textContent = data.message;
+                formMessages.className = 'alert alert-success';
+                formMessages.style.display = 'block';
+                
+                // Reset form
+                form.reset();
+            } else {
+                // Show field-specific errors
+                if (data.errors) {
+                    Object.keys(data.errors).forEach(field => {
+                        const inputField = document.getElementById(field);
+                        const feedbackElement = inputField.nextElementSibling;
+                        feedbackElement.textContent = data.errors[field];
+                        inputField.classList.add('is-invalid');
+                    });
+                }
+                
+                // Show general error message
+                formMessages.textContent = 'Please correct the errors below.';
+                formMessages.className = 'alert alert-danger';
+                formMessages.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            // Handle network errors
+            submitBtn.style.display = 'inline-block';
+            loadingIndicator.style.display = 'none';
+            
+            formMessages.textContent = 'There was a problem with your submission. Please try again later.';
+            formMessages.className = 'alert alert-danger';
+            formMessages.style.display = 'block';
+            console.error('Error:', error);
+        });
+    });
+    
+    function resetFormErrors() {
+        // Hide any previous messages
+        formMessages.style.display = 'none';
+        
+        // Clear field-specific errors
+        const invalidFields = form.querySelectorAll('.is-invalid');
+        invalidFields.forEach(field => {
+            field.classList.remove('is-invalid');
+            const feedbackElement = field.nextElementSibling;
+            if (feedbackElement && feedbackElement.classList.contains('invalid-feedback')) {
+                feedbackElement.textContent = '';
+            }
+        });
+    }
+});
+&lt;/script&gt;
+{% endblock %}</code></pre>
+            
+            <p>Add a route in <code>app/views/main.py</code> to render this template:</p>
+            
+            <pre><code># app/views/main.py
+@bp.route('/contact-ajax')
+def contact_ajax():
+    return render_template('contact_ajax.html')</code></pre>
+            
+            <h3>Understanding the AJAX Flow</h3>
+            
+            <p>Let's break down what happens in this implementation:</p>
+            
+            <ol>
+                <li><strong>Intercept Form Submission</strong>: We prevent the default form submission with <code>event.preventDefault()</code></li>
+                <li><strong>Collect Data</strong>: We gather the form values into a JavaScript object</li>
+                <li><strong>Show Loading Indicator</strong>: We provide visual feedback that the submission is in progress</li>
+                <li><strong>Send Data</strong>: We use the Fetch API to send the data as JSON to our backend</li>
+                <li><strong>Process Response</strong>: We handle success and error responses accordingly</li>
+                <li><strong>Update UI</strong>: We show appropriate messages and highlight any validation errors</li>
+            </ol>
+            
+            <p>This pattern is like a waiter taking your order at a restaurant. Instead of making you fill out a form and walk to the kitchen yourself (traditional form submission), the waiter (JavaScript) takes your order (form data), brings it to the kitchen (server) on your behalf, and returns with a response.</p>
+        </section>
+
+        <section>
+            <h2>AJAX with Flask-WTF Integration</h2>
+            
+            <p>The previous approach works, but it bypasses Flask-WTF's server-side validation and CSRF protection. Let's create a more integrated solution that leverages Flask-WTF's features.</p>
+            
+            <h3>Backend Route with Flask-WTF</h3>
+            
+            <p>First, let's create a contact form class in <code>app/forms/contact.py</code>:</p>
+            
+            <pre><code># app/forms/contact.py
+from flask_wtf import FlaskForm
+from wtforms import StringField, TextAreaField, SubmitField
+from wtforms.validators import DataRequired, Email, Length
+
+class ContactForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(min=2, max=50)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    message = TextAreaField('Message', validators=[DataRequired(), Length(min=10, max=1000)])
+    submit = SubmitField('Send Message')</code></pre>
+            
+            <p>Now, let's create a route that uses this form but returns JSON for AJAX requests:</p>
+            
+            <pre><code># app/views/main.py
+from flask import jsonify, request
+from app.forms.contact import ContactForm
+from app.models.message import Message
+
+@bp.route('/contact-wtf-ajax', methods=['GET', 'POST'])
+def contact_wtf_ajax():
+    form = ContactForm()
+    
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            # Process the valid form data
+            try:
+                message = Message(
+                    name=form.name.data,
+                    email=form.email.data,
+                    content=form.message.data
+                )
+                db.session.add(message)
+                db.session.commit()
+                
+                return jsonify({
+                    'success': True,
+                    'message': 'Your message has been sent. Thank you!'
+                })
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'message': 'An error occurred while processing your request.',
+                    'error': str(e)
+                }), 500
+        else:
+            # Return validation errors
+            errors = {}
+            for field_name, field_errors in form.errors.items():
+                errors[field_name] = field_errors[0]  # Just take the first error for each field
+            
+            return jsonify({
+                'success': False,
+                'errors': errors
+            }), 400
+    
+    # For GET request, just render the form
+    return render_template('contact_wtf_ajax.html', form=form)</code></pre>
+            
+            <h3>Frontend Template with Flask-WTF</h3>
+            
+            <p>Create a template at <code>app/templates/contact_wtf_ajax.html</code>:</p>
+            
+            <pre><code>{% extends 'base.html' %}
+
+{% block title %}Contact Us{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Contact Us with Flask-WTF&lt;/h2&gt;
+    
+    &lt;div id="form-messages" class="alert" style="display: none;"&gt;&lt;/div&gt;
+    
+    &lt;form id="contact-form" method="post" novalidate&gt;
+        {{ form.hidden_tag() }}
+        
+        &lt;div class="form-group"&gt;
+            {{ form.name.label }}
+            {{ form.name(class="form-control") }}
+            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            {{ form.email.label }}
+            {{ form.email(class="form-control") }}
+            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            {{ form.message.label }}
+            {{ form.message(class="form-control", rows=5) }}
+            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group mt-3"&gt;
+            {{ form.submit(class="btn btn-primary", id="submit-btn") }}
+            &lt;span id="loading-indicator" style="display: none;"&gt;
+                Sending... &lt;div class="spinner-border spinner-border-sm text-primary"&gt;&lt;/div&gt;
+            &lt;/span&gt;
+        &lt;/div&gt;
+    &lt;/form&gt;
+{% endblock %}
+
+{% block scripts %}
+&lt;script&gt;
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('contact-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const formMessages = document.getElementById('form-messages');
+    
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        // Reset previous errors
+        resetFormErrors();
+        
+        // Show loading indicator
+        submitBtn.style.display = 'none';
+        loadingIndicator.style.display = 'inline-block';
+        
+        // Get form data including CSRF token
+        const formData = new FormData(form);
+        
+        // Send AJAX request to the current URL
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            // Don't set Content-Type header when using FormData
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Hide loading indicator
+            submitBtn.style.display = 'inline-block';
+            loadingIndicator.style.display = 'none';
+            
+            if (data.success) {
+                // Show success message
+                formMessages.textContent = data.message;
+                formMessages.className = 'alert alert-success';
+                formMessages.style.display = 'block';
+                
+                // Reset form
+                form.reset();
+                
+                // Re-add the CSRF token (it gets cleared with form.reset())
+                const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+                document.querySelector('input[name="csrf_token"]').value = csrfToken;
+            } else {
+                // Show field-specific errors
+                if (data.errors) {
+                    Object.keys(data.errors).forEach(field => {
+                        // Handle special case for csrf_token
+                        if (field === 'csrf_token') {
+                            formMessages.textContent = 'Session expired. Please refresh the page and try again.';
+                            formMessages.className = 'alert alert-danger';
+                            formMessages.style.display = 'block';
+                            return;
+                        }
+                        
+                        const inputField = document.getElementById(field);
+                        if (inputField) {
+                            const feedbackElement = inputField.nextElementSibling;
+                            feedbackElement.textContent = data.errors[field];
+                            inputField.classList.add('is-invalid');
+                        }
+                    });
+                }
+                
+                // Show general error message
+                formMessages.textContent = 'Please correct the errors below.';
+                formMessages.className = 'alert alert-danger';
+                formMessages.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            // Handle network errors
+            submitBtn.style.display = 'inline-block';
+            loadingIndicator.style.display = 'none';
+            
+            formMessages.textContent = 'There was a problem with your submission. Please try again later.';
+            formMessages.className = 'alert alert-danger';
+            formMessages.style.display = 'block';
+            console.error('Error:', error);
+        });
+    });
+    
+    function resetFormErrors() {
+        // Hide any previous messages
+        formMessages.style.display = 'none';
+        
+        // Clear field-specific errors
+        const invalidFields = form.querySelectorAll('.is-invalid');
+        invalidFields.forEach(field => {
+            field.classList.remove('is-invalid');
+            const feedbackElement = field.nextElementSibling;
+            if (feedbackElement && feedbackElement.classList.contains('invalid-feedback')) {
+                feedbackElement.textContent = '';
+            }
+        });
+    }
+});
+&lt;/script&gt;
+{% endblock %}</code></pre>
+            
+            <h3>Key Differences with Flask-WTF Integration</h3>
+            
+            <p>This approach has several advantages over the previous one:</p>
+            
+            <ul>
+                <li><strong>CSRF Protection</strong>: We include Flask-WTF's CSRF token and handle expired tokens</li>
+                <li><strong>Server-Side Validation</strong>: We leverage Flask-WTF's validators</li>
+                <li><strong>FormData</strong>: We use the FormData API instead of manually collecting fields</li>
+                <li><strong>Same Endpoint</strong>: The form submits to the same URL that rendered it</li>
+            </ul>
+            
+            <p>The CSRF token is like a special ticket that proves you got the form from our website. Without it, someone could trick users into submitting forms to our site from somewhere else (a Cross-Site Request Forgery attack). It's similar to how movie theaters stamp your hand when you leave temporarily – it proves you came from inside.</p>
+        </section>
+
+        <section>
+            <h2>Real-Time Form Validation with AJAX</h2>
+            
+            <p>AJAX isn't just useful for form submission – it can also provide real-time validation feedback as users type. Let's implement an example for checking if a username is available.</p>
+            
+            <h3>Backend Route for Username Validation</h3>
+            
+            <p>Add this route to <code>app/views/api.py</code>:</p>
+            
+            <pre><code>@bp.route('/check-username')
+def check_username():
+    """Check if a username is available"""
+    username = request.args.get('username', '').strip()
+    
+    if not username:
+        return jsonify({'available': False, 'message': 'Please enter a username'})
+    
+    if len(username) < 3:
+        return jsonify({
+            'available': False,
+            'message': 'Username must be at least 3 characters long'
+        })
+    
+    # Check if username exists in the database
+    user = User.query.filter(User.username.ilike(username)).first()
+    
+    if user is None:
+        return jsonify({
+            'available': True,
+            'message': 'Username is available'
+        })
+    else:
+        return jsonify({
+            'available': False,
+            'message': 'This username is already taken'
+        })
+</code></pre>
+            
+            <h3>Frontend JavaScript for Real-Time Validation</h3>
+            
+            <p>Add this JavaScript to your registration form:</p>
+            
+            <pre><code>&lt;script&gt;
+document.addEventListener('DOMContentLoaded', function() {
+    const usernameField = document.getElementById('username');
+    const usernameValidationMessage = document.getElementById('username-validation');
+    
+    // Debounce function to limit API calls
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+    
+    // Function to check username availability
+    const checkUsername = debounce(function() {
+        const username = usernameField.value.trim();
+        
+        // Skip validation for empty or very short usernames
+        if (username.length < 3) {
+            usernameValidationMessage.textContent = '';
+            usernameValidationMessage.className = '';
+            usernameField.classList.remove('is-valid', 'is-invalid');
+            return;
+        }
+        
+        // Show loading state
+        usernameValidationMessage.textContent = 'Checking availability...';
+        usernameValidationMessage.className = 'text-muted';
+        
+        // Make AJAX request to check username
+        fetch(`/api/check-username?username=${encodeURIComponent(username)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.available) {
+                    usernameValidationMessage.textContent = data.message;
+                    usernameValidationMessage.className = 'text-success';
+                    usernameField.classList.remove('is-invalid');
+                    usernameField.classList.add('is-valid');
+                } else {
+                    usernameValidationMessage.textContent = data.message;
+                    usernameValidationMessage.className = 'text-danger';
+                    usernameField.classList.remove('is-valid');
+                    usernameField.classList.add('is-invalid');
+                }
+            })
+            .catch(error => {
+                usernameValidationMessage.textContent = 'Error checking username';
+                usernameValidationMessage.className = 'text-danger';
+                console.error('Error checking username:', error);
+            });
+    }, 500); // 500ms delay
+    
+    // Add event listener for input changes
+    usernameField.addEventListener('input', checkUsername);
+});
+&lt;/script&gt;</code></pre>
+            
+            <p>Make sure your form includes a place for the validation message:</p>
+            
+            <pre><code>&lt;div class="form-group"&gt;
+    &lt;label for="username"&gt;Username&lt;/label&gt;
+    &lt;input type="text" class="form-control" id="username" name="username" required&gt;
+    &lt;small id="username-validation" class="form-text"&gt;&lt;/small&gt;
+&lt;/div&gt;</code></pre>
+            
+            <h3>Understanding Debouncing</h3>
+            
+            <p>Notice the <code>debounce</code> function in our code. It's an important technique when implementing real-time validation. Debouncing ensures we don't send a request for every keystroke, which would overwhelm the server.</p>
+            
+            <p>Think of debouncing like controlling the water when you're taking a shower. Instead of turning the knob back and forth rapidly as the temperature fluctuates, you make small adjustments and wait to see the effect before making more. Similarly, debouncing waits until the user pauses typing before sending a request.</p>
+            
+            <p>Real-time validation creates a responsive form that feels like having a helpful assistant looking over your shoulder, offering immediate feedback as you fill it out.</p>
+        </section>
+
+        <section>
+            <h2>Multi-Step Forms with AJAX</h2>
+            
+            <p>Multi-step forms break a complex form into manageable pieces, like dividing a long journey into shorter legs. AJAX is perfect for multi-step forms because it allows you to validate each step before proceeding and save progress along the way.</p>
+            
+            <p>Let's look at a practical example of a job application form with progress saving.</p>
+            
+            <h3>Backend Model for Job Applications</h3>
+            
+            <p>First, let's create a model to store application data in <code>app/models/application.py</code>:</p>
+            
+            <pre><code># app/models/application.py
+from datetime import datetime
+from app import db
+
+class JobApplication(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
+    status = db.Column(db.String(20), default='draft')  # draft, submitted, under_review, etc.
+    
+    # Personal Information
+    full_name = db.Column(db.String(100))
+    email = db.Column(db.String(100))
+    phone = db.Column(db.String(20))
+    address = db.Column(db.String(200))
+    
+    # Education
+    education = db.Column(db.JSON)  # List of education entries
+    
+    # Experience
+    experience = db.Column(db.JSON)  # List of experience entries
+    
+    # Skills
+    skills = db.Column(db.JSON)  # List of skills
+    
+    # Additional Questions
+    additional_info = db.Column(db.JSON)  # Answers to job-specific questions
+    
+    # Resume
+    resume_path = db.Column(db.String(255))
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    submitted_at = db.Column(db.DateTime)
+    
+    # Relationships
+    user = db.relationship('User', backref='applications')
+    job = db.relationship('Job', backref='applications')</code></pre>
+            
+            <h3>API Routes for Saving Progress</h3>
+            
+            <p>Add these routes to <code>app/views/api.py</code>:</p>
+            
+            <pre><code>@bp.route('/application/<int:application_id>/save', methods=['POST'])
+@login_required
+def save_application_progress(application_id):
+    """Save progress for a job application"""
+    application = JobApplication.query.get_or_404(application_id)
+    
+    # Make sure the application belongs to the current user
+    if application.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    data = request.json
+    step = data.get('step')
+    
+    if not step:
+        return jsonify({'success': False, 'message': 'Step is required'}), 400
+    
+    # Update the application based on the current step
+    if step == 'personal':
+        application.full_name = data.get('full_name')
+        application.email = data.get('email')
+        application.phone = data.get('phone')
+        application.address = data.get('address')
+    
+    elif step == 'education':
+        application.education = data.get('education', [])
+    
+    elif step == 'experience':
+        application.experience = data.get('experience', [])
+    
+    elif step == 'skills':
+        application.skills = data.get('skills', [])
+    
+    elif step == 'additional':
+        application.additional_info = data.get('answers', {})
+    
+    # Update the timestamp
+    application.updated_at = datetime.utcnow()
+    
+    try:
+        db.session.commit()
+        return jsonify({
+            'success': True, 
+            'message': 'Progress saved successfully',
+            'updated_at': application.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@bp.route('/application/<int:application_id>/submit', methods=['POST'])
+@login_required
+def submit_application(application_id):
+    """Submit a completed job application"""
+    application = JobApplication.query.get_or_404(application_id)
+    
+    # Make sure the application belongs to the current user
+    if application.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    # Validate all required fields are filled
+    errors = {}
+    
+    # Personal info validation
+    if not application.full_name:
+        errors['full_name'] = 'Full name is required'
+    if not application.email:
+        errors['email'] = 'Email is required'
+    if not application.phone:
+        errors['phone'] = 'Phone number is required'
+    if not application.address:
+        errors['address'] = 'Address is required'
+    
+    # Education validation
+    if not application.education or len(application.education) == 0:
+        errors['education'] = 'At least one education entry is required'
+    
+    # Experience validation (might be optional depending on job)
+    # if not application.experience or len(application.experience) == 0:
+    #     errors['experience'] = 'At least one experience entry is required'
+    
+    # Resume validation
+    if not application.resume_path:
+        errors['resume'] = 'Resume is required'
+    
+    # Return errors if validation fails
+    if errors:
+        return jsonify({'success': False, 'errors': errors}), 400
+    
+    # Update application status and submission timestamp
+    application.status = 'submitted'
+    application.submitted_at = datetime.utcnow()
+    
+    try:
+        db.session.commit()
+        
+        # Send confirmation email (in a real app)
+        # send_application_confirmation(application)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Application submitted successfully',
+            'redirect_url': url_for('job.application_confirmation', application_id=application.id)
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Uploads in Flask-WTF</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>File Uploads in Flask-WTF</h1>
+        <p class="subtitle">Week 2 - Friday: Full Stack Web Development with Python</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>File Uploads</h2>
+            <p>File uploads add a new dimension to form handling. They're like receiving physical documents at an office — they need to be validated, processed, and stored securely.</p>
+            
+            <h3>Setting Up File Uploads</h3>
+            <p>Flask-WTF makes it easy to handle file uploads using the <code>FileField</code> class:</p>
+            
+            <pre><code>from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileRequired, FileAllowed
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
+
+class ProfilePictureForm(FlaskForm):
+    display_name = StringField('Display Name', validators=[DataRequired()])
+    profile_picture = FileField('Profile Picture', validators=[
+        FileRequired(),
+        FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')
+    ])
+    submit = SubmitField('Update Profile')</code></pre>
+            
+            <p>You'll need to configure your application to handle file uploads:</p>
+            
+            <pre><code># app/__init__.py or config.py
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size</code></pre>
+            
+            <h3>Processing Uploaded Files</h3>
+            <p>Once you've set up the form, you need to handle the uploaded file in your route:</p>
+            
+            <pre><code>import os
+from werkzeug.utils import secure_filename
+from flask import current_app
+
+# Define a function to save uploaded files
+def save_file(file, folder):
+    filename = secure_filename(file.filename)
+    # Create a unique filename to prevent overwriting
+    base_filename, extension = os.path.splitext(filename)
+    unique_filename = f"{base_filename}_{int(time.time())}{extension}"
+    
+    # Ensure the upload folder exists
+    upload_folder = os.path.join(current_app.root_path, 'static', folder)
+    os.makedirs(upload_folder, exist_ok=True)
+    
+    # Save the file
+    file_path = os.path.join(upload_folder, unique_filename)
+    file.save(file_path)
+    
+    # Return the path relative to the static folder
+    return os.path.join(folder, unique_filename)
+
+@bp.route('/profile/picture', methods=['GET', 'POST'])
+@login_required
+def update_profile_picture():
+    form = ProfilePictureForm()
+    
+    if form.validate_on_submit():
+        # Save the uploaded file
+        picture_path = save_file(form.profile_picture.data, 'uploads/profile_pictures')
+        
+        # Update user profile
+        current_user.display_name = form.display_name.data
+        current_user.profile_picture = picture_path
+        db.session.commit()
+        
+        flash('Your profile has been updated!', 'success')
+        return redirect(url_for('main.profile'))
+    
+    # Pre-populate form with current values
+    if request.method == 'GET':
+        form.display_name.data = current_user.display_name
+    
+    return render_template('profile/picture.html', form=form)</code></pre>
+            
+            <h3>File Upload Template</h3>
+            <p>The template for file uploads needs the <code>enctype</code> attribute:</p>
+            
+            <pre><code>&lt;!-- templates/profile/picture.html --&gt;
+{% extends 'base.html' %}
+
+{% block title %}Update Profile Picture{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Update Profile Picture&lt;/h2&gt;
+    
+    {% if current_user.profile_picture %}
+        &lt;div class="mb-3"&gt;
+            &lt;h4&gt;Current Profile Picture&lt;/h4&gt;
+            &lt;img src="{{ url_for('static', filename=current_user.profile_picture) }}" 
+                 alt="Current profile picture"
+                 class="img-thumbnail"
+                 style="max-width: 200px"&gt;
+        &lt;/div&gt;
+    {% endif %}
+    
+    &lt;form method="post" enctype="multipart/form-data" novalidate&gt;
+        {{ form.hidden_tag() }}
+        
+        &lt;div class="form-group"&gt;
+            {{ form.display_name.label }}
+            {{ form.display_name(class="form-control") }}
+            {% for error in form.display_name.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            {{ form.profile_picture.label }}
+            {{ form.profile_picture(class="form-control") }}
+            {% for error in form.profile_picture.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+            &lt;small class="form-text text-muted"&gt;
+                Allowed formats: JPG, JPEG, PNG. Maximum size: 16MB.
+            &lt;/small&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group mt-3"&gt;
+            {{ form.submit(class="btn btn-primary") }}
+        &lt;/div&gt;
+    &lt;/form&gt;
+{% endblock %}</code></pre>
+            
+            <h3>Advanced File Validation</h3>
+            <p>For more sophisticated validation, you can create custom validators:</p>
+            
+            <pre><code>import imghdr
+from wtforms.validators import ValidationError
+
+def validate_image(form, field):
+    """Validate that the uploaded file is an image with proper format"""
+    if field.data:
+        # Check if there's an actual file
+        file = field.data
+        
+        # Additional check beyond extension
+        image_type = imghdr.what(file)
+        if image_type not in ['jpeg', 'png', 'gif']:
+            raise ValidationError('Uploaded file is not a valid image. Please upload a JPEG, PNG, or GIF.')
+        
+        # Check file size (max 5MB)
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)  # Reset file pointer
+        
+        if file_size > 5 * 1024 * 1024:  # 5MB in bytes
+            raise ValidationError('File size exceeds the 5MB limit.')
+
+class AdvancedProfilePictureForm(FlaskForm):
+    display_name = StringField('Display Name', validators=[DataRequired()])
+    profile_picture = FileField('Profile Picture', validators=[
+        FileRequired(),
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!'),
+        validate_image
+    ])
+    submit = SubmitField('Update Profile')</code></pre>
+            
+            <h3>Multiple File Uploads</h3>
+            <p>To handle multiple file uploads, you can use <code>MultipleFileField</code>:</p>
+            
+            <pre><code>from flask_wtf.file import MultipleFileField
+
+class ProductImagesForm(FlaskForm):
+    product_name = StringField('Product Name', validators=[DataRequired()])
+    images = MultipleFileField('Product Images', validators=[
+        DataRequired('Please select at least one image.'),
+        FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')
+    ])
+    submit = SubmitField('Add Product')</code></pre>
+            
+            <p>And process the files in your route:</p>
+            
+            <pre><code>@bp.route('/product/add', methods=['GET', 'POST'])
+@login_required
+def add_product():
+    form = ProductImagesForm()
+    
+    if form.validate_on_submit():
+        # Create the product
+        product = Product(
+            name=form.product_name.data,
+            seller_id=current_user.id
+        )
+        db.session.add(product)
+        db.session.flush()  # Get the product ID
+        
+        # Save all uploaded images
+        for image_file in form.images.data:
+            # Skip if file is empty
+            if not image_file.filename:
+                continue
+                
+            image_path = save_file(image_file, f'uploads/products/{product.id}')
+            
+            # Create image record
+            product_image = ProductImage(
+                product_id=product.id,
+                image_path=image_path
+            )
+            db.session.add(product_image)
+        
+        db.session.commit()
+        flash('Product added successfully!', 'success')
+        return redirect(url_for('product.details', product_id=product.id))
+    
+    return render_template('product/add.html', form=form)</code></pre>
+            
+            <h3>Real-World Example: Document Management System</h3>
+            <p>Let's look at a more complex example for a document management system that handles various file types with different validation requirements:</p>
+            
+            <pre><code># models/document.py
+class DocumentType(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    allowed_extensions = db.Column(db.String(255), nullable=False)  # Comma-separated list
+    max_size_mb = db.Column(db.Integer, nullable=False, default=10)
+    requires_approval = db.Column(db.Boolean, default=False)
+    
+    def get_allowed_extensions_list(self):
+        return self.allowed_extensions.split(',')
+
+class Document(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)
+    file_path = db.Column(db.String(255), nullable=False)
+    file_size = db.Column(db.Integer, nullable=False)  # Size in bytes
+    file_type = db.Column(db.String(50), nullable=False)
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    document_type_id = db.Column(db.Integer, db.ForeignKey('document_type.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+
+# forms/document.py
+def create_document_upload_form(document_types):
+    """Create a form based on available document types"""
+    class DocumentUploadForm(FlaskForm):
+        title = StringField('Document Title', validators=[DataRequired(), Length(max=100)])
+        document_type = SelectField('Document Type', coerce=int, validators=[DataRequired()])
+        file = FileField('File', validators=[FileRequired()])
+        notes = TextAreaField('Notes', validators=[Length(max=500)])
+        submit = SubmitField('Upload Document')
+        
+        def __init__(self, *args, **kwargs):
+            super(DocumentUploadForm, self).__init__(*args, **kwargs)
+            self.document_type.choices = [(dt.id, dt.name) for dt in document_types]
+        
+        def validate_file(self, field):
+            # Get the selected document type
+            doc_type = DocumentType.query.get(self.document_type.data)
+            if not doc_type:
+                raise ValidationError('Invalid document type.')
+            
+            # Check file extension
+            filename = field.data.filename
+            file_ext = os.path.splitext(filename)[1].lower().lstrip('.')
+            allowed_extensions = doc_type.get_allowed_extensions_list()
+            
+            if file_ext not in allowed_extensions:
+                raise ValidationError(
+                    f'File type not allowed. Allowed types: {", ".join(allowed_extensions)}'
+                )
+            
+            # Check file size
+            field.data.seek(0, os.SEEK_END)
+            file_size = field.data.tell()
+            field.data.seek(0)  # Reset file pointer
+            
+            max_size = doc_type.max_size_mb * 1024 * 1024  # Convert MB to bytes
+            if file_size > max_size:
+                raise ValidationError(
+                    f'File size exceeds the {doc_type.max_size_mb}MB limit.'
+                )
+    
+    return DocumentUploadForm()
+
+# views/document.py
+@bp.route('/documents/upload', methods=['GET', 'POST'])
+@login_required
+def upload_document():
+    # Get available document types
+    document_types = DocumentType.query.all()
+    if not document_types:
+        flash('No document types available. Please contact the administrator.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    form = create_document_upload_form(document_types)
+    
+    if form.validate_on_submit():
+        file = form.file.data
+        filename = secure_filename(file.filename)
+        
+        # Get selected document type
+        doc_type = DocumentType.query.get_or_404(form.document_type.data)
+        
+        # Create upload directory if it doesn't exist
+        upload_dir = os.path.join(
+            current_app.root_path, 
+            'uploads', 
+            'documents', 
+            str(current_user.id)
+        )
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Generate unique filename
+        base_name, extension = os.path.splitext(filename)
+        unique_filename = f"{base_name}_{int(time.time())}{extension}"
+        file_path = os.path.join(upload_dir, unique_filename)
+        
+        # Save the file
+        file.save(file_path)
+        
+        # Get file size
+        file_size = os.path.getsize(file_path)
+        
+        # Create document record
+        document = Document(
+            title=form.title.data,
+            filename=unique_filename,
+            file_path=os.path.join(
+                'uploads', 
+                'documents', 
+                str(current_user.id), 
+                unique_filename
+            ),
+            file_size=file_size,
+            file_type=os.path.splitext(filename)[1].lower().lstrip('.'),
+            user_id=current_user.id,
+            document_type_id=doc_type.id,
+            status='pending' if doc_type.requires_approval else 'approved'
+        )
+        
+        db.session.add(document)
+        db.session.commit()
+        
+        if doc_type.requires_approval:
+            flash('Document uploaded successfully and pending approval.', 'success')
+        else:
+            flash('Document uploaded successfully.', 'success')
+        
+        return redirect(url_for('document.my_documents'))
+    
+    return render_template('document/upload.html', form=form)</code></pre>
+
+            <h3>Security Considerations for File Uploads</h3>
+            <p>File uploads present several security challenges that you need to address:</p>
+            
+            <ul>
+                <li><strong>File Type Validation</strong>: Always verify the file type both by extension and content (using libraries like <code>imghdr</code> for images)</li>
+                <li><strong>File Size Limits</strong>: Set reasonable size limits to prevent denial-of-service attacks</li>
+                <li><strong>Secure Filenames</strong>: Use <code>secure_filename()</code> from Werkzeug to sanitize filenames</li>
+                <li><strong>Storage Location</strong>: Store uploaded files outside the web root if possible</li>
+                <li><strong>Permissions</strong>: Set appropriate file permissions on uploaded files</li>
+                <li><strong>Malware Scanning</strong>: For high-security applications, consider scanning uploads for malware</li>
+                <li><strong>Content Disposition</strong>: When serving files back to users, set appropriate Content-Disposition headers</li>
+            </ul>
+            
+            <h3>Best Practices for File Uploads</h3>
+            
+            <ul>
+                <li><strong>Use a CDN for Public Files</strong>: For user-uploaded content that needs to be publicly accessible, consider using a content delivery network (CDN)</li>
+                <li><strong>Store Metadata in Database</strong>: Keep file metadata (original filename, size, type, upload date) in your database</li>
+                <li><strong>Use Unique Filenames</strong>: Generate unique filenames to prevent overwrites</li>
+                <li><strong>Implement Chunked Uploads</strong>: For large files, consider implementing chunked uploads</li>
+                <li><strong>Progress Indicators</strong>: Provide upload progress indicators for better user experience</li>
+                <li><strong>Preview Functionality</strong>: For images and PDFs, consider adding preview functionality</li>
+            </ul>
+            
+            <div class="reflection">
+                <h4>Reflection Point</h4>
+                <p>Think about the security implications of file uploads. What types of validation should you perform? How can you prevent users from uploading malicious files? What storage options might be appropriate for different types of files or security requirements?</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Full Stack Python Web Development Course</p>
+    </footer>
+</body>
+</html>

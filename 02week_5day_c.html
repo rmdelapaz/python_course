@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Forms in Flask-WTF</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Dynamic Forms in Flask-WTF</h1>
+        <p class="subtitle">Week 2 - Friday: Full Stack Web Development with Python</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Dynamic Forms</h2>
+            <p>Static forms are like fixed menus at restaurants — they serve a purpose but can't adapt to changing needs. Dynamic forms, on the other hand, are like customizable buffets that adjust based on previous selections or user context.</p>
+            
+            <h3>Why Dynamic Forms?</h3>
+            <p>In many real-world scenarios, the form structure needs to change based on:</p>
+            <ul>
+                <li>User input (e.g., showing additional fields based on a selection)</li>
+                <li>User role or permissions</li>
+                <li>Context (e.g., different fields for different product categories)</li>
+                <li>Variable number of items (e.g., adding multiple phone numbers)</li>
+            </ul>
+            
+            <h3>Techniques for Dynamic Forms</h3>
+            
+            <h4>Conditional Fields</h4>
+            <p>One common pattern is showing or hiding fields based on other field values:</p>
+            
+            <pre><code># In your form class
+class SurveyForm(FlaskForm):
+    occupation = SelectField('Occupation', choices=[
+        ('student', 'Student'),
+        ('employed', 'Employed'),
+        ('unemployed', 'Unemployed'),
+        ('retired', 'Retired')
+    ])
+    
+    # Only relevant for 'employed' selection
+    company = StringField('Company Name')
+    position = StringField('Position')
+    years_employed = IntegerField('Years at Company')
+    
+    # Only relevant for 'student' selection
+    institution = StringField('Educational Institution')
+    field_of_study = StringField('Field of Study')
+    year = SelectField('Year', choices=[
+        ('1', '1st Year'),
+        ('2', '2nd Year'),
+        ('3', '3rd Year'),
+        ('4', '4th Year'),
+        ('5+', '5+ Year')
+    ])
+    
+    submit = SubmitField('Submit')</code></pre>
+            
+            <p>In your template, you'll use JavaScript to show/hide fields based on the selection:</p>
+            
+            <pre><code>&lt;!-- In your template --&gt;
+&lt;script&gt;
+    document.addEventListener('DOMContentLoaded', function() {
+        const occupationField = document.getElementById('occupation');
+        const employedFields = document.getElementById('employed-fields');
+        const studentFields = document.getElementById('student-fields');
+        
+        function updateFieldVisibility() {
+            const occupation = occupationField.value;
+            
+            // Hide all conditional fields first
+            employedFields.style.display = 'none';
+            studentFields.style.display = 'none';
+            
+            // Show relevant fields based on selection
+            if (occupation === 'employed') {
+                employedFields.style.display = 'block';
+            } else if (occupation === 'student') {
+                studentFields.style.display = 'block';
+            }
+        }
+        
+        // Initial update and event listener for changes
+        updateFieldVisibility();
+        occupationField.addEventListener('change', updateFieldVisibility);
+    });
+&lt;/script&gt;
+
+&lt;form method="post" novalidate&gt;
+    {{ form.hidden_tag() }}
+    
+    &lt;div class="form-group"&gt;
+        {{ form.occupation.label }}
+        {{ form.occupation(class="form-control") }}
+    &lt;/div&gt;
+    
+    &lt;div id="employed-fields"&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.company.label }}
+            {{ form.company(class="form-control") }}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.position.label }}
+            {{ form.position(class="form-control") }}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.years_employed.label }}
+            {{ form.years_employed(class="form-control") }}
+        &lt;/div&gt;
+    &lt;/div&gt;
+    
+    &lt;div id="student-fields"&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.institution.label }}
+            {{ form.institution(class="form-control") }}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.field_of_study.label }}
+            {{ form.field_of_study(class="form-control") }}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+        {{ form.field_of_study.label }}
+        {{ form.field_of_study(class="form-control") }}
+    &lt;/div&gt;
+    &lt;div class="form-group"&gt;
+        {{ form.year.label }}
+        {{ form.year(class="form-control") }}
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="form-group mt-3"&gt;
+    {{ form.submit(class="btn btn-primary") }}
+&lt;/div&gt;
+&lt;/form&gt;</code></pre>
+        
+        <p>In your route, you'll need to validate only the relevant fields:</p>
+        
+        <pre><code>@bp.route('/survey', methods=['GET', 'POST'])
+def survey():
+form = SurveyForm()
+
+if form.validate_on_submit():
+    # Basic data collection
+    survey_data = {
+        'occupation': form.occupation.data
+    }
+    
+    # Collect occupation-specific data
+    if form.occupation.data == 'employed':
+        survey_data.update({
+            'company': form.company.data,
+            'position': form.position.data,
+            'years_employed': form.years_employed.data
+        })
+    elif form.occupation.data == 'student':
+        survey_data.update({
+            'institution': form.institution.data,
+            'field_of_study': form.field_of_study.data,
+            'year': form.year.data
+        })
+    
+    # Process the survey data
+    # ...
+    
+    flash('Thank you for completing the survey!', 'success')
+    return redirect(url_for('main.index'))
+
+return render_template('survey.html', form=form)</code></pre>
+        
+        <h4>Form Factories</h4>
+        <p>For more complex scenarios, you can dynamically create forms at runtime:</p>
+        
+        <pre><code>def create_product_form(category):
+"""Create a form specific to a product category"""
+class ProductForm(FlaskForm):
+    name = StringField('Product Name', validators=[DataRequired()])
+    price = DecimalField('Price', validators=[DataRequired(), NumberRange(min=0)])
+    description = TextAreaField('Description', validators=[DataRequired()])
+    
+    # Add category-specific fields
+    if category == 'clothing':
+        size = SelectField('Size', choices=[
+            ('xs', 'Extra Small'),
+            ('s', 'Small'),
+            ('m', 'Medium'),
+            ('l', 'Large'),
+            ('xl', 'Extra Large')
+        ])
+        color = StringField('Color', validators=[DataRequired()])
+        material = StringField('Material', validators=[DataRequired()])
+    
+    elif category == 'electronics':
+        warranty = IntegerField('Warranty (months)', validators=[DataRequired(), NumberRange(min=0)])
+        technical_specs = TextAreaField('Technical Specifications', validators=[DataRequired()])
+        
+    elif category == 'books':
+        author = StringField('Author', validators=[DataRequired()])
+        isbn = StringField('ISBN', validators=[DataRequired()])
+        pages = IntegerField('Number of Pages', validators=[DataRequired(), NumberRange(min=1)])
+    
+    submit = SubmitField('Add Product')
+
+return ProductForm()
+
+@bp.route('/add-product/<category>', methods=['GET', 'POST'])
+@login_required
+def add_product(category):
+if category not in ['clothing', 'electronics', 'books']:
+    flash('Invalid product category', 'danger')
+    return redirect(url_for('main.dashboard'))
+
+ProductForm = create_product_form(category)
+form = ProductForm()
+
+if form.validate_on_submit():
+    # Common product data
+    product = Product(
+        name=form.name.data,
+        price=form.price.data,
+        description=form.description.data,
+        category=category
+    )
+    
+    # Category-specific data
+    if category == 'clothing':
+        product.attributes = {
+            'size': form.size.data,
+            'color': form.color.data,
+            'material': form.material.data
+        }
+    elif category == 'electronics':
+        product.attributes = {
+            'warranty': form.warranty.data,
+            'technical_specs': form.technical_specs.data
+        }
+    elif category == 'books':
+        product.attributes = {
+            'author': form.author.data,
+            'isbn': form.isbn.data,
+            'pages': form.pages.data
+        }
+    
+    db.session.add(product)
+    db.session.commit()
+    
+    flash(f'Product "{product.name}" added successfully!', 'success')
+    return redirect(url_for('main.products'))
+
+return render_template('add_product.html', form=form, category=category)</code></pre>
+        
+        <h4>FormField and FieldList</h4>
+        <p>WTForms provides tools for nested forms and variable-length field lists:</p>
+        
+        <pre><code>from wtforms import FormField, FieldList
+
+class AddressForm(FlaskForm):
+street = StringField('Street', validators=[DataRequired()])
+city = StringField('City', validators=[DataRequired()])
+state = StringField('State', validators=[DataRequired()])
+zip_code = StringField('ZIP Code', validators=[DataRequired()])
+
+# Make this form usable as a subform
+class Meta:
+    csrf = False
+
+class PhoneNumberForm(FlaskForm):
+number = StringField('Phone Number', validators=[DataRequired()])
+type = SelectField('Type', choices=[
+    ('home', 'Home'),
+    ('work', 'Work'),
+    ('mobile', 'Mobile'),
+    ('other', 'Other')
+])
+
+# Make this form usable as a subform
+class Meta:
+    csrf = False
+
+class CustomerForm(FlaskForm):
+name = StringField('Name', validators=[DataRequired()])
+email = StringField('Email', validators=[DataRequired(), Email()])
+
+# Nested form
+shipping_address = FormField(AddressForm, label='Shipping Address')
+billing_address = FormField(AddressForm, label='Billing Address')
+
+# Variable list of phone numbers
+phone_numbers = FieldList(
+    FormField(PhoneNumberForm), 
+    min_entries=1,  # At least one phone number
+    max_entries=5   # Maximum five phone numbers
+)
+
+# Add another phone number button is handled with JavaScript
+submit = SubmitField('Save Customer')</code></pre>
+        
+        <p>The corresponding template might look like:</p>
+        
+        <pre><code>&lt;!-- customer_form.html --&gt;
+&lt;form method="post" novalidate&gt;
+{{ form.hidden_tag() }}
+
+&lt;div class="form-group"&gt;
+    {{ form.name.label }}
+    {{ form.name(class="form-control") }}
+&lt;/div&gt;
+
+&lt;div class="form-group"&gt;
+    {{ form.email.label }}
+    {{ form.email(class="form-control") }}
+&lt;/div&gt;
+
+&lt;h3&gt;Addresses&lt;/h3&gt;
+
+&lt;div class="card mb-3"&gt;
+    &lt;div class="card-header"&gt;{{ form.shipping_address.label }}&lt;/div&gt;
+    &lt;div class="card-body"&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.shipping_address.street.label }}
+            {{ form.shipping_address.street(class="form-control") }}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.shipping_address.city.label }}
+            {{ form.shipping_address.city(class="form-control") }}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.shipping_address.state.label }}
+            {{ form.shipping_address.state(class="form-control") }}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.shipping_address.zip_code.label }}
+            {{ form.shipping_address.zip_code(class="form-control") }}
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="card mb-3"&gt;
+    &lt;div class="card-header"&gt;{{ form.billing_address.label }}&lt;/div&gt;
+    &lt;div class="card-body"&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.billing_address.street.label }}
+            {{ form.billing_address.street(class="form-control") }}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.billing_address.city.label }}
+            {{ form.billing_address.city(class="form-control") }}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.billing_address.state.label }}
+            {{ form.billing_address.state(class="form-control") }}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.billing_address.zip_code.label }}
+            {{ form.billing_address.zip_code(class="form-control") }}
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;h3&gt;Phone Numbers&lt;/h3&gt;
+&lt;div id="phone-numbers"&gt;
+    {% for phone_form in form.phone_numbers %}
+        &lt;div class="phone-entry card mb-2"&gt;
+            &lt;div class="card-body"&gt;
+                &lt;div class="row"&gt;
+                    &lt;div class="col-md-8"&gt;
+                        &lt;div class="form-group"&gt;
+                            {{ phone_form.number.label }}
+                            {{ phone_form.number(class="form-control") }}
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;div class="col-md-4"&gt;
+                        &lt;div class="form-group"&gt;
+                            {{ phone_form.type.label }}
+                            {{ phone_form.type(class="form-control") }}
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+                {% if not loop.first %}
+                    &lt;button type="button" class="btn btn-sm btn-danger remove-phone"&gt;Remove&lt;/button&gt;
+                {% endif %}
+            &lt;/div&gt;
+        &lt;/div&gt;
+    {% endfor %}
+&lt;/div&gt;
+
+&lt;button type="button" id="add-phone" class="btn btn-secondary mb-3"&gt;Add Another Phone Number&lt;/button&gt;
+
+&lt;div class="form-group mt-3"&gt;
+    {{ form.submit(class="btn btn-primary") }}
+&lt;/div&gt;
+&lt;/form&gt;
+
+&lt;script&gt;
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneContainer = document.getElementById('phone-numbers');
+    const addButton = document.getElementById('add-phone');
+    
+    // Add a new phone number entry
+    addButton.addEventListener('click', function() {
+        // Get the last phone entry as a template
+        const lastEntry = phoneContainer.querySelector('.phone-entry:last-child');
+        const newEntry = lastEntry.cloneNode(true);
+        
+        // Clear input values
+        newEntry.querySelectorAll('input').forEach(input => {
+            input.value = '';
+            
+            // Update the input name to match WTForms naming convention
+            const nameParts = input.name.split('-');
+            const newIndex = parseInt(nameParts[1]) + 1;
+            input.name = `${nameParts[0]}-${newIndex}-${nameParts[2]}`;
+        });
+        
+        // Update select names as well
+        newEntry.querySelectorAll('select').forEach(select => {
+            const nameParts = select.name.split('-');
+            const newIndex = parseInt(nameParts[1]) + 1;
+            select.name = `${nameParts[0]}-${newIndex}-${nameParts[2]}`;
+        });
+        
+        // Add remove button if not already present
+        if (!newEntry.querySelector('.remove-phone')) {
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn btn-sm btn-danger remove-phone';
+            removeBtn.textContent = 'Remove';
+            newEntry.querySelector('.card-body').appendChild(removeBtn);
+        }
+        
+        // Add the new entry to the container
+        phoneContainer.appendChild(newEntry);
+        
+        // Add event listener for the remove button
+        setupRemoveButtons();
+    });
+    
+    // Function to handle removal of phone entries
+    function setupRemoveButtons() {
+        document.querySelectorAll('.remove-phone').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.phone-entry').remove();
+            });
+        });
+    }
+    
+    // Initial setup
+    setupRemoveButtons();
+});
+&lt;/script&gt;</code></pre>
+        
+        <h3>Real-World Example: Event Registration Form</h3>
+        <p>Consider an event registration system where users can register for conferences. Depending on the event type, different information needs to be collected:</p>
+        
+        <pre><code># models/event.py
+class Event(db.Model):
+id = db.Column(db.Integer, primary_key=True)
+name = db.Column(db.String(100), nullable=False)
+event_type = db.Column(db.String(50), nullable=False)  # 'conference', 'workshop', 'webinar'
+start_date = db.Column(db.DateTime, nullable=False)
+end_date = db.Column(db.DateTime, nullable=False)
+# ... other fields ...
+
+# forms/event.py
+def create_registration_form(event):
+"""Create a registration form based on event type"""
+class RegistrationForm(FlaskForm):
+    first_name = StringField('First Name', validators=[DataRequired()])
+    last_name = StringField('Last Name', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    
+    # Common fields for all event types
+    dietary_requirements = SelectField('Dietary Requirements', choices=[
+        ('none', 'None'),
+        ('vegetarian', 'Vegetarian'),
+        ('vegan', 'Vegan'),
+        ('gluten_free', 'Gluten Free'),
+        ('other', 'Other (please specify)')
+    ])
+    dietary_notes = TextAreaField('Dietary Notes')
+    
+    # For conferences and workshops (in-person events)
+    if event.event_type in ['conference', 'workshop']:
+        # Accommodation options
+        needs_accommodation = BooleanField('I need accommodation')
+        check_in_date = DateField('Check-in Date')
+        check_out_date = DateField('Check-out Date')
+        room_type = SelectField('Room Type', choices=[
+            ('single', 'Single Room'),
+            ('double', 'Double Room'),
+            ('shared', 'Shared Room')
+        ])
+        
+        # Workshop-specific fields
+        if event.event_type == 'workshop':
+            experience_level = SelectField('Experience Level', choices=[
+                ('beginner', 'Beginner'),
+                ('intermediate', 'Intermediate'),
+                ('advanced', 'Advanced')
+            ])
+            equipment = BooleanField('I will bring my own equipment')
+            
+        # Conference-specific fields
+        if event.event_type == 'conference':
+            # Multiple sessions selection
+            from app.models.event import Session
+            sessions = Session.query.filter_by(event_id=event.id).all()
+            session_choices = [(str(s.id), s.title) for s in sessions]
+            
+            selected_sessions = SelectMultipleField(
+                'Select Sessions to Attend',
+                choices=session_choices
+            )
+            networking_dinner = BooleanField('I will attend the networking dinner')
+    
+    # Webinar-specific fields
+    if event.event_type == 'webinar':
+        platform_experience = BooleanField('I have used the webinar platform before')
+        receive_recording = BooleanField('I would like to receive the recording')
+        timezone = SelectField('Your Timezone', choices=[
+            ('GMT-8', 'Pacific Time (PT)'),
+            ('GMT-7', 'Mountain Time (MT)'),
+            ('GMT-6', 'Central Time (CT)'),
+            ('GMT-5', 'Eastern Time (ET)'),
+            ('GMT', 'Greenwich Mean Time (GMT)'),
+            ('GMT+1', 'Central European Time (CET)'),
+            # ... other timezones ...
+        ])
+    
+    submit = SubmitField('Register')
+    
+    # Add custom validation as needed
+    def validate(self):
+        if not super().validate():
+            return False
+        
+        # Custom validation for accommodations
+        if event.event_type in ['conference', 'workshop'] and self.needs_accommodation.data:
+            if not self.check_in_date.data:
+                self.check_in_date.errors.append('Check-in date is required if accommodation is needed.')
+                return False
+            if not self.check_out_date.data:
+                self.check_out_date.errors.append('Check-out date is required if accommodation is needed.')
+                return False
+            if self.check_in_date.data > self.check_out_date.data:
+                self.check_out_date.errors.append('Check-out date must be after check-in date.')
+                return False
+        
+        return True
+
+return RegistrationForm()
+
+# views/event.py
+@bp.route('/event/<int:event_id>/register', methods=['GET', 'POST'])
+def register_for_event(event_id):
+event = Event.query.get_or_404(event_id)
+RegistrationForm = create_registration_form(event)
+form = RegistrationForm()
+
+if form.validate_on_submit():
+    # Create registration record
+    registration = Registration(
+        user_id=current_user.id if current_user.is_authenticated else None,
+        event_id=event.id,
+        first_name=form.first_name.data,
+        last_name=form.last_name.data,
+        email=form.email.data,
+        dietary_requirements=form.dietary_requirements.data,
+        dietary_notes=form.dietary_notes.data
+    )
+    
+    # Handle event-specific data
+    metadata = {}
+    
+    if event.event_type in ['conference', 'workshop']:
+        metadata['needs_accommodation'] = form.needs_accommodation.data
+        if form.needs_accommodation.data:
+            metadata['check_in_date'] = form.check_in_date.data.strftime('%Y-%m-%d')
+            metadata['check_out_date'] = form.check_out_date.data.strftime('%Y-%m-%d')
+            metadata['room_type'] = form.room_type.data
+        
+        if event.event_type == 'workshop':
+            metadata['experience_level'] = form.experience_level.data
+            metadata['equipment'] = form.equipment.data
+        
+        if event.event_type == 'conference':
+            metadata['selected_sessions'] = form.selected_sessions.data
+            metadata['networking_dinner'] = form.networking_dinner.data
+    
+    if event.event_type == 'webinar':
+        metadata['platform_experience'] = form.platform_experience.data
+        metadata['receive_recording'] = form.receive_recording.data
+        metadata['timezone'] = form.timezone.data
+    
+    registration.metadata = metadata
+    db.session.add(registration)
+    db.session.commit()
+    
+    flash(f'You have successfully registered for {event.name}!', 'success')
+    return redirect(url_for('event.event_details', event_id=event.id))
+
+return render_template('event/register.html', form=form, event=event)</code></pre>
+        
+        <p>This example shows how a single registration endpoint can handle different event types, dynamically generating the appropriate form with fields that make sense for that context.</p>
+        
+        <div class="reflection">
+            <h4>Reflection Point</h4>
+            <p>Consider a multi-step process you've encountered online, such as an e-commerce checkout, job application, or travel booking. How was it structured? Why might the developers have chosen to dynamically show/hide fields or split the process into steps? How might you implement a similar process in your application?</p>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>&copy; 2025 Full Stack Python Web Development Course</p>
+</footer>
+</body>
+</html>

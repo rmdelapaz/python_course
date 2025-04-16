@@ -1,0 +1,2233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forms and Validation in Web Development</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Forms and Validation in Web Development</h1>
+        <p class="subtitle">Week 2 - Friday: Full Stack Web Development with Python</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Advanced Form Handling with Flask-WTF</h2>
+            <p>Imagine you're a restaurant host managing reservations. You need to collect specific information (name, party size, time) in a consistent format to properly serve your guests. Similarly, web forms provide a structured way to collect user input, and Flask-WTF gives us powerful tools to manage this process.</p>
+            
+            <p>Flask-WTF is an extension that integrates Flask with WTForms, providing a robust form handling system. It's like having a well-trained assistant who not only collects information but also verifies it before passing it along.</p>
+            
+            <h3>Key Benefits of Flask-WTF</h3>
+            <ul>
+                <li><strong>CSRF Protection</strong>: Automatically protects your forms from Cross-Site Request Forgery attacks</li>
+                <li><strong>Form Validation</strong>: Built-in validators to ensure data meets your requirements</li>
+                <li><strong>Integration with Templates</strong>: Seamlessly works with Jinja2 templates</li>
+                <li><strong>File Uploads</strong>: Simple handling of file uploads</li>
+                <li><strong>Localization</strong>: Support for multiple languages</li>
+            </ul>
+            
+            <h3>Setting Up Flask-WTF</h3>
+            <p>First, let's make sure we have Flask-WTF installed:</p>
+            <pre><code>pip install flask-wtf</code></pre>
+            
+            <p>Then, configure it in your Flask application:</p>
+            
+            <pre><code># In app/__init__.py or config.py
+app.config['SECRET_KEY'] = 'your-secret-key-here'  # Required for CSRF protection
+app.config['WTF_CSRF_ENABLED'] = True  # Enable CSRF protection (enabled by default)</code></pre>
+            
+            <h3>Creating Form Classes</h3>
+            <p>In Flask-WTF, forms are represented as classes that inherit from FlaskForm. This object-oriented approach makes forms reusable and maintainable.</p>
+            
+            <p>Think of a form class as a blueprint for a specific type of form, similar to how a database model is a blueprint for a type of data. Let's create a form for collecting contact information:</p>
+            
+            <pre><code># In app/forms/contact.py
+from flask_wtf import FlaskForm
+from wtforms import StringField, TextAreaField, EmailField, SubmitField
+from wtforms.validators import DataRequired, Email, Length
+
+class ContactForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(min=2, max=50)])
+    email = EmailField('Email', validators=[DataRequired(), Email()])
+    subject = StringField('Subject', validators=[DataRequired(), Length(max=100)])
+    message = TextAreaField('Message', validators=[DataRequired(), Length(min=10, max=1000)])
+    submit = SubmitField('Send Message')</code></pre>
+            
+            <h3>Using Forms in Routes</h3>
+            <p>Now, let's see how to use this form in a Flask route:</p>
+            
+            <pre><code># In app/views/main.py
+from flask import Blueprint, render_template, flash, redirect, url_for
+from app.forms.contact import ContactForm
+from app.models.message import Message
+from app import db
+
+bp = Blueprint('main', __name__)
+
+@bp.route('/contact', methods=['GET', 'POST'])
+def contact():
+    form = ContactForm()
+    
+    if form.validate_on_submit():
+        # Form data is valid, process it
+        message = Message(
+            name=form.name.data,
+            email=form.email.data,
+            subject=form.subject.data,
+            content=form.message.data
+        )
+        db.session.add(message)
+        db.session.commit()
+        
+        flash('Your message has been sent. Thank you!', 'success')
+        return redirect(url_for('main.index'))
+    
+    # Either a GET request or form validation failed
+    return render_template('contact.html', form=form)</code></pre>
+            
+            <h3>Rendering Forms in Templates</h3>
+            <p>In your Jinja2 templates, you can render the form with automatic CSRF protection:</p>
+            
+            <pre><code>&lt;!-- In templates/contact.html --&gt;
+{% extends 'base.html' %}
+
+{% block title %}Contact Us{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Contact Us&lt;/h2&gt;
+    
+    &lt;form method="post" novalidate&gt;
+        {{ form.hidden_tag() }}
+        
+        &lt;div class="form-group"&gt;
+            {{ form.name.label }}
+            {{ form.name(class="form-control") }}
+            {% for error in form.name.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            {{ form.email.label }}
+            {{ form.email(class="form-control") }}
+            {% for error in form.email.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            {{ form.subject.label }}
+            {{ form.subject(class="form-control") }}
+            {% for error in form.subject.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            {{ form.message.label }}
+            {{ form.message(class="form-control", rows=5) }}
+            {% for error in form.message.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        
+        &lt;div class="form-group mt-3"&gt;
+            {{ form.submit(class="btn btn-primary") }}
+        &lt;/div&gt;
+    &lt;/form&gt;
+{% endblock %}</code></pre>
+            
+            <h3>Real-World Example: Product Feedback Form</h3>
+            <p>Consider an e-commerce application where you want to collect customer feedback on products. Here's how you might implement it:</p>
+            
+            <pre><code># In app/forms/product.py
+class ProductFeedbackForm(FlaskForm):
+    rating = RadioField(
+        'Rating', 
+        choices=[(1, '1 Star'), (2, '2 Stars'), (3, '3 Stars'), (4, '4 Stars'), (5, '5 Stars')],
+        validators=[DataRequired()],
+        coerce=int
+    )
+    review_title = StringField('Review Title', validators=[DataRequired(), Length(max=100)])
+    review_text = TextAreaField('Your Review', validators=[DataRequired(), Length(min=10, max=1000)])
+    would_recommend = BooleanField('I would recommend this product to a friend')
+    submit = SubmitField('Submit Review')</code></pre>
+            
+            <p>This form captures a product rating, review title, review text, and whether the customer would recommend the product. In a real application, you would associate this feedback with specific products and users.</p>
+            
+            <div class="reflection">
+                <h4>Reflection Point</h4>
+                <p>Consider the forms you encounter in your daily digital life. What makes some forms easier to use than others? How might you apply these insights to your own form designs? Think about a specific web application you might want to build and what forms it would require.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Custom Form Validators</h2>
+            <p>While WTForms provides many built-in validators, real-world applications often require custom validation logic. Think of validators as quality control inspectors on an assembly line — each one checks a specific aspect of the data.</p>
+            
+            <h3>Why Custom Validators?</h3>
+            <p>Built-in validators handle common cases, but custom validators allow you to implement business-specific rules, such as:</p>
+            <ul>
+                <li>Username availability</li>
+                <li>Password strength requirements</li>
+                <li>Age restrictions</li>
+                <li>Specific formats (e.g., SKU codes, product identifiers)</li>
+                <li>Cross-field validation</li>
+            </ul>
+            
+            <h3>Creating Custom Validators</h3>
+            <p>There are two main approaches to creating custom validators in WTForms:</p>
+            
+            <h4>Inline Validators</h4>
+            <p>These are methods defined within your form class that validate specific fields:</p>
+            
+            <pre><code>class RegistrationForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=25)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Register')
+    
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user:
+            raise ValidationError('That username is already taken. Please choose a different one.')
+    
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user:
+            raise ValidationError('That email is already registered. Please use a different one.')</code></pre>
+            
+            <p>The method naming convention <code>validate_fieldname</code> is important — WTForms automatically calls these methods during validation.</p>
+            
+            <h4>Standalone Validators</h4>
+            <p>For more complex validation or to create reusable validators, you can create standalone validator functions or classes:</p>
+            
+            <pre><code>from wtforms.validators import ValidationError
+
+def password_strength(form, field):
+    """Validate password strength"""
+    password = field.data
+    
+    if not any(char.isdigit() for char in password):
+        raise ValidationError('Password must contain at least one number.')
+    
+    if not any(char.isupper() for char in password):
+        raise ValidationError('Password must contain at least one uppercase letter.')
+    
+    if not any(char.islower() for char in password):
+        raise ValidationError('Password must contain at least one lowercase letter.')
+    
+    if not any(char in '!@#$%^&*()_+-=[]{}|;:,.<>?/~`' for char in password):
+        raise ValidationError('Password must contain at least one special character.')
+
+class RegistrationForm(FlaskForm):
+    # ... other fields ...
+    password = PasswordField('Password', validators=[
+        DataRequired(), 
+        Length(min=8),
+        password_strength
+    ])</code></pre>
+            
+            <h3>Cross-Field Validation</h3>
+            <p>Sometimes you need to validate fields in relation to each other. For example, ensuring that a start date comes before an end date:</p>
+            
+            <pre><code>class EventForm(FlaskForm):
+    title = StringField('Event Title', validators=[DataRequired()])
+    start_date = DateField('Start Date', validators=[DataRequired()])
+    end_date = DateField('End Date', validators=[DataRequired()])
+    submit = SubmitField('Create Event')
+    
+    def validate(self):
+        if not super().validate():
+            return False
+        
+        # Custom cross-field validation
+        if self.start_date.data >= self.end_date.data:
+            self.end_date.errors.append('End date must be after start date.')
+            return False
+        
+        return True</code></pre>
+            
+            <p>By overriding the <code>validate</code> method, you can implement validation logic that depends on multiple fields.</p>
+            
+            <h3>Real-World Example: Credit Card Form</h3>
+            <p>Let's look at a form for collecting credit card information that uses custom validators to ensure data integrity:</p>
+            
+            <pre><code>import re
+from datetime import datetime
+from wtforms.validators import ValidationError
+
+def validate_credit_card_number(form, field):
+    """Validate credit card number using Luhn algorithm"""
+    # Remove any spaces or dashes
+    number = re.sub(r'\D', '', field.data)
+    
+    # Check length
+    if not (13 <= len(number) <= 19):
+        raise ValidationError('Invalid card number length.')
+    
+    # Luhn algorithm
+    digits = [int(d) for d in number]
+    checksum = 0
+    for i, digit in enumerate(reversed(digits)):
+        if i % 2 == 1:  # Odd position (0-indexed from right)
+            digit *= 2
+            if digit > 9:
+                digit -= 9
+        checksum += digit
+    
+    if checksum % 10 != 0:
+        raise ValidationError('Invalid card number.')
+
+class PaymentForm(FlaskForm):
+    cardholder_name = StringField('Cardholder Name', validators=[DataRequired()])
+    card_number = StringField('Card Number', validators=[DataRequired(), validate_credit_card_number])
+    expiry_month = SelectField('Expiry Month', choices=[(str(i).zfill(2), str(i).zfill(2)) for i in range(1, 13)], validators=[DataRequired()])
+    expiry_year = SelectField('Expiry Year', choices=[(str(i), str(i)) for i in range(datetime.now().year, datetime.now().year + 11)], validators=[DataRequired()])
+    cvv = StringField('CVV', validators=[DataRequired(), Length(min=3, max=4)])
+    submit = SubmitField('Submit Payment')
+    
+    def validate(self):
+        if not super().validate():
+            return False
+        
+        # Validate expiry date
+        current_year = datetime.now().year
+        current_month = datetime.now().month
+        
+        exp_year = int(self.expiry_year.data)
+        exp_month = int(self.expiry_month.data)
+        
+        if exp_year < current_year or (exp_year == current_year and exp_month < current_month):
+            self.expiry_month.errors.append('Card has expired.')
+            return False
+        
+        return True</code></pre>
+            
+            <p>This example demonstrates both standalone validators and cross-field validation. The <code>validate_credit_card_number</code> function checks that the card number is valid using the Luhn algorithm, while the form's <code>validate</code> method ensures that the expiry date is in the future.</p>
+            
+            <div class="reflection">
+                <h4>Reflection Point</h4>
+                <p>Think about situations where standard validation isn't enough. Have you encountered forms that rejected valid data or accepted invalid data? How might custom validators improve these experiences? Consider a specific business rule in your domain that would require custom validation.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Dynamic Forms</h2>
+            <p>Static forms are like fixed menus at restaurants — they serve a purpose but can't adapt to changing needs. Dynamic forms, on the other hand, are like customizable buffets that adjust based on previous selections or user context.</p>
+            
+            <h3>Why Dynamic Forms?</h3>
+            <p>In many real-world scenarios, the form structure needs to change based on:</p>
+            <ul>
+                <li>User input (e.g., showing additional fields based on a selection)</li>
+                <li>User role or permissions</li>
+                <li>Context (e.g., different fields for different product categories)</li>
+                <li>Variable number of items (e.g., adding multiple phone numbers)</li>
+            </ul>
+            
+            <h3>Techniques for Dynamic Forms</h3>
+            
+            <h4>Conditional Fields</h4>
+            <p>One common pattern is showing or hiding fields based on other field values:</p>
+            
+            <pre><code># In your form class
+class SurveyForm(FlaskForm):
+    occupation = SelectField('Occupation', choices=[
+        ('student', 'Student'),
+        ('employed', 'Employed'),
+        ('unemployed', 'Unemployed'),
+        ('retired', 'Retired')
+    ])
+    
+    # Only relevant for 'employed' selection
+    company = StringField('Company Name')
+    position = StringField('Position')
+    years_employed = IntegerField('Years at Company')
+    
+    # Only relevant for 'student' selection
+    institution = StringField('Educational Institution')
+    field_of_study = StringField('Field of Study')
+    year = SelectField('Year', choices=[
+        ('1', '1st Year'),
+        ('2', '2nd Year'),
+        ('3', '3rd Year'),
+        ('4', '4th Year'),
+        ('5+', '5+ Year')
+    ])
+    
+    submit = SubmitField('Submit')</code></pre>
+            
+            <p>In your template, you'll use JavaScript to show/hide fields based on the selection:</p>
+            
+            <pre><code>&lt;!-- In your template --&gt;
+&lt;script&gt;
+    document.addEventListener('DOMContentLoaded', function() {
+        const occupationField = document.getElementById('occupation');
+        const employedFields = document.getElementById('employed-fields');
+        const studentFields = document.getElementById('student-fields');
+        
+        function updateFieldVisibility() {
+            const occupation = occupationField.value;
+            
+            // Hide all conditional fields first
+            employedFields.style.display = 'none';
+            studentFields.style.display = 'none';
+            
+            // Show relevant fields based on selection
+            if (occupation === 'employed') {
+                employedFields.style.display = 'block';
+            } else if (occupation === 'student') {
+                studentFields.style.display = 'block';
+            }
+        }
+        
+        // Initial update and event listener for changes
+        updateFieldVisibility();
+        occupationField.addEventListener('change', updateFieldVisibility);
+    });
+&lt;/script&gt;
+
+&lt;form method="post" novalidate&gt;
+    {{ form.hidden_tag() }}
+    
+    &lt;div class="form-group"&gt;
+        {{ form.occupation.label }}
+        {{ form.occupation(class="form-control") }}
+    &lt;/div&gt;
+    
+    &lt;div id="employed-fields"&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.company.label }}
+            {{ form.company(class="form-control") }}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.position.label }}
+            {{ form.position(class="form-control") }}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.years_employed.label }}
+            {{ form.years_employed(class="form-control") }}
+        &lt;/div&gt;
+    &lt;/div&gt;
+    
+    &lt;div id="student-fields"&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.institution.label }}
+            {{ form.institution(class="form-control") }}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.field_of_study.label }}
+            {{ form.field_of_study(class="form-control") }}
+        &lt;/div&gt;
+        &lt;div class="form-group"&gt;
+            {{ form.year.label }}
+            {{ form.year(class="form-control") }}
+        &lt;/div&gt;
+    &lt;/div&gt;
+    
+    &lt;div class="form-group mt-3"&gt;
+        {{ form.submit(class="btn btn-primary") }}
+    &lt;/div&gt;
+&lt;/form&gt;</code></pre>
+            
+            <p>In your route, you'll need to validate only the relevant fields:</p>
+            
+            <pre><code>@bp.route('/survey', methods=['GET', 'POST'])
+def survey():
+    form = SurveyForm()
+    
+    if form.validate_on_submit():
+        # Basic data collection
+        survey_data = {
+            'occupation': form.occupation.data
+        }
+        
+        # Collect occupation-specific data
+        if form.occupation.data == 'employed':
+            survey_data.update({
+                'company': form.company.data,
+                'position': form.position.data,
+                'years_employed': form.years_employed.data
+            })
+        elif form.occupation.data == 'student':
+            survey_data.update({
+                'institution': form.institution.data,
+                'field_of_study': form.field_of_study.data,
+                'year': form.year.data
+            })
+        
+        # Process the survey data
+        # ...
+        
+        flash('Thank you for completing the survey!', 'success')
+        return redirect(url_for('main.index'))
+    
+    return render_template('survey.html', form=form)</code></pre>
+            
+            <h4>Form Factories</h4>
+            <p>For more complex scenarios, you can dynamically create forms at runtime:</p>
+            
+            <pre><code>def create_product_form(category):
+    """Create a form specific to a product category"""
+    class ProductForm(FlaskForm):
+        name = StringField('Product Name', validators=[DataRequired()])
+        price = DecimalField('Price', validators=[DataRequired(), NumberRange(min=0)])
+        description = TextAreaField('Description', validators=[DataRequired()])
+        
+        # Add category-specific fields
+        if category == 'clothing':
+            size = SelectField('Size', choices=[
+                ('xs', 'Extra Small'),
+                ('s', 'Small'),
+                ('m', 'Medium'),
+                ('l', 'Large'),
+                ('xl', 'Extra Large')
+            ])
+            color = StringField('Color', validators=[DataRequired()])
+            material = StringField('Material', validators=[DataRequired()])
+        
+        elif category == 'electronics':
+            warranty = IntegerField('Warranty (months)', validators=[DataRequired(), NumberRange(min=0)])
+            technical_specs = TextAreaField('Technical Specifications', validators=[DataRequired()])
+            
+        elif category == 'books':
+            author = StringField('Author', validators=[DataRequired()])
+            isbn = StringField('ISBN', validators=[DataRequired()])
+            pages = IntegerField('Number of Pages', validators=[DataRequired(), NumberRange(min=1)])
+        
+        submit = SubmitField('Add Product')
+    
+    return ProductForm()
+
+@bp.route('/add-product/<category>', methods=['GET', 'POST'])
+@login_required
+def add_product(category):
+    if category not in ['clothing', 'electronics', 'books']:
+        flash('Invalid product category', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    ProductForm = create_product_form(category)
+    form = ProductForm()
+    
+    if form.validate_on_submit():
+        # Common product data
+        product = Product(
+            name=form.name.data,
+            price=form.price.data,
+            description=form.description.data,
+            category=category
+        )
+        
+        # Category-specific data
+        if category == 'clothing':
+            product.attributes = {
+                'size': form.size.data,
+                'color': form.color.data,
+                'material': form.material.data
+            }
+        elif category == 'electronics':
+            product.attributes = {
+                'warranty': form.warranty.data,
+                'technical_specs': form.technical_specs.data
+            }
+        elif category == 'books':
+            product.attributes = {
+                'author': form.author.data,
+                'isbn': form.isbn.data,
+                'pages': form.pages.data
+            }
+        
+        db.session.add(product)
+        db.session.commit()
+        
+        flash(f'Product "{product.name}" added successfully!', 'success')
+        return redirect(url_for('main.products'))
+    
+    return render_template('add_product.html', form=form, category=category)</code></pre>
+            
+            <h4>FormField and FieldList</h4>
+            <p>WTForms provides tools for nested forms and variable-length field lists:</p>
+            
+            <pre><code>from wtforms import FormField, FieldList
+
+class AddressForm(FlaskForm):
+    street = StringField('Street', validators=[DataRequired()])
+    city = StringField('City', validators=[DataRequired()])
+    state = StringField('State', validators=[DataRequired()])
+    zip_code = StringField('ZIP Code', validators=[DataRequired()])
+    
+    # Make this form usable as a subform
+    class Meta:
+        csrf = False
+
+class PhoneNumberForm(FlaskForm):
+    number = StringField('Phone Number', validators=[DataRequired()])
+    type = SelectField('Type', choices=[
+        ('home', 'Home'),
+        ('work', 'Work'),
+        ('mobile', 'Mobile'),
+        ('other', 'Other')
+    ])
+    
+    # Make this form usable as a subform
+    class Meta:
+        csrf = False
+
+class CustomerForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    
+    # Nested form
+    shipping_address = FormField(AddressForm, label='Shipping Address')
+    billing_address = FormField(AddressForm, label='Billing Address')
+    
+    # Variable list of phone numbers
+    phone_numbers = FieldList(
+        FormField(PhoneNumberForm), 
+        min_entries=1,  # At least one phone number
+        max_entries=5   # Maximum five phone numbers
+    )
+    
+    # Add another phone number button is handled with JavaScript
+    submit = SubmitField('Save Customer')</code></pre>
+            
+            <p>The corresponding template might look like:</p>
+            
+            <pre><code>&lt;!-- customer_form.html --&gt;
+&lt;form method="post" novalidate&gt;
+    {{ form.hidden_tag() }}
+    
+    &lt;div class="form-group"&gt;
+        {{ form.name.label }}
+        {{ form.name(class="form-control") }}
+    &lt;/div&gt;
+    
+    &lt;div class="form-group"&gt;
+        {{ form.email.label }}
+        {{ form.email(class="form-control") }}
+    &lt;/div&gt;
+    
+    &lt;h3&gt;Addresses&lt;/h3&gt;
+    
+    &lt;div class="card mb-3"&gt;
+        &lt;div class="card-header"&gt;{{ form.shipping_address.label }}&lt;/div&gt;
+        &lt;div class="card-body"&gt;
+            &lt;div class="form-group"&gt;
+                {{ form.shipping_address.street.label }}
+                {{ form.shipping_address.street(class="form-control") }}
+            &lt;/div&gt;
+            &lt;div class="form-group"&gt;
+                {{ form.shipping_address.city.label }}
+                {{ form.shipping_address.city(class="form-control") }}
+            &lt;/div&gt;
+            &lt;div class="form-group"&gt;
+                {{ form.shipping_address.state.label }}
+                {{ form.shipping_address.state(class="form-control") }}
+            &lt;/div&gt;
+            &lt;div class="form-group"&gt;
+                {{ form.shipping_address.zip_code.label }}
+                {{ form.shipping_address.zip_code(class="form-control") }}
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    
+    &lt;div class="card mb-3"&gt;
+        &lt;div class="card-header"&gt;{{ form.billing_address.label }}&lt;/div&gt;
+        &lt;div class="card-body"&gt;
+            &lt;div class="form-group"&gt;
+                {{ form.billing_address.street.label }}
+                {{ form.billing_address.street(class="form-control") }}
+            &lt;/div&gt;
+            &lt;div class="form-group"&gt;
+                {{ form.billing_address.city.label }}
+                {{ form.billing_address.city(class="form-control") }}
+            &lt;/div&gt;
+            &lt;div class="form-group"&gt;
+                {{ form.billing_address.state.label }}
+                {{ form.billing_address.state(class="form-control") }}
+            &lt;/div&gt;
+            &lt;div class="form-group"&gt;
+                {{ form.billing_address.zip_code.label }}
+                {{ form.billing_address.zip_code(class="form-control") }}
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    
+    &lt;h3&gt;Phone Numbers&lt;/h3&gt;
+    &lt;div id="phone-numbers"&gt;
+        {% for phone_form in form.phone_numbers %}
+            &lt;div class="phone-entry card mb-2"&gt;
+                &lt;div class="card-body"&gt;
+                    &lt;div class="row"&gt;
+                        &lt;div class="col-md-8"&gt;
+                            &lt;div class="form-group"&gt;
+                                {{ phone_form.number.label }}
+                                {{ phone_form.number(class="form-control") }}
+                            &lt;/div&gt;
+                        &lt;/div&gt;
+                        &lt;div class="col-md-4"&gt;
+                            &lt;div class="form-group"&gt;
+                                {{ phone_form.type.label }}
+                                {{ phone_form.type(class="form-control") }}
+                            &lt;/div&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                    {% if not loop.first %}
+                        &lt;button type="button" class="btn btn-sm btn-danger remove-phone"&gt;Remove&lt;/button&gt;
+                    {% endif %}
+                &lt;/div&gt;
+            &lt;/div&gt;
+        {% endfor %}
+    &lt;/div&gt;
+    
+    &lt;button type="button" id="add-phone" class="btn btn-secondary mb-3"&gt;Add Another Phone Number&lt;/button&gt;
+    
+    &lt;div class="form-group mt-3"&gt;
+        {{ form.submit(class="btn btn-primary") }}
+    &lt;/div&gt;
+&lt;/form&gt;
+
+&lt;script&gt;
+    document.addEventListener('DOMContentLoaded', function() {
+        const phoneContainer = document.getElementById('phone-numbers');
+        const addButton = document.getElementById('add-phone');
+        
+        // Add a new phone number entry
+        addButton.addEventListener('click', function() {
+            // Get the last phone entry as a template
+            const lastEntry = phoneContainer.querySelector('.phone-entry:last-child');
+            const newEntry = lastEntry.cloneNode(true);
+            
+            // Clear input values
+            newEntry.querySelectorAll('input').forEach(input => {
+                input.value = '';
+                
+                // Update the input name to match WTForms naming convention
+                const nameParts = input.name.split('-');
+                const newIndex = parseInt(nameParts[1]) + 1;
+                input.name = `${nameParts[0]}-${newIndex}-${nameParts[2]}`;
+            });
+            
+            // Update select names as well
+            newEntry.querySelectorAll('select').forEach(select => {
+                const nameParts = select.name.split('-');
+                const newIndex = parseInt(nameParts[1]) + 1;
+                select.name = `${nameParts[0]}-${newIndex}-${nameParts[2]}`;
+            });
+            
+            // Add remove button if not already present
+            if (!newEntry.querySelector('.remove-phone')) {
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'btn btn-sm btn-danger remove-phone';
+                removeBtn.textContent = 'Remove';
+                newEntry.querySelector('.card-body').appendChild(removeBtn);
+            }
+            
+            // Add the new entry to the container
+            phoneContainer.appendChild(newEntry);
+            
+            // Add event listener for the remove button
+            setupRemoveButtons();
+        });
+        
+        // Function to handle removal of phone entries
+        function setupRemoveButtons() {
+            document.querySelectorAll('.remove-phone').forEach(button => {
+                button.addEventListener('click', function() {
+                    this.closest('.phone-entry').remove();
+                });
+            });
+        }
+        
+        // Initial setup
+        setupRemoveButtons();
+    });
+&lt;/script&gt;</code></pre>
+            
+            <h3>Real-World Example: Event Registration Form</h3>
+            <p>Consider an event registration system where users can register for conferences. Depending on the event type, different information needs to be collected:</p>
+            
+            <pre><code># models/event.py
+class Event(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    event_type = db.Column(db.String(50), nullable=False)  # 'conference', 'workshop', 'webinar'
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime, nullable=False)
+    # ... other fields ...
+
+# forms/event.py
+def create_registration_form(event):
+    """Create a registration form based on event type"""
+    class RegistrationForm(FlaskForm):
+        first_name = StringField('First Name', validators=[DataRequired()])
+        last_name = StringField('Last Name', validators=[DataRequired()])
+        email = StringField('Email', validators=[DataRequired(), Email()])
+        
+        # Common fields for all event types
+        dietary_requirements = SelectField('Dietary Requirements', choices=[
+            ('none', 'None'),
+            ('vegetarian', 'Vegetarian'),
+            ('vegan', 'Vegan'),
+            ('gluten_free', 'Gluten Free'),
+            ('other', 'Other (please specify)')
+        ])
+        dietary_notes = TextAreaField('Dietary Notes')
+        
+        # For conferences and workshops (in-person events)
+        if event.event_type in ['conference', 'workshop']:
+            # Accommodation options
+            needs_accommodation = BooleanField('I need accommodation')
+            check_in_date = DateField('Check-in Date')
+            check_out_date = DateField('Check-out Date')
+            room_type = SelectField('Room Type', choices=[
+                ('single', 'Single Room'),
+                ('double', 'Double Room'),
+                ('shared', 'Shared Room')
+            ])
+            
+            # Workshop-specific fields
+            if event.event_type == 'workshop':
+                experience_level = SelectField('Experience Level', choices=[
+                    ('beginner', 'Beginner'),
+                    ('intermediate', 'Intermediate'),
+                    ('advanced', 'Advanced')
+                ])
+                equipment = BooleanField('I will bring my own equipment')
+                
+            # Conference-specific fields
+            if event.event_type == 'conference':
+                # Multiple sessions selection
+                from app.models.event import Session
+                sessions = Session.query.filter_by(event_id=event.id).all()
+                session_choices = [(str(s.id), s.title) for s in sessions]
+                
+                selected_sessions = SelectMultipleField(
+                    'Select Sessions to Attend',
+                    choices=session_choices
+                )
+                networking_dinner = BooleanField('I will attend the networking dinner')
+        
+        # Webinar-specific fields
+        if event.event_type == 'webinar':
+            platform_experience = BooleanField('I have used the webinar platform before')
+            receive_recording = BooleanField('I would like to receive the recording')
+            timezone = SelectField('Your Timezone', choices=[
+                ('GMT-8', 'Pacific Time (PT)'),
+                ('GMT-7', 'Mountain Time (MT)'),
+                ('GMT-6', 'Central Time (CT)'),
+                ('GMT-5', 'Eastern Time (ET)'),
+                ('GMT', 'Greenwich Mean Time (GMT)'),
+                ('GMT+1', 'Central European Time (CET)'),
+                # ... other timezones ...
+            ])
+        
+        submit = SubmitField('Register')
+        
+        # Add custom validation as needed
+        def validate(self):
+            if not super().validate():
+                return False
+            
+            # Custom validation for accommodations
+            if event.event_type in ['conference', 'workshop'] and self.needs_accommodation.data:
+                if not self.check_in_date.data:
+                    self.check_in_date.errors.append('Check-in date is required if accommodation is needed.')
+                    return False
+                if not self.check_out_date.data:
+                    self.check_out_date.errors.append('Check-out date is required if accommodation is needed.')
+                    return False
+                if self.check_in_date.data > self.check_out_date.data:
+                    self.check_out_date.errors.append('Check-out date must be after check-in date.')
+                    return False
+            
+            return True
+    
+    return RegistrationForm()
+
+# views/event.py
+@bp.route('/event/<int:event_id>/register', methods=['GET', 'POST'])
+def register_for_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    RegistrationForm = create_registration_form(event)
+    form = RegistrationForm()
+    
+    if form.validate_on_submit():
+        # Create registration record
+        registration = Registration(
+            user_id=current_user.id if current_user.is_authenticated else None,
+            event_id=event.id,
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            email=form.email.data,
+            dietary_requirements=form.dietary_requirements.data,
+            dietary_notes=form.dietary_notes.data
+        )
+        
+        # Handle event-specific data
+        metadata = {}
+        
+        if event.event_type in ['conference', 'workshop']:
+            metadata['needs_accommodation'] = form.needs_accommodation.data
+            if form.needs_accommodation.data:
+                metadata['check_in_date'] = form.check_in_date.data.strftime('%Y-%m-%d')
+                metadata['check_out_date'] = form.check_out_date.data.strftime('%Y-%m-%d')
+                metadata['room_type'] = form.room_type.data
+            
+            if event.event_type == 'workshop':
+                metadata['experience_level'] = form.experience_level.data
+                metadata['equipment'] = form.equipment.data
+            
+            if event.event_type == 'conference':
+                metadata['selected_sessions'] = form.selected_sessions.data
+                metadata['networking_dinner'] = form.networking_dinner.data
+        
+        if event.event_type == 'webinar':
+            metadata['platform_experience'] = form.platform_experience.data
+            metadata['receive_recording'] = form.receive_recording.data
+            metadata['timezone'] = form.timezone.data
+        
+        registration.metadata = metadata
+        db.session.add(registration)
+        db.session.commit()
+        
+        flash(f'You have successfully registered for {event.name}!', 'success')
+        return redirect(url_for('event.event_details', event_id=event.id))
+    
+    return render_template('event/register.html', form=form, event=event)</code></pre>
+            
+            <p>This example shows how a single registration endpoint can handle different event types, dynamically generating the appropriate form with fields that make sense for that context.</p>
+            
+            <div class="reflection">
+                <h4>Reflection Point</h4>
+                <p>Consider a multi-step process you've encountered online, such as an e-commerce checkout, job application, or travel booking. How was it structured? Why might the developers have chosen to dynamically show/hide fields or split the process into steps? How might you implement a similar process in your application?</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>File Uploads</h2>
+            <p>File uploads add a new dimension to form handling. They're like receiving physical documents at an office — they need to be validated, processed, and stored securely.</p>
+            
+            <h3>Setting Up File Uploads</h3>
+            <p>Flask-WTF makes it easy to handle file uploads using the <code>FileField</code> class:</p>
+            
+            <pre><code>from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileRequired, FileAllowed
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
+
+class ProfilePictureForm(FlaskForm):
+    display_name = StringField('Display Name', validators=[DataRequired()])
+    profile_picture = FileField('Profile Picture', validators=[
+        FileRequired(),
+        FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')
+    ])
+    submit = SubmitField('Update Profile')</code></pre>
+            
+            <p>You'll need to configure your application to handle file uploads:</p>
+            
+            <pre><code># app/__init__.py or config.py
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size</code></pre>
+            
+            <h3>Processing Uploaded Files</h3>
+            <p>Once you've set up the form, you need to handle the uploaded file in your route:</p>
+            
+            <pre><code>import os
+from werkzeug.utils import secure_filename
+from flask import current_app
+
+# Define a function to save uploaded files
+def save_file(file, folder):
+    filename = secure_filename(file.filename)
+    # Create a unique filename to prevent overwriting
+    base_filename, extension = os.path.splitext(filename)
+    unique_filename = f"{base_filename}_{int(time.time())}{extension}"
+    
+    # Ensure the upload folder exists
+    upload_folder = os.path.join(current_app.root_path, 'static', folder)
+    os.makedirs(upload_folder, exist_ok=True)
+    
+    # Save the file
+    file_path = os.path.join(upload_folder, unique_filename)
+    file.save(file_path)
+    
+    # Return the path relative to the static folder
+    return os.path.join(folder, unique_filename)
+
+@bp.route('/profile/picture', methods=['GET', 'POST'])
+@login_required
+def update_profile_picture():
+    form = ProfilePictureForm()
+    
+    if form.validate_on_submit():
+        # Save the uploaded file
+        picture_path = save_file(form.profile_picture.data, 'uploads/profile_pictures')
+        
+        # Update user profile
+        current_user.display_name = form.display_name.data
+        current_user.profile_picture = picture_path
+        db.session.commit()
+        
+        flash('Your profile has been updated!', 'success')
+        return redirect(url_for('main.profile'))
+    
+    # Pre-populate form with current values
+    if request.method == 'GET':
+        form.display_name.data = current_user.display_name
+    
+    return render_template('profile/picture.html', form=form)</code></pre>
+            
+            <h3>File Upload Template</h3>
+            <p>The template for file uploads needs the <code>enctype</code> attribute:</p>
+            
+            <pre><code>&lt;!-- templates/profile/picture.html --&gt;
+{% extends 'base.html' %}
+
+{% block title %}Update Profile Picture{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Update Profile Picture&lt;/h2&gt;
+    
+    {% if current_user.profile_picture %}
+        &lt;div class="mb-3"&gt;
+            &lt;h4&gt;Current Profile Picture&lt;/h4&gt;
+            &lt;img src="{{ url_for('static', filename=current_user.profile_picture) }}" 
+                 alt="Current profile picture"
+                 class="img-thumbnail"
+                 style="max-width: 200px"&gt;
+        &lt;/div&gt;
+    {% endif %}
+    
+    &lt;form method="post" enctype="multipart/form-data" novalidate&gt;
+        {{ form.hidden_tag() }}
+        
+        &lt;div class="form-group"&gt;
+            {{ form.display_name.label }}
+            {{ form.display_name(class="form-control") }}
+            {% for error in form.display_name.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            {{ form.profile_picture.label }}
+            {{ form.profile_picture(class="form-control") }}
+            {% for error in form.profile_picture.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+            &lt;small class="form-text text-muted"&gt;
+                Allowed formats: JPG, JPEG, PNG. Maximum size: 16MB.
+            &lt;/small&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group mt-3"&gt;
+            {{ form.submit(class="btn btn-primary") }}
+        &lt;/div&gt;
+    &lt;/form&gt;
+{% endblock %}</code></pre>
+            
+            <h3>Advanced File Validation</h3>
+            <p>For more sophisticated validation, you can create custom validators:</p>
+            
+            <pre><code>import imghdr
+from wtforms.validators import ValidationError
+
+def validate_image(form, field):
+    """Validate that the uploaded file is an image with proper format"""
+    if field.data:
+        # Check if there's an actual file
+        file = field.data
+        
+        # Additional check beyond extension
+        image_type = imghdr.what(file)
+        if image_type not in ['jpeg', 'png', 'gif']:
+            raise ValidationError('Uploaded file is not a valid image. Please upload a JPEG, PNG, or GIF.')
+        
+        # Check file size (max 5MB)
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)  # Reset file pointer
+        
+        if file_size > 5 * 1024 * 1024:  # 5MB in bytes
+            raise ValidationError('File size exceeds the 5MB limit.')
+
+class AdvancedProfilePictureForm(FlaskForm):
+    display_name = StringField('Display Name', validators=[DataRequired()])
+    profile_picture = FileField('Profile Picture', validators=[
+        FileRequired(),
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!'),
+        validate_image
+    ])
+    submit = SubmitField('Update Profile')</code></pre>
+            
+            <h3>Multiple File Uploads</h3>
+            <p>To handle multiple file uploads, you can use <code>MultipleFileField</code>:</p>
+            
+            <pre><code>from flask_wtf.file import MultipleFileField
+
+class ProductImagesForm(FlaskForm):
+    product_name = StringField('Product Name', validators=[DataRequired()])
+    images = MultipleFileField('Product Images', validators=[
+        DataRequired('Please select at least one image.'),
+        FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')
+    ])
+    submit = SubmitField('Add Product')</code></pre>
+            
+            <p>And process the files in your route:</p>
+            
+            <pre><code>@bp.route('/product/add', methods=['GET', 'POST'])
+@login_required
+def add_product():
+    form = ProductImagesForm()
+    
+    if form.validate_on_submit():
+        # Create the product
+        product = Product(
+            name=form.product_name.data,
+            seller_id=current_user.id
+        )
+        db.session.add(product)
+        db.session.flush()  # Get the product ID
+        
+        # Save all uploaded images
+        for image_file in form.images.data:
+            # Skip if file is empty
+            if not image_file.filename:
+                continue
+                
+            image_path = save_file(image_file, f'uploads/products/{product.id}')
+            
+            # Create image record
+            product_image = ProductImage(
+                product_id=product.id,
+                image_path=image_path
+            )
+            db.session.add(product_image)
+        
+        db.session.commit()
+        flash('Product added successfully!', 'success')
+        return redirect(url_for('product.details', product_id=product.id))
+    
+    return render_template('product/add.html', form=form)</code></pre>
+            
+            <h3>Real-World Example: Document Management System</h3>
+            <p>Let's look at a more complex example for a document management system that handles various file types with different validation requirements:</p>
+            
+            <pre><code># models/document.py
+class DocumentType(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    allowed_extensions = db.Column(db.String(255), nullable=False)  # Comma-separated list
+    max_size_mb = db.Column(db.Integer, nullable=False, default=10)
+    requires_approval = db.Column(db.Boolean, default=False)
+    
+    def get_allowed_extensions_list(self):
+        return self.allowed_extensions.split(',')
+
+class Document(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)
+    file_path = db.Column(db.String(255), nullable=False)
+    file_size = db.Column(db.Integer, nullable=False)  # Size in bytes
+    file_type = db.Column(db.String(50), nullable=False)
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    document_type_id = db.Column(db.Integer, db.ForeignKey('document_type.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+
+# forms/document.py
+def create_document_upload_form(document_types):
+    """Create a form based on available document types"""
+    class DocumentUploadForm(FlaskForm):
+        title = StringField('Document Title', validators=[DataRequired(), Length(max=100)])
+        document_type = SelectField('Document Type', coerce=int, validators=[DataRequired()])
+        file = FileField('File', validators=[FileRequired()])
+        notes = TextAreaField('Notes', validators=[Length(max=500)])
+        submit = SubmitField('Upload Document')
+        
+        def __init__(self, *args, **kwargs):
+            super(DocumentUploadForm, self).__init__(*args, **kwargs)
+            self.document_type.choices = [(dt.id, dt.name) for dt in document_types]
+        
+        def validate_file(self, field):
+            # Get the selected document type
+            doc_type = DocumentType.query.get(self.document_type.data)
+            if not doc_type:
+                raise ValidationError('Invalid document type.')
+            
+            # Check file extension
+            filename = field.data.filename
+            file_ext = os.path.splitext(filename)[1].lower().lstrip('.')
+            allowed_extensions = doc_type.get_allowed_extensions_list()
+            
+            if file_ext not in allowed_extensions:
+                raise ValidationError(
+                    f'File type not allowed. Allowed types: {", ".join(allowed_extensions)}'
+                )
+            
+            # Check file size
+            field.data.seek(0, os.SEEK_END)
+            file_size = field.data.tell()
+            field.data.seek(0)  # Reset file pointer
+            
+            max_size = doc_type.max_size_mb * 1024 * 1024  # Convert MB to bytes
+            if file_size > max_size:
+                raise ValidationError(
+                    f'File size exceeds the {doc_type.max_size_mb}MB limit.'
+                )
+    
+    return DocumentUploadForm()
+
+# views/document.py
+@bp.route('/documents/upload', methods=['GET', 'POST'])
+@login_required
+def upload_document():
+    # Get available document types
+    document_types = DocumentType.query.all()
+    if not document_types:
+        flash('No document types available. Please contact the administrator.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    form = create_document_upload_form(document_types)
+    
+    if form.validate_on_submit():
+        file = form.file.data
+        filename = secure_filename(file.filename)
+        
+        # Get selected document type
+        doc_type = DocumentType.query.get_or_404(form.document_type.data)
+        
+        # Create upload directory if it doesn't exist
+        upload_dir = os.path.join(
+            current_app.root_path, 
+            'uploads', 
+            'documents', 
+            str(current_user.id)
+        )
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Generate unique filename
+        base_name, extension = os.path.splitext(filename)
+        unique_filename = f"{base_name}_{int(time.time())}{extension}"
+        file_path = os.path.join(upload_dir, unique_filename)
+        
+        # Save the file
+        file.save(file_path)
+        
+        # Get file size
+        file_size = os.path.getsize(file_path)
+        
+        # Create document record
+        document = Document(
+            title=form.title.data,
+            filename=unique_filename,
+            file_path=os.path.join(
+                'uploads', 
+                'documents', 
+                str(current_user.id), 
+                unique_filename
+            ),
+            file_size=file_size,
+            file_type=os.path.splitext(filename)[1].lower().lstrip('.'),
+            user_id=current_user.id,
+            document_type_id=doc_type.id,
+            status='pending' if doc_type.requires_approval else 'approved'
+        )
+        
+        db.session.add(document)
+        db.session.commit()
+        
+        if doc_type.requires_approval:
+            flash('Document uploaded successfully and pending approval.', 'success')
+        else:
+            flash('Document uploaded successfully.', 'success')
+        
+        return redirect(url_for('document.my_documents'))
+    
+    return render_template('document/upload.html', form=form)</code></pre>
+            
+            <div class="reflection">
+                <h4>Reflection Point</h4>
+                <p>Think about the security implications of file uploads. What types of validation should you perform? How can you prevent users from uploading malicious files? What storage options might be appropriate for different types of files or security requirements?</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>AJAX Form Submission</h2>
+            <p>Traditional form submissions require a full page reload, like physically mailing a paper form and waiting for a response. AJAX (Asynchronous JavaScript and XML) lets us submit forms in the background without page reloads, like sending a text message and getting an immediate response.</p>
+            
+            <h3>Why Use AJAX?</h3>
+            <p>AJAX form submissions provide several benefits:</p>
+            <ul>
+                <li>Better user experience (no page reloads)</li>
+                <li>Real-time feedback</li>
+                <li>Partial page updates</li>
+                <li>Background processing</li>
+                <li>Reduced server load</li>
+            </ul>
+            
+            <h3>Basic AJAX Form Submission</h3>
+            <p>First, let's set up a route that accepts AJAX requests:</p>
+            
+            <pre><code># views/api.py
+from flask import Blueprint, jsonify, request
+
+bp = Blueprint('api', __name__, url_prefix='/api')
+
+@bp.route('/contact', methods=['POST'])
+def contact():
+    data = request.json
+    
+    # Validate the data
+    errors = {}
+    if not data.get('name'):
+        errors['name'] = 'Name is required'
+    if not data.get('email'):
+        errors['email'] = 'Email is required'
+    elif '@' not in data.get('email', ''):
+        errors['email'] = 'Invalid email format'
+    if not data.get('message'):
+        errors['message'] = 'Message is required'
+    elif len(data.get('message', '')) < 10:
+        errors['message'] = 'Message must be at least 10 characters'
+    
+    if errors:
+        return jsonify({'success': False, 'errors': errors}), 400
+    
+    # Process the message (e.g., save to database, send email)
+    # ...
+    
+    return jsonify({
+        'success': True,
+        'message': 'Your message has been sent. We will respond shortly.'
+    })</code></pre>
+            
+            <p>Now, let's create the HTML form and JavaScript to handle the AJAX submission:</p>
+            
+            <pre><code>&lt;!-- templates/contact_ajax.html --&gt;
+{% extends 'base.html' %}
+
+{% block title %}Contact Us{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Contact Us&lt;/h2&gt;
+    
+    &lt;div id="form-messages" class="alert alert-success" style="display: none;"&gt;&lt;/div&gt;
+    
+    &lt;form id="contact-form" method="post" novalidate&gt;
+        &lt;div class="form-group"&gt;
+            &lt;label for="name"&gt;Name&lt;/label&gt;
+            &lt;input type="text" class="form-control" id="name" name="name" required&gt;
+            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            &lt;label for="email"&gt;Email&lt;/label&gt;
+            &lt;input type="email" class="form-control" id="email" name="email" required&gt;
+            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            &lt;label for="message"&gt;Message&lt;/label&gt;
+            &lt;textarea class="form-control" id="message" name="message" rows="5" required&gt;&lt;/textarea&gt;
+            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group mt-3"&gt;
+            &lt;button type="submit" class="btn btn-primary" id="submit-btn"&gt;Send Message&lt;/button&gt;
+            &lt;span id="loading-indicator" style="display: none;"&gt;
+                Sending... &lt;div class="spinner-border spinner-border-sm text-primary"&gt;&lt;/div&gt;
+            &lt;/span&gt;
+        &lt;/div&gt;
+    &lt;/form&gt;
+{% endblock %}
+
+{% block scripts %}
+&lt;script&gt;
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('contact-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const formMessages = document.getElementById('form-messages');
+    
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        // Reset previous errors
+        resetFormErrors();
+        
+        // Show loading indicator
+        submitBtn.style.display = 'none';
+        loadingIndicator.style.display = 'inline-block';
+        
+        // Collect form data
+        const formData = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            message: document.getElementById('message').value
+        };
+        
+        // Send AJAX request
+        fetch('/api/contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Hide loading indicator
+            submitBtn.style.display = 'inline-block';
+            loadingIndicator.style.display = 'none';
+            
+            if (data.success) {
+                // Show success message
+                formMessages.textContent = data.message;
+                formMessages.className = 'alert alert-success';
+                formMessages.style.display = 'block';
+                
+                // Reset form
+                form.reset();
+            } else {
+                // Show field-specific errors
+                if (data.errors) {
+                    Object.keys(data.errors).forEach(field => {
+                        const inputField = document.getElementById(field);
+                        const feedbackElement = inputField.nextElementSibling;
+                        feedbackElement.textContent = data.errors[field];
+                        inputField.classList.add('is-invalid');
+                    });
+                }
+                
+                // Show general error message
+                formMessages.textContent = 'Please correct the errors below.';
+                formMessages.className = 'alert alert-danger';
+                formMessages.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            // Handle network errors
+            submitBtn.style.display = 'inline-block';
+            loadingIndicator.style.display = 'none';
+            
+            formMessages.textContent = 'There was a problem with your submission. Please try again later.';
+            formMessages.className = 'alert alert-danger';
+            formMessages.style.display = 'block';
+            console.error('Error:', error);
+        });
+    });
+    
+    function resetFormErrors() {
+        // Hide any previous messages
+        formMessages.style.display = 'none';
+        
+        // Clear field-specific errors
+        const invalidFields = form.querySelectorAll('.is-invalid');
+        invalidFields.forEach(field => {
+            field.classList.remove('is-invalid');
+            const feedbackElement = field.nextElementSibling;
+            if (feedbackElement && feedbackElement.classList.contains('invalid-feedback')) {
+                feedbackElement.textContent = '';
+            }
+        });
+    }
+});
+&lt;/script&gt;
+{% endblock %}</code></pre>
+            
+            <h3>AJAX with FormData and Flask-WTF</h3>
+            <p>While the above approach works, it bypasses Flask-WTF's server-side validation. Here's a more integrated approach:</p>
+            
+            <pre><code># views/contact.py
+@bp.route('/contact-ajax', methods=['GET', 'POST'])
+def contact_ajax():
+    form = ContactForm()
+    
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            # Process the valid form data
+            message = Message(
+                name=form.name.data,
+                email=form.email.data,
+                subject=form.subject.data,
+                content=form.message.data
+            )
+            db.session.add(message)
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Your message has been sent. Thank you!'
+            })
+        else:
+            # Return validation errors
+            errors = {}
+            for field, field_errors in form.errors.items():
+                errors[field] = field_errors[0]  # Just take the first error for each field
+            
+            return jsonify({
+                'success': False,
+                'errors': errors
+            }), 400
+    
+    # For GET request, just render the form
+    return render_template('contact_wtf_ajax.html', form=form)</code></pre>
+            
+            <p>And the corresponding template:</p>
+            
+            <pre><code>&lt;!-- templates/contact_wtf_ajax.html --&gt;
+{% extends 'base.html' %}
+
+{% block title %}Contact Us{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Contact Us&lt;/h2&gt;
+    
+    &lt;div id="form-messages" class="alert" style="display: none;"&gt;&lt;/div&gt;
+    
+    &lt;form id="contact-form" method="post" novalidate&gt;
+        {{ form.hidden_tag() }}
+        
+        &lt;div class="form-group"&gt;
+            {{ form.name.label }}
+            {{ form.name(class="form-control") }}
+            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            {{ form.email.label }}
+            {{ form.email(class="form-control") }}
+            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            {{ form.subject.label }}
+            {{ form.subject(class="form-control") }}
+            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            {{ form.message.label }}
+            {{ form.message(class="form-control", rows=5) }}
+            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="form-group mt-3"&gt;
+            {{ form.submit(class="btn btn-primary", id="submit-btn") }}
+            &lt;span id="loading-indicator" style="display: none;"&gt;
+                Sending... &lt;div class="spinner-border spinner-border-sm text-primary"&gt;&lt;/div&gt;
+            &lt;/span&gt;
+        &lt;/div&gt;
+    &lt;/form&gt;
+{% endblock %}
+
+{% block scripts %}
+&lt;script&gt;
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('contact-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const formMessages = document.getElementById('form-messages');
+    
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        // Reset previous errors
+        resetFormErrors();
+        
+        // Show loading indicator
+        submitBtn.style.display = 'none';
+        loadingIndicator.style.display = 'inline-block';
+        
+        // Get form data with CSRF token
+        const formData = new FormData(form);
+        
+        // Send AJAX request
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            // Don't set Content-Type header when using FormData
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Hide loading indicator
+            submitBtn.style.display = 'inline-block';
+            loadingIndicator.style.display = 'none';
+            
+            if (data.success) {
+                // Show success message
+                formMessages.textContent = data.message;
+                formMessages.className = 'alert alert-success';
+                formMessages.style.display = 'block';
+                
+                // Reset form
+                form.reset();
+                
+                // Re-add the CSRF token (it gets cleared with form.reset())
+                const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+                document.querySelector('input[name="csrf_token"]').value = csrfToken;
+            } else {
+                // Show field-specific errors
+                if (data.errors) {
+                    Object.keys(data.errors).forEach(field => {
+                        // Handle special case for csrf_token
+                        if (field === 'csrf_token') {
+                            formMessages.textContent = 'Session expired. Please refresh the page and try again.';
+                            formMessages.className = 'alert alert-danger';
+                            formMessages.style.display = 'block';
+                            return;
+                        }
+                        
+                        const inputField = document.getElementById(field);
+                        if (inputField) {
+                            const feedbackElement = inputField.nextElementSibling;
+                            feedbackElement.textContent = data.errors[field];
+                            inputField.classList.add('is-invalid');
+                        }
+                    });
+                }
+                
+                // Show general error message
+                formMessages.textContent = 'Please correct the errors below.';
+                formMessages.className = 'alert alert-danger';
+                formMessages.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            // Handle network errors
+            submitBtn.style.display = 'inline-block';
+            loadingIndicator.style.display = 'none';
+            
+            formMessages.textContent = 'There was a problem with your submission. Please try again later.';
+            formMessages.className = 'alert alert-danger';
+            formMessages.style.display = 'block';
+            console.error('Error:', error);
+        });
+    });
+    
+    function resetFormErrors() {
+        // Hide any previous messages
+        formMessages.style.display = 'none';
+        
+        // Clear field-specific errors
+        const invalidFields = form.querySelectorAll('.is-invalid');
+        invalidFields.forEach(field => {
+            field.classList.remove('is-invalid');
+            const feedbackElement = field.nextElementSibling;
+            if (feedbackElement && feedbackElement.classList.contains('invalid-feedback')) {
+                feedbackElement.textContent = '';
+            }
+        });
+    }
+});
+&lt;/script&gt;
+{% endblock %}</code></pre>
+            
+            <h3>Real-Time Validation</h3>
+            <p>You can also use AJAX for real-time validation as users type:</p>
+            
+            <pre><code>// Add to your JavaScript
+const usernameField = document.getElementById('username');
+const usernameValidationMessage = document.getElementById('username-validation');
+
+let usernameTimer;
+usernameField.addEventListener('input', function() {
+    // Clear previous timer
+    clearTimeout(usernameTimer);
+    
+    const username = this.value.trim();
+    
+    // Skip validation for empty or very short usernames
+    if (username.length < 3) {
+        usernameValidationMessage.textContent = '';
+        usernameValidationMessage.className = '';
+        return;
+    }
+    
+    // Set a small delay to avoid making requests for every keystroke
+    usernameTimer = setTimeout(function() {
+        // Make AJAX request to check username
+        fetch(`/api/check-username?username=${encodeURIComponent(username)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.available) {
+                    usernameValidationMessage.textContent = 'Username is available';
+                    usernameValidationMessage.className = 'text-success';
+                    usernameField.classList.remove('is-invalid');
+                    usernameField.classList.add('is-valid');
+                } else {
+                    usernameValidationMessage.textContent = 'Username is already taken';
+                    usernameValidationMessage.className = 'text-danger';
+                    usernameField.classList.remove('is-valid');
+                    usernameField.classList.add('is-invalid');
+                }
+            })
+            .catch(error => {
+                console.error('Error checking username:', error);
+            });
+    }, 300);  // 300ms delay
+});</code></pre>
+            
+            <p>With the corresponding route:</p>
+            
+            <pre><code>@bp.route('/api/check-username')
+def check_username():
+    username = request.args.get('username', '')
+    if not username:
+        return jsonify({'available': False})
+    
+    # Check if username exists
+    user = User.query.filter(User.username.ilike(username)).first()
+    
+    return jsonify({'available': user is None})</code></pre>
+            
+            <h3>Real-World Example: Multi-Step Form with Progress Saving</h3>
+            <p>For complex forms, users appreciate the ability to save progress as they go. Here's an example of a multi-step job application form with AJAX progress saving:</p>
+            
+            <pre><code># models/application.py
+class JobApplication(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
+    status = db.Column(db.String(20), default='draft')  # draft, submitted, under_review, etc.
+    
+    # Personal Information
+    full_name = db.Column(db.String(100))
+    email = db.Column(db.String(100))
+    phone = db.Column(db.String(20))
+    address = db.Column(db.String(200))
+    
+    # Education
+    education = db.Column(db.JSON)  # List of education entries
+    
+    # Experience
+    experience = db.Column(db.JSON)  # List of experience entries
+    
+    # Skills
+    skills = db.Column(db.JSON)  # List of skills
+    
+    # Additional Questions
+    additional_info = db.Column(db.JSON)  # Answers to job-specific questions
+    
+    # Resume
+    resume_path = db.Column(db.String(255))
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    submitted_at = db.Column(db.DateTime)
+
+# views/api.py
+@bp.route('/api/application/<int:application_id>/save', methods=['POST'])
+@login_required
+def save_application_progress(application_id):
+    application = JobApplication.query.get_or_404(application_id)
+    
+    # Make sure the application belongs to the current user
+    if application.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    data = request.json
+    step = data.get('step')
+    
+    if not step:
+        return jsonify({'success': False, 'message': 'Step is required'}), 400
+    
+    # Update the application based on the current step
+    if step == 'personal':
+        application.full_name = data.get('full_name')
+        application.email = data.get('email')
+        application.phone = data.get('phone')
+        application.address = data.get('address')
+    
+    elif step == 'education':
+        application.education = data.get('education', [])
+    
+    elif step == 'experience':
+        application.experience = data.get('experience', [])
+    
+    elif step == 'skills':
+        application.skills = data.get('skills', [])
+    
+    elif step == 'additional':
+        application.additional_info = data.get('answers', {})
+    
+    # Update the timestamp
+    application.updated_at = datetime.utcnow()
+    
+    try:
+        db.session.commit()
+        return jsonify({
+            'success': True, 
+            'message': 'Progress saved successfully',
+            'updated_at': application.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@bp.route('/api/application/<int:application_id>/submit', methods=['POST'])
+@login_required
+def submit_application(application_id):
+    application = JobApplication.query.get_or_404(application_id)
+    
+    # Make sure the application belongs to the current user
+    if application.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    # Validate all required fields are filled
+    errors = {}
+    
+    # Personal info validation
+    if not application.full_name:
+        errors['full_name'] = 'Full name is required'
+    if not application.email:
+        errors['email'] = 'Email is required'
+    if not application.phone:
+        errors['phone'] = 'Phone number is required'
+    if not application.address:
+        errors['address'] = 'Address is required'
+    
+    # Education validation
+    if not application.education or len(application.education) == 0:
+        errors['education'] = 'At least one education entry is required'
+    
+    # Experience validation (might be optional depending on job)
+    # if not application.experience or len(application.experience) == 0:
+    #     errors['experience'] = 'At least one experience entry is required'
+    
+    # Resume validation
+    if not application.resume_path:
+        errors['resume'] = 'Resume is required'
+    
+    # Return errors if validation fails
+    if errors:
+        return jsonify({'success': False, 'errors': errors}), 400
+    
+    # Update application status and submission timestamp
+    application.status = 'submitted'
+    application.submitted_at = datetime.utcnow()
+    
+    try:
+        db.session.commit()
+        
+        # Send confirmation email
+        send_application_confirmation(application)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Application submitted successfully',
+            'redirect_url': url_for('job.application_confirmation', application_id=application.id)
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500</code></pre>
+            
+            <p>This API would be used with a multi-step form in the frontend:</p>
+            
+            <pre><code>&lt;!-- JavaScript for auto-saving in multi-step form --&gt;
+&lt;script&gt;
+    let autoSaveTimer;
+    const applicationId = {{ application.id }};
+    const saveProgressIndicator = document.getElementById('save-progress');
+    
+    // Function to save current step
+    function saveProgress(step) {
+        saveProgressIndicator.textContent = 'Saving...';
+        
+        // Collect data based on current step
+        let data = {
+            step: step
+        };
+        
+        if (step === 'personal') {
+            data.full_name = document.getElementById('full_name').value;
+            data.email = document.getElementById('email').value;
+            data.phone = document.getElementById('phone').value;
+            data.address = document.getElementById('address').value;
+        }
+        else if (step === 'education') {
+            // Collect education entries from form
+            data.education = collectEducationData();
+        }
+        else if (step === 'experience') {
+            // Collect experience entries from form
+            data.experience = collectExperienceData();
+        }
+        // ... other steps ...
+        
+        // Send AJAX request to save progress
+        fetch(`/api/application/${applicationId}/save`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                saveProgressIndicator.textContent = `Last saved: ${data.updated_at}`;
+            } else {
+                saveProgressIndicator.textContent = 'Failed to save';
+                console.error('Save error:', data.message);
+            }
+        })
+        .catch(error => {
+            saveProgressIndicator.textContent = 'Failed to save';
+            console.error('Save error:', error);
+        });
+    }
+    
+    // Set up auto-save on input changes
+    function setupAutoSave(step) {
+        // Clear previous timer
+        clearTimeout(autoSaveTimer);
+        
+        // Get all inputs in the current step
+        const stepElement = document.querySelector(`.step[data-step="${step}"]`);
+        const inputs = stepElement.querySelectorAll('input, textarea, select');
+        
+        // Add change event listeners
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                clearTimeout(autoSaveTimer);
+                autoSaveTimer = setTimeout(() => {
+                    saveProgress(step);
+                }, 1000);
+            });
+            
+            input.addEventListener('input', () => {
+                clearTimeout(autoSaveTimer);
+                autoSaveTimer = setTimeout(() => {
+                    saveProgress(step);
+                }, 3000);
+            });
+        });
+        
+        // Also set up auto-save on custom components
+        if (step === 'education') {
+            setupEducationAutoSave();
+        }
+        else if (step === 'experience') {
+            setupExperienceAutoSave();
+        }
+    }
+    
+    // Function to set up navigation between steps
+    function setupStepNavigation() {
+        const steps = document.querySelectorAll('.step');
+        const nextButtons = document.querySelectorAll('.next-step');
+        const prevButtons = document.querySelectorAll('.prev-step');
+        const progressBar = document.querySelector('.progress-bar');
+        
+        let currentStepIndex = 0;
+        
+        // Show initial step
+        showStep(currentStepIndex);
+        
+        // Setup next buttons
+        nextButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Validate current step
+                if (validateStep(steps[currentStepIndex].dataset.step)) {
+                    // Save progress before moving to next step
+                    saveProgress(steps[currentStepIndex].dataset.step);
+                    
+                    currentStepIndex++;
+                    showStep(currentStepIndex);
+                }
+            });
+        });
+        
+        // Setup previous buttons
+        prevButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Save progress before moving to previous step
+                saveProgress(steps[currentStepIndex].dataset.step);
+                
+                currentStepIndex--;
+                showStep(currentStepIndex);
+            });
+        });
+        
+        function showStep(index) {
+            // Hide all steps
+            steps.forEach(step => {
+                step.style.display = 'none';
+            });
+            
+            // Show current step
+            steps[index].style.display = 'block';
+            
+            // Setup auto-save for the current step
+            setupAutoSave(steps[index].dataset.step);
+            
+            // Update progress bar
+            const progress = ((index + 1) / steps.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressBar.setAttribute('aria-valuenow', progress);
+            
+            // Update buttons visibility
+            prevButtons.forEach(button => {
+                button.style.display = index === 0 ? 'none' : 'inline-block';
+            });
+            
+            nextButtons.forEach(button => {
+                if (index === steps.length - 1) {
+                    button.textContent = 'Submit Application';
+                    button.classList.add('submit-application');
+                } else {
+                    button.textContent = 'Next';
+                    button.classList.remove('submit-application');
+                }
+            });
+            
+            // Handle final submit button
+            if (index === steps.length - 1) {
+                setupSubmitHandler();
+            }
+        }
+        
+        // Function to validate current step
+        function validateStep(step) {
+            let valid = true;
+            const stepElement = document.querySelector(`.step[data-step="${step}"]`);
+            
+            // Reset previous errors
+            stepElement.querySelectorAll('.is-invalid').forEach(el => {
+                el.classList.remove('is-invalid');
+                const feedback = el.nextElementSibling;
+                if (feedback && feedback.classList.contains('invalid-feedback')) {
+                    feedback.textContent = '';
+                }
+            });
+            
+            // Validate based on step
+            if (step === 'personal') {
+                // Personal info validation
+                const requiredFields = ['full_name', 'email', 'phone', 'address'];
+                requiredFields.forEach(field => {
+                    const input = document.getElementById(field);
+                    if (!input.value.trim()) {
+                        valid = false;
+                        input.classList.add('is-invalid');
+                        input.nextElementSibling.textContent = 'This field is required';
+                    }
+                });
+                
+                // Email validation
+                const email = document.getElementById('email');
+                if (email.value.trim() && !email.value.includes('@')) {
+                    valid = false;
+                    email.classList.add('is-invalid');
+                    email.nextElementSibling.textContent = 'Please enter a valid email address';
+                }
+            }
+            else if (step === 'education') {
+                // Education validation
+                const educationEntries = document.querySelectorAll('.education-entry');
+                if (educationEntries.length === 0) {
+                    valid = false;
+                    document.getElementById('education-error').textContent = 'Please add at least one education entry';
+                }
+            }
+            // ... other validation rules ...
+            
+            return valid;
+        }
+        
+        // Setup submit handler for final step
+        function setupSubmitHandler() {
+            const submitBtn = document.querySelector('.submit-application');
+            
+            submitBtn.addEventListener('click', () => {
+                // Final validation
+                if (validateStep(steps[currentStepIndex].dataset.step)) {
+                    // Save final step
+                    saveProgress(steps[currentStepIndex].dataset.step);
+                    
+                    // Show confirmation modal
+                    const modal = new bootstrap.Modal(document.getElementById('submit-confirmation-modal'));
+                    modal.show();
+                    
+                    // Handle final submit
+                    document.getElementById('confirm-submit').addEventListener('click', () => {
+                        // Show loading state
+                        document.getElementById('submit-spinner').style.display = 'inline-block';
+                        document.getElementById('confirm-submit').disabled = true;
+                        
+                        // Submit application
+                        fetch(`/api/application/${applicationId}/submit`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Redirect to confirmation page
+                                window.location.href = data.redirect_url;
+                            } else {
+                                // Show errors
+                                modal.hide();
+                                displaySubmissionErrors(data.errors);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Submit error:', error);
+                            modal.hide();
+                            alert('There was a problem submitting your application. Please try again later.');
+                        });
+                    });
+                }
+            });
+        }
+        
+        // Helper function to display submission errors
+        function displaySubmissionErrors(errors) {
+            if (!errors) return;
+            
+            // Show error alert
+            const errorAlert = document.getElementById('submission-errors');
+            errorAlert.style.display = 'block';
+            
+            // Populate error list
+            const errorList = document.getElementById('error-list');
+            errorList.innerHTML = '';
+            
+            Object.entries(errors).forEach(([field, message]) => {
+                const li = document.createElement('li');
+                li.textContent = message;
+                errorList.appendChild(li);
+                
+                // If the field is in the current step, highlight it
+                const input = document.getElementById(field);
+                if (input) {
+                    input.classList.add('is-invalid');
+                    const feedback = input.nextElementSibling;
+                    if (feedback && feedback.classList.contains('invalid-feedback')) {
+                        feedback.textContent = message;
+                    }
+                }
+                // If not in current step, we might want to navigate to that step
+            });
+        }
+    }
+    
+    // Helper functions to collect data from dynamic form sections
+    function collectEducationData() {
+        const entries = [];
+        document.querySelectorAll('.education-entry').forEach(entry => {
+            entries.push({
+                institution: entry.querySelector('.institution').value,
+                degree: entry.querySelector('.degree').value,
+                field: entry.querySelector('.field').value,
+                start_date: entry.querySelector('.start-date').value,
+                end_date: entry.querySelector('.end-date').value,
+                current: entry.querySelector('.current-education').checked
+            });
+        });
+        return entries;
+    }
+    
+    function collectExperienceData() {
+        const entries = [];
+        document.querySelectorAll('.experience-entry').forEach(entry => {
+            entries.push({
+                company: entry.querySelector('.company').value,
+                position: entry.querySelector('.position').value,
+                location: entry.querySelector('.location').value,
+                start_date: entry.querySelector('.start-date').value,
+                end_date: entry.querySelector('.end-date').value,
+                current: entry.querySelector('.current-position').checked,
+                description: entry.querySelector('.description').value
+            });
+        });
+        return entries;
+    }
+    
+    // Initialize the form
+    document.addEventListener('DOMContentLoaded', () => {
+        setupStepNavigation();
+    });
+&lt;/script&gt;</code></pre>
+            
+            <div class="reflection">
+                <h4>Reflection Point</h4>
+                <p>Think about how AJAX improves the user experience in complex forms. When would you use real-time validation versus traditional form submission? How might AJAX enhance a specific application you're considering building? What challenges might arise in implementing AJAX form handling, and how might you address them?</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Form Macros for Reusable Components</h2>
+            <p>As your application grows, you'll find yourself repeating similar form patterns. Macros in Jinja2 templates are like reusable code functions that help keep your templates DRY (Don't Repeat Yourself).</p>
+            
+            <h3>Creating Form Macros</h3>
+            <p>Let's create a set of form macros to standardize form rendering across your application:</p>
+            
+            <pre><code>&lt;!-- templates/macros/forms.html --&gt;
+{% macro render_field(field, label_class='', field_class='form-control') %}
+    &lt;div class="form-group"&gt;
+        {{ field.label(class=label_class) }}
+        
+        {% if field.type == 'BooleanField' %}
+            &lt;div class="form-check"&gt;
+                {{ field(class='form-check-input ' + field_class) }}
+                {{ field.label(class='form-check-label ' + label_class) }}
+            &lt;/div&gt;
+        {% else %}
+            {{ field(class=field_class) }}
+        {% endif %}
+        
+        {% if field.errors %}
+            {% for error in field.errors %}
+                &lt;div class="invalid-feedback d-block"&gt;{{ error }}&lt;/div&gt;
+            {% endfor %}
+        {% endif %}
+        
+        {% if field.description %}
+            &lt;small class="form-text text-muted"&gt;{{ field.description }}&lt;/small&gt;
+        {% endif %}
+    &lt;/div&gt;
+{% endmacro %}
+
+{% macro render_submit(field, class='btn btn-primary') %}
+    &lt;div class="form-group mt-3"&gt;
+        {{ field(class=class) }}
+    &lt;/div&gt;
+{% endmacro %}
+
+{% macro render_form(form, action='', method='post', enctype=None) %}
+    &lt;form action="{{ action }}" method="{{ method }}" {% if enctype %}enctype="{{ enctype }}"{% endif %} novalidate&gt;
+        {{ form.hidden_tag() }}
+        
+        {% for field in form %}
+            {% if field.type != 'CSRFTokenField' and field.type != 'SubmitField' %}
+                {{ render_field(field) }}
+            {% endif %}
+        {% endfor %}
+        
+        {% for field in form %}
+            {% if field.type == 'SubmitField' %}
+                {{ render_submit(field) }}
+            {% endif %}
+        {% endfor %}
+    &lt;/form&gt;
+{% endmac
+<!--missing content-->  
+</code></pre>
+</section>
+</main>
+</body>
+</html>

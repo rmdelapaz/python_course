@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Form Handling with Flask-WTF</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Advanced Form Handling with Flask-WTF</h1>
+        <p class="subtitle">Week 2 - Friday: Full Stack Web Development with Python</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Advanced Form Handling with Flask-WTF</h2>
+            <p>Imagine you're a restaurant host managing reservations. You need to collect specific information (name, party size, time) in a consistent format to properly serve your guests. Similarly, web forms provide a structured way to collect user input, and Flask-WTF gives us powerful tools to manage this process.</p>
+            
+            <p>Flask-WTF is an extension that integrates Flask with WTForms, providing a robust form handling system. It's like having a well-trained assistant who not only collects information but also verifies it before passing it along.</p>
+            
+            <h3>Key Benefits of Flask-WTF</h3>
+            <ul>
+                <li><strong>CSRF Protection</strong>: Automatically protects your forms from Cross-Site Request Forgery attacks</li>
+                <li><strong>Form Validation</strong>: Built-in validators to ensure data meets your requirements</li>
+                <li><strong>Integration with Templates</strong>: Seamlessly works with Jinja2 templates</li>
+                <li><strong>File Uploads</strong>: Simple handling of file uploads</li>
+                <li><strong>Localization</strong>: Support for multiple languages</li>
+            </ul>
+            
+            <h3>Setting Up Flask-WTF</h3>
+            <p>First, let's make sure we have Flask-WTF installed:</p>
+            <pre><code>pip install flask-wtf</code></pre>
+            
+            <p>Then, configure it in your Flask application:</p>
+            
+            <pre><code># In app/__init__.py or config.py
+app.config['SECRET_KEY'] = 'your-secret-key-here'  # Required for CSRF protection
+app.config['WTF_CSRF_ENABLED'] = True  # Enable CSRF protection (enabled by default)</code></pre>
+            
+            <h3>Creating Form Classes</h3>
+            <p>In Flask-WTF, forms are represented as classes that inherit from FlaskForm. This object-oriented approach makes forms reusable and maintainable.</p>
+            
+            <p>Think of a form class as a blueprint for a specific type of form, similar to how a database model is a blueprint for a type of data. Let's create a form for collecting contact information:</p>
+            
+            <pre><code># In app/forms/contact.py
+from flask_wtf import FlaskForm
+from wtforms import StringField, TextAreaField, EmailField, SubmitField
+from wtforms.validators import DataRequired, Email, Length
+
+class ContactForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(min=2, max=50)])
+    email = EmailField('Email', validators=[DataRequired(), Email()])
+    subject = StringField('Subject', validators=[DataRequired(), Length(max=100)])
+    message = TextAreaField('Message', validators=[DataRequired(), Length(min=10, max=1000)])
+    submit = SubmitField('Send Message')</code></pre>
+            
+            <h3>Using Forms in Routes</h3>
+            <p>Now, let's see how to use this form in a Flask route:</p>
+            
+            <pre><code># In app/views/main.py
+from flask import Blueprint, render_template, flash, redirect, url_for
+from app.forms.contact import ContactForm
+from app.models.message import Message
+from app import db
+
+bp = Blueprint('main', __name__)
+
+@bp.route('/contact', methods=['GET', 'POST'])
+def contact():
+    form = ContactForm()
+    
+    if form.validate_on_submit():
+        # Form data is valid, process it
+        message = Message(
+            name=form.name.data,
+            email=form.email.data,
+            subject=form.subject.data,
+            content=form.message.data
+        )
+        db.session.add(message)
+        db.session.commit()
+        
+        flash('Your message has been sent. Thank you!', 'success')
+        return redirect(url_for('main.index'))
+    
+    # Either a GET request or form validation failed
+    return render_template('contact.html', form=form)</code></pre>
+            
+            <h3>Rendering Forms in Templates</h3>
+            <p>In your Jinja2 templates, you can render the form with automatic CSRF protection:</p>
+            
+            <pre><code>&lt;!-- In templates/contact.html --&gt;
+{% extends 'base.html' %}
+
+{% block title %}Contact Us{% endblock %}
+
+{% block content %}
+    &lt;h2&gt;Contact Us&lt;/h2&gt;
+    
+    &lt;form method="post" novalidate&gt;
+        {{ form.hidden_tag() }}
+        
+        &lt;div class="form-group"&gt;
+            {{ form.name.label }}
+            {{ form.name(class="form-control") }}
+            {% for error in form.name.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            {{ form.email.label }}
+            {{ form.email(class="form-control") }}
+            {% for error in form.email.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            {{ form.subject.label }}
+            {{ form.subject(class="form-control") }}
+            {% for error in form.subject.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        
+        &lt;div class="form-group"&gt;
+            {{ form.message.label }}
+            {{ form.message(class="form-control", rows=5) }}
+            {% for error in form.message.errors %}
+                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
+            {% endfor %}
+        &lt;/div&gt;
+        
+        &lt;div class="form-group mt-3"&gt;
+            {{ form.submit(class="btn btn-primary") }}
+        &lt;/div&gt;
+    &lt;/form&gt;
+{% endblock %}</code></pre>
+            
+            <h3>Real-World Example: Product Feedback Form</h3>
+            <p>Consider an e-commerce application where you want to collect customer feedback on products. Here's how you might implement it:</p>
+            
+            <pre><code># In app/forms/product.py
+class ProductFeedbackForm(FlaskForm):
+    rating = RadioField(
+        'Rating', 
+        choices=[(1, '1 Star'), (2, '2 Stars'), (3, '3 Stars'), (4, '4 Stars'), (5, '5 Stars')],
+        validators=[DataRequired()],
+        coerce=int
+    )
+    review_title = StringField('Review Title', validators=[DataRequired(), Length(max=100)])
+    review_text = TextAreaField('Your Review', validators=[DataRequired(), Length(min=10, max=1000)])
+    would_recommend = BooleanField('I would recommend this product to a friend')
+    submit = SubmitField('Submit Review')</code></pre>
+            
+            <p>This form captures a product rating, review title, review text, and whether the customer would recommend the product. In a real application, you would associate this feedback with specific products and users.</p>
+            
+            <div class="reflection">
+                <h4>Reflection Point</h4>
+                <p>Consider the forms you encounter in your daily digital life. What makes some forms easier to use than others? How might you apply these insights to your own form designs? Think about a specific web application you might want to build and what forms it would require.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Full Stack Python Web Development Course</p>
+    </footer>
+</body>
+</html>

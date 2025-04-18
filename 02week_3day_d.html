@@ -1,0 +1,2208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Full Stack Web Developer Course - Sets and Set Operations</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 2 Wednesday: Sets and Set Operations</h2>
+    </header>
+
+    <main>
+        <section class="lesson-intro">
+            <h3>Introduction to Sets</h3>
+            <p>Welcome to our exploration of Python sets! Today we're diving into one of Python's most elegant but often underutilized data structures. Sets provide powerful, concise ways to handle collections with a focus on uniqueness and set-theoretic operations that aren't available with lists or dictionaries.</p>
+            
+            <p>If you've ever worked with unique values, needed to quickly check for membership in a collection, or wanted to find common elements between two groups, sets are about to become your new best friend. They combine the uniqueness enforcement of dictionary keys with powerful mathematical operations that can solve complex problems with surprisingly little code.</p>
+            
+            <div class="real-world-example">
+                <h5>Real-World Analogy: Venn Diagrams</h5>
+                <p>Remember Venn diagrams from math class? Those overlapping circles that show relationships between different groups? Python sets work exactly like that. They let you easily find the intersection (common elements), union (all elements), and difference (elements in one set but not another) between collections—operations that would require multiple loops and conditional statements with lists.</p>
+            </div>
+        </section>
+
+        <section class="set-basics">
+            <h3>Set Fundamentals</h3>
+            
+            <h4>Creating Sets</h4>
+            <p>Python offers several ways to create sets:</p>
+            
+            <pre><code># Empty set (Note: {} creates an empty dictionary, not a set)
+empty_set = set()
+
+# Set from a list of values
+colors = {'red', 'green', 'blue'}
+
+# Set from iterable (like a list or string)
+vowels = set('aeiou')
+print(vowels)  # {'a', 'e', 'i', 'o', 'u'}
+
+numbers = set([1, 2, 3, 4, 5])
+print(numbers)  # {1, 2, 3, 4, 5}
+
+# Set with mixed data types
+mixed_set = {42, 'apple', True, (1, 2)}
+print(mixed_set)  # {42, 'apple', True, (1, 2)}
+
+# Set comprehension (similar to list comprehensions)
+squares = {x**2 for x in range(10)}
+print(squares)  # {0, 1, 4, 9, 16, 25, 36, 49, 64, 81}</code></pre>
+            
+            <p>Notice that sets are created using curly braces <code>{}</code> like dictionaries, but without key-value pairs. This can lead to a common pitfall: <code>{}</code> actually creates an empty dictionary, not an empty set. To create an empty set, you must use <code>set()</code>.</p>
+            
+            <h4>The Uniqueness Property</h4>
+            <p>The most defining characteristic of sets is their automatic enforcement of uniqueness—each element can only appear once:</p>
+            
+            <pre><code># Duplicate values are automatically eliminated
+numbers_with_duplicates = {1, 2, 2, 3, 4, 4, 5}
+print(numbers_with_duplicates)  # {1, 2, 3, 4, 5}
+
+# This property makes sets excellent for removing duplicates from other collections
+duplicated_list = [1, 2, 3, 2, 4, 5, 4, 6]
+unique_list = list(set(duplicated_list))
+print(unique_list)  # [1, 2, 3, 4, 5, 6] (order may vary)
+
+# Counting unique elements
+text = "mississippi"
+unique_chars = set(text)
+print(f"'{text}' has {len(unique_chars)} unique characters: {unique_chars}")
+# 'mississippi' has 4 unique characters: {'m', 'i', 's', 'p'}</code></pre>
+            
+            <div class="practical-usage">
+                <h5>Practical Usage: Data Deduplication</h5>
+                <p>When working with user-submitted data, sets provide an elegant way to handle duplicates:</p>
+                <pre><code># Removing duplicate email addresses from a mailing list
+email_list = [
+    "user1@example.com",
+    "user2@example.com",
+    "user1@example.com",  # Duplicate
+    "USER2@example.com",  # Case difference
+    "user3@example.com"
+]
+
+# Simple deduplication
+unique_emails = set(email_list)
+print(f"Unique emails: {len(unique_emails)}")
+print(unique_emails)
+
+# Case-insensitive deduplication
+normalized_emails = {email.lower() for email in email_list}
+print(f"Case-insensitive unique emails: {len(normalized_emails)}")
+print(normalized_emails)
+
+# Identifying duplicates
+duplicates = []
+seen = set()
+
+for email in email_list:
+    email_lower = email.lower()
+    if email_lower in seen:
+        duplicates.append(email)
+    else:
+        seen.add(email_lower)
+
+print(f"Duplicate emails: {duplicates}")</code></pre>
+            </div>
+            
+            <h4>Set Constraints</h4>
+            <p>Sets have specific constraints on what elements they can contain:</p>
+            
+            <pre><code># Sets can only contain hashable objects (immutable objects)
+valid_set = {1, 'hello', (1, 2, 3)}  # This works
+
+# This raises TypeError because lists are mutable (not hashable)
+# invalid_set = {1, [2, 3]}
+
+# This raises TypeError because dictionaries are mutable
+# another_invalid = {1, {'key': 'value'}}
+
+# You can include a frozenset (immutable version of a set)
+frozen = frozenset([1, 2, 3])
+valid_with_frozen = {1, 2, frozen}
+print(valid_with_frozen)  # {1, 2, frozenset({1, 2, 3})}</code></pre>
+            
+            <p>The hashability requirement is the same as for dictionary keys and exists for the same reason: under the hood, sets use a hash table for efficient lookups.</p>
+            
+            <h4>Set Order</h4>
+            <p>Unlike lists, sets do not maintain insertion order. They are unordered collections:</p>
+            
+            <pre><code># Sets don't guarantee order
+example = {5, 3, 1, 4, 2}
+print(example)  # Order may vary, e.g. {1, 2, 3, 4, 5}
+
+# When iterating through a set, order isn't guaranteed
+for item in example:
+    print(item)  # Items may print in different order each time
+
+# Converting back to list won't preserve original order
+numbers = [10, 9, 8, 7, 6]
+set_numbers = set(numbers)
+back_to_list = list(set_numbers)
+print(f"Original: {numbers}")
+print(f"After set conversion: {back_to_list}")  # Order likely different</code></pre>
+            
+            <p>If you need both uniqueness and order preservation, consider using dictionaries (with placeholder values) or the <code>OrderedDict</code> from the <code>collections</code> module.</p>
+            
+            <div class="real-world-example">
+                <h5>Real-World Analogy: Library Card Catalog</h5>
+                <p>Think of a set like an old library card catalog. Each book can only appear once in the catalog (uniqueness), and while there's a logical organization, you wouldn't expect the cards to be in the order the books were added to the library. The focus is on efficiently determining whether a particular book exists in the collection, not on the order of acquisition.</p>
+            </div>
+        </section>
+
+        <section class="set-operations">
+            <h3>Common Set Operations</h3>
+            
+            <h4>Adding and Removing Elements</h4>
+            <p>Sets provide several methods for modifying their contents:</p>
+            
+            <pre><code>fruits = {'apple', 'banana', 'cherry'}
+
+# Adding a single element
+fruits.add('orange')
+print(fruits)  # {'apple', 'banana', 'cherry', 'orange'}
+
+# Trying to add an element that already exists (no effect)
+fruits.add('apple')
+print(fruits)  # {'apple', 'banana', 'cherry', 'orange'}
+
+# Adding multiple elements at once
+fruits.update(['mango', 'pineapple'])
+print(fruits)  # {'apple', 'banana', 'cherry', 'orange', 'mango', 'pineapple'}
+
+# update() works with any iterable
+fruits.update('kiwi')  # Adds each character of the string
+print(fruits)  # {'apple', 'banana', 'cherry', 'orange', 'mango', 'pineapple', 'k', 'i', 'w'}
+
+# Removing elements
+fruits.remove('k')
+fruits.remove('i')
+fruits.remove('w')
+print(fruits)  # {'apple', 'banana', 'cherry', 'orange', 'mango', 'pineapple'}
+
+# remove() raises KeyError if element isn't present
+try:
+    fruits.remove('grape')
+except KeyError as e:
+    print(f"Error: {e}")
+
+# discard() removes if present, does nothing if not present
+fruits.discard('pineapple')  # Element exists, will be removed
+fruits.discard('grape')      # No error even though element doesn't exist
+print(fruits)  # {'apple', 'banana', 'cherry', 'orange', 'mango'}
+
+# pop() removes and returns an arbitrary element
+fruit = fruits.pop()
+print(f"Popped: {fruit}")
+print(fruits)  # One fewer element than before
+
+# clear() removes all elements
+fruits.clear()
+print(fruits)  # set()</code></pre>
+            
+            <div class="practical-usage">
+                <h5>Practical Example: Tag System</h5>
+                <p>Sets are perfect for managing tags in content systems:</p>
+                <pre><code># User applying tags to an article
+article = {
+    'id': 1234,
+    'title': 'Python Set Operations Explained',
+    'tags': {'python', 'programming', 'data structures'}
+}
+
+# User adds new tags
+new_tags = ['python', 'sets', 'tutorial']
+article['tags'].update(new_tags)
+
+print(f"Updated tags: {article['tags']}")
+
+# Moderator removes inappropriate tags
+article['tags'].discard('inappropriate')  # Safe even if tag doesn't exist
+print(f"After moderation: {article['tags']}")
+
+# Finding posts with specific tags
+articles = [
+    {'id': 1, 'tags': {'python', 'beginner', 'tutorial'}},
+    {'id': 2, 'tags': {'python', 'advanced', 'data science'}},
+    {'id': 3, 'tags': {'javascript', 'beginner', 'tutorial'}},
+    {'id': 4, 'tags': {'python', 'machine learning', 'tutorial'}}
+]
+
+# Find articles tagged with both 'python' and 'tutorial'
+python_tutorials = [a for a in articles if 'python' in a['tags'] and 'tutorial' in a['tags']]
+print(f"Python tutorials: {[a['id'] for a in python_tutorials]}")
+
+# Count each tag's frequency
+all_tags = set()
+for article in articles:
+    all_tags.update(article['tags'])
+
+tag_counts = {tag: sum(1 for a in articles if tag in a['tags']) for tag in all_tags}
+print(f"Tag counts: {tag_counts}")
+
+# Find most common tags
+most_common = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+print(f"Most common tags: {most_common}")</code></pre>
+            </div>
+        </section>
+
+        <section class="set-theory-operations">
+            <h3>Set Theory Operations</h3>
+            
+            <p>Python's set implementation includes powerful operations from mathematical set theory, providing elegant solutions to common programming problems.</p>
+            
+            <h4>Membership Testing</h4>
+            <p>Sets provide highly efficient membership testing:</p>
+            
+            <pre><code>large_set = set(range(1000000))  # A set with one million integers
+
+# Membership testing is O(1) - very fast even for large sets
+print(42 in large_set)  # True
+print(1000001 in large_set)  # False
+
+# Comparison with list membership (which is O(n))
+import time
+
+# Create a large list and an equivalent set
+large_list = list(range(1000000))
+large_set = set(large_list)
+
+# Time list membership check
+start = time.time()
+result = 999999 in large_list
+end = time.time()
+list_time = end - start
+print(f"List membership check: {list_time:.6f} seconds")
+
+# Time set membership check
+start = time.time()
+result = 999999 in large_set
+end = time.time()
+set_time = end - start
+print(f"Set membership check: {set_time:.6f} seconds")
+print(f"Set is approximately {list_time/set_time:.0f}x faster")</code></pre>
+            
+            <p>The dramatic speed difference for membership testing makes sets ideal for scenarios where you need to repeatedly check if items are in a collection.</p>
+            
+            <h4>Union</h4>
+            <p>The union operation combines all elements from two or more sets, removing duplicates:</p>
+            
+            <pre><code>sci_fi = {'Star Trek', 'Star Wars', 'Blade Runner', 'Alien'}
+fantasy = {'Lord of the Rings', 'Harry Potter', 'Star Wars'}  # Note the overlap
+
+# Union using the | operator
+all_movies = sci_fi | fantasy
+print(f"All movies: {all_movies}")
+
+# Union using the union() method
+all_movies_alt = sci_fi.union(fantasy)
+print(f"All movies (alt): {all_movies_alt}")
+
+# Union of multiple sets
+action = {'Die Hard', 'The Matrix', 'Alien'}  # Note the overlap with sci_fi
+comedy = {'The Hangover', 'Airplane!', 'Ghostbusters'}
+all_genres = sci_fi.union(fantasy, action, comedy)
+print(f"Total unique movies: {len(all_genres)}")
+
+# union() works with any iterables, not just sets
+more_movies = sci_fi.union(['The Matrix', 'Interstellar'], {'Inception', 'Tenet'})
+print(f"Extended sci-fi: {more_movies}")</code></pre>
+            
+            <div class="real-world-example">
+                <h5>Practical Application: Search Results</h5>
+                <p>The union operation is perfect for combining search results from different sources:</p>
+                <pre><code># Simulated search results from different indexes or databases
+database1_results = {'doc1', 'doc5', 'doc7', 'doc10'}
+database2_results = {'doc3', 'doc5', 'doc9', 'doc10'}
+database3_results = {'doc2', 'doc7', 'doc8'}
+
+# Combine all unique results
+all_results = database1_results | database2_results | database3_results
+print(f"Total unique results: {len(all_results)}")
+print(f"All results: {all_results}")
+
+# Count results by source
+result_sources = {}
+for doc in all_results:
+    sources = []
+    if doc in database1_results:
+        sources.append('DB1')
+    if doc in database2_results:
+        sources.append('DB2')
+    if doc in database3_results:
+        sources.append('DB3')
+    result_sources[doc] = sources
+
+# Show which database provided each result
+for doc, sources in result_sources.items():
+    print(f"{doc}: Found in {', '.join(sources)}")</code></pre>
+            </div>
+            
+            <h4>Intersection</h4>
+            <p>The intersection operation finds elements common to two or more sets:</p>
+            
+            <pre><code>team_a = {'Alice', 'Bob', 'Charlie', 'David', 'Eve'}
+team_b = {'Charlie', 'David', 'Frank', 'Grace', 'Heidi'}
+
+# Intersection using the & operator
+common_members = team_a & team_b
+print(f"Members in both teams: {common_members}")
+
+# Intersection using the intersection() method
+common_members_alt = team_a.intersection(team_b)
+print(f"Members in both teams (alt): {common_members_alt}")
+
+# Intersection of multiple sets
+team_c = {'Bob', 'David', 'Grace', 'Ivan'}
+in_all_teams = team_a.intersection(team_b, team_c)
+print(f"Members in all three teams: {in_all_teams}")
+
+# intersection() also works with iterables
+students = {'Alice', 'Bob', 'Charlie', 'David'}
+passing_grades = ['Alice', 'Charlie', 'Eve', 'Frank']
+passing_students = students.intersection(passing_grades)
+print(f"Students who passed: {passing_students}")</code></pre>
+            
+            <div class="practical-usage">
+                <h5>Practical Application: Data Analysis</h5>
+                <p>Intersection is invaluable when analyzing data across segments:</p>
+                <pre><code># User segments for an e-commerce site
+mobile_users = {'user1', 'user2', 'user5', 'user9', 'user10'}
+desktop_users = {'user2', 'user3', 'user4', 'user5', 'user7', 'user10'}
+paying_customers = {'user2', 'user5', 'user6', 'user7', 'user8', 'user10'}
+
+# Find users who use both mobile and desktop (cross-platform)
+cross_platform = mobile_users & desktop_users
+print(f"Cross-platform users: {cross_platform}")
+
+# Find paying customers who use mobile
+mobile_paying = mobile_users.intersection(paying_customers)
+print(f"Mobile paying customers: {mobile_paying}")
+
+# Find users who use all platforms and pay
+power_users = mobile_users & desktop_users & paying_customers
+print(f"Power users: {power_users}")
+
+# Percentage of mobile users who are paying customers
+mobile_paying_pct = (len(mobile_paying) / len(mobile_users)) * 100
+print(f"{mobile_paying_pct:.1f}% of mobile users are paying customers")
+
+# Build user segments for marketing
+segments = {
+    'mobile_only': mobile_users - desktop_users,
+    'desktop_only': desktop_users - mobile_users,
+    'cross_platform_free': cross_platform - paying_customers,
+    'paid_not_mobile': paying_customers - mobile_users,
+    'power_users': power_users
+}
+
+for segment, users in segments.items():
+    print(f"{segment}: {len(users)} users")</code></pre>
+            </div>
+            
+            <h4>Difference</h4>
+            <p>The difference operation finds elements in one set but not in another:</p>
+            
+            <pre><code>all_students = {'Alice', 'Bob', 'Charlie', 'David', 'Eve'}
+absent_today = {'Bob', 'Eve'}
+
+# Difference using the - operator
+present_today = all_students - absent_today
+print(f"Students present today: {present_today}")
+
+# Difference using the difference() method
+present_today_alt = all_students.difference(absent_today)
+print(f"Students present today (alt): {present_today_alt}")
+
+# Difference with multiple sets (elements in first set but not in any others)
+late_arrivals = {'Charlie'}
+fully_present = all_students.difference(absent_today, late_arrivals)
+print(f"Students present for full day: {fully_present}")
+
+# Difference works with iterables too
+excused_absences = ['Eve']
+unexcused_absences = absent_today.difference(excused_absences)
+print(f"Unexcused absences: {unexcused_absences}")</code></pre>
+            
+            <h4>Symmetric Difference</h4>
+            <p>The symmetric difference finds elements in either set, but not in both:</p>
+            
+            <pre><code>morning_shift = {'Alice', 'Bob', 'Charlie'}
+afternoon_shift = {'Charlie', 'David', 'Eve'}
+
+# Symmetric difference using the ^ operator
+one_shift_only = morning_shift ^ afternoon_shift
+print(f"Employees working exactly one shift: {one_shift_only}")
+
+# Symmetric difference using the symmetric_difference() method
+one_shift_only_alt = morning_shift.symmetric_difference(afternoon_shift)
+print(f"Employees working exactly one shift (alt): {one_shift_only_alt}")
+
+# Employees unique to each shift
+morning_only = morning_shift - afternoon_shift
+afternoon_only = afternoon_shift - morning_shift
+print(f"Morning only: {morning_only}")
+print(f"Afternoon only: {afternoon_only}")
+print(f"Combined unique: {morning_only | afternoon_only}")  # Same as symmetric difference</code></pre>
+            
+            <div class="practical-usage">
+                <h5>Practical Application: Change Detection</h5>
+                <p>Symmetric difference is perfect for finding changes between two states:</p>
+                <pre><code># Monitoring file changes in a directory
+files_before = {'document.txt', 'image.jpg', 'script.py', 'data.csv'}
+files_after = {'document.txt', 'image.jpg', 'script.py', 'new_file.txt', 'data.json'}
+
+# Find all changes (added or removed files)
+changed_files = files_before ^ files_after
+print(f"Changed files: {changed_files}")
+
+# Identify specifically what changed
+added_files = files_after - files_before
+removed_files = files_before - files_after
+
+print(f"Added files: {added_files}")
+print(f"Removed files: {removed_files}")
+
+# Tracking database record changes
+db_yesterday = {
+    'user1': {'name': 'Alice', 'email': 'alice@example.com'},
+    'user2': {'name': 'Bob', 'email': 'bob@example.com'},
+    'user3': {'name': 'Charlie', 'email': 'charlie@example.com'}
+}
+
+db_today = {
+    'user1': {'name': 'Alice', 'email': 'alice@example.com'},
+    'user3': {'name': 'Charlie', 'email': 'charlie@example.com'},
+    'user4': {'name': 'David', 'email': 'david@example.com'}
+}
+
+# Find changed user IDs
+changed_users = set(db_yesterday.keys()) ^ set(db_today.keys())
+print(f"Changed users: {changed_users}")
+
+# Detailed change report
+added_users = set(db_today.keys()) - set(db_yesterday.keys())
+removed_users = set(db_yesterday.keys()) - set(db_today.keys())
+
+print("\nDatabase change report:")
+for user in added_users:
+    print(f"+ Added: User {user} ({db_today[user]['name']})")
+    
+for user in removed_users:
+    print(f"- Removed: User {user} ({db_yesterday[user]['name']})")</code></pre>
+            </div>
+        </section>
+
+        <section class="set-methods">
+            <h3>Important Set Methods</h3>
+            
+            <p>Python sets provide several useful methods beyond the basic set operations:</p>
+            
+            <h4>Membership and Subset Testing</h4>
+            <pre><code># Subset testing
+set_a = {1, 2, 3, 4, 5}
+set_b = {1, 2, 3}
+set_c = {1, 2, 3}
+set_d = {5, 6, 7}
+
+# Check if set_b is a subset of set_a (all elements in set_b are in set_a)
+is_subset = set_b.issubset(set_a)
+print(f"Is set_b a subset of set_a? {is_subset}")  # True
+
+# Alternative syntax using <= operator
+is_subset_alt = set_b <= set_a
+print(f"Is set_b a subset of set_a (alt)? {is_subset_alt}")  # True
+
+# Proper subset (subset but not equal)
+is_proper_subset = set_b < set_a
+print(f"Is set_b a proper subset of set_a? {is_proper_subset}")  # True
+
+# Equal sets are subsets of each other but not proper subsets
+is_subset_equal = set_b <= set_c
+is_proper_subset_equal = set_b < set_c
+print(f"Is set_b a subset of set_c? {is_subset_equal}")  # True
+print(f"Is set_b a proper subset of set_c? {is_proper_subset_equal}")  # False
+
+# Superset checking (opposite of subset)
+is_superset = set_a.issuperset(set_b)
+print(f"Is set_a a superset of set_b? {is_superset}")  # True
+
+# Alternative syntax using >= operator
+is_superset_alt = set_a >= set_b
+print(f"Is set_a a superset of set_b (alt)? {is_superset_alt}")  # True
+
+# Disjoint sets (no elements in common)
+are_disjoint = set_b.isdisjoint(set_d)
+print(f"Are set_b and set_d disjoint? {are_disjoint}")  # True
+
+are_disjoint2 = set_a.isdisjoint(set_d)
+print(f"Are set_a and set_d disjoint? {are_disjoint2}")  # False (both have 5)</code></pre>
+            
+            <h4>In-place Operations</h4>
+            <p>For efficiency, sets provide in-place versions of the main set operations:</p>
+            
+            <pre><code>students_biology = {'Alice', 'Bob', 'Charlie', 'David'}
+students_chemistry = {'Bob', 'Charlie', 'Eve', 'Frank'}
+students_physics = {'Charlie', 'Eve', 'Grace'}
+
+# In-place update (union)
+all_science_students = students_biology.copy()
+all_science_students.update(students_chemistry, students_physics)
+print(f"All science students: {all_science_students}")
+
+# In-place intersection
+students_in_all = students_biology.copy()
+students_in_all.intersection_update(students_chemistry, students_physics)
+print(f"Students taking all sciences: {students_in_all}")
+
+# In-place difference
+biology_only = students_biology.copy()
+biology_only.difference_update(students_chemistry, students_physics)
+print(f"Students taking only biology: {biology_only}")
+
+# In-place symmetric difference
+exclusive_students = students_biology.copy()
+exclusive_students.symmetric_difference_update(students_chemistry)
+print(f"Students in either biology or chemistry but not both: {exclusive_students}")</code></pre>
+            
+            <div class="practical-usage">
+                <h5>Practical Application: Access Control</h5>
+                <p>Set operations are perfect for implementing access control systems:</p>
+                <pre><code># User permission system
+user_roles = {
+    'alice': {'admin', 'editor', 'viewer'},
+    'bob': {'editor', 'viewer'},
+    'charlie': {'viewer'},
+    'dave': {'developer', 'viewer'},
+    'eve': {'manager', 'editor', 'viewer'}
+}
+
+# Required permissions for different operations
+permissions = {
+    'view_content': {'viewer'},
+    'edit_content': {'editor', 'admin'},
+    'delete_content': {'admin'},
+    'manage_users': {'admin', 'manager'},
+    'deploy_code': {'developer', 'admin'}
+}
+
+def check_access(user, operation):
+    """Check if a user has permission to perform an operation."""
+    if user not in user_roles:
+        return False
+    
+    user_permissions = user_roles[user]
+    required_permissions = permissions[operation]
+    
+    # Check if user has any of the required permissions
+    return not user_permissions.isdisjoint(required_permissions)
+
+# Test the access control system
+users = ['alice', 'bob', 'charlie', 'dave', 'eve']
+operations = ['view_content', 'edit_content', 'delete_content', 'manage_users', 'deploy_code']
+
+print("Access control matrix:")
+print("                " + " ".join(f"{op:<15}" for op in operations))
+
+for user in users:
+    access_results = []
+    for operation in operations:
+        has_access = check_access(user, operation)
+        access_results.append("Yes" if has_access else "No")
+    
+    print(f"{user:<10}: " + " ".join(f"{result:<15}" for result in access_results))</code></pre>
+            </div>
+        </section>
+
+        <section class="set-comprehensions">
+            <h3>Set Comprehensions</h3>
+            
+            <p>Like lists and dictionaries, sets support comprehension syntax for concise creation:</p>
+            
+            <pre><code># Basic set comprehension
+squares = {x**2 for x in range(10)}
+print(f"Squares: {squares}")
+
+# Set comprehension with condition
+even_squares = {x**2 for x in range(10) if x % 2 == 0}
+print(f"Even squares: {even_squares}")
+
+# Character set from string
+unique_chars = {char.lower() for char in "Hello, World!"}
+print(f"Unique characters: {unique_chars}")
+
+# Set of tuple pairs
+coordinate_points = {(x, y) for x in range(3) for y in range(3)}
+print(f"Grid coordinates: {coordinate_points}")
+
+# Creating sets from other collections
+numbers = [1, 2, 3, 2, 1, 4, 5, 4, 3, 6]
+unique_evens = {num for num in numbers if num % 2 == 0}
+print(f"Unique even numbers: {unique_evens}")</code></pre>
+            
+            <div class="practical-usage">
+                <h5>Practical Application: Data Extraction</h5>
+                <p>Set comprehensions are excellent for extracting unique values from complex data:</p>
+                <pre><code># List of records
+products = [
+    {'id': 1, 'name': 'Laptop', 'category': 'Electronics', 'in_stock': True},
+    {'id': 2, 'name': 'Desk Chair', 'category': 'Furniture', 'in_stock': True},
+    {'id': 3, 'name': 'Coffee Maker', 'category': 'Appliances', 'in_stock': False},
+    {'id': 4, 'name': 'Monitor', 'category': 'Electronics', 'in_stock': True},
+    {'id': 5, 'name': 'Bookshelf', 'category': 'Furniture', 'in_stock': False},
+    {'id': 6, 'name': 'Tablet', 'category': 'Electronics', 'in_stock': True}
+]
+
+# Extract all unique categories
+categories = {product['category'] for product in products}
+print(f"Product categories: {categories}")
+
+# Extract IDs of in-stock products
+in_stock_ids = {product['id'] for product in products if product['in_stock']}
+print(f"In-stock product IDs: {in_stock_ids}")
+
+# Extract first letter of each product name
+first_letters = {product['name'][0] for product in products}
+print(f"First letters of product names: {first_letters}")
+
+# More complex extraction - categories with in-stock items
+categories_with_stock = {product['category'] for product in products if product['in_stock']}
+print(f"Categories with in-stock products: {categories_with_stock}")
+
+# Categories without stock
+categories_without_stock = categories - categories_with_stock
+print(f"Categories with no in-stock products: {categories_without_stock}")</code></pre>
+            </div>
+        </section>
+
+        <section class="frozensets">
+            <h3>Frozensets: Immutable Sets</h3>
+            
+            <p>Python provides an immutable version of sets called frozensets, which can be useful in specific scenarios:</p>
+            
+            <pre><code># Creating a frozenset
+regular_set = {1, 2, 3, 4, 5}
+frozen = frozenset([1, 2, 3, 4, 5])
+
+print(f"Regular set: {regular_set}")
+print(f"Frozenset: {frozen}")
+
+# Attempting to modify a frozenset raises an error
+try:
+    frozen.add(6)  # This will fail
+except AttributeError as e:
+    print(f"Error: {e}")
+
+# Frozensets can be used in operations with regular sets
+print(f"Union: {regular_set | frozen}")
+print(f"Intersection: {regular_set & frozen}")
+
+# The main benefit: frozensets can be used as dictionary keys or set elements
+fs1 = frozenset([1, 2, 3])
+fs2 = frozenset([3, 4, 5])
+fs3 = frozenset([5, 6, 7])
+
+# Dictionary with frozensets as keys
+set_relations = {
+    fs1: "Group A",
+    fs2: "Group B",
+    fs3: "Group C"
+}
+
+print(f"Group name for {fs1}: {set_relations[fs1]}")
+
+# Set containing frozensets (could not use regular sets here)
+set_of_sets = {fs1, fs2, fs3}
+print(f"Set of frozensets: {set_of_sets}")
+
+# Frozensets are hashable and can be compared for equality
+print(f"fs1 == fs1: {fs1 == fs1}")
+print(f"fs1 == frozenset([1, 2, 3]): {fs1 == frozenset([1, 2, 3])}")
+print(f"Hash of fs1: {hash(fs1)}")  # This works
+# print(f"Hash of regular_set: {hash(regular_set)}")  # This would fail</code></pre>
+            
+            <div class="practical-usage">
+                <h5>Practical Application: Caching and Memoization</h5>
+                <p>Frozensets are useful when you need to use sets as dictionary keys, such as in caching:</p>
+                <pre><code># A function to find common factors of multiple numbers
+def find_common_factors(*numbers):
+    """Find all factors that are common to a set of numbers."""
+    # Convert input to a frozenset for caching
+    number_set = frozenset(numbers)
+    
+    # Check if we've already calculated this
+    if number_set in find_common_factors.cache:
+        print(f"Cache hit for {numbers}")
+        return find_common_factors.cache[number_set]
+    
+    # Find factors for the first number
+    smallest = min(numbers)
+    factors = {i for i in range(1, smallest + 1) if smallest % i == 0}
+    
+    # Check which factors work for all numbers
+    for num in numbers:
+        factors = {factor for factor in factors if num % factor == 0}
+    
+    # Cache the result
+    find_common_factors.cache[number_set] = factors
+    return factors
+
+# Initialize the cache
+find_common_factors.cache = {}
+
+# Test the function
+print(f"Common factors of 12, 18: {find_common_factors(12, 18)}")
+print(f"Common factors of 18, 12: {find_common_factors(18, 12)}")  # Should be a cache hit
+print(f"Common factors of 15, 25, 35: {find_common_factors(15, 25, 35)}")
+print(f"Common factors of 100, 120, 150: {find_common_factors(100, 120, 150)}")
+
+# Show what's in the cache
+print("\nCache contents:")
+for numbers, factors in find_common_factors.cache.items():
+    print(f"{sorted(numbers)}: {sorted(factors)}")</code></pre>
+            </div>
+        </section>
+
+        <section class="sets-in-web-dev">
+            <h3>Sets in Web Development</h3>
+            
+            <p>Sets offer elegant solutions to many common web development tasks:</p>
+            
+            <h4>Form Data Validation</h4>
+            <pre><code># Validating form input against allowed values
+def validate_form(form_data):
+    """Validate form data against allowed values."""
+    
+    # Define allowed values
+    allowed_countries = {
+        'US', 'CA', 'UK', 'AU', 'DE', 'FR', 'JP', 'BR', 'IN'
+    }
+    
+    required_fields = {'name', 'email', 'country'}
+    optional_fields = {'phone', 'company', 'message'}
+    allowed_fields = required_fields | optional_fields
+    
+    # Check for missing required fields
+    provided_fields = set(form_data.keys())
+    missing_fields = required_fields - provided_fields
+    
+    if missing_fields:
+        return False, f"Missing required fields: {', '.join(missing_fields)}"
+    
+    # Check for unexpected fields
+    unexpected_fields = provided_fields - allowed_fields
+    
+    if unexpected_fields:
+        return False, f"Unexpected fields: {', '.join(unexpected_fields)}"
+    
+    # Validate specific fields
+    if 'country' in form_data and form_data['country'] not in allowed_countries:
+        return False, f"Invalid country. Allowed values: {', '.join(allowed_countries)}"
+    
+    # All validations passed
+    return True, "Form data is valid"
+
+# Test the validation
+valid_form = {
+    'name': 'John Smith',
+    'email': 'john@example.com',
+    'country': 'US',
+    'message': 'Hello, world!'
+}
+
+invalid_form1 = {
+    'name': 'Jane Doe',
+    'country': 'US',
+    # missing email
+}
+
+invalid_form2 = {
+    'name': 'Bob Johnson',
+    'email': 'bob@example.com',
+    'country': 'XY',  # invalid country
+}
+
+invalid_form3 = {
+    'name': 'Alice Williams',
+    'email': 'alice@example.com',
+    'country': 'UK',
+    'hack_attempt': '<script>alert("XSS")</script>'  # unexpected field
+}
+
+print(validate_form(valid_form))
+print(validate_form(invalid_form1))
+print(validate_form(invalid_form2))
+print(validate_form(invalid_form3))</code></pre>
+            
+            <h4>URL Parameter Handling</h4>
+            <pre><code># Parsing and validating URL parameters
+def parse_url_params(url_params, allowed_filters, default_sort=None):
+    """Parse and validate URL query parameters."""
+    # Convert the parameters to a dict
+    params = {}
+    for param in url_params.split('&'):
+        if '=' in param:
+            key, value = param.split('=', 1)
+            params[key] = value
+    
+    # Extract and validate filters
+    provided_filters = {key for key in params if key.startswith('filter_')}
+    filter_names = {filter_param.replace('filter_', '') for filter_param in provided_filters}
+    
+    # Check for invalid filters
+    invalid_filters = filter_names - allowed_filters
+    if invalid_filters:
+        return None, f"Invalid filters: {', '.join(invalid_filters)}"
+    
+    # Extract and validate sort parameter
+    sort = params.get('sort', default_sort)
+    if sort and sort.lstrip('-') not in allowed_filters:
+        return None, f"Invalid sort parameter: {sort}"
+    
+    # Parse page and limit
+    try:
+        page = int(params.get('page', '1'))
+        limit = min(int(params.get('limit', '20')), 100)  # Cap at 100
+    except ValueError:
+        return None, "Invalid page or limit parameter"
+    
+    # Build result
+    result = {
+        'filters': {name: params[f'filter_{name}'] for name in filter_names},
+        'sort': sort,
+        'page': page,
+        'limit': limit
+    }
+    
+    return result, "Parameters parsed successfully"
+
+# Test with example URL parameters
+allowed_product_filters = {'category', 'price', 'brand', 'color', 'size'}
+
+valid_params = "filter_category=electronics&filter_price=100-500&sort=-price&page=2&limit=50"
+invalid_params = "filter_category=electronics&filter_invalid=test&sort=price&page=1"
+
+print(parse_url_params(valid_params, allowed_product_filters))
+print(parse_url_params(invalid_params, allowed_product_filters))</code></pre>
+            
+            <div class="practical-usage">
+                <h5>Practical Application: API Feature Flags</h5>
+                <p>Sets are perfect for implementing feature flags in web applications:</p>
+                <pre><code>class FeatureFlags:
+    """A simple feature flag system using sets."""
+    
+    def __init__(self):
+        # Global features available to everyone
+        self.global_features = {
+            'basic_search',
+            'product_viewing',
+            'user_profiles'
+        }
+        
+        # Features available in specific environments
+        self.environment_features = {
+            'development': {
+                'debug_toolbar',
+                'test_data',
+                'performance_metrics'
+            },
+            'staging': {
+                'performance_metrics',
+                'new_ui_preview'
+            },
+            'production': set()  # No environment-specific features in production
+        }
+        
+        # Features enabled for specific user roles
+        self.role_features = {
+            'anonymous': set(),  # No special features
+            'user': {
+                'saved_searches',
+                'favorites',
+                'recommendations'
+            },
+            'premium': {
+                'advanced_search',
+                'export_data',
+                'ad_free_experience'
+            },
+            'admin': {
+                'user_management',
+                'content_moderation',
+                'analytics_dashboard'
+            }
+        }
+        
+        # Beta features enabled for specific user IDs
+        self.beta_users = {
+            'user123',
+            'user456',
+            'user789'
+        }
+        
+        self.beta_features = {
+            'ai_assistant',
+            'voice_search',
+            'dark_mode'
+        }
+    
+    def get_available_features(self, user_id=None, role='anonymous', environment='production'):
+        """Get all features available to a user in a specific environment."""
+        # Start with global features
+        available = self.global_features.copy()
+        
+        # Add environment-specific features
+        if environment in self.environment_features:
+            available.update(self.environment_features[environment])
+        
+        # Add role-specific features (including inherited features)
+        if role == 'admin':
+            available.update(self.role_features['user'])
+            available.update(self.role_features['premium'])
+            available.update(self.role_features['admin'])
+        elif role == 'premium':
+            available.update(self.role_features['user'])
+            available.update(self.role_features['premium'])
+        elif role == 'user':
+            available.update(self.role_features['user'])
+        
+        # Add beta features if the user is in the beta program
+        if user_id in self.beta_users:
+            available.update(self.beta_features)
+        
+        return available
+    
+    def has_feature(self, feature, user_id=None, role='anonymous', environment='production'):
+        """Check if a specific feature is available."""
+        available_features = self.get_available_features(user_id, role, environment)
+        return feature in available_features
+
+# Usage example
+feature_manager = FeatureFlags()
+
+# Check features for different user scenarios
+scenarios = [
+    {'name': 'Anonymous Visitor', 'user_id': None, 'role': 'anonymous', 'env': 'production'},
+    {'name': 'Basic User', 'user_id': 'user999', 'role': 'user', 'env': 'production'},
+    {'name': 'Premium User', 'user_id': 'user789', 'role': 'premium', 'env': 'production'},
+    {'name': 'Admin', 'user_id': 'admin1', 'role': 'admin', 'env': 'staging'},
+    {'name': 'Developer Testing', 'user_id': 'dev1', 'role': 'admin', 'env': 'development'}
+]
+
+# Features to check
+features_to_check = [
+    'basic_search',           # Global feature
+    'user_management',        # Admin feature
+    'advanced_search',        # Premium feature
+    'ai_assistant',           # Beta feature
+    'debug_toolbar',          # Development feature
+    'new_ui_preview'          # Staging feature
+]
+
+# Print feature availability matrix
+print("Feature Availability Matrix:")
+header = "User Scenario".ljust(20)
+for feature in features_to_check:
+    header += feature.ljust(20)
+print(header)
+print("-" * (20 * (len(features_to_check) + 1)))
+
+for scenario in scenarios:
+    line = scenario['name'].ljust(20)
+    for feature in features_to_check:
+        has_feature = feature_manager.has_feature(
+            feature, 
+            scenario['user_id'], 
+            scenario['role'],
+            scenario['env']
+        )
+        line += ("✓" if has_feature else "✗").ljust(20)
+    print(line)
+
+# Get full feature list for a specific user
+premium_beta_user = feature_manager.get_available_features('user789', 'premium', 'production')
+print(f"\nAll features for premium beta user: {premium_beta_user}")</code></pre>
+            </div>
+        </section>
+
+        <section class="performance-considerations">
+            <h3>Performance Considerations</h3>
+            
+            <p>Sets offer significant performance advantages for specific operations:</p>
+            
+            <pre><code>import time
+import random
+
+# Data generation for testing
+def generate_random_data(size):
+    return [random.randint(1, size*10) for _ in range(size)]
+
+# Generate test data
+small_data = generate_random_data(1000)
+medium_data = generate_random_data(10000)
+large_data = generate_random_data(100000)
+
+# Performance test for finding unique elements
+def test_unique_performance():
+    print("Performance comparison: Finding unique elements")
+    
+    # Test with different data sizes
+    for name, data in [("Small", small_data), ("Medium", medium_data), ("Large", large_data)]:
+        # Method 1: Using a loop and list
+        start = time.time()
+        unique_list = []
+        for item in data:
+            if item not in unique_list:
+                unique_list.append(item)
+        list_time = time.time() - start
+        
+        # Method 2: Using a set
+        start = time.time()
+        unique_set = set(data)
+        set_time = time.time() - start
+        
+        # Compare results
+        print(f"{name} data ({len(data)} items, {len(unique_set)} unique):")
+        print(f"  List method: {list_time:.6f} seconds")
+        print(f"  Set method: {set_time:.6f} seconds")
+        print(f"  Set is {list_time/set_time:.1f}x faster")
+
+# Performance test for membership checking
+def test_membership_performance():
+    print("\nPerformance comparison: Membership testing")
+    
+    # Generate test items (half exist in data, half don't)
+    def generate_test_items(data, count=1000):
+        existing = random.sample(data, count // 2)
+        non_existing = [random.randint(max(data) + 1, max(data) + 10000) for _ in range(count // 2)]
+        all_items = existing + non_existing
+        random.shuffle(all_items)
+        return all_items
+    
+    # Test with different data sizes
+    for name, data in [("Small", small_data), ("Medium", medium_data), ("Large", large_data)]:
+        test_items = generate_test_items(data)
+        
+        # Create a set version
+        data_set = set(data)
+        
+        # Method 1: List membership
+        start = time.time()
+        results_list = [item in data for item in test_items]
+        list_time = time.time() - start
+        
+        # Method 2: Set membership
+        start = time.time()
+        results_set = [item in data_set for item in test_items]
+        set_time = time.time() - start
+        
+        # Compare results
+        print(f"{name} data ({len(data)} items):")
+        print(f"  List membership: {list_time:.6f} seconds")
+        print(f"  Set membership: {set_time:.6f} seconds")
+        print(f"  Set is {list_time/set_time:.1f}x faster")
+
+# Performance test for set operations vs manual implementations
+def test_operations_performance():
+    print("\nPerformance comparison: Set operations")
+    
+    # Generate two sets with some overlap
+    def generate_overlapping_sets(size):
+        set1 = set(random.sample(range(size*2), size))
+        # Create set2 with ~30% overlap
+        overlap = set(random.sample(list(set1), size // 3))
+        non_overlap = set(random.sample(range(size*2, size*4), size - len(overlap)))
+        set2 = overlap | non_overlap
+        return set1, set2
+    
+    # Test with medium-sized sets
+    set1, set2 = generate_overlapping_sets(10000)
+    
+    # Method 1: Manual union with lists
+    start = time.time()
+    union_list = list(set1)
+    for item in set2:
+        if item not in union_list:
+            union_list.append(item)
+    list_union_time = time.time() - start
+    
+    # Method 2: Set union
+    start = time.time()
+    union_set = set1 | set2
+    set_union_time = time.time() - start
+    
+    # Method 1: Manual intersection with lists
+    start = time.time()
+    intersection_list = []
+    for item in set1:
+        if item in set2:
+            intersection_list.append(item)
+    list_intersection_time = time.time() - start
+    
+    # Method 2: Set intersection
+    start = time.time()
+    intersection_set = set1 & set2
+    set_intersection_time = time.time() - start
+    
+    # Compare results
+    print(f"Union operation (result size: {len(union_set)}):")
+    print(f"  Manual list implementation: {list_union_time:.6f} seconds")
+    print(f"  Set operation: {set_union_time:.6f} seconds")
+    print(f"  Set is {list_union_time/set_union_time:.1f}x faster")
+    
+    print(f"Intersection operation (result size: {len(intersection_set)}):")
+    print(f"  Manual list implementation: {list_intersection_time:.6f} seconds")
+    print(f"  Set operation: {set_intersection_time:.6f} seconds")
+    print(f"  Set is {list_intersection_time/set_intersection_time:.1f}x faster")
+
+# Run the performance tests
+test_unique_performance()
+test_membership_performance()
+test_operations_performance()</code></pre>
+            
+            <div class="optimization-tips">
+                <h5>Set Performance Optimization Tips</h5>
+                <ul>
+                    <li><strong>Use sets for membership testing</strong> when order doesn't matter and you have a large collection</li>
+                    <li><strong>Convert to sets temporarily</strong> to perform operations, then back to lists if needed</li>
+                    <li><strong>Prefer set operations</strong> (union, intersection, etc.) over manual implementations</li>
+                    <li><strong>Use set comprehensions</strong> instead of loops for filtering and transformation</li>
+                    <li><strong>For very large sets, consider in-place operations</strong> (<code>update</code>, <code>intersection_update</code>, etc.)</li>
+                    <li><strong>Avoid unnecessary conversions</strong> between different collection types</li>
+                    <li><strong>Use <code>any()</code> and <code>all()</code></strong> with generator expressions for efficient boolean operations</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="exercises">
+            <h3>Practice Exercises</h3>
+            
+            <div class="exercise">
+                <h4>Exercise 1: URL Analysis</h4>
+                <p>Create a set of functions to analyze and compare URLs:</p>
+                <ol>
+                    <li>Write a function to extract the path components from a URL</li>
+                    <li>Write a function to extract query parameters from a URL</li>
+                    <li>Write a function to find common parameters between two URLs</li>
+                </ol>
+                
+                <details>
+                    <summary>Solution</summary>
+                    <pre><code>def extract_path_components(url):
+    """Extract path components from a URL as a set."""
+    # Remove protocol and domain
+    if '://' in url:
+        url = url.split('://', 1)[1]
+    
+    # Remove domain
+    if '/' in url:
+        url = url.split('/', 1)[1]
+    else:
+        return set()  # No path components
+    
+    # Remove query parameters and fragments
+    if '?' in url:
+        url = url.split('?', 1)[0]
+    if '#' in url:
+        url = url.split('#', 1)[0]
+    
+    # Split path into components and filter empty strings
+    components = url.split('/')
+    return {component for component in components if component}
+
+def extract_query_parameters(url):
+    """Extract query parameters from a URL as a set of keys."""
+    if '?' not in url:
+        return set()
+    
+    query_string = url.split('?', 1)[1]
+    
+    # Remove fragment if present
+    if '#' in query_string:
+        query_string = query_string.split('#', 1)[0]
+    
+    # Split query string into parameters
+    parameters = query_string.split('&')
+    
+    # Extract parameter names (keys)
+    return {param.split('=', 1)[0] for param in parameters if '=' in param}
+
+def get_parameter_values(url, param_name):
+    """Get the values of a specific parameter from a URL."""
+    if '?' not in url:
+        return set()
+    
+    query_string = url.split('?', 1)[1]
+    
+    # Remove fragment if present
+    if '#' in query_string:
+        query_string = query_string.split('#', 1)[0]
+    
+    # Split query string into parameters
+    parameters = query_string.split('&')
+    
+    # Find parameters matching the name
+    values = set()
+    for param in parameters:
+        if '=' in param:
+            key, value = param.split('=', 1)
+            if key == param_name:
+                values.add(value)
+    
+    return values
+
+def find_common_parameters(url1, url2):
+    """Find common query parameters between two URLs."""
+    params1 = extract_query_parameters(url1)
+    params2 = extract_query_parameters(url2)
+    
+    return params1.intersection(params2)
+
+# Test the functions
+urls = [
+    "https://example.com/products/category/electronics?sort=price&filter=brand:apple&page=1",
+    "https://example.com/products/category/electronics/phones?filter=brand:samsung&filter=price:high&page=2",
+    "https://example.com/search?q=laptop&sort=relevance&limit=20#results",
+    "https://api.example.com/v2/users/profile?fields=name,email,address&format=json"
+]
+
+print("Path components:")
+for url in urls:
+    components = extract_path_components(url)
+    print(f"{url}\n  Components: {components}\n")
+
+print("Query parameters:")
+for url in urls:
+    parameters = extract_query_parameters(url)
+    print(f"{url}\n  Parameters: {parameters}\n")
+
+# Test for common parameters
+for i in range(len(urls)):
+    for j in range(i+1, len(urls)):
+        common = find_common_parameters(urls[i], urls[j])
+        if common:
+            print(f"Common parameters between URL {i+1} and URL {j+1}: {common}")
+
+# Test parameter values
+filter_values = get_parameter_values(urls[1], "filter")
+print(f"\nValues for 'filter' parameter in URL 2: {filter_values}")</code></pre>
+                </details>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 2: Web Application User Analysis</h4>
+                <p>You're analyzing user data for a web application. Use sets to answer questions about user behavior:</p>
+                <pre><code># User activity data (simulated)
+users_yesterday = {'user1', 'user2', 'user3', 'user5', 'user7', 'user8', 'user9'}
+users_today = {'user2', 'user3', 'user4', 'user6', 'user7', 'user10'}
+
+premium_users = {'user1', 'user3', 'user5', 'user7', 'user9'}
+free_users = {'user2', 'user4', 'user6', 'user8', 'user10'}
+
+feature_a_users = {'user1', 'user3', 'user5', 'user7', 'user10'}
+feature_b_users = {'user2', 'user3', 'user6', 'user8', 'user9'}
+feature_c_users = {'user1', 'user2', 'user6', 'user8', 'user10'}</code></pre>
+                <ol>
+                    <li>Identify users who were active yesterday but not today (churn)</li>
+                    <li>Identify new users today</li>
+                    <li>Find premium users who used Feature A today</li>
+                    <li>Find free users who used both Features B and C</li>
+                    <li>Identify features with the highest and lowest premium user adoption</li>
+                </ol>
+                
+                <details>
+                    <summary>Solution</summary>
+                    <pre><code># User activity data from provided code block
+users_yesterday = {'user1', 'user2', 'user3', 'user5', 'user7', 'user8', 'user9'}
+users_today = {'user2', 'user3', 'user4', 'user6', 'user7', 'user10'}
+
+premium_users = {'user1', 'user3', 'user5', 'user7', 'user9'}
+free_users = {'user2', 'user4', 'user6', 'user8', 'user10'}
+
+feature_a_users = {'user1', 'user3', 'user5', 'user7', 'user10'}
+feature_b_users = {'user2', 'user3', 'user6', 'user8', 'user9'}
+feature_c_users = {'user1', 'user2', 'user6', 'user8', 'user10'}
+
+# 1. Identify users who were active yesterday but not today (churn)
+churned_users = users_yesterday - users_today
+print(f"Churned users: {churned_users}")
+
+# 2. Identify new users today
+new_users = users_today - users_yesterday
+print(f"New users today: {new_users}")
+
+# 3. Find premium users who used Feature A today
+premium_feature_a_today = premium_users & feature_a_users & users_today
+print(f"Premium users using Feature A today: {premium_feature_a_today}")
+
+# 4. Find free users who used both Features B and C
+free_using_b_and_c = free_users & feature_b_users & feature_c_users
+print(f"Free users using both Features B and C: {free_using_b_and_c}")
+
+# 5. Identify features with the highest and lowest premium user adoption
+feature_a_premium_users = feature_a_users & premium_users
+feature_b_premium_users = feature_b_users & premium_users
+feature_c_premium_users = feature_c_users & premium_users
+
+feature_premium_counts = {
+    'Feature A': len(feature_a_premium_users),
+    'Feature B': len(feature_b_premium_users),
+    'Feature C': len(feature_c_premium_users)
+}
+
+highest_feature = max(feature_premium_counts.items(), key=lambda x: x[1])
+lowest_feature = min(feature_premium_counts.items(), key=lambda x: x[1])
+
+print(f"Premium user adoption by feature: {feature_premium_counts}")
+print(f"Highest premium adoption: {highest_feature[0]} ({highest_feature[1]} users)")
+print(f"Lowest premium adoption: {lowest_feature[0]} ({lowest_feature[1]} users)")
+
+# Additional analysis
+# Active premium users today
+active_premium_today = premium_users & users_today
+print(f"\nActive premium users today: {active_premium_today}")
+print(f"Percentage of premium users active today: {len(active_premium_today) / len(premium_users) * 100:.1f}%")
+
+# Feature usage overlap
+all_features_users = feature_a_users & feature_b_users & feature_c_users
+print(f"Users using all three features: {all_features_users}")
+
+at_least_one_feature = feature_a_users | feature_b_users | feature_c_users
+print(f"Users using at least one feature: {at_least_one_feature}")
+print(f"Users not using any features: {(premium_users | free_users) - at_least_one_feature}")
+
+# Feature exclusivity (users who use only one specific feature)
+only_feature_a = feature_a_users - (feature_b_users | feature_c_users)
+only_feature_b = feature_b_users - (feature_a_users | feature_c_users)
+only_feature_c = feature_c_users - (feature_a_users | feature_b_users)
+
+print(f"Users using only Feature A: {only_feature_a}")
+print(f"Users using only Feature B: {only_feature_b}")
+print(f"Users using only Feature C: {only_feature_c}")</code></pre>
+                </details>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 3: Web Security Analysis</h4>
+                <p>Create a system to analyze website permissions and security risks:</p>
+                <pre><code># Website access data
+admin_pages = {'/admin', '/admin/users', '/admin/settings', '/admin/reports'} 
+user_pages = {'/home', '/profile', '/settings', '/products', '/cart'}
+guest_pages = {'/home', '/products', '/about', '/contact'}    
+restricted_pages = {'/admin', '/admin/users', '/admin/settings'}
+# User roles
+user_roles = {
+    'alice': {'admin', 'user'},
+    'bob': {'user'},
+    'charlie': {'guest'},
+    'dave': {'admin', 'user'},
+    'eve': {'guest'}
+}
+# Function to check access
+def check_access(user, page):
+    """Check if a user has access to a specific page."""
+    if user not in user_roles:
+        return False
+    
+    user_permissions = user_roles[user]
+    
+    # Check if the page is restricted
+    if page in restricted_pages:
+        return 'admin' in user_permissions
+    
+    # Check if the page is accessible to the user's role
+    if 'admin' in user_permissions and page in admin_pages:
+        return True
+    elif 'user' in user_permissions and page in user_pages:
+        return True
+    elif 'guest' in user_permissions and page in guest_pages:
+        return True
+    
+    return False
+# Test the access control system
+users = ['alice', 'bob', 'charlie', 'dave', 'eve']
+operations = ['view_content', 'edit_content', 'delete_content', 'manage_users', 'deploy_code']
+permissions = {
+    'view_content': {'guest', 'user', 'admin'},
+    'edit_content': {'user', 'admin'},
+    'delete_content': {'admin'},
+    'manage_users': {'admin'},
+    'deploy_code': {'admin'}
+}
+def check_access(user, operation):
+    """Check if a user has access to a specific operation."""
+    if user not in user_roles:
+        return False
+    
+    user_permissions = user_roles[user]
+    
+    # Check if the operation is allowed for the user's role
+    return operation in permissions and permissions[operation].intersection(user_permissions)
+# Test the access control system        
+</code></pre></div></section>
+
+            <h4>Exercise 2: Web Application User Analysis</h4>
+                <p>You're analyzing user data for a web application. Use sets to answer questions about user behavior:</p>
+                <ol>
+                    <li>Identify users who were active yesterday but not today (churn)</li>
+                    <li>Identify new users today</li>
+                    <li>Find premium users who used Feature A today</li>
+                    <li>Find free users who used both Features B and C</li>
+                    <li>Identify features with the highest and lowest premium user adoption</li>
+                </ol>
+                
+                <details>
+                    <summary>Solution</summary>
+                    <pre><code># User activity data from provided code block
+users_yesterday = {'user1', 'user2', 'user3', 'user5', 'user7', 'user8', 'user9'}           
+         
+            </code></pre></details>
+            
+            <div class="exercise">
+                <h4>Exercise 3: Web Security Analysis</h4>
+                <p>Create a system to analyze website permissions and security risks:</p>
+                <pre><code># Website access data
+admin_pages = {'/admin', '/admin/users', '/admin/settings', '/admin/reports'}
+logged_in_pages = {'/dashboard', '/profile', '/settings', '/messages', '/admin'}
+public_pages = {'/', '/about', '/contact', '/login', '/register', '/products'}
+
+# User roles and their default permissions
+roles = {
+    'admin': {'can_view_admin', 'can_edit_users', 'can_edit_content', 'can_delete', 'can_view_logs'},
+    'moderator': {'can_view_admin', 'can_edit_content', 'can_view_logs'},
+    'editor': {'can_edit_content'},
+    'user': set(),
+    'anonymous': set()
+}
+
+# Access logs (page, user, timestamp)
+access_logs = [
+    ('/admin/users', 'admin1', '2023-05-15 10:30'),
+    ('/profile', 'user1', '2023-05-15 10:35'),
+    ('/admin/settings', 'moderator1', '2023-05-15 10:40'),
+    ('/admin/users', 'editor1', '2023-05-15 10:45'),  # Potentially unauthorized
+    ('/', 'anonymous', '2023-05-15 10:50'),
+    ('/admin/reports', 'moderator1', '2023-05-15 10:55'),  # Potentially unauthorized
+    ('/dashboard', 'anonymous', '2023-05-15 11:00')  # Potentially unauthorized
+]
+
+# HTTP Referrers (potentially revealing sensitive URLs)
+http_referrers = {
+    'https://example.com/admin/users?filter=new': 10,
+    'https://example.com/profile?user_id=123': 5,
+    'https://example.com/admin/reports?type=security&date=2023-05-14': 3,
+    'https://example.com/products': 150,
+    'https://example.com/admin/settings?security_level=high': 2
+}</code></pre>
+                <ol>
+                    <li>Create a function to detect unauthorized page access based on user roles</li>
+                    <li>Create a function to identify potentially sensitive information exposed in referrer URLs</li>
+                    <li>Create a function to suggest security improvements based on page access patterns</li>
+                </ol>
+                
+                <details>
+                    <summary>Solution</summary>
+                    <pre><code># Website access data from provided code block
+admin_pages = {'/admin', '/admin/users', '/admin/settings', '/admin/reports'}
+logged_in_pages = {'/dashboard', '/profile', '/settings', '/messages', '/admin'}
+public_pages = {'/', '/about', '/contact', '/login', '/register', '/products'}
+
+# User roles and their default permissions
+roles = {
+    'admin': {'can_view_admin', 'can_edit_users', 'can_edit_content', 'can_delete', 'can_view_logs'},
+    'moderator': {'can_view_admin', 'can_edit_content', 'can_view_logs'},
+    'editor': {'can_edit_content'},
+    'user': set(),
+    'anonymous': set()
+}
+
+# Access logs (page, user, timestamp)
+access_logs = [
+    ('/admin/users', 'admin1', '2023-05-15 10:30'),
+    ('/profile', 'user1', '2023-05-15 10:35'),
+    ('/admin/settings', 'moderator1', '2023-05-15 10:40'),
+    ('/admin/users', 'editor1', '2023-05-15 10:45'),  # Potentially unauthorized
+    ('/', 'anonymous', '2023-05-15 10:50'),
+    ('/admin/reports', 'moderator1', '2023-05-15 10:55'),  # Potentially unauthorized
+    ('/dashboard', 'anonymous', '2023-05-15 11:00')  # Potentially unauthorized
+]
+
+# HTTP Referrers (potentially revealing sensitive URLs)
+http_referrers = {
+    'https://example.com/admin/users?filter=new': 10,
+    'https://example.com/profile?user_id=123': 5,
+    'https://example.com/admin/reports?type=security&date=2023-05-14': 3,
+    'https://example.com/products': 150,
+    'https://example.com/admin/settings?security_level=high': 2
+}
+
+# 1. Function to detect unauthorized page access based on user roles
+def detect_unauthorized_access(logs, roles, admin_pages, logged_in_pages, public_pages):
+    """Detect potentially unauthorized access in access logs."""
+    unauthorized_access = []
+    
+    # Identify role from username (simplified implementation)
+    def get_user_role(username):
+        if username.startswith('admin'):
+            return 'admin'
+        elif username.startswith('moderator'):
+            return 'moderator'
+        elif username.startswith('editor'):
+            return 'editor'
+        elif username.startswith('user'):
+            return 'user'
+        return 'anonymous'
+    
+    # Check each access log
+    for page, username, timestamp in logs:
+        user_role = get_user_role(username)
+        
+        # Check for unauthorized access patterns
+        if page in admin_pages and user_role not in ('admin', 'moderator'):
+            # Only admins and moderators should access admin pages
+            # Note: moderators might have limited admin access, depends on permissions
+            unauthorized_access.append({
+                'page': page,
+                'user': username,
+                'role': user_role,
+                'timestamp': timestamp,
+                'reason': 'Unauthorized access to admin page'
+            })
+        elif page in logged_in_pages and user_role == 'anonymous':
+            # Anonymous users should not access logged_in pages
+            unauthorized_access.append({
+                'page': page,
+                'user': username,
+                'role': user_role,
+                'timestamp': timestamp,
+                'reason': 'Anonymous access to logged-in page'
+            })
+        elif page == '/admin/users' and user_role != 'admin':
+            # Specific check: only admins should access user management
+            unauthorized_access.append({
+                'page': page,
+                'user': username,
+                'role': user_role,
+                'timestamp': timestamp,
+                'reason': 'Non-admin access to user management'
+            })
+        elif page == '/admin/reports' and 'can_view_logs' not in roles[user_role]:
+            # Check based on permissions rather than role
+            unauthorized_access.append({
+                'page': page,
+                'user': username,
+                'role': user_role,
+                'timestamp': timestamp,
+                'reason': 'Missing required permission: can_view_logs'
+            })
+    
+    return unauthorized_access
+
+# 2. Function to identify potentially sensitive information in referrer URLs
+def identify_sensitive_referrers(referrers):
+    """Identify potentially sensitive information exposed in referrer URLs."""
+    sensitive_patterns = {
+        'user_id': 'Personally identifiable information',
+        'password': 'Authentication credentials',
+        'token': 'Security token',
+        'key': 'Security key',
+        'security': 'Security settings',
+        'admin': 'Administrative interface',
+        'filter': 'Data filtering parameters',
+        'date': 'Temporal information'
+    }
+    
+    sensitive_referrers = []
+    
+    for url, count in referrers.items():
+        # Parse URL and parameters
+        params = {}
+        if '?' in url:
+            base_url, query_string = url.split('?', 1)
+            param_pairs = query_string.split('&')
+            
+            for pair in param_pairs:
+                if '=' in pair:
+                    key, value = pair.split('=', 1)
+                    params[key] = value
+        else:
+            base_url = url
+        
+        # Check for sensitive patterns in URL and parameters
+        detected_patterns = set()
+        
+        # Check URL path
+        for pattern, description in sensitive_patterns.items():
+            if pattern in base_url:
+                detected_patterns.add(f"{description} in URL path")
+        
+        # Check parameters
+        for param, value in params.items():
+            for pattern, description in sensitive_patterns.items():
+                if pattern in param:
+                    detected_patterns.add(f"{description} in parameter name: {param}")
+        
+        # Add to results if sensitive patterns detected
+        if detected_patterns:
+            sensitive_referrers.append({
+                'url': url,
+                'occurrence_count': count,
+                'sensitive_info': detected_patterns
+            })
+    
+    return sensitive_referrers
+
+# 3. Function to suggest security improvements
+def suggest_security_improvements(unauthorized_access, sensitive_referrers, admin_pages, logged_in_pages):
+    """Suggest security improvements based on analysis."""
+    suggestions = []
+    
+    # Check for admin pages that might need more protection
+    if unauthorized_access:
+        suggestions.append({
+            'category': 'Access Control',
+            'suggestion': 'Implement stricter access controls for admin pages',
+            'details': f"Detected {len(unauthorized_access)} potential unauthorized access attempts",
+            'priority': 'High'
+        })
+    
+    # Check for sensitive data in referrers
+    if sensitive_referrers:
+        suggestions.append({
+            'category': 'Information Leakage',
+            'suggestion': 'Implement referrer policy to prevent leaking sensitive URLs',
+            'details': f"Detected {len(sensitive_referrers)} referrer URLs with potentially sensitive information",
+            'priority': 'Medium'
+        })
+    
+    # Analyze admin pages structure
+    if len(admin_pages & logged_in_pages) > 0:
+        suggestions.append({
+            'category': 'URL Structure',
+            'suggestion': 'Separate admin and user page hierarchies completely',
+            'details': f"Found {len(admin_pages & logged_in_pages)} pages that appear in both admin and logged-in areas",
+            'priority': 'Medium'
+        })
+    
+    # Additional suggestions based on common best practices
+    suggestions.extend([
+        {
+            'category': 'Authentication',
+            'suggestion': 'Implement two-factor authentication for admin access',
+            'details': 'Enhance security for administrative actions',
+            'priority': 'High'
+        },
+        {
+            'category': 'Session Management',
+            'suggestion': 'Use shorter session timeouts for admin areas',
+            'details': 'Reduce window of opportunity for session hijacking',
+            'priority': 'Medium'
+        },
+        {
+            'category': 'Monitoring',
+            'suggestion': 'Implement real-time alerts for suspicious access patterns',
+            'details': 'Enable immediate response to potential security breaches',
+            'priority': 'Medium'
+        }
+    ])
+    
+    return suggestions
+
+# Test the functions
+print("Detecting unauthorized access...")
+unauthorized = detect_unauthorized_access(access_logs, roles, admin_pages, logged_in_pages, public_pages)
+for incident in unauthorized:
+    print(f"- {incident['timestamp']}: {incident['user']} ({incident['role']}) accessed {incident['page']}")
+    print(f"  Reason: {incident['reason']}")
+
+print("\nIdentifying sensitive referrers...")
+sensitive = identify_sensitive_referrers(http_referrers)
+for ref in sensitive:
+    print(f"- {ref['url']} (occurred {ref['occurrence_count']} times)")
+    print(f"  Sensitive information: {', '.join(ref['sensitive_info'])}")
+
+print("\nSecurity improvement suggestions:")
+improvements = suggest_security_improvements(unauthorized, sensitive, admin_pages, logged_in_pages)
+for i, suggestion in enumerate(improvements, 1):
+    print(f"{i}. [{suggestion['priority']}] {suggestion['suggestion']}")
+    print(f"   Category: {suggestion['category']}")
+    print(f"   Details: {suggestion['details']}")</code></pre>
+                </details>
+            </div>
+        </section>
+
+        <section class="set-interview-questions">
+            <h3>Common Set Interview Questions</h3>
+            
+            <p>Sets frequently appear in technical interviews. Here are some common interview questions involving sets:</p>
+            
+            <div class="interview-question">
+                <h4>Question 1: Find Common Elements in Arrays</h4>
+                <p><strong>Problem:</strong> Given two arrays, write a function to find all the common elements between them efficiently.</p>
+                <pre><code>def find_common_elements(array1, array2):
+    """
+    Find all common elements between two arrays.
+    
+    Args:
+        array1: First array
+        array2: Second array
+        
+    Returns:
+        List of common elements
+    """
+    # Convert the first array to a set for O(1) lookups
+    set1 = set(array1)
+    
+    # Use set intersection
+    common = set1.intersection(array2)
+    
+    # Return as a list (or keep as a set if order doesn't matter)
+    return list(common)
+
+# Example usage
+arr1 = [1, 2, 3, 4, 5, 6]
+arr2 = [4, 5, 6, 7, 8, 9]
+result = find_common_elements(arr1, arr2)
+print(f"Common elements: {result}")  # [4, 5, 6]
+
+# Alternative implementation without using intersection
+def find_common_elements_alt(array1, array2):
+    """Alternative implementation using membership testing."""
+    set1 = set(array1)
+    common = [item for item in array2 if item in set1]
+    return common</code></pre>
+                <p><strong>Time Complexity:</strong> O(m + n) where m and n are the lengths of the arrays</p>
+                <p><strong>Space Complexity:</strong> O(m) for storing the first array as a set</p>
+            </div>
+            
+            <div class="interview-question">
+                <h4>Question 2: Find Duplicates in an Array</h4>
+                <p><strong>Problem:</strong> Given an array of integers, find all the elements that appear more than once.</p>
+                <pre><code>def find_duplicates(nums):
+    """
+    Find all duplicates in an array.
+    
+    Args:
+        nums: Array of integers
+        
+    Returns:
+        List of duplicated elements
+    """
+    seen = set()
+    duplicates = set()
+    
+    for num in nums:
+        if num in seen:
+            duplicates.add(num)
+        else:
+            seen.add(num)
+    
+    return list(duplicates)
+
+# Example usage
+numbers = [4, 3, 2, 7, 8, 2, 3, 1]
+result = find_duplicates(numbers)
+print(f"Duplicates: {result}")  # [2, 3]</code></pre>
+                <p><strong>Time Complexity:</strong> O(n) where n is the length of the array</p>
+                <p><strong>Space Complexity:</strong> O(n) for storing the sets</p>
+            </div>
+            
+            <div class="interview-question">
+                <h4>Question 3: Check if Strings Are Anagrams</h4>
+                <p><strong>Problem:</strong> Determine if two strings are anagrams of each other (contain the same characters with the same frequency).</p>
+                <pre><code>def are_anagrams(str1, str2):
+    """
+    Check if two strings are anagrams.
+    
+    Args:
+        str1: First string
+        str2: Second string
+        
+    Returns:
+        True if strings are anagrams, False otherwise
+    """
+    # Quick check: anagrams must have the same length
+    if len(str1) != len(str2):
+        return False
+    
+    # Character frequency approach
+    from collections import Counter
+    return Counter(str1) == Counter(str2)
+
+# Alternative implementation using sets (checks only character presence, not frequency)
+def have_same_characters(str1, str2):
+    """Check if two strings have the same set of characters."""
+    return set(str1) == set(str2)
+
+# Example usage
+word1 = "listen"
+word2 = "silent"
+word3 = "enlist"
+word4 = "banana"
+
+print(f"'{word1}' and '{word2}' are anagrams: {are_anagrams(word1, word2)}")  # True
+print(f"'{word1}' and '{word3}' are anagrams: {are_anagrams(word1, word3)}")  # True
+print(f"'{word1}' and '{word4}' are anagrams: {are_anagrams(word1, word4)}")  # False
+
+print(f"'{word1}' and '{word2}' have same characters: {have_same_characters(word1, word2)}")  # True
+print(f"'{word1}' and '{word4}' have same characters: {have_same_characters(word1, word4)}")  # False</code></pre>
+                <p><strong>Time Complexity:</strong> O(n) where n is the length of the strings</p>
+                <p><strong>Space Complexity:</strong> O(k) where k is the size of the character set</p>
+            </div>
+            
+            <div class="interview-question">
+                <h4>Question 4: Longest Consecutive Sequence</h4>
+                <p><strong>Problem:</strong> Given an unsorted array of integers, find the length of the longest consecutive sequence of integers.</p>
+                <pre><code>def longest_consecutive_sequence(nums):
+    """
+    Find the length of the longest consecutive sequence.
+    
+    Args:
+        nums: Array of integers
+        
+    Returns:
+        Length of the longest consecutive sequence
+    """
+    # Handle empty input
+    if not nums:
+        return 0
+    
+    # Convert to set for O(1) lookups
+    num_set = set(nums)
+    max_length = 0
+    
+    # Check each possible sequence start
+    for num in num_set:
+        # Only consider numbers that could be sequence starts
+        # (i.e., no smaller number exists in the set)
+        if num - 1 not in num_set:
+            current_num = num
+            current_length = 1
+            
+            # Count consecutive numbers
+            while current_num + 1 in num_set:
+                current_num += 1
+                current_length += 1
+            
+            # Update max length
+            max_length = max(max_length, current_length)
+    
+    return max_length
+
+# Example usage
+numbers = [100, 4, 200, 1, 3, 2]
+result = longest_consecutive_sequence(numbers)
+print(f"Longest consecutive sequence length: {result}")  # 4 (for sequence 1, 2, 3, 4)
+
+# Another example
+numbers2 = [0, 3, 7, 2, 5, 8, 4, 6, 0, 1]
+result2 = longest_consecutive_sequence(numbers2)
+print(f"Longest consecutive sequence length: {result2}")  # 9 (for sequence 0, 1, 2, 3, 4, 5, 6, 7, 8)</code></pre>
+                <p><strong>Time Complexity:</strong> O(n) where n is the length of the array</p>
+                <p><strong>Space Complexity:</strong> O(n) for storing the set</p>
+            </div>
+        </section>
+
+        <section class="advanced-set-topics">
+            <h3>Advanced Set Topics</h3>
+            
+            <h4>Sets with Custom Objects</h4>
+            <p>To use custom objects in sets, you need to implement <code>__hash__</code> and <code>__eq__</code> methods:</p>
+            
+            <pre><code>class Person:
+    """A basic class representing a person."""
+    
+    def __init__(self, first_name, last_name, birth_year):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.birth_year = birth_year
+    
+    def __repr__(self):
+        return f"Person({self.first_name}, {self.last_name}, {self.birth_year})"
+
+# This won't work well with sets without proper __hash__ and __eq__ methods
+person1 = Person("John", "Doe", 1980)
+person2 = Person("John", "Doe", 1980)  # Same data but different object
+
+people = {person1, person2}
+print(f"Set size: {len(people)}")  # 2, not 1 as we might expect
+
+# Let's fix the Person class
+class BetterPerson:
+    """Person class with proper equality and hashing support."""
+    
+    def __init__(self, first_name, last_name, birth_year):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.birth_year = birth_year
+    
+    def __eq__(self, other):
+        """Define equality based on attributes."""
+        if not isinstance(other, BetterPerson):
+            return False
+        return (self.first_name == other.first_name and
+                self.last_name == other.last_name and
+                self.birth_year == other.birth_year)
+    
+    def __hash__(self):
+        """Define hash based on the attributes that define equality."""
+        return hash((self.first_name, self.last_name, self.birth_year))
+    
+    def __repr__(self):
+        return f"BetterPerson({self.first_name}, {self.last_name}, {self.birth_year})"
+
+# Now this works correctly
+better_person1 = BetterPerson("John", "Doe", 1980)
+better_person2 = BetterPerson("John", "Doe", 1980)  # Same data
+
+better_people = {better_person1, better_person2}
+print(f"Set size: {len(better_people)}")  # 1, as expected
+
+# Adding different people
+better_person3 = BetterPerson("Jane", "Doe", 1982)
+better_people.add(better_person3)
+print(f"Set after adding different person: {better_people}")
+
+# Testing with other set operations
+better_person4 = BetterPerson("John", "Doe", 1980)  # Equivalent to person1/person2
+print(f"Is person4 in the set? {better_person4 in better_people}")  # True</code></pre>
+            
+            <h4>Building a Simple Set Implementation</h4>
+            <p>Let's create a simplified version of a set to understand how sets work under the hood:</p>
+            
+            <pre><code>class SimpleSet:
+    """A simplified set implementation using a dictionary."""
+    
+    def __init__(self, iterable=None):
+        """Initialize a new set, optionally from an iterable."""
+        self._data = {}
+        if iterable:
+            for item in iterable:
+                self.add(item)
+    
+    def add(self, item):
+        """Add an item to the set."""
+        self._data[item] = True  # Value doesn't matter, only keys are used
+    
+    def remove(self, item):
+        """Remove an item from the set, raising KeyError if not present."""
+        del self._data[item]
+    
+    def discard(self, item):
+        """Remove an item if present, do nothing if not present."""
+        if item in self._data:
+            del self._data[item]
+    
+    def __contains__(self, item):
+        """Check if item is in the set."""
+        return item in self._data
+    
+    def __iter__(self):
+        """Return an iterator over set items."""
+        return iter(self._data)
+    
+    def __len__(self):
+        """Return the number of items in the set."""
+        return len(self._data)
+    
+    def __repr__(self):
+        """Return string representation of the set."""
+        if not self._data:
+            return "SimpleSet()"
+        return f"SimpleSet({list(self._data.keys())})"
+    
+    # Set operations
+    def union(self, other):
+        """Return a new set with elements from this set and other."""
+        result = SimpleSet(self)
+        for item in other:
+            result.add(item)
+        return result
+    
+    def intersection(self, other):
+        """Return a new set with elements common to this set and other."""
+        result = SimpleSet()
+        for item in self:
+            if item in other:
+                result.add(item)
+        return result
+    
+    def difference(self, other):
+        """Return a new set with elements in this set but not in other."""
+        result = SimpleSet()
+        for item in self:
+            if item not in other:
+                result.add(item)
+        return result
+
+# Test our simple set implementation
+simple_set1 = SimpleSet([1, 2, 3, 4, 5])
+simple_set2 = SimpleSet([4, 5, 6, 7, 8])
+
+print(f"Set 1: {simple_set1}")
+print(f"Set 2: {simple_set2}")
+print(f"Length of Set 1: {len(simple_set1)}")
+
+# Test set operations
+union = simple_set1.union(simple_set2)
+intersection = simple_set1.intersection(simple_set2)
+difference = simple_set1.difference(simple_set2)
+
+print(f"Union: {union}")
+print(f"Intersection: {intersection}")
+print(f"Difference (Set 1 - Set 2): {difference}")
+
+# Test membership and iteration
+print(f"3 in Set 1? {3 in simple_set1}")
+print(f"6 in Set 1? {6 in simple_set1}")
+
+print("Items in Set 1:")
+for item in simple_set1:
+    print(f"- {item}")
+
+# Test adding duplicates
+simple_set1.add(3)  # Should not change the set
+print(f"After adding 3 again: {simple_set1}")
+
+# Test removal
+simple_set1.remove(3)
+print(f"After removing 3: {simple_set1}")
+
+try:
+    simple_set1.remove(10)  # Should raise KeyError
+except KeyError as e:
+    print(f"Error removing non-existent element: {e}")
+
+simple_set1.discard(10)  # Should not raise an error
+print(f"After discarding 10 (not present): {simple_set1}")</code></pre>
+            
+            <div class="practical-usage">
+                <h5>Practical Application: Custom Set Types in Django</h5>
+                <p>Django ORM uses set-like operations for handling many-to-many relationships:</p>
+                <pre><code># Pseudocode based on Django ORM patterns
+class User:
+    # Imagine this is a Django model
+    def __init__(self, username):
+        self.username = username
+        self.groups = set()  # Many-to-many relationship
+
+class Group:
+    # Imagine this is a Django model
+    def __init__(self, name):
+        self.name = name
+        self.permissions = set()  # Many-to-many relationship
+
+class Permission:
+    # Imagine this is a Django model
+    def __init__(self, codename, name):
+        self.codename = codename
+        self.name = name
+    
+    def __eq__(self, other):
+        if not isinstance(other, Permission):
+            return False
+        return self.codename == other.codename
+    
+    def __hash__(self):
+        return hash(self.codename)
+    
+    def __repr__(self):
+        return f"Permission({self.codename})"
+
+# Create some permissions
+view_content = Permission("view_content", "Can view content")
+edit_content = Permission("edit_content", "Can edit content")
+delete_content = Permission("delete_content", "Can delete content")
+admin_site = Permission("admin_site", "Can access admin site")
+
+# Create groups with permissions
+editors_group = Group("Editors")
+editors_group.permissions = {view_content, edit_content}
+
+admins_group = Group("Administrators")
+admins_group.permissions = {view_content, edit_content, delete_content, admin_site}
+
+moderators_group = Group("Moderators")
+moderators_group.permissions = {view_content, delete_content}
+
+# Create users and assign groups
+user1 = User("alice")
+user1.groups = {editors_group, moderators_group}
+
+user2 = User("bob")
+user2.groups = {admins_group}
+
+user3 = User("charlie")
+user3.groups = {editors_group}
+
+# Function to get all permissions for a user through groups
+def get_user_permissions(user):
+    """Get all permissions for a user through their groups."""
+    permissions = set()
+    for group in user.groups:
+        permissions.update(group.permissions)
+    return permissions
+
+# Check user permissions
+for user in [user1, user2, user3]:
+    permissions = get_user_permissions(user)
+    print(f"User {user.username} has permissions:")
+    for permission in permissions:
+        print(f"- {permission.name}")
+    
+    # Check specific permissions
+    can_delete = delete_content in permissions
+    print(f"Can {user.username} delete content? {'Yes' if can_delete else 'No'}")
+    
+    can_admin = admin_site in permissions
+    print(f"Can {user.username} access admin site? {'Yes' if can_admin else 'No'}")
+    print()</code></pre>
+            </div>
+        </section>
+
+        <section class="further-learning">
+            <h3>Further Topics to Explore</h3>
+            
+            <p>To continue your journey with Python sets, consider exploring these related topics:</p>
+            
+            <ul>
+                <li><strong>Collections Module:</strong> Beyond <code>Counter</code>, explore <code>defaultdict</code>, <code>OrderedDict</code>, and <code>ChainMap</code></li>
+                <li><strong>Set Theory in Mathematics:</strong> Learn about mathematical set theory to understand more advanced operations</li>
+                <li><strong>Multisets:</strong> Explore <code>Counter</code> as an implementation of multisets (bags) where elements can appear multiple times</li>
+                <li><strong>Graph Algorithms:</strong> Many graph operations use set operations for efficient implementation</li>
+                <li><strong>Functional Programming:</strong> Explore how sets can be used with filter, map, and reduce operations</li>
+                <li><strong>Database Operations:</strong> Understand how SQL operations like UNION, INTERSECT, and EXCEPT relate to set operations</li>
+                <li><strong>Set Comprehensions vs. Generator Expressions:</strong> Compare performance and use cases</li>
+                <li><strong>BiSets and DiSets:</strong> Advanced data structures for bidirectional mappings</li>
+            </ul>
+            
+            <p>These topics will deepen your understanding of sets and their applications in software development.</p>
+        </section>
+
+        <section class="conclusion">
+            <h3>Key Takeaways</h3>
+            
+            <ul>
+                <li><strong>Uniqueness:</strong> Sets automatically enforce uniqueness, making them perfect for removing duplicates</li>
+                <li><strong>Performance:</strong> Sets provide O(1) average time complexity for operations like membership testing, adding, and removing elements</li>
+                <li><strong>Set Operations:</strong> Python sets support powerful mathematical operations like union, intersection, and difference</li>
+                <li><strong>Hashability:</strong> Set elements must be hashable (generally immutable), which is the same requirement as dictionary keys</li>
+                <li><strong>Real-world Applications:</strong> Sets excel in data deduplication, permission systems, data analysis, and filtering operations</li>
+                <li><strong>Web Development:</strong> Sets provide elegant solutions for handling user roles, feature flags, validation, and data filtering</li>
+            </ul>
+            
+            <p>Sets are a fundamental data structure that every Python developer should master. They offer elegant, efficient solutions to many common programming problems, particularly those involving uniqueness and set-theoretic operations. By understanding when and how to use sets, you'll write more concise, performant, and expressive code.</p>
+            
+            <p>As you continue through this course, you'll encounter numerous opportunities to apply set operations in your web development projects, from user authentication to data processing and API design.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

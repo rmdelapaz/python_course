@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Full Stack Web Developer Course - Dictionaries and Dictionary Operations</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 2 Wednesday: Dictionaries and Dictionary Operations</h2>
+    </header>
+
+    <main>
+        <section class="lesson-intro">
+            <h3>Introduction to Dictionaries</h3>
+            <p>Welcome to our exploration of Python dictionaries! If you're building web applications, working with APIs, or handling data in virtually any form, dictionaries will become your constant companion. Today, we'll discover why dictionaries are one of Python's most powerful and versatile data structures.</p>
+            
+            <p>Dictionaries provide a way to store data as key-value pairs, enabling fast lookup, flexible data modeling, and intuitive data representation. Think of a dictionary as a real-world address book where names (keys) help you quickly find phone numbers (values). This direct mapping makes dictionaries ideal for scenarios where you need to retrieve, update, or organize data efficiently.</p>
+            
+            <div class="real-world-example">
+                <h5>Real-World Analogy: Library Catalog</h5>
+                <p>Consider a library catalog where each book has a unique ISBN number. When you want to find information about a specific book, you look it up by its ISBN rather than searching through every book on the shelves. Python dictionaries work similarly – they let you retrieve values instantly using their associated keys, rather than searching through the entire collection sequentially.</p>
+            </div>
+        </section>
+
+        <section class="dictionary-basics">
+            <h3>Dictionary Fundamentals</h3>
+            
+            <h4>Creating Dictionaries</h4>
+            <p>Python offers several ways to create dictionaries:</p>
+            
+            <pre><code># Empty dictionary
+empty_dict = {}
+another_empty = dict()
+
+# Dictionary with initial key-value pairs
+student = {
+    "name": "John Smith",
+    "age": 20,
+    "major": "Computer Science",
+    "gpa": 3.7
+}
+
+# Using dict() constructor with keyword arguments
+config = dict(
+    host="localhost",
+    port=8080,
+    debug=True
+)
+
+# Using dict() with a list of tuples
+colors = dict([
+    ("red", "#FF0000"),
+    ("green", "#00FF00"),
+    ("blue", "#0000FF")
+])
+
+# Dictionary comprehension (covered in detail later)
+squares = {x: x*x for x in range(6)}
+print(squares)  # {0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25}</code></pre>
+            
+            <p>Each approach has its use cases. Curly braces are most common for literal dictionaries, while <code>dict()</code> constructor can be handy when creating dictionaries programmatically or from other data structures.</p>
+            
+            <h4>Keys and Values</h4>
+            <p>In Python dictionaries:</p>
+            <ul>
+                <li><strong>Keys must be immutable</strong> (strings, numbers, tuples of immutable elements)</li>
+                <li><strong>Values can be any Python object</strong> (including other dictionaries)</li>
+                <li><strong>Keys must be unique</strong> within a dictionary</li>
+            </ul>
+            
+            <pre><code># String keys (most common)
+user = {
+    "username": "jsmith",
+    "email": "john@example.com",
+    "is_active": True
+}
+
+# Number keys
+employee_ids = {
+    101: "Alice Johnson",
+    102: "Bob Smith",
+    103: "Charlie Davis"
+}
+
+# Tuple keys (must contain only immutable elements)
+coordinates = {
+    (0, 0): "origin",
+    (0, 1): "north",
+    (1, 0): "east"
+}
+
+# Invalid - lists cannot be keys because they're mutable
+# error_dict = {[1, 2]: "value"}  # This raises TypeError</code></pre>
+            
+            <p>The restriction on immutable keys ensures that dictionary lookups remain efficient and reliable. If keys could change their values, the internal hash table would become corrupted.</p>
+            
+            <h4>Accessing Dictionary Values</h4>
+            <p>There are multiple ways to access values in a dictionary:</p>
+            
+            <pre><code>student = {
+    "name": "John Smith",
+    "age": 20,
+    "major": "Computer Science",
+    "gpa": 3.7
+}
+
+# Using square bracket notation
+name = student["name"]
+print(name)  # "John Smith"
+
+# Using get() method - safer, returns None if key doesn't exist
+age = student.get("age")
+print(age)  # 20
+
+# Providing a default value with get()
+graduation_year = student.get("graduation_year", 2025)
+print(graduation_year)  # 2025 (default value since key doesn't exist)
+
+# This raises KeyError because the key doesn't exist
+# missing = student["graduation_year"]
+
+# Checking if a key exists
+if "gpa" in student:
+    print(f"GPA: {student['gpa']}")
+
+if "address" not in student:
+    print("No address information available")</code></pre>
+            
+            <p>The <code>get()</code> method is typically preferred in production code because it won't raise an exception for missing keys. This is especially important when dealing with user inputs or external data sources where you can't guarantee the presence of all keys.</p>
+            
+            <div class="practical-usage">
+                <h5>Real-World Usage: User Profiles</h5>
+                <p>When handling user data from forms or APIs, dictionaries provide a natural way to store and access profile information:</p>
+                <pre><code># User profile from a web form or API
+user_profile = {
+    "user_id": "u12345",
+    "name": "Sarah Connor",
+    "email": "sarah@example.com",
+    "preferences": {
+        "theme": "dark",
+        "notifications": True,
+        "language": "en-US"
+    },
+    "subscription": {
+        "plan": "premium",
+        "renewal_date": "2023-12-31"
+    }
+}
+
+# Safe way to access nested properties
+theme = user_profile.get("preferences", {}).get("theme", "default")
+print(f"User theme: {theme}")  # "dark"
+
+# Checking for subscription status
+if user_profile.get("subscription", {}).get("plan") == "premium":
+    print("Access granted to premium features")
+
+# Handling missing data gracefully
+address = user_profile.get("address", {}).get("city", "Unknown")
+print(f"City: {address}")  # "Unknown" (because address key doesn't exist)</code></pre>
+            </div>
+        </section>
+
+        <section class="dictionary-operations">
+            <h3>Common Dictionary Operations</h3>
+            
+            <h4>Adding and Updating Elements</h4>
+            <p>Dictionaries are mutable, so you can easily add or modify entries:</p>
+            
+            <pre><code>product = {
+    "id": "P001",
+    "name": "Smartphone",
+    "price": 699.99
+}
+
+# Adding new key-value pairs
+product["brand"] = "TechCo"
+product["in_stock"] = True
+
+# Updating existing values
+product["price"] = 649.99
+
+# Adding/updating multiple items at once with update()
+product.update({
+    "color": "Black",
+    "storage": "128GB",
+    "price": 599.99  # This overwrites the previous price
+})
+
+print(product)
+# {'id': 'P001', 'name': 'Smartphone', 'price': 599.99, 'brand': 'TechCo', 
+#  'in_stock': True, 'color': 'Black', 'storage': '128GB'}</code></pre>
+            
+            <p>The <code>update()</code> method is particularly useful when you need to merge data from multiple sources, such as combining default settings with user preferences.</p>
+            
+            <h4>Removing Elements</h4>
+            <p>Python provides several ways to remove items from dictionaries:</p>
+            
+            <pre><code>server_config = {
+    "host": "192.168.1.10",
+    "port": 8080,
+    "user": "admin",
+    "password": "secure123",
+    "debug": True,
+    "temp_setting": "delete_me"
+}
+
+# Remove specific key-value pair and return the value
+password = server_config.pop("password")
+print(f"Removed password: {password}")
+
+# Remove and return the last inserted item (Python 3.7+ where dicts maintain insertion order)
+last_item = server_config.popitem()
+print(f"Last item: {last_item}")  # ('temp_setting', 'delete_me')
+
+# Delete a specific key
+del server_config["debug"]
+
+# Clear all items
+server_config.clear()
+print(server_config)  # {}</code></pre>
+            
+            <p>Each removal method has its specific use case. Use <code>pop()</code> when you need the value you're removing, <code>del</code> for straightforward removal, and <code>clear()</code> when you need to empty a dictionary but keep the variable.</p>
+            
+            <div class="practical-usage">
+                <h5>Error Handling with Dictionary Removal</h5>
+                <pre><code>config = {"host": "localhost", "port": 8000, "debug": True}
+
+# Safe removal with pop() - provides a default if key doesn't exist
+timeout = config.pop("timeout", 30)  # Returns 30 since "timeout" doesn't exist
+print(f"Timeout set to: {timeout}")
+
+# This raises KeyError if the key doesn't exist
+try:
+    protocol = config.pop("protocol")  # KeyError: 'protocol'
+except KeyError as e:
+    print(f"Error: {e}")
+    protocol = "http"
+
+print(f"Using protocol: {protocol}")</code></pre>
+            </div>
+            
+            <h4>Dictionary Methods</h4>
+            <p>Dictionaries come with several built-in methods for common operations:</p>
+            
+            <table>
+                <tr>
+                    <th>Method</th>
+                    <th>Description</th>
+                    <th>Example</th>
+                </tr>
+                <tr>
+                    <td><code>keys()</code></td>
+                    <td>Returns a view object of all keys</td>
+                    <td><code>dict.keys()</code></td>
+                </tr>
+                <tr>
+                    <td><code>values()</code></td>
+                    <td>Returns a view object of all values</td>
+                    <td><code>dict.values()</code></td>
+                </tr>
+                <tr>
+                    <td><code>items()</code></td>
+                    <td>Returns a view object of all key-value pairs as tuples</td>
+                    <td><code>dict.items()</code></td>
+                </tr>
+                <tr>
+                    <td><code>get(key, default)</code></td>
+                    <td>Returns value for key, or default if key doesn't exist</td>
+                    <td><code>dict.get('key', 'default')</code></td>
+                </tr>
+                <tr>
+                    <td><code>pop(key, default)</code></td>
+                    <td>Removes key and returns its value</td>
+                    <td><code>dict.pop('key', 'default')</code></td>
+                </tr>
+                <tr>
+                    <td><code>popitem()</code></td>
+                    <td>Removes and returns the last inserted key-value pair</td>
+                    <td><code>dict.popitem()</code></td>
+                </tr>
+                <tr>
+                    <td><code>update(other_dict)</code></td>
+                    <td>Updates dictionary with key-value pairs from another dictionary</td>
+                    <td><code>dict.update({'key': 'value'})</code></td>
+                </tr>
+                <tr>
+                    <td><code>clear()</code></td>
+                    <td>Removes all items</td>
+                    <td><code>dict.clear()</code></td>
+                </tr>
+                <tr>
+                    <td><code>copy()</code></td>
+                    <td>Returns a shallow copy of the dictionary</td>
+                    <td><code>dict.copy()</code></td>
+                </tr>
+                <tr>
+                    <td><code>setdefault(key, default)</code></td>
+                    <td>Returns value for key, or sets key to default and returns default if key doesn't exist</td>
+                    <td><code>dict.setdefault('key', 'default')</code></td>
+                </tr>
+            </table>
+            
+            <pre><code>user_data = {
+    "username": "jdoe",
+    "email": "john.doe@example.com",
+    "active": True
+}
+
+# Getting all keys, values, and items
+keys = user_data.keys()
+print(f"Keys: {list(keys)}")  # Convert view to list for display
+
+values = user_data.values()
+print(f"Values: {list(values)}")
+
+items = user_data.items()
+print(f"Items: {list(items)}")
+
+# View objects are dynamic - they update when the dictionary changes
+user_data["last_login"] = "2023-05-15"
+print(f"Updated keys: {list(keys)}")  # Now includes 'last_login'
+
+# setdefault - get value if exists, otherwise set default
+role = user_data.setdefault("role", "user")  # Adds 'role': 'user' if not present
+print(f"Role: {role}")
+print(user_data)  # Now contains the 'role' key with 'user' value
+
+# Creating a copy
+user_data_copy = user_data.copy()
+user_data_copy["username"] = "johndoe"  # Modifying the copy doesn't affect original
+print(f"Original: {user_data['username']}")  # Still "jdoe"
+print(f"Copy: {user_data_copy['username']}")  # "johndoe"</code></pre>
+            
+            <p>The view objects returned by <code>keys()</code>, <code>values()</code>, and <code>items()</code> are particularly useful because they dynamically reflect changes to the dictionary without needing to be regenerated.</p>
+        </section>
+
+        <section class="iterating-dictionaries">
+            <h3>Iterating Through Dictionaries</h3>
+            
+            <p>There are multiple ways to iterate through dictionaries, depending on what data you need:</p>
+            
+            <pre><code>sample_dict = {
+    "a": 1,
+    "b": 2,
+    "c": 3,
+    "d": 4
+}
+
+# Iterating through keys (default behavior)
+print("Keys:")
+for key in sample_dict:
+    print(key)
+
+# Explicitly iterating through keys
+print("\nKeys (explicit):")
+for key in sample_dict.keys():
+    print(key)
+
+# Iterating through values
+print("\nValues:")
+for value in sample_dict.values():
+    print(value)
+
+# Iterating through key-value pairs
+print("\nKey-value pairs:")
+for key, value in sample_dict.items():
+    print(f"{key}: {value}")
+
+# Using enumeration to get index
+print("\nEnumerated items:")
+for i, (key, value) in enumerate(sample_dict.items()):
+    print(f"Item {i}: {key} = {value}")</code></pre>
+            
+            <div class="practical-usage">
+                <h5>Practical Application: Processing Form Data</h5>
+                <p>Dictionaries are perfect for handling form data in web applications:</p>
+                <pre><code># Simulated form data from a registration page
+form_data = {
+    "username": "new_user",
+    "email": "user@example.com",
+    "password": "P@ssw0rd",
+    "confirm_password": "P@ssw0rd",
+    "terms_accepted": "yes"
+}
+
+# Validating form data
+errors = {}
+
+# Check for required fields
+required_fields = ["username", "email", "password", "confirm_password"]
+for field in required_fields:
+    if field not in form_data or not form_data[field]:
+        errors[field] = f"{field.replace('_', ' ').title()} is required"
+
+# Check password match
+if "password" in form_data and "confirm_password" in form_data:
+    if form_data["password"] != form_data["confirm_password"]:
+        errors["confirm_password"] = "Passwords do not match"
+
+# Check terms acceptance
+if form_data.get("terms_accepted") != "yes":
+    errors["terms_accepted"] = "You must accept the terms and conditions"
+
+# Display validation results
+if errors:
+    print("Form validation failed:")
+    for field, error in errors.items():
+        print(f"- {error}")
+else:
+    print("Form validation successful! Processing registration...")
+    # Process the registration...</code></pre>
+            </div>
+            
+            <h4>Dictionary Order</h4>
+            <p>As of Python 3.7, dictionaries maintain insertion order. This means when you iterate through a dictionary, the keys appear in the same order they were added:</p>
+            
+            <pre><code># Dictionary order is preserved (Python 3.7+)
+ordered_dict = {}
+ordered_dict["first"] = 1
+ordered_dict["second"] = 2
+ordered_dict["third"] = 3
+ordered_dict["fourth"] = 4
+
+print("Dictionary maintains insertion order:")
+for key, value in ordered_dict.items():
+    print(f"{key}: {value}")
+
+# Output will be in insertion order:
+# first: 1
+# second: 2
+# third: 3
+# fourth: 4</code></pre>
+            
+            <p>This feature eliminates much of the need for the <code>OrderedDict</code> class from the <code>collections</code> module, which was commonly used before Python 3.7 when order preservation was important.</p>
+        </section>
+
+        <section class="dict-comprehensions">
+            <h3>Dictionary Comprehensions</h3>
+            
+            <p>Similar to list comprehensions, dictionary comprehensions provide a concise way to create dictionaries:</p>
+            
+            <pre><code># Basic dictionary comprehension: {key_expr: value_expr for item in iterable}
+squares = {x: x**2 for x in range(1, 6)}
+print(squares)  # {1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
+
+# With conditional filtering
+even_squares = {x: x**2 for x in range(1, 11) if x % 2 == 0}
+print(even_squares)  # {2: 4, 4: 16, 6: 36, 8: 64, 10: 100}
+
+# Converting between data formats
+names = ["Alice", "Bob", "Charlie", "David"]
+name_lengths = {name: len(name) for name in names}
+print(name_lengths)  # {'Alice': 5, 'Bob': 3, 'Charlie': 7, 'David': 5}
+
+# Transforming an existing dictionary
+prices = {"apple": 0.5, "banana": 0.25, "orange": 0.75, "pear": 0.60}
+discounted_prices = {item: price * 0.8 for item, price in prices.items()}
+print(discounted_prices)  # {'apple': 0.4, 'banana': 0.2, 'orange': 0.6, 'pear': 0.48}
+
+# Multiple conditions
+filtered_prices = {item: price for item, price in prices.items() 
+                  if price > 0.3 if len(item) > 4}
+print(filtered_prices)  # {'orange': 0.75}</code></pre>
+            
+            <p>Dictionary comprehensions shine when transforming data or creating mappings from other collections. They combine the conciseness of comprehensions with the power of dictionaries.</p>
+            
+            <div class="real-world-example">
+                <h5>Real-World Example: API Response Processing</h5>
+                <p>When processing API responses, dictionary comprehensions can help transform and filter data:</p>
+                <pre><code># Simulated API response (list of products)
+api_response = [
+    {"id": "P001", "name": "Smartphone", "price": 699.99, "in_stock": True},
+    {"id": "P002", "name": "Laptop", "price": 1299.99, "in_stock": True},
+    {"id": "P003", "name": "Headphones", "price": 199.99, "in_stock": False},
+    {"id": "P004", "name": "Tablet", "price": 499.99, "in_stock": True},
+    {"id": "P005", "name": "Smartwatch", "price": 249.99, "in_stock": False}
+]
+
+# Create a lookup dictionary by product ID
+products_by_id = {item["id"]: item for item in api_response}
+print(f"Product P003: {products_by_id['P003']['name']}")
+
+# Create price map of in-stock products
+in_stock_prices = {item["name"]: item["price"] for item in api_response if item["in_stock"]}
+print(f"In-stock product prices: {in_stock_prices}")
+
+# Extract specific fields for display
+product_display = {
+    item["name"]: f"${item['price']} - {'In Stock' if item['in_stock'] else 'Out of Stock'}"
+    for item in api_response
+}
+print(product_display)
+
+# Group products by availability status
+status_groups = {"In Stock": [], "Out of Stock": []}
+for product in api_response:
+    key = "In Stock" if product["in_stock"] else "Out of Stock"
+    status_groups[key].append(product["name"])
+    
+print(f"Product availability: {status_groups}")</code></pre>
+            </div>
+        </section>
+
+        <section class="nested-dictionaries">
+            <h3>Nested Dictionaries</h3>
+            
+            <p>Dictionaries can contain other dictionaries, enabling representation of complex hierarchical data:</p>
+            
+            <pre><code># Nested dictionary representing a simple e-commerce system
+store = {
+    "name": "Online Gadget Store",
+    "products": {
+        "P001": {
+            "name": "Smartphone",
+            "price": 699.99,
+            "specs": {
+                "screen": "6.1 inch",
+                "processor": "A15",
+                "storage": "128GB"
+            },
+            "inventory": {
+                "in_stock": 42,
+                "warehouse_locations": ["East", "West"]
+            }
+        },
+        "P002": {
+            "name": "Laptop",
+            "price": 1299.99,
+            "specs": {
+                "screen": "15.6 inch",
+                "processor": "i7",
+                "storage": "512GB SSD"
+            },
+            "inventory": {
+                "in_stock": 15,
+                "warehouse_locations": ["East"]
+            }
+        }
+    },
+    "locations": {
+        "East": {
+            "address": "123 East St",
+            "manager": "Alice Johnson"
+        },
+        "West": {
+            "address": "456 West Blvd",
+            "manager": "Bob Smith"
+        }
+    }
+}</code></pre>
+            
+            <h4>Accessing Nested Dictionary Values</h4>
+            <p>You can access nested values using chained square brackets or the <code>get()</code> method for safer access:</p>
+            
+            <pre><code># Direct access (may raise KeyError if keys don't exist)
+try:
+    laptop_price = store["products"]["P002"]["price"]
+    print(f"Laptop price: ${laptop_price}")
+    
+    # Accessing deeply nested properties
+    smartphone_storage = store["products"]["P001"]["specs"]["storage"]
+    print(f"Smartphone storage: {smartphone_storage}")
+except KeyError as e:
+    print(f"Error accessing key: {e}")
+
+# Safe access with get() method
+smartphone_screen = store.get("products", {}).get("P001", {}).get("specs", {}).get("screen", "Unknown")
+print(f"Smartphone screen: {smartphone_screen}")
+
+# This won't raise an error, just returns the default value
+nonexistent_product = store.get("products", {}).get("P999", {}).get("name", "Product not found")
+print(nonexistent_product)  # "Product not found"</code></pre>
+            
+            <h4>Modifying Nested Dictionaries</h4>
+            <p>You can modify values at any level of nesting:</p>
+            
+            <pre><code># Update a nested value
+store["products"]["P001"]["price"] = 649.99
+
+# Add a new nested property
+store["products"]["P001"]["discount"] = 0.1
+
+# Modify deeply nested properties
+store["products"]["P002"]["specs"]["storage"] = "1TB SSD"
+
+# Add a completely new nested structure
+store["products"]["P003"] = {
+    "name": "Tablet",
+    "price": 499.99,
+    "specs": {
+        "screen": "10.9 inch",
+        "processor": "A14",
+        "storage": "64GB"
+    },
+    "inventory": {
+        "in_stock": 28,
+        "warehouse_locations": ["East", "West"]
+    }
+}
+
+# Update multiple nested properties at once
+store["products"]["P001"].update({
+    "price": 599.99,
+    "discount": 0.15,
+    "color": "Black"
+})</code></pre>
+            
+            <div class="practical-usage">
+                <h5>Practical Application: Configuration Management</h5>
+                <p>Nested dictionaries are perfect for configuration settings in applications:</p>
+                <pre><code># Application configuration with nested settings
+config = {
+    "app": {
+        "name": "MyWebApp",
+        "version": "1.2.0",
+        "debug": True
+    },
+    "database": {
+        "host": "localhost",
+        "port": 5432,
+        "name": "myapp_db",
+        "user": "admin",
+        "password": "secure_password",
+        "pool_size": 10
+    },
+    "api": {
+        "base_url": "https://api.example.com/v1",
+        "timeout": 30,
+        "retry": {
+            "max_attempts": 3,
+            "backoff_factor": 2
+        }
+    },
+    "logging": {
+        "level": "INFO",
+        "file": "/var/log/myapp.log",
+        "rotate": {
+            "when": "midnight",
+            "backup_count": 7
+        }
+    }
+}
+
+# Function to get configuration with dot notation path
+def get_config(path, default=None):
+    """Access config values with dot notation path."""
+    keys = path.split('.')
+    value = config
+    
+    for key in keys:
+        if isinstance(value, dict) and key in value:
+            value = value[key]
+        else:
+            return default
+            
+    return value
+
+# Example usage
+db_host = get_config("database.host")
+print(f"Database host: {db_host}")
+
+log_level = get_config("logging.level")
+print(f"Logging level: {log_level}")
+
+max_retries = get_config("api.retry.max_attempts")
+print(f"API max retry attempts: {max_retries}")
+
+# Loading environment-specific overrides
+def load_environment_config(env):
+    """Load environment-specific configuration overrides."""
+    # In a real app, these might come from files or environment variables
+    environments = {
+        "development": {
+            "app.debug": True,
+            "database.host": "localhost"
+        },
+        "staging": {
+            "app.debug": False,
+            "database.host": "staging-db.example.com"
+        },
+        "production": {
+            "app.debug": False,
+            "database.host": "prod-db.example.com",
+            "logging.level": "WARNING"
+        }
+    }
+    
+    # Apply overrides for the specified environment
+    if env in environments:
+        for path, value in environments[env].items():
+            # Set config value (simplified implementation)
+            keys = path.split('.')
+            target = config
+            for key in keys[:-1]:
+                target = target[key]
+            target[keys[-1]] = value
+            
+        print(f"Loaded configuration for {env} environment")
+    else:
+        print(f"Unknown environment: {env}")
+
+# Load production configuration
+load_environment_config("production")
+print(f"Updated database host: {config['database']['host']}")
+print(f"Updated debug mode: {config['app']['debug']}")</code></pre>
+            </div>
+        </section>
+
+        <section class="dictionary-merging">
+            <h3>Merging Dictionaries</h3>
+            
+            <p>Python offers several ways to combine dictionaries:</p>
+            
+            <pre><code># Two separate dictionaries
+user_info = {
+    "name": "John Doe",
+    "email": "john@example.com"
+}
+
+user_settings = {
+    "theme": "dark",
+    "notifications": True,
+    "language": "en-US"
+}
+
+# Method 1: Using update() (modifies the first dictionary)
+user_data = user_info.copy()  # Create a copy to avoid modifying the original
+user_data.update(user_settings)
+print(user_data)
+
+# Method 2: Dictionary unpacking (Python 3.5+)
+merged = {**user_info, **user_settings}
+print(merged)
+
+# Method 3: Using dict() constructor
+merged_alt = dict(user_info, **user_settings)  # Less common
+print(merged_alt)
+
+# Method 4: Using the | operator (Python 3.9+)
+# merged_new = user_info | user_settings
+# print(merged_new)
+
+# Handling key conflicts
+defaults = {
+    "theme": "light",
+    "notifications": False,
+    "language": "en-US",
+    "auto_save": True
+}
+
+# Later keys override earlier ones with the same name
+user_preferences = {**defaults, **user_settings}
+print(user_preferences)  # Uses settings from user_settings where available, defaults otherwise
+
+# Merging multiple dictionaries
+profile = {
+    "bio": "Python developer",
+    "location": "San Francisco"
+}
+
+complete_user = {**user_info, **user_settings, **profile}
+print(complete_user)</code></pre>
+            
+            <p>Dictionary unpacking with <code>**</code> is particularly elegant and clearly shows the intent to merge dictionaries. In Python 3.9+, the pipe operator <code>|</code> and the update operator <code>|=</code> provide even more intuitive syntax for merging.</p>
+            
+            <h4>Deep Merging</h4>
+            <p>The standard methods perform shallow merges. For nested dictionaries, you might need a deep merge function:</p>
+            
+            <pre><code>def deep_merge(dict1, dict2):
+    """
+    Recursively merge dict2 into dict1.
+    If keys exist in both, and both values are dictionaries, merge those dictionaries.
+    Otherwise, values from dict2 overwrite those in dict1.
+    """
+    result = dict1.copy()
+    
+    for key, value in dict2.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            # Recursively merge nested dictionaries
+            result[key] = deep_merge(result[key], value)
+        else:
+            # Overwrite or add key-value pair
+            result[key] = value
+            
+    return result
+
+# Default configuration
+default_config = {
+    "app": {
+        "name": "MyApp",
+        "debug": False,
+        "components": ["core", "auth"]
+    },
+    "database": {
+        "host": "localhost",
+        "port": 5432,
+        "settings": {
+            "pool_size": 10,
+            "timeout": 30
+        }
+    }
+}
+
+# User configuration overrides
+user_config = {
+    "app": {
+        "debug": True,
+        "components": ["core", "auth", "api"]
+    },
+    "database": {
+        "host": "db.example.com",
+        "settings": {
+            "pool_size": 20
+        }
+    }
+}
+
+# Deep merge configurations
+merged_config = deep_merge(default_config, user_config)
+print(merged_config)
+
+# Result preserves nested structure while applying overrides
+# {
+#   'app': {
+#     'name': 'MyApp',  # Kept from default
+#     'debug': True,    # Overridden by user config
+#     'components': ['core', 'auth', 'api']  # Overridden by user config
+#   },
+#   'database': {
+#     'host': 'db.example.com',  # Overridden by user config
+#     'port': 5432,  # Kept from default
+#     'settings': {
+#       'pool_size': 20,  # Overridden by user config
+#       'timeout': 30  # Kept from default
+#     }
+#   }
+# }</code></pre>
+            
+            <div class="practical-usage">
+                <h5>Practical Application: API Response Handling</h5>
+                <p>Deep merging is useful when working with API responses that need to be combined with cached data:</p>
+                <pre><code># Cached product data (complete but possibly outdated)
+cached_product = {
+    "id": "P001",
+    "name": "Smartphone",
+    "price": 699.99,
+    "description": "Latest model with advanced features.",
+    "specs": {
+        "screen": "6.1 inch",
+        "processor": "A15",
+        "storage": "128GB",
+        "camera": "12MP",
+        "battery": "3000mAh"
+    },
+    "reviews": [
+        {"user": "user1", "rating": 5, "comment": "Great phone!"},
+        {"user": "user2", "rating": 4, "comment": "Good value."}
+    ],
+    "last_updated": "2023-04-15"
+}
+
+# New partial data from API (only changed fields)
+api_update = {
+    "id": "P001",
+    "price": 649.99,  # Price dropped
+    "specs": {
+        "processor": "A16",  # New processor
+        "battery": "3200mAh"  # Better battery
+    },
+    "last_updated": "2023-05-20"
+}
+
+# Merge updates into cached data
+updated_product = deep_merge(cached_product, api_update)
+print(f"Updated product: {updated_product['name']}")
+print(f"New price: ${updated_product['price']}")
+print(f"Processor: {updated_product['specs']['processor']}")
+print(f"Last updated: {updated_product['last_updated']}")
+
+# Original reviews are preserved
+print(f"Review count: {len(updated_product['reviews'])}")</code></pre>
+            </div>
+        </section>
+
+        <section class="dictionaries-in-web-dev">
+            <h3>Dictionaries in Web Development</h3>
+            
+            <p>Dictionaries are foundational to Python web development, appearing in virtually every aspect of web applications:</p>
+            
+            <h4>Working with JSON</h4>
+            <p>Python dictionaries map directly to JSON objects, making them perfect for API interactions:</p>
+            
+            <pre><code>import json
+
+# Creating an API response
+user_response = {
+    "id": 123,
+    "username": "jsmith",
+    "email": "john@example.com",
+    "profile": {
+        "full_name": "John Smith",
+        "bio": "Software developer",
+        "location": "San Francisco"
+    },
+    "preferences": {
+        "theme": "dark",
+        "notifications": True
+    },
+    "posts": [
+        {"id": 1, "title": "Hello World", "likes": 42},
+        {"id": 2, "title": "Python Tips", "likes": 28}
+    ]
+}
+
+# Converting dictionary to JSON string
+json_string = json.dumps(user_response, indent=2)
+print(f"JSON response:\n{json_string}")
+
+# Converting JSON back to dictionary
+parsed_data = json.loads(json_string)
+print(f"Username: {parsed_data['username']}")
+print(f"Post count: {len(parsed_data['posts'])}")
+
+# Writing JSON to a file
+with open("user_data.json", "w") as f:
+    json.dump(user_response, f, indent=2)
+
+# Reading JSON from a file
+with open("user_data.json", "r") as f:
+    loaded_data = json.load(f)
+    print(f"Loaded user: {loaded_data['profile']['full_name']}")</code></pre>
+            
+            <h4>HTTP Request and Response Handling</h4>
+            <p>Web frameworks like Flask and Django heavily utilize dictionaries:</p>
+            
+            <pre><code># Simplified Flask-like route handling
+def handle_login():
+    # Request data as dictionary
+    request_data = {
+        "method": "POST",
+        "form": {
+            "username": "jsmith",
+            "password": "secret123",
+            "remember_me": "true"
+        },
+        "headers": {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "Mozilla/5.0",
+            "Accept-Language": "en-US,en;q=0.9"
+        }
+    }
+    
+    # Extract form data
+    username = request_data["form"].get("username")
+    password = request_data["form"].get("password")
+    remember = request_data["form"].get("remember_me") == "true"
+    
+    # Authentication logic (simplified)
+    if username == "jsmith" and password == "secret123":
+        # Response as dictionary
+        response = {
+            "status_code": 200,
+            "body": {
+                "message": "Login successful",
+                "user_id": 123,
+                "token": "abc123xyz456"
+            },
+            "headers": {
+                "Content-Type": "application/json",
+                "Set-Cookie": f"session=abc123xyz456; {'Max-Age=2592000;' if remember else ''} Path=/"
+            }
+        }
+    else:
+        response = {
+            "status_code": 401,
+            "body": {
+                "message": "Invalid credentials"
+            },
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }
+    
+    # In real framework, this would be converted to an HTTP response
+    print(f"Status: {response['status_code']}")
+    print(f"Body: {response['body']}")
+    print(f"Headers: {response['headers']}")
+    
+    return response
+
+# Simulate route call
+handle_login()</code></pre>
+            
+            <h4>Template Context</h4>
+            <p>Web templates receive variables through dictionary-like context objects:</p>
+            
+            <pre><code>def render_profile_page(user_id):
+    # In a real app, this would fetch data from a database
+    user_data = {
+        "id": user_id,
+        "username": "jsmith",
+        "email": "john@example.com",
+        "joined": "2023-01-15",
+        "posts": [
+            {"title": "Hello World", "date": "2023-01-16"},
+            {"title": "Python Tips", "date": "2023-02-05"},
+            {"title": "Web Development", "date": "2023-03-20"}
+        ]
+    }
+    
+    # Create template context
+    context = {
+        "user": user_data,
+        "page_title": f"Profile: {user_data['username']}",
+        "is_admin": False,
+        "current_year": 2023,
+        "site_name": "My Web App"
+    }
+    
+    # In a real app, this would render a template
+    print("Template rendering with context:")
+    print(f"Title: {context['page_title']}")
+    print(f"User: {context['user']['username']}")
+    print(f"Post count: {len(context['user']['posts'])}")
+    
+    # The template might access these variables like:
+    # &lt;h1&gt;{{ page_title }}&lt;/h1&gt;
+    # &lt;p&gt;Username: {{ user.username }}&lt;/p&gt;
+    # &lt;p&gt;Email: {{ user.email }}&lt;/p&gt;
+    # {% for post in user.posts %}
+    #   &lt;div&gt;{{ post.title }} - {{ post.date }}&lt;/div&gt;
+    # {% endfor %}
+    
+    return context
+
+# Render a user profile page
+render_profile_page(123)</code></pre>
+            
+            <div class="real-world-example">
+                <h5>Real-World Example: Flask Application</h5>
+                <p>This example shows how dictionaries are used throughout a typical Flask web application:</p>
+                <pre><code># This is simplified Flask-like code (not meant to run directly)
+
+# Route decorator uses dictionaries for configuration
+@app.route("/api/products", methods=["GET"])
+def get_products():
+    # Request object often represented as dictionary-like structure
+    query_params = request.args
+    
+    # Database query params
+    filter_params = {
+        "category": query_params.get("category"),
+        "min_price": query_params.get("min_price", type=float),
+        "max_price": query_params.get("max_price", type=float),
+        "in_stock": query_params.get("in_stock", "").lower() == "true"
+    }
+    
+    # Clean up None values
+    clean_params = {k: v for k, v in filter_params.items() if v is not None}
+    
+    # Simulated database query
+    products = [
+        {"id": 1, "name": "Product A", "price": 19.99, "category": "Electronics"},
+        {"id": 2, "name": "Product B", "price": 29.99, "category": "Home"},
+        {"id": 3, "name": "Product C", "price": 9.99, "category": "Electronics"}
+    ]
+    
+    # Filter products based on parameters
+    filtered_products = products
+    if "category" in clean_params:
+        filtered_products = [p for p in filtered_products 
+                           if p["category"] == clean_params["category"]]
+    if "min_price" in clean_params:
+        filtered_products = [p for p in filtered_products 
+                           if p["price"] >= clean_params["min_price"]]
+    if "max_price" in clean_params:
+        filtered_products = [p for p in filtered_products 
+                           if p["price"] <= clean_params["max_price"]]
+    
+    # Response as dictionary
+    response = {
+        "total": len(filtered_products),
+        "products": filtered_products
+    }
+    
+    # Convert to JSON and return
+    return jsonify(response)
+
+# Another example with form data
+@app.route("/api/products", methods=["POST"])
+def create_product():
+    # Request JSON body parsed as dictionary
+    product_data = request.json
+    
+    # Validate required fields
+    required_fields = ["name", "price", "category"]
+    missing_fields = [field for field in required_fields if field not in product_data]
+    
+    if missing_fields:
+        # Error response
+        error_response = {
+            "error": "Missing required fields",
+            "missing_fields": missing_fields
+        }
+        return jsonify(error_response), 400
+    
+    # Process the new product (simplified)
+    new_product = {
+        "id": 4,  # In real app, this would be generated
+        "name": product_data["name"],
+        "price": product_data["price"],
+        "category": product_data["category"]
+    }
+    
+    # Success response
+    return jsonify({
+        "message": "Product created successfully",
+        "product": new_product
+    }), 201</code></pre>
+            </div>
+        </section>
+
+        <section class="common-patterns">
+            <h3>Common Dictionary Patterns and Idioms</h3>
+            
+            <h4>Defaultdict: Handling Missing Keys</h4>
+            <p>The <code>defaultdict</code> from the <code>collections</code> module provides a convenient way to handle missing keys automatically:</p>
+            
+            <pre><code>from collections import defaultdict
+
+# Regular dict requires manual initialization for counters
+word_counts = {}
+text = "the quick brown fox jumps over the lazy dog"
+words = text.split()
+
+for word in words:
+    if word not in word_counts:
+        word_counts[word] = 0
+    word_counts[word] += 1
+
+print(f"Regular dict counts: {word_counts}")
+
+# Using defaultdict simplifies this common pattern
+word_counts_default = defaultdict(int)  # Default value is 0 for int()
+
+for word in words:
+    word_counts_default[word] += 1
+
+print(f"defaultdict counts: {dict(word_counts_default)}")
+
+# Other useful defaultdict applications
+# Group items by some property
+animals = [
+    ("dog", "mammal"),
+    ("cat", "mammal"),
+    ("snake", "reptile"),
+    ("lizard", "reptile"),
+    ("eagle", "bird"),
+    ("sparrow", "bird")
+]
+
+# Without defaultdict
+animal_groups = {}
+for animal, group in animals:
+    if group not in animal_groups:
+        animal_groups[group] = []
+    animal_groups[group].append(animal)
+
+print(f"Regular dict grouping: {animal_groups}")
+
+# With defaultdict
+animal_groups_default = defaultdict(list)
+for animal, group in animals:
+    animal_groups_default[group].append(animal)
+
+print(f"defaultdict grouping: {dict(animal_groups_default)}")
+
+# Nested defaultdicts for hierarchical data
+nested_data = defaultdict(lambda: defaultdict(list))
+
+entries = [
+    ("2023-05-01", "user1", "login"),
+    ("2023-05-01", "user2", "login"),
+    ("2023-05-01", "user1", "purchase"),
+    ("2023-05-02", "user1", "login"),
+    ("2023-05-02", "user3", "login")
+]
+
+for date, user, action in entries:
+    nested_data[date][user].append(action)
+
+print("Activity log:")
+for date, users in nested_data.items():
+    print(f"Date: {date}")
+    for user, actions in users.items():
+        print(f"  {user}: {actions}")</code></pre>
+            
+            <h4>Counter: Frequency Analysis</h4>
+            <p>The <code>Counter</code> class makes counting elements even easier:</p>
+            
+            <pre><code>from collections import Counter
+
+# Count word frequencies
+text = "the quick brown fox jumps over the lazy dog the fox"
+word_counter = Counter(text.split())
+print(f"Word frequencies: {word_counter}")
+
+# Most common words
+print(f"Most common words: {word_counter.most_common(2)}")
+
+# Count character frequencies
+char_counter = Counter(text.replace(" ", ""))
+print(f"Character frequencies: {char_counter}")
+
+# Updating counters
+more_text = "the fox and the hound"
+word_counter.update(more_text.split())
+print(f"Updated word frequencies: {word_counter}")
+
+# Arithmetic with counters
+inventory1 = Counter(apples=5, oranges=3, bananas=2)
+inventory2 = Counter(apples=2, oranges=4, pears=1)
+
+# Combined inventory
+combined = inventory1 + inventory2
+print(f"Combined inventory: {combined}")
+
+# Subtraction (only positive counts remain)
+remaining = inventory1 - inventory2  # Only keeps positive counts
+print(f"Remaining after subtraction: {remaining}")  # No oranges because 3-4 < 0</code></pre>
+            
+            <h4>Using dictionaries for memoization</h4>
+            <p>Dictionaries can cache function results to improve performance:</p>
+            
+            <pre><code># Recursive Fibonacci without memoization (slow)
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+# With memoization using a dictionary
+def fibonacci_memo(n, memo={}):
+    if n in memo:
+        return memo[n]
+    
+    if n <= 1:
+        result = n
+    else:
+        result = fibonacci_memo(n-1, memo) + fibonacci_memo(n-2, memo)
+    
+    memo[n] = result
+    return result
+
+# Compare performance for larger values of n
+import time
+
+n = 30  # Without memoization, this would be very slow
+
+start = time.time()
+result1 = fibonacci_memo(n)
+end = time.time()
+memo_time = end - start
+
+print(f"Fibonacci({n}) = {result1}")
+print(f"Time with memoization: {memo_time:.6f} seconds")
+
+# Try without memoization for a smaller value
+n_small = 20
+start = time.time()
+result2 = fibonacci(n_small)
+end = time.time()
+regular_time = end - start
+
+print(f"Fibonacci({n_small}) = {result2}")
+print(f"Time without memoization: {regular_time:.6f} seconds")</code></pre>
+            
+            <div class="practical-usage">
+                <h5>Practical Application: Caching API Responses</h5>
+                <p>Dictionaries make excellent caches for API or database calls:</p>
+                <pre><code>import time
+
+# Simulated expensive API call
+def fetch_user_data(user_id):
+    print(f"Fetching data for user {user_id} from API...")
+    time.sleep(1)  # Simulate network delay
+    return {
+        "id": user_id,
+        "name": f"User {user_id}",
+        "email": f"user{user_id}@example.com"
+    }
+
+# Cache implementation using dictionary
+class APICache:
+    def __init__(self, expiry_seconds=60):
+        self.cache = {}
+        self.expiry = expiry_seconds
+    
+    def get(self, key):
+        if key in self.cache:
+            timestamp, value = self.cache[key]
+            # Check if cache entry has expired
+            if time.time() - timestamp < self.expiry:
+                print(f"Cache hit for {key}")
+                return value
+            else:
+                print(f"Cache expired for {key}")
+                del self.cache[key]
+        
+        print(f"Cache miss for {key}")
+        return None
+    
+    def set(self, key, value):
+        self.cache[key] = (time.time(), value)
+        print(f"Cached value for {key}")
+    
+    def clear(self):
+        self.cache.clear()
+        print("Cache cleared")
+
+# Using the cache with API calls
+cache = APICache(expiry_seconds=5)
+
+def get_user(user_id):
+    # Try to get from cache first
+    cached_data = cache.get(f"user:{user_id}")
+    if cached_data:
+        return cached_data
+    
+    # Fetch from API if not in cache
+    data = fetch_user_data(user_id)
+    cache.set(f"user:{user_id}", data)
+    return data
+
+# First call - should fetch from API
+user1 = get_user(101)
+print(f"Got user: {user1['name']}")
+
+# Second call - should use cache
+user1_again = get_user(101)
+print(f"Got user again: {user1_again['name']}")
+
+# Different user - should fetch from API
+user2 = get_user(102)
+print(f"Got user: {user2['name']}")
+
+print("\nWaiting for cache to expire...")
+time.sleep(6)  # Wait for cache to expire
+
+# After expiry - should fetch from API again
+user1_expired = get_user(101)
+print(f"Got user after expiry: {user1_expired['name']}")</code></pre>
+            </div>
+        </section>
+
+        <section class="performance-considerations">
+            <h3>Performance Considerations</h3>
+            
+            <p>Dictionaries in Python are implemented as hash tables, providing excellent performance characteristics:</p>
+            
+            <ul>
+                <li><strong>Lookup time</strong>: O(1) average case - constant time regardless of dictionary size</li>
+                <li><strong>Insertion time</strong>: O(1) average case</li>
+                <li><strong>Deletion time</strong>: O(1) average case</li>
+                <li><strong>Space complexity</strong>: O(n) - proportional to the number of items</li>
+            </ul>
+            
+            <pre><code>import time
+import random
+
+# Generate test data: dictionaries of various sizes
+sizes = [1000, 10000, 100000, 1000000]
+test_dicts = {}
+
+for size in sizes:
+    # Create dictionary with numeric keys
+    test_dicts[size] = {i: f"value_{i}" for i in range(size)}
+
+# Test lookup performance
+print("Lookup performance test:")
+for size, dictionary in test_dicts.items():
+    # Generate random keys to look up (existing keys)
+    keys_to_lookup = [random.randint(0, size-1) for _ in range(1000)]
+    
+    start = time.time()
+    for key in keys_to_lookup:
+        value = dictionary[key]
+    end = time.time()
+    
+    print(f"Dictionary size {size}: {end - start:.6f} seconds for 1000 lookups")
+
+# Comparing to list lookup (which is O(n))
+print("\nComparison with list lookup:")
+size = 10000
+test_dict = {i: f"value_{i}" for i in range(size)}
+test_list = [(i, f"value_{i}") for i in range(size)]
+
+# Random key to look up
+key = random.randint(0, size-1)
+
+# Dictionary lookup
+start = time.time()
+value = test_dict[key]
+dict_time = time.time() - start
+
+# List lookup (linear search)
+start = time.time()
+for k, v in test_list:
+    if k == key:
+        value = v
+        break
+list_time = time.time() - start
+
+print(f"Dictionary lookup: {dict_time:.9f} seconds")
+print(f"List lookup: {list_time:.9f} seconds")
+print(f"Dictionary is {list_time / dict_time:.1f}x faster")</code></pre>
+            
+            <div class="optimization-tips">
+                <h5>Performance Optimization Tips</h5>
+                <ul>
+                    <li><strong>Use dictionary comprehensions</strong> instead of loops for creating dictionaries when possible</li>
+                    <li><strong>Prefer <code>in</code> operator</strong> over <code>keys()</code> for membership checking (<code>if key in dict</code> vs <code>if key in dict.keys()</code>)</li>
+                    <li><strong>Use <code>get()</code> with default</strong> instead of explicit key checking when retrieving values</li>
+                    <li><strong>Consider <code>defaultdict</code></strong> for collections that require default values</li>
+                    <li><strong>Use <code>collections.ChainMap</code></strong> for multiple dictionary lookups without merging</li>
+                    <li><strong>For very large dictionaries with numeric keys</strong>, consider NumPy arrays or specialized data structures</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="exercises">
+            <h3>Practice Exercises</h3>
+            
+            <div class="exercise">
+                <h4>Exercise 1: Dictionary Manipulation</h4>
+                <p>Create functions that perform common dictionary operations:</p>
+                <ol>
+                    <li>Write a function that filters a dictionary, keeping only key-value pairs where the value meets a given condition.</li>
+                    <li>Write a function that flattens a nested dictionary into a single-level dictionary with concatenated keys.</li>
+                </ol>
+                
+                <details>
+                    <summary>Solution</summary>
+                    <pre><code># Exercise 1: Dictionary filtering
+def filter_dict(input_dict, condition_func):
+    """
+    Filter a dictionary based on a condition function applied to values.
+    
+    Args:
+        input_dict: The dictionary to filter
+        condition_func: A function that takes a value and returns True/False
+        
+    Returns:
+        A new dictionary with only the entries where condition_func returns True
+    """
+    return {key: value for key, value in input_dict.items() if condition_func(value)}
+
+# Test filtering
+data = {
+    "a": 10,
+    "b": 25,
+    "c": 13,
+    "d": 42,
+    "e": 8
+}
+
+# Filter for values > 15
+result1 = filter_dict(data, lambda x: x > 15)
+print(f"Values > 15: {result1}")
+
+# Filter for even values
+result2 = filter_dict(data, lambda x: x % 2 == 0)
+print(f"Even values: {result2}")
+
+# Filter a dict of dicts
+products = {
+    "P001": {"name": "Laptop", "price": 1299.99, "in_stock": True},
+    "P002": {"name": "Phone", "price": 799.99, "in_stock": True},
+    "P003": {"name": "Tablet", "price": 349.99, "in_stock": False},
+    "P004": {"name": "Headphones", "price": 149.99, "in_stock": True}
+}
+
+in_stock_products = filter_dict(products, lambda p: p["in_stock"])
+print(f"In-stock products: {in_stock_products.keys()}")
+
+expensive_products = filter_dict(products, lambda p: p["price"] > 500)
+print(f"Expensive products: {expensive_products.keys()}")
+
+
+# Exercise 2: Flattening nested dictionaries
+def flatten_dict(nested_dict, prefix="", separator="."):
+    """
+    Flatten a nested dictionary by concatenating the keys at each level.
+    
+    Args:
+        nested_dict: The nested dictionary to flatten
+        prefix: Prefix for keys at the current level
+        separator: String to join key parts
+        
+    Returns:
+        A flat dictionary with concatenated keys
+    """
+    flat_dict = {}
+    
+    for key, value in nested_dict.items():
+        # Create the new key with prefix if needed
+        new_key = f"{prefix}{separator}{key}" if prefix else key
+        
+        # If value is a dictionary, recursively flatten it
+        if isinstance(value, dict):
+            # Merge the flattened sub-dictionary
+            flat_dict.update(flatten_dict(value, new_key, separator))
+        else:
+            # Add the key-value pair to the flat dictionary
+            flat_dict[new_key] = value
+            
+    return flat_dict
+
+# Test flattening
+config = {
+    "app": {
+        "name": "MyApp",
+        "version": "1.0.0",
+        "settings": {
+            "debug": True,
+            "log_level": "INFO"
+        }
+    },
+    "database": {
+        "host": "localhost",
+        "port": 5432,
+        "credentials": {
+            "username": "admin",
+            "password": "secret"
+        }
+    }
+}
+
+flat_config = flatten_dict(config)
+print("\nFlattened config:")
+for key, value in flat_config.items():
+    print(f"{key}: {value}")
+
+# Test with different separator
+flat_config_custom = flatten_dict(config, separator="_")
+print("\nFlattened config with custom separator:")
+for key, value in flat_config_custom.items():
+    print(f"{key}: {value}")</code></pre>
+                </details>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 2: Word Frequency Counter</h4>
+                <p>Create a function that counts word frequencies in a text and provides analysis:</p>
+                <ol>
+                    <li>Split the text into words and count the frequency of each word</li>
+                    <li>Ignore case and strip punctuation</li>
+                    <li>Filter out common "stop words" like "the", "and", "of"</li>
+                    <li>Return the top N most frequent words and their counts</li>
+                </ol>
+                
+                <details>
+                    <summary>Solution</summary>
+                    <pre><code>def word_frequency_analysis(text, num_top_words=5, stop_words=None):
+    """
+    Analyze word frequencies in a text.
+    
+    Args:
+        text: The input text to analyze
+        num_top_words: Number of top frequent words to return
+        stop_words: Set of words to exclude (common words like 'the', 'and', etc.)
+        
+    Returns:
+        Dictionary with analysis results
+    """
+    if stop_words is None:
+        stop_words = {'the', 'and', 'of', 'to', 'in', 'a', 'is', 'that', 'it', 'with', 
+                      'for', 'as', 'was', 'on', 'be', 'at', 'by', 'this', 'an', 'are'}
+    
+    # Normalize text: lowercase and replace punctuation with spaces
+    import string
+    for char in string.punctuation:
+        text = text.replace(char, ' ')
+    text = text.lower()
+    
+    # Split into words and count frequencies
+    words = text.split()
+    word_counts = {}
+    
+    for word in words:
+        if word and word not in stop_words:  # Skip empty strings and stop words
+            word_counts[word] = word_counts.get(word, 0) + 1
+    
+    # Sort words by frequency
+    sorted_words = sorted(word_counts.items(), key=lambda x: x[1], reverse=True)
+    top_words = sorted_words[:num_top_words]
+    
+    # Calculate statistics
+    total_words = len(words)
+    unique_words = len(word_counts)
+    
+    # Build result dictionary
+    result = {
+        'total_words': total_words,
+        'unique_words': unique_words,
+        'top_words': dict(top_words),
+        'stop_words_removed': len([w for w in words if w in stop_words])
+    }
+    
+    return result
+
+# Test with example text
+sample_text = """
+Python is a programming language that lets you work quickly and integrate systems more effectively.
+Python is powerful, and fast; plays well with others; runs everywhere; is friendly and easy to learn;
+is open source; has a supportive community. These qualities make Python incredibly useful and popular.
+"""
+
+analysis = word_frequency_analysis(sample_text)
+print(f"Total words: {analysis['total_words']}")
+print(f"Unique words (excluding stop words): {analysis['unique_words']}")
+print(f"Stop words remove

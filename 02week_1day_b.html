@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python in Docker Containers</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python in Docker Containers</h1>
+        <h2>Week 2: Python Fundamentals - Docker Containerization Deep Dive</h2>
+    </header>
+
+    <main>
+        <section class="session_intro">
+            <h3>Session Overview</h3>
+            <p>Welcome to our deep dive into Python and Docker! Today, we'll explore how containerization revolutionizes Python development and deployment. We'll learn why Docker has become essential in modern Python workflows, how to set up Python environments in containers, and best practices for Python-based Docker applications.</p>
+        </section>
+
+        <section class="docker_fundamentals">
+            <h3>Understanding Docker and Containerization</h3>
+            
+            <p>Before diving into Python-specific aspects, let's ensure we have a solid understanding of what Docker provides:</p>
+            
+            <h4>What is Docker?</h4>
+            
+            <p>Docker is a platform that packages applications and their dependencies into standardized units called containers. These containers are isolated, lightweight, and contain everything needed to run an application, including code, runtime, system tools, and libraries.</p>
+            
+            <h4>Container vs. Virtual Machine</h4>
+            
+            <p>Containers are often compared to virtual machines, but they operate differently:</p>
+            
+            <ul>
+                <li><strong>Containers</strong> share the host system's kernel but run in isolated user spaces</li>
+                <li><strong>Virtual Machines</strong> virtualize the entire operating system, including the kernel</li>
+            </ul>
+            
+            <p>This makes containers significantly lighter and faster to start than VMs, while still providing strong isolation.</p>
+            
+            <div class="analogy_box">
+                <h4>Analogy: Apartments vs. Houses</h4>
+                <p>Think of the difference between containers and VMs like apartments versus houses:</p>
+                <ul>
+                    <li><strong>Containers (Apartments)</strong> share core infrastructure (foundation, plumbing, electrical systems) but have their own private living spaces</li>
+                    <li><strong>VMs (Houses)</strong> have completely independent infrastructure, making them larger and more resource-intensive</li>
+                </ul>
+                <p>Containers are more efficient when you need many isolated environments that can share core resources.</p>
+            </div>
+        </section>
+
+        <section class="why_docker_python">
+            <h3>Why Use Docker for Python Development?</h3>
+            
+            <p>Docker solves several persistent challenges in Python development:</p>
+            
+            <h4>The "Works on My Machine" Problem</h4>
+            
+            <p>One of the most common issues in software development is code that runs perfectly on one machine but fails on another. This occurs because:</p>
+            
+            <ul>
+                <li>Different Python versions</li>
+                <li>Missing or conflicting dependencies</li>
+                <li>System-level library differences</li>
+                <li>Operating system variations</li>
+            </ul>
+            
+            <p>Docker containers package the entire runtime environment, ensuring consistent behavior across development, testing, and production.</p>
+            
+            <h4>Python-Specific Benefits</h4>
+            
+            <ul>
+                <li><strong>Version Management:</strong> Run applications with specific Python versions (2.7, 3.6, 3.10, etc.) without conflicts</li>
+                <li><strong>Dependency Isolation:</strong> Avoid conflicts between projects requiring different versions of the same library</li>
+                <li><strong>System Dependencies:</strong> Package system-level libraries that Python modules might depend on (like C compilers, image processing libraries, etc.)</li>
+                <li><strong>Reproducible Environments:</strong> Guarantee that everyone on the team works with identical setups</li>
+                <li><strong>Clean Testing:</strong> Test in pristine environments without accumulated artifacts</li>
+            </ul>
+            
+            <h4>Real-World Example: Data Science Workflows</h4>
+            
+            <p>Data scientists often face the "dependency nightmare" when collaborating on models. One team member might use NumPy 1.18 with Python 3.7, while another uses NumPy 1.20 with Python 3.9, leading to subtle bugs. With Docker, they can specify:</p>
+            
+            <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["python", "model_training.py"]</code></pre>
+            
+            <p>This ensures that everyone uses exactly the same environment, eliminating inconsistencies.</p>
+
+            <div class="analogy_box">
+                <h4>Analogy: Docker as Recipe Boxes</h4>
+                <p>Think of Docker containers like recipe boxes that include not just the recipe (your code) but also all the ingredients (dependencies), cooking tools (runtime), and even the cooking environment (system libraries):</p>
+                <ul>
+                    <li>Without Docker: "Make this cake" but everyone has different flour, ovens at different temperatures, and varying measuring cups</li>
+                    <li>With Docker: "Here's a complete box with the exact ingredients, tools, and instructions" - ensuring the same cake every time</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="python_docker_basics">
+            <h3>Getting Started with Python in Docker</h3>
+            
+            <h4>Official Python Docker Images</h4>
+            
+            <p>The Python team maintains official Docker images available on Docker Hub. These images come in several variants:</p>
+            
+            <ul>
+                <li><strong>python:3.x</strong> - Full images with most dependencies</li>
+                <li><strong>python:3.x-slim</strong> - Smaller images with minimal packages</li>
+                <li><strong>python:3.x-alpine</strong> - Ultra-minimal images based on Alpine Linux</li>
+                <li><strong>python:3.x-windowsservercore</strong> - Windows-based images</li>
+            </ul>
+            
+            <h4>Running Python in a Docker Container</h4>
+            
+            <p>Let's start with the simplest possible example - running a Python interpreter in a container:</p>
+            
+            <pre><code># Pull the Python image (if not already present)
+docker pull python:3.10
+
+# Run an interactive Python shell
+docker run -it python:3.10
+
+# You should now see the Python REPL
+>>> print("Hello from containerized Python!")
+Hello from containerized Python!
+>>> exit()</code></pre>
+            
+            <h4>Running a Python Script in a Container</h4>
+            
+            <p>Create a file named <code>hello_docker.py</code> with the following content:</p>
+            
+            <pre><code>import platform
+import sys
+
+print("Hello from Python in Docker!")
+print(f"Python version: {sys.version}")
+print(f"Platform: {platform.platform()}")
+</code></pre>
+            
+            <p>Now run this script in a container:</p>
+            
+            <pre><code># Assuming hello_docker.py is in your current directory
+docker run -v "$(pwd):/app" -w /app python:3.10 python hello_docker.py</code></pre>
+            
+            <p>This command:</p>
+            <ul>
+                <li><code>-v "$(pwd):/app"</code> mounts your current directory to /app in the container</li>
+                <li><code>-w /app</code> sets the working directory inside the container to /app</li>
+                <li><code>python:3.10</code> specifies which image to use</li>
+                <li><code>python hello_docker.py</code> is the command to run inside the container</li>
+            </ul>
+        </section>
+
+        <section class="creating_python_dockerfile">
+            <h3>Creating a Python Dockerfile</h3>
+            
+            <p>While running commands directly is useful for simple cases, most projects need a custom Docker image. This is done by creating a Dockerfile.</p>
+            
+            <h4>Basic Python Dockerfile</h4>
+            
+            <p>Create a file named <code>Dockerfile</code> (no extension) in your project directory:</p>
+            
+            <pre><code># Use an official Python runtime as a parent image
+FROM python:3.10-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY . /app/
+
+# Install any needed packages specified in requirements.txt
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Make port 5000 available to the world outside this container
+EXPOSE 5000
+
+# Define environment variable
+ENV NAME World
+
+# Run app.py when the container launches
+CMD ["python", "app.py"]</code></pre>
+            
+            <p>Create a simple <code>app.py</code>:</p>
+            
+            <pre><code>import os
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    name = os.environ.get('NAME', 'World')
+    return f'Hello, {name}!'
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)</code></pre>
+            
+            <p>And a <code>requirements.txt</code> file:</p>
+            
+            <pre><code>flask==2.0.1</code></pre>
+            
+            <h4>Building and Running the Docker Image</h4>
+            
+            <pre><code># Build the image
+docker build -t my-python-app .
+
+# Run the container
+docker run -p 5000:5000 my-python-app</code></pre>
+            
+            <p>Your Flask application should now be running at <a href="http://localhost:5000">http://localhost:5000</a></p>
+            
+            <h4>Best Practices for Python Dockerfiles</h4>
+            
+            <ol>
+                <li><strong>Use Specific Versions:</strong> Always specify exact versions in requirements.txt (e.g., flask==2.0.1 not just flask)</li>
+                <li><strong>Layer Caching:</strong> Copy and install requirements before copying the rest of the code to leverage Docker's caching mechanism</li>
+                <li><strong>Non-Root User:</strong> For production, run as a non-root user for security</li>
+                <li><strong>Multi-Stage Builds:</strong> Use for compiling extensions or reducing image size</li>
+                <li><strong>Environment Variables:</strong> Use ENV for configuration that can change</li>
+            </ol>
+            
+            <p>Here's an improved version of our Dockerfile with these practices:</p>
+            
+            <pre><code>FROM python:3.10-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+ENV PIP_NO_CACHE_DIR 1
+
+# Create a non-root user
+RUN useradd -m appuser
+
+# Set the working directory
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+# Copy the application
+COPY . .
+
+# Change ownership to non-root user
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 5000
+
+# Run the application
+CMD ["python", "app.py"]</code></pre>
+        </section>
+
+        <section class="python_docker_compose">
+            <h3>Python with Docker Compose</h3>
+            
+            <p>For applications with multiple services (e.g., web server, database, cache), Docker Compose simplifies management.</p>
+            
+            <h4>Creating a Docker Compose File</h4>
+            
+            <p>Create a file named <code>docker_compose.yml</code>:</p>
+            
+            <pre><code>version: '3'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+    depends_on:
+      - db
+  
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:</code></pre>
+            
+            <h4>Using Docker Compose</h4>
+            
+            <pre><code># Start all services
+docker-compose up
+
+# Start in detached mode
+docker-compose up -d
+
+# Stop all services
+docker-compose down
+
+# Rebuild images and start
+docker-compose up --build</code></pre>
+            
+            <h4>Real-World Example: Python Web Application Stack</h4>
+            
+            <p>A production-ready Python web application might include:</p>
+            
+            <pre><code>version: '3'
+
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - static_volume:/app/static
+      - media_volume:/app/media
+    depends_on:
+      - web
+
+  web:
+    build: .
+    command: gunicorn myapp.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+
+  redis:
+    image: redis:6
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:</code></pre>
+            
+            <p>This setup includes:</p>
+            <ul>
+                <li>Nginx as a reverse proxy and static file server</li>
+                <li>Gunicorn as a WSGI application server</li>
+                <li>PostgreSQL database</li>
+                <li>Redis for caching or as a message broker</li>
+            </ul>
+            
+            <div class="analogy_box">
+                <h4>Analogy: Docker Compose as an Orchestra Conductor</h4>
+                <p>If individual Docker containers are like musicians, Docker Compose is like an orchestra conductor:</p>
+                <ul>
+                    <li>Each container (musician) knows how to play its own part</li>
+                    <li>Docker Compose (conductor) coordinates when each starts, stops, and how they work together</li>
+                    <li>The conductor ensures everyone is playing in the right order and at the right time</li>
+                    <li>The score (docker-compose.yml) defines exactly how everything should work together</li>
+                </ul>
+                <p>Just as a conductor makes it easier to manage a complex orchestra, Docker Compose makes it easier to manage complex multi-container applications.</p>
+            </div>
+        </section>
+
+        <section class="python_development_docker">
+            <h3>Development Workflow with Python and Docker</h3>
+            
+            <h4>Hot Reloading for Development</h4>
+            
+            <p>One challenge when developing with Docker is seeing code changes reflected immediately. Here's how to set up hot reloading:</p>
+            
+            <pre><code>version: '3'
+
+services:
+  web:
+    build: .
+    command: python -m flask run --host=0.0.0.0 --port=5000
+    volumes:
+      - .:/app
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_APP=app.py</code></pre>
+            
+            <p>With this setup:</p>
+            <ol>
+                <li>The local directory is mounted into the container</li>
+                <li>Flask's development server automatically reloads when files change</li>
+                <li>Changes made on your host machine are immediately reflected</li>
+            </ol>
+            
+            <h4>Debugging Python in Docker</h4>
+            
+            <p>For debugging, you can:</p>
+            
+            <ol>
+                <li>Use simple print statements</li>
+                <li>Mount debugger configurations</li>
+                <li>Use remote debugging</li>
+            </ol>
+            
+            <p>For pdb/debugpy setup:</p>
+            
+            <pre><code># In your code
+import debugpy
+
+# Enable debugger attachment
+debugpy.listen(("0.0.0.0", 5678))
+print("Waiting for debugger to attach...")
+debugpy.wait_for_client()
+</code></pre>
+            
+            <p>And in your docker-compose.yml:</p>
+            
+            <pre><code>services:
+  web:
+    # ...
+    ports:
+      - "5000:5000"
+      - "5678:5678"  # Debugger port</code></pre>
+            
+            <h4>Testing in Docker</h4>
+            
+            <p>Creating a separate service for testing ensures isolation:</p>
+            
+            <pre><code>services:
+  web:
+    # ... your web service config
+
+  test:
+    build: .
+    command: pytest
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/test_db
+    depends_on:
+      - db</code></pre>
+            
+            <p>Run tests with:</p>
+            
+            <pre><code>docker-compose run test</code></pre>
+        </section>
+
+        <section class="advanced_topics">
+            <h3>Advanced Python Docker Patterns</h3>
+            
+            <h4>Multi-Stage Builds for Python Applications</h4>
+            
+            <p>Multi-stage builds can significantly reduce image size, especially for applications with build dependencies:</p>
+            
+            <pre><code># Build stage
+FROM python:3.10 AS builder
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
+
+# Final stage
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Copy built wheels from builder stage
+COPY --from=builder /app/wheels /wheels
+COPY --from=builder /app/requirements.txt .
+
+# Install packages from wheels
+RUN pip install --no-cache /wheels/*
+
+COPY . .
+
+CMD ["python", "app.py"]</code></pre>
+            
+            <h4>Python Applications with C Extensions</h4>
+            
+            <p>Many Python packages (NumPy, Pandas, etc.) require C compilation. Ensure your Docker image includes necessary build tools:</p>
+            
+            <pre><code>FROM python:3.10
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+CMD ["python", "app.py"]</code></pre>
+            
+            <h4>Using Alpine-based Images</h4>
+            
+            <p>Alpine-based images are much smaller but require special handling:</p>
+            
+            <pre><code>FROM python:3.10-alpine
+
+# Install build dependencies
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    python3-dev
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+CMD ["python", "app.py"]</code></pre>
+            
+            <p>Be aware that Alpine uses musl libc instead of glibc, which can cause subtle compatibility issues with some Python packages.</p>
+            
+            <h4>Production Optimizations</h4>
+            
+            <ul>
+                <li><strong>Use .dockerignore:</strong> Create a .dockerignore file to exclude unnecessary files (like .git, __pycache__, etc.)</li>
+                <li><strong>Pin Dependencies:</strong> Use exact versions for all dependencies</li>
+                <li><strong>Set Python Environment Variables:</strong>
+                    <ul>
+                        <li><code>PYTHONDONTWRITEBYTECODE=1</code> - Prevents Python from writing .pyc files</li>
+                        <li><code>PYTHONUNBUFFERED=1</code> - Prevents Python from buffering stdout and stderr</li>
+                    </ul>
+                </li>
+                <li><strong>Use Non-Root User:</strong> Run containers as a non-root user for security</li>
+                <li><strong>Health Checks:</strong> Add Docker health checks to monitor application status</li>
+            </ul>
+            
+            <pre><code>FROM python:3.10-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# Create user
+RUN useradd -m appuser
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+RUN chown -R appuser:appuser /app
+
+USER appuser
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:5000/health || exit 1
+
+EXPOSE 5000
+CMD ["python", "app.py"]</code></pre>
+        </section>
+
+        <section class="real_world_applications">
+            <h3>Real-World Python Docker Applications</h3>
+            
+            <h4>Data Science and Machine Learning</h4>
+            
+            <p>Data science workflows benefit greatly from containerization:</p>
+            
+            <pre><code>FROM python:3.10
+
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install Jupyter
+RUN pip install jupyterlab
+
+# Copy project files
+COPY . .
+
+# Expose Jupyter port
+EXPOSE 8888
+
+# Start Jupyter
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token=''"]</code></pre>
+            
+            <p>With Docker Compose, you can create a complete data science environment:</p>
+            
+            <pre><code>version: '3'
+
+services:
+  jupyter:
+    build: .
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/app
+      - ./data:/app/data
+  
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.1.1
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlruns
+    command: mlflow server --host 0.0.0.0
+
+volumes:
+  postgres_data:</code></pre>
+            
+            <h4>Django Web Applications</h4>
+            
+            <p>Django projects often include multiple services:</p>
+            
+            <pre><code>version: '3'
+
+services:
+  web:
+    build: .
+    command: gunicorn myproject.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+  
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+  
+  redis:
+    image: redis:6
+  
+  celery:
+    build: .
+    command: celery -A myproject worker -l info
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - web
+      - db
+      - redis
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:</code></pre>
+            
+            <h4>Microservices with Python</h4>
+            
+            <p>In a microservices architecture, each service can be its own Python container:</p>
+            
+            <pre><code>version: '3'
+
+services:
+  auth_service:
+    build: ./auth_service
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/auth_db
+  
+  product_service:
+    build: ./product_service
+    ports:
+      - "5001:5000"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/product_db
+      - AUTH_SERVICE_URL=http://auth_service:5000
+  
+  order_service:
+    build: ./order_service
+    ports:
+      - "5002:5000"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/order_db
+      - PRODUCT_SERVICE_URL=http://product_service:5000
+      - AUTH_SERVICE_URL=http://auth_service:5000
+  
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+
+volumes:
+  postgres_data:</code></pre>
+            
+            <div class="analogy_box">
+                <h4>Analogy: Microservices as Specialized Shops</h4>
+                <p>Think of a microservices architecture like a shopping center with specialized stores instead of a single department store:</p>
+                <ul>
+                    <li>Each shop (microservice) specializes in one thing and does it well</li>
+                    <li>Shops can be updated or replaced individually without affecting others</li>
+                    <li>Shops communicate with each other when necessary (e.g., the tailor might send customers to the shoe store)</li>
+                    <li>The shopping center can add new stores or remove underperforming ones easily</li>
+                </ul>
+                <p>Docker makes it easy to manage all these specialized services, ensuring they can work together while remaining independently maintainable.</p>
+            </div>
+        </section>
+
+        <section class="python_docker_verification">
+            <h3>Verifying Python in Docker</h3>
+            
+            <h4>Core Verification Steps</h4>
+            
+            <p>When setting up Python in Docker, verify the following:</p>
+            
+            <ol>
+                <li><strong>Python Version:</strong> Ensure the container uses the expected Python version</li>
+                <li><strong>Package Installation:</strong> Verify dependencies are correctly installed</li>
+                <li><strong>Environment Variables:</strong> Check that environment variables are properly set</li>
+                <li><strong>Filesystem Access:</strong> Confirm volumes are mounted correctly</li>
+                <li><strong>Network Connectivity:</strong> Test that services can communicate</li>
+            </ol>
+            
+            <h4>Verification Script</h4>
+            
+            <p>Create a file named <code>verify_environment.py</code>:</p>
+            
+            <pre><code>#!/usr/bin/env python3
+import sys
+import os
+import platform
+import subprocess
+import importlib.util
+
+def verify_python_version():
+    print(f"Python version: {sys.version}")
+    print(f"Python executable: {sys.executable}")
+    print(f"Platform: {platform.platform()}")
+
+def verify_packages(required_packages):
+    print("\nPackage verification:")
+    for package in required_packages:
+        try:
+            spec = importlib.util.find_spec(package)
+            if spec is None:
+                print(f"❌ {package} is NOT installed")
+            else:
+                module = importlib.import_module(package)
+                version = getattr(module, '__version__', 'unknown')
+                print(f"✅ {package} is installed (version: {version})")
+        except ImportError:
+            print(f"❌ {package} is NOT installed")
+
+def verify_environment_variables(required_vars):
+    print("\nEnvironment variables:")
+    for var in required_vars:
+        value = os.environ.get(var)
+        if value:
+            print(f"✅ {var} is set to: {value}")
+        else:
+            print(f"❌ {var} is NOT set")
+
+def verify_filesystem_access(paths):
+    print("\nFilesystem access:")
+    for path in paths:
+        if os.path.exists(path):
+            print(f"✅ {path} exists and is accessible")
+            if os.path.isdir(path):
+                try:
+                    test_file = os.path.join(path, 'test_write.txt')
+                    with open(test_file, 'w') as f:
+                        f.write('test')
+                    os.remove(test_file)
+                    print(f"✅ {path} is writable")
+                except Exception as e:
+                    print(f"❌ {path} is NOT writable: {e}")
+        else:
+            print(f"❌ {path} does NOT exist or is NOT accessible")
+
+def verify_network_connectivity(endpoints):
+    print("\nNetwork connectivity:")
+    for endpoint in endpoints:
+        try:
+            result = subprocess.run(['curl', '-s', '-o', '/dev/null', '-w', '%{http_code}', endpoint], 
+                                   capture_output=True, text=True, timeout=5)
+            status = result.stdout.strip()
+            if status.startswith('2') or status.startswith('3'):
+                print(f"✅ {endpoint} is reachable (status: {status})")
+            else:
+                print(f"❌ {endpoint} returned status: {status}")
+        except subprocess.SubprocessError as e:
+            print(f"❌ {endpoint} is NOT reachable: {e}")
+
+if __name__ == "__main__":
+    verify_python_version()
+    
+    # Customize these lists for your application
+    verify_packages(['flask', 'requests', 'sqlalchemy', 'numpy'])
+    verify_environment_variables(['DATABASE_URL', 'FLASK_ENV'])
+    verify_filesystem_access(['/app', '/app/data', '/tmp'])
+    verify_network_connectivity(['http://localhost:5000', 'http://db:5432', 'https://pypi.org'])
+</code></pre>
+            
+            <p>Run this script in your container:</p>
+            
+            <pre><code>docker run -it --rm myapp python verify_environment.py</code></pre>
+            
+            <h4>Using Docker Compose for Verification</h4>
+            
+            <p>Add a verification service to your docker-compose.yml:</p>
+            
+            <pre><code>services:
+  # ... your existing services
+  
+  verify:
+    build: .
+    command: python verify_environment.py
+    depends_on:
+      - web
+      - db
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+      - FLASK_ENV=development</code></pre>
+            
+            <p>Run it with:</p>
+            
+            <pre><code>docker-compose run verify</code></pre>
+        </section>
+
+        <section class="troubleshooting">
+            <h3>Troubleshooting Python in Docker</h3>
+            
+            <h4>Common Issues and Solutions</h4>
+            
+            <table>
+                <tr>
+                    <th>Issue</th>
+                    <th>Possible Causes</th>
+                    <th>Solutions</th>
+                </tr>
+                <tr>
+                    <td>Module Not Found Error</td>
+                    <td>
+                        <ul>
+                            <li>Package not in requirements.txt</li>
+                            <li>Build failed silently</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>Update requirements.txt</li>
+                            <li>Rebuild with <code>--no-cache</code></li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Permission Denied</td>
+                    <td>
+                        <ul>
+                            <li>Volume mount permissions</li>
+                            <li>Running as non-root user</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>Fix host permissions</li>
+                            <li>Use <code>chown</code> in Dockerfile</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Connection Refused</td>
+                    <td>
+                        <ul>
+                            <li>Service not ready</li>
+                            <li>Incorrect port mapping</li>
+                            <li>Binding to 127.0.0.1 instead of 0.0.0.0</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>Use wait-for scripts</li>
+                            <li>Check port mappings</li>
+                            <li>Bind to 0.0.0.0</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Memory Errors</td>
+                    <td>
+                        <ul>
+                            <li>Container memory limits</li>
+                            <li>Large data processing</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>Increase container memory</li>
+                            <li>Optimize code for memory usage</li>
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+            
+            <h4>Debugging Commands</h4>
+            
+            <pre><code># View container logs
+docker logs container_name
+
+# Enter a running container
+docker exec -it container_name bash
+
+# Inspect a container
+docker inspect container_name
+
+# Check resource usage
+docker stats
+
+# View networks
+docker network ls</code></pre>
+            
+            <h4>Interactive Debugging Session</h4>
+            
+            <p>To debug a failing container:</p>
+            
+            <pre><code># Start the container with a different command
+docker run -it --entrypoint=bash myapp
+
+# Or for a failed container, commit its state to a new image and debug
+docker commit failed_container debug_image
+docker run -it --entrypoint=bash debug_image</code></pre>
+        </section>
+
+        <section class="next_steps">
+            <h3>Wrapping Up and Next Steps</h3>
+            
+            <p>Today we've covered the fundamentals of using Python in Docker containers, from basic setup to production-ready configurations. Docker containers have revolutionized Python development by providing consistent, isolated environments that solve many traditional deployment challenges.</p>
+            
+            <h4>Key Takeaways</h4>
+            
+            <ul>
+                <li>Docker solves the "works on my machine" problem for Python applications</li>
+                <li>Official Python Docker images provide a solid foundation for your projects</li>
+                <li>A well-crafted Dockerfile is essential for reproducible environments</li>
+                <li>Docker Compose simplifies multi-service Python applications</li>
+                <li>Proper verification ensures your containerized Python environment works as expected</li>
+            </ul>
+            
+            <h4>Practice Exercises</h4>
+            
+            <ol>
+                <li>Create a Dockerfile for a simple Flask application</li>
+                <li>Set up a development environment with code hot-reloading</li>
+                <li>Build a multi-container application with Python, PostgreSQL, and Redis</li>
+                <li>Implement the verification script to test your Docker environment</li>
+                <li>Optimize your Docker image size using multi-stage builds</li>
+            </ol>
+            
+            <h4>Additional Resources</h4>
+            
+            <ul>
+                <li><a href="https://hub.docker.com/_/python" target="_blank">Official Python Docker Images</a></li>
+                <li><a href="https://docs.docker.com/compose/" target="_blank">Docker Compose Documentation</a></li>
+                <li><a href="https://testdriven.io/blog/dockerizing-flask-with-postgres-gunicorn-and-nginx/" target="_blank">Dockerizing Flask with Postgres, Gunicorn, and Nginx</a></li>
+                <li><a href="https://pythonspeed.com/docker/" target="_blank">Python Speed - Docker Tips</a></li>
+            </ul>
+            
+            <p>In our next session, we'll build on these containerization concepts to explore how to effectively manage Python dependencies in Docker and implement best practices for production deployments.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

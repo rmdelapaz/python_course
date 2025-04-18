@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 1: Workshop - Putting it all together</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Week 1: Workshop - Putting it all together</h1>
+        <h2>Integrating Web Fundamentals, Git, and Docker in a Complete Workflow</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>From Individual Tools to Integrated Workflow</h3>
+            <p>Welcome to our integration workshop! Throughout this week, we've explored individual components of the web development ecosystem: HTTP and web fundamentals, Git for version control, VS Code as our editor, and Docker for containerization. Now it's time to see how these pieces work together in a cohesive workflow.</p>
+            
+            <p>Think of this workshop as assembling a vehicle. We've studied the engine (Python), the steering system (Git), the chassis (Docker), and the dashboard (VS Code) separately. Now we'll connect these components to create a functional development vehicle that can take us from concept to deployment.</p>
+            
+            <p>By the end of this hands-on session, you'll have experienced a complete development cycle using all the tools we've learned about, preparing you for the more complex work to come in the following weeks.</p>
+        </section>
+
+        <section class="workshop_overview">
+            <h3>Workshop Goals and Structure</h3>
+            
+            <p>In this workshop, we'll create a simple "Hello World" web application using Flask, a lightweight Python web framework. We'll implement proper project structure, version control, containerization, and deployment – all while following development best practices.</p>
+            
+            <p><strong>Workshop Objectives:</strong></p>
+            <ul>
+                <li>Create a structured Flask application from scratch</li>
+                <li>Implement proper Git workflow with meaningful commits</li>
+                <li>Containerize the application with Docker</li>
+                <li>Configure VS Code for optimal Python development</li>
+                <li>Deploy the application locally and test it</li>
+                <li>Document the process for future reference</li>
+            </ul>
+            
+            <p><strong>Workshop Flow:</strong></p>
+            <ol>
+                <li>Project planning and structure creation (20 minutes)</li>
+                <li>Setting up the development environment (30 minutes)</li>
+                <li>Implementing the basic application (30 minutes)</li>
+                <li>Containerizing with Docker (30 minutes)</li>
+                <li>Testing and debugging (20 minutes)</li>
+                <li>Documentation and reflection (20 minutes)</li>
+            </ol>
+            
+            <p>This hands-on approach mimics real-world development practices, where tools and concepts don't exist in isolation but form an integrated ecosystem.</p>
+        </section>
+
+        <section class="project_planning">
+            <h3>Project Planning and Structure</h3>
+            
+            <p>Before writing a single line of code, professional developers plan their project structure. This upfront investment pays dividends in maintainability and scalability.</p>
+            
+            <h4>Our Application: Flask Hello World</h4>
+            <p>We'll create a simple Flask web application that:</p>
+            <ul>
+                <li>Serves a "Hello World" message on the homepage</li>
+                <li>Includes a simple API endpoint returning JSON</li>
+                <li>Has a basic HTML template using Jinja2</li>
+                <li>Follows a scalable project structure</li>
+            </ul>
+            
+            <h4>Project Structure</h4>
+            <p>We'll use a structure that can grow with application complexity:</p>
+            
+            <pre><code>flask_hello_world/
+├── .git/                   # Git repository (created by git init)
+├── .gitignore              # Git ignore file
+├── .vscode/                # VS Code configuration
+│   ├── launch.json         # Debug configuration
+│   └── settings.json       # Editor settings
+├── app/                    # Application package
+│   ├── __init__.py         # Package initializer and app factory
+│   ├── routes.py           # Route definitions
+│   ├── templates/          # HTML templates
+│   │   └── index.html      # Homepage template
+│   └── static/             # Static files (CSS, JS, images)
+│       └── style.css       # Basic styling
+├── docker/                 # Docker configuration
+│   ├── Dockerfile          # Main Dockerfile
+│   └── docker-compose.yml  # Docker Compose configuration
+├── tests/                  # Test directory
+│   └── test_app.py         # Basic tests
+├── .env                    # Environment variables (not in Git)
+├── .env.example            # Example environment variables (in Git)
+├── requirements.txt        # Python dependencies
+└── README.md               # Project documentation
+</code></pre>
+            
+            <p><strong>Why this structure matters:</strong></p>
+            <p>This organization follows the principle of separation of concerns. Like organizing a kitchen with separate areas for prep, cooking, and plating, this structure separates different aspects of the application:</p>
+            <ul>
+                <li>Code that handles requests (routes.py)</li>
+                <li>Templates that define the presentation</li>
+                <li>Configuration files for development tools</li>
+                <li>Documentation for developers</li>
+            </ul>
+            
+            <p><strong>Real-world parallel:</strong> This structure is a simplified version of what you'd see in production Flask applications at companies like Pinterest and LinkedIn, which use Flask for certain microservices.</p>
+        </section>
+
+        <section class="environment_setup">
+            <h3>Setting Up the Development Environment</h3>
+            
+            <p>With our plan in place, let's create the development environment that will support our project.</p>
+            
+            <h4>Project Initialization</h4>
+            <p>Let's create our project directory and initialize Git:</p>
+            
+            <pre><code># Create project directory
+mkdir flask_hello_world
+cd flask_hello_world
+
+# Initialize Git repository
+git init
+
+# Create basic project structure
+mkdir -p app/templates app/static .vscode docker tests
+touch app/__init__.py app/routes.py app/templates/index.html app/static/style.css
+touch .gitignore README.md requirements.txt .env.example
+touch docker/Dockerfile docker/docker-compose.yml
+touch tests/test_app.py
+touch .vscode/settings.json .vscode/launch.json
+</code></pre>
+            
+            <h4>VS Code Configuration</h4>
+            <p>Let's configure VS Code for optimal Python development by creating proper settings.json and launch.json files:</p>
+            
+            <p><strong>settings.json:</strong></p>
+            <pre><code>{
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": ["--line-length", "88"],
+    "editor.formatOnSave": true,
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.pytestArgs": ["tests"],
+    "editor.rulers": [88],
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/*.pyc": true
+    }
+}
+</code></pre>
+            
+            <p><strong>launch.json:</strong></p>
+            <pre><code>{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Flask",
+            "type": "python",
+            "request": "launch",
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "app",
+                "FLASK_ENV": "development",
+                "FLASK_DEBUG": "1"
+            },
+            "args": [
+                "run",
+                "--no-debugger",
+                "--host=0.0.0.0"
+            ],
+            "jinja": true
+        },
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        }
+    ]
+}
+</code></pre>
+            
+            <h4>Git Configuration</h4>
+            <p>Create a .gitignore file to avoid tracking unnecessary files:</p>
+            
+            <pre><code># Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# Docker
+.docker/
+
+# Tests
+.coverage
+htmlcov/
+.pytest_cache/
+</code></pre>
+            
+            <h4>Python Virtual Environment</h4>
+            <p>Create a virtual environment and install dependencies:</p>
+            
+            <pre><code># Create a virtual environment
+python -m venv venv
+
+# Activate the virtual environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
+
+# Create requirements.txt with dependencies
+cat > requirements.txt << EOL
+flask==2.3.3
+python-dotenv==1.0.0
+pytest==7.4.0
+black==23.7.0
+flake8==6.1.0
+EOL
+
+# Install dependencies
+pip install -r requirements.txt
+</code></pre>
+            
+            <p><strong>Analogy:</strong> Setting up the environment is like preparing a kitchen before cooking. You ensure all utensils and ingredients are available and organized before starting to cook. Similarly, we prepare all our development tools before writing code.</p>
+        </section>
+
+        <section class="implementing_application">
+            <h3>Implementing the Basic Application</h3>
+            
+            <p>Now let's implement our Flask application following best practices and proper structure.</p>
+            
+            <h4>Application Factory Pattern</h4>
+            <p>We'll use the application factory pattern to allow for easier testing and multiple instances:</p>
+            
+            <p><strong>app/__init__.py:</strong></p>
+            <pre><code>from flask import Flask
+
+def create_app(test_config=None):
+    """Create and configure the Flask application."""
+    app = Flask(__name__, instance_relative_config=True)
+    
+    # Default configuration
+    app.config.from_mapping(
+        SECRET_KEY='dev',
+    )
+    
+    if test_config is None:
+        # Load the instance config, if it exists, when not testing
+        app.config.from_pyfile('config.py', silent=True)
+    else:
+        # Load the test config if passed in
+        app.config.from_mapping(test_config)
+    
+    # Register routes
+    from app import routes
+    routes.register_routes(app)
+    
+    return app
+
+# This allows running the app with 'flask run'
+app = create_app()
+</code></pre>
+            
+            <h4>Routes Module</h4>
+            <p><strong>app/routes.py:</strong></p>
+            <pre><code>from flask import render_template, jsonify
+
+def register_routes(app):
+    """Register all application routes."""
+    
+    @app.route('/')
+    def index():
+        """Render the homepage."""
+        return render_template('index.html', title="Flask Hello World")
+    
+    @app.route('/api/hello')
+    def hello_api():
+        """Return a JSON greeting."""
+        return jsonify({
+            'message': 'Hello, World!',
+            'status': 'success'
+        })
+    
+    @app.route('/about')
+    def about():
+        """About page."""
+        return render_template('index.html', title="About", 
+                               content="This is a simple Flask application created during our workshop.")
+</code></pre>
+            
+            <h4>HTML Template</h4>
+            <p><strong>app/templates/index.html:</strong></p>
+            <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;{{ title }}&lt;/title&gt;
+    &lt;link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;header&gt;
+        &lt;h1&gt;{{ title }}&lt;/h1&gt;
+        &lt;nav&gt;
+            &lt;a href="{{ url_for('index') }}"&gt;Home&lt;/a&gt;
+            &lt;a href="{{ url_for('about') }}"&gt;About&lt;/a&gt;
+        &lt;/nav&gt;
+    &lt;/header&gt;
+    
+    &lt;main&gt;
+        {% if content %}
+            &lt;p&gt;{{ content }}&lt;/p&gt;
+        {% else %}
+            &lt;h2&gt;Welcome to our Flask Hello World application!&lt;/h2&gt;
+            &lt;p&gt;This application was created during the Week 1 Workshop of our Python Full Stack Developer Course.&lt;/p&gt;
+            
+            &lt;h3&gt;API Example&lt;/h3&gt;
+            &lt;button id="apiButton"&gt;Get JSON Greeting&lt;/button&gt;
+            &lt;pre id="apiResponse"&gt;&lt;/pre&gt;
+        {% endif %}
+    &lt;/main&gt;
+    
+    &lt;footer&gt;
+        &lt;p&gt;&copy; 2025 Python Full Stack Developer Course&lt;/p&gt;
+    &lt;/footer&gt;
+    
+    &lt;script&gt;
+        document.getElementById('apiButton').addEventListener('click', async () => {
+            const response = await fetch('/api/hello');
+            const data = await response.json();
+            document.getElementById('apiResponse').textContent = JSON.stringify(data, null, 2);
+        });
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+            
+            <h4>CSS Styling</h4>
+            <p><strong>app/static/style.css:</strong></p>
+            <pre><code>* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+nav {
+    margin-top: 10px;
+}
+
+nav a {
+    margin-right: 15px;
+    text-decoration: none;
+    color: #0066cc;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+h1, h2, h3 {
+    margin-bottom: 15px;
+}
+
+main {
+    margin-bottom: 30px;
+}
+
+button {
+    background-color: #0066cc;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 10px 0;
+}
+
+button:hover {
+    background-color: #0055aa;
+}
+
+pre {
+    background-color: #f4f4f4;
+    padding: 15px;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 10px 0;
+    min-height: 20px;
+}
+
+footer {
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #666;
+}
+</code></pre>
+            
+            <h4>Environment Variables</h4>
+            <p><strong>.env.example:</strong></p>
+            <pre><code>FLASK_APP=app
+FLASK_ENV=development
+FLASK_DEBUG=1
+</code></pre>
+            
+            <p>Create your actual .env file (not committed to Git):</p>
+            <pre><code>cp .env.example .env</code></pre>
+            
+            <h4>First Git Commit</h4>
+            <p>Now let's commit our initial application:</p>
+            
+            <pre><code>git add .
+git commit -m "feat: Initial implementation of Flask Hello World application"
+</code></pre>
+            
+            <p><strong>Real-world practice:</strong> This structured approach to implementing a Flask application reflects patterns used in production environments. The application factory pattern, for example, is used by companies like Mozilla and Twilio in their Flask applications to allow for better testing and configuration management.</p>
+        </section>
+
+        <section class="containerization">
+            <h3>Containerizing with Docker</h3>
+            
+            <p>Now that our application works locally, let's containerize it for consistent deployment.</p>
+            
+            <h4>Dockerfile</h4>
+            <p><strong>docker/Dockerfile:</strong></p>
+            <pre><code>FROM python:3.10-slim
+
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV FLASK_APP=app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Expose port
+EXPOSE 5000
+
+# Command to run when container starts
+CMD ["flask", "run", "--host=0.0.0.0"]
+</code></pre>
+            
+            <h4>Docker Compose Configuration</h4>
+            <p><strong>docker/docker-compose.yml:</strong></p>
+            <pre><code>version: '3.8'
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ..:/app
+    environment:
+      - FLASK_APP=app
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    command: flask run --host=0.0.0.0
+</code></pre>
+            
+            <h4>Building and Running with Docker</h4>
+            <p>Let's build and run our container:</p>
+            
+            <pre><code># Navigate to the docker directory
+cd docker
+
+# Build and start the container
+docker-compose up -d --build
+
+# Check that the container is running
+docker-compose ps
+</code></pre>
+            
+            <p>Now you can access the application at http://localhost:5000</p>
+            
+            <h4>Git Commit for Docker Configuration</h4>
+            <pre><code>git add .
+git commit -m "feat: Add Docker configuration for containerization"
+</code></pre>
+            
+            <p><strong>Analogy:</strong> Containerizing an application is like vacuum-sealing a meal – it preserves all the ingredients and preparations in exactly the state you intended, ensuring it will be the same when "opened" in any environment.</p>
+            
+            <p><strong>Real-world application:</strong> At companies like Uber and Airbnb, containerization is a standard practice for ensuring consistency between development and production environments, especially for microservices architectures where dozens or hundreds of small applications must work together seamlessly.</p>
+        </section>
+
+        <section class="testing_debugging">
+            <h3>Testing and Debugging</h3>
+            
+            <p>Professional developers ensure their code works correctly through testing. Let's add some tests and learn debugging techniques.</p>
+            
+            <h4>Basic Tests</h4>
+            <p><strong>tests/test_app.py:</strong></p>
+            <pre><code>import pytest
+from app import create_app
+
+@pytest.fixture
+def app():
+    """Create application for the tests."""
+    app = create_app({
+        'TESTING': True,
+    })
+    
+    yield app
+
+@pytest.fixture
+def client(app):
+    """A test client for the app."""
+    return app.test_client()
+
+def test_index_page(client):
+    """Test that the index page loads correctly."""
+    response = client.get('/')
+    assert response.status_code == 200
+    assert b'Welcome to our Flask Hello World application!' in response.data
+
+def test_about_page(client):
+    """Test that the about page loads correctly."""
+    response = client.get('/about')
+    assert response.status_code == 200
+    assert b'This is a simple Flask application' in response.data
+
+def test_api_endpoint(client):
+    """Test that the API endpoint returns correct JSON."""
+    response = client.get('/api/hello')
+    assert response.status_code == 200
+    json_data = response.get_json()
+    assert json_data['message'] == 'Hello, World!'
+    assert json_data['status'] == 'success'
+</code></pre>
+            
+            <h4>Running Tests</h4>
+            <p>Let's run our tests to ensure everything works:</p>
+            
+            <pre><code># Run tests
+pytest -v tests/
+</code></pre>
+            
+            <h4>Debugging with VS Code</h4>
+            <p>Now let's try debugging our application using VS Code's debug configuration that we set up earlier:</p>
+            
+            <ol>
+                <li>Stop the Docker container if it's running: <code>docker-compose down</code></li>
+                <li>Open VS Code in the project directory: <code>code .</code></li>
+                <li>Set a breakpoint in routes.py, for example on the return line in the index function</li>
+                <li>Press F5 or click the "Run and Debug" button in VS Code</li>
+                <li>Select the "Flask" configuration</li>
+                <li>Open http://localhost:5000 in your browser</li>
+                <li>VS Code will pause execution at your breakpoint, allowing you to inspect variables, step through code, etc.</li>
+            </ol>
+            
+            <h4>Common Issues and Solutions</h4>
+            
+            <p><strong>Issue 1: Module not found errors</strong></p>
+            <p>If you get "ModuleNotFoundError" when running the application, check:</p>
+            <ul>
+                <li>Ensure your PYTHONPATH includes the project root directory</li>
+                <li>Verify that you're running the application from the correct directory</li>
+                <li>Check import statements for typos</li>
+            </ul>
+            
+            <p><strong>Issue 2: Port already in use</strong></p>
+            <p>If port 5000 is already in use, you'll get an OSError. To resolve:</p>
+            <ul>
+                <li>Stop any other services using port 5000</li>
+                <li>Change the port in docker-compose.yml and launch.json</li>
+                <li>On Mac, stop the AirPlay Receiver which also uses port 5000</li>
+            </ul>
+            
+            <p><strong>Issue 3: Docker container won't start</strong></p>
+            <p>If the Docker container fails to start, check:</p>
+            <ul>
+                <li>Docker daemon is running</li>
+                <li>No syntax errors in Dockerfile or docker-compose.yml</li>
+                <li>Ports aren't already in use</li>
+                <li>Check logs with <code>docker-compose logs</code></li>
+            </ul>
+            
+            <h4>Git Commit for Tests</h4>
+            <pre><code>git add .
+git commit -m "test: Add basic tests for application functionality"
+</code></pre>
+            
+            <p><strong>Real-world practice:</strong> Companies like Shopify and Twilio have extensive test suites for their applications, with test coverage requirements before code can be merged. Debugging skills are equally valued, as they significantly reduce time spent identifying and fixing issues in production.</p>
+        </section>
+
+        <section class="documentation">
+            <h3>Documentation and Project Reflection</h3>
+            
+            <p>Documentation is critical for both personal reference and team collaboration. Let's create a comprehensive README.md file:</p>
+            
+            <h4>Project README</h4>
+            <p><strong>README.md:</strong></p>
+            <pre><code># Flask Hello World
+
+A simple Flask web application created during the Week 1 Workshop of the Python Full Stack Developer Course.
+
+## Features
+
+- Simple web pages with Flask routing
+- API endpoint returning JSON data
+- Containerized with Docker
+- Configured for VS Code development
+- Includes basic tests
+
+## Development Setup
+
+### Prerequisites
+
+- Python 3.10 or higher
+- Docker and Docker Compose
+- Visual Studio Code (recommended)
+
+### Local Setup
+
+1. Clone the repository:
+   ```
+   git clone &lt;repository-url&gt;
+   cd flask_hello_world
+   ```
+
+2. Create a virtual environment and install dependencies:
+   ```
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+3. Create a .env file:
+   ```
+   cp .env.example .env
+   ```
+
+4. Run the application:
+   ```
+   flask run
+   ```
+
+5. Access the application at http://localhost:5000
+
+### Docker Setup
+
+1. Build and run with Docker Compose:
+   ```
+   cd docker
+   docker-compose up -d
+   ```
+
+2. Access the application at http://localhost:5000
+
+3. Stop the container when finished:
+   ```
+   docker-compose down
+   ```
+
+## Testing
+
+Run tests with pytest:
+```
+pytest -v tests/
+```
+
+## Project Structure
+
+- `app/`: Application package
+  - `__init__.py`: Application factory
+  - `routes.py`: Route definitions
+  - `templates/`: HTML templates
+  - `static/`: Static files (CSS, JS)
+- `docker/`: Docker configuration
+- `tests/`: Test suite
+- `.vscode/`: VS Code configuration
+
+## What I Learned
+
+In this project, I learned how to:
+
+- Structure a Flask application using the application factory pattern
+- Set up a development environment with VS Code
+- Implement proper Git workflow with meaningful commits
+- Containerize a Python application with Docker
+- Write basic tests for Flask routes
+- Configure debugging tools for efficient development
+
+## Next Steps
+
+Future enhancements could include:
+
+- Database integration
+- User authentication
+- More complex API endpoints
+- Frontend framework integration
+- Deployment to a cloud platform
+</code></pre>
+            
+            <h4>Final Git Commit</h4>
+            <pre><code>git add .
+git commit -m "docs: Add comprehensive README with setup instructions and project details"
+</code></pre>
+            
+            <h4>Reflection Questions</h4>
+            <p>Take a few minutes to reflect on this workshop:</p>
+            <ul>
+                <li>How did the integration of different tools (Git, Docker, VS Code) enhance your development workflow?</li>
+                <li>What challenges did you encounter when setting up the project structure or containerizing the application?</li>
+                <li>How might this workflow scale to larger projects with multiple developers?</li>
+                <li>Which parts of the setup process could be automated for future projects?</li>
+            </ul>
+            
+            <p><strong>Analogy:</strong> Good documentation is like a map for a complex city. It may seem unnecessary when you know the area well, but it becomes invaluable when you return after an absence or when guiding someone new.</p>
+            
+            <p><strong>Real-world importance:</strong> In professional environments, documentation is often considered as important as the code itself. Companies like Google and Microsoft have strict documentation requirements, recognizing that code is read far more often than it is written, and that clear documentation reduces onboarding time for new team members.</p>
+        </section>
+
+        <section class="conclusion">
+            <h3>Workshop Conclusion</h3>
+            
+            <p>Congratulations! You've successfully integrated all the key concepts from Week 1 into a functional workflow. Let's summarize what we've accomplished:</p>
+            
+            <h4>What We Built</h4>
+            <ul>
+                <li>A structured Flask web application with routes and templates</li>
+                <li>A functioning API endpoint returning JSON</li>
+                <li>A containerized environment using Docker</li>
+                <li>A configured VS Code setup with debugging support</li>
+                <li>A Git repository with proper commits and documentation</li>
+                <li>A test suite verifying application functionality</li>
+            </ul>
+            
+            <h4>Key Skills Practiced</h4>
+            <ul>
+                <li>Project planning and structure creation</li>
+                <li>Environment configuration and dependency management</li>
+                <li>Web application development with Flask</li>
+                <li>Containerization with Docker</li>
+                <li>Version control best practices</li>
+                <li>Testing and debugging techniques</li>
+                <li>Documentation writing</li>
+            </ul>
+            
+            <h4>From Here to Week 2</h4>
+            <p>As we move into Week 2, focusing on Python fundamentals, remember that these workflow practices apply to all types of development. The foundation we've built today – structured approach, version control, containerization, and testing – will serve as the backbone for all future projects.</p>
+            
+            <p>Your weekend assignment will build directly on these skills, challenging you to apply them independently to create a complete containerized Python environment.</p>
+            
+            <p><strong>Final thought:</strong> Just as a chef doesn't just learn ingredients but also kitchen workflow, timing, and presentation, a developer needs more than just programming syntax – they need an integrated workflow that brings efficiency and reliability to their craft. Today, you've taken a significant step toward developing that professional workflow.</p>
+        </section>
+
+        <section class="additional_resources">
+            <h3>Additional Resources</h3>
+            
+            <h4>Flask Development</h4>
+            <ul>
+                <li><a href="https://flask.palletsprojects.com/" target="_blank">Flask Official Documentation</a></li>
+                <li><a href="https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world" target="_blank">Flask Mega-Tutorial by Miguel Grinberg</a></li>
+                <li><a href="https://testdriven.io/blog/flask-pytest/" target="_blank">Testing Flask Applications with pytest</a></li>
+            </ul>
+            
+            <h4>Docker and Containerization</h4>
+            <ul>
+                <li><a href="https://docs.docker.com/get-started/" target="_blank">Docker Getting Started Guide</a></li>
+                <li><a href="https://testdriven.io/blog/dockerizing-flask-with-postgres-gunicorn-and-nginx/" target="_blank">Dockerizing Flask with Postgres, Gunicorn, and Nginx</a></li>
+                <li><a href="https://pythonspeed.com/docker/" target="_blank">Python-specific Docker tips</a></li>
+            </ul>
+            
+            <h4>Development Workflow</h4>
+            <ul>
+                <li><a href="https://code.visualstudio.com/docs/python/tutorial-flask" target="_blank">VS Code Flask Tutorial</a></li>
+                <li><a href="https://git-scm.com/book/en/v2" target="_blank">Pro Git Book</a></li>
+                <li><a href="https://12factor.net/" target="_blank">The Twelve-Factor App Methodology</a></li>
+            </ul>
+            
+            <h4>Project Templates</h4>
+            <ul>
+                <li><a href="https://github.com/cookiecutter-flask/cookiecutter-flask" target="_blank">cookiecutter-flask</a> - A Flask template with Bootstrap, asset bundling, and more</li>
+                <li><a href="https://github.com/testdrivenio/flask-docker-swarm" target="_blank">flask-docker-swarm</a> - Flask + Docker Swarm template</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

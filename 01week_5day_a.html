@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setting Up a Complete Development Environment for Python Web Development</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Setting Up a Complete Development Environment</h1>
+        <h2>Python Web Development Toolkit Configuration</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>Why a Proper Development Environment Matters</h3>
+            <p>Think of your development environment as a chef's kitchen. A professional chef doesn't just need a stove and some pans—they need a properly organized workspace with quality tools arranged for efficiency. Similarly, a developer needs more than just a text editor and Python installed. You need a complete ecosystem where all your tools work together seamlessly.</p>
+            
+            <p>Today, we'll build this ecosystem piece by piece, focusing on four core areas:</p>
+            <ul>
+                <li>Configuring VS Code for Python development</li>
+                <li>Integrating Git for version control</li>
+                <li>Setting up Docker for containerization</li>
+                <li>Adding productivity extensions and tools</li>
+            </ul>
+            
+            <p>By the end of this session, you'll have a professional-grade development environment that will serve as the foundation for all your future projects in this course.</p>
+        </section>
+
+        <section class="editor-config">
+            <h3>Code Editor Configuration for Python Development</h3>
+            
+            <p>VS Code has become the editor of choice for many Python developers due to its balance of performance, features, and extensibility. Let's configure it properly for Python development.</p>
+            
+            <h4>Basic VS Code Settings for Python</h4>
+            <p>The settings.json file in VS Code controls your editor's behavior. Here's a recommended configuration specifically for Python development:</p>
+            
+            <pre><code>{
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": ["--line-length", "88"],
+    "editor.formatOnSave": true,
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Args": ["--max-line-length=88"],
+    "python.sortImports.args": ["--profile", "black"],
+    "editor.rulers": [88],
+    "files.trimTrailingWhitespace": true,
+    "python.analysis.typeCheckingMode": "basic"
+}</code></pre>
+            
+            <p>This configuration does several important things:</p>
+            <ul>
+                <li>Enables linting (code quality checking) with Pylint and Flake8</li>
+                <li>Sets up Black as the code formatter with a line length of 88 characters</li>
+                <li>Configures automatic formatting when you save files</li>
+                <li>Enables basic type checking for better error detection</li>
+                <li>Shows a visual guide at 88 characters to help maintain consistent line lengths</li>
+            </ul>
+            
+            <p><strong>Real-world benefit:</strong> When working on teams, consistent code formatting eliminates unproductive discussions about code style and prevents "format wars" in pull requests. It's like having standardized containers in a kitchen—everyone knows exactly where things belong.</p>
+            
+            <h4>Setting Up Python Interpreter Selection</h4>
+            
+            <p>VS Code needs to know which Python environment to use. Here's how to configure it:</p>
+            
+            <ol>
+                <li>Press <code>Ctrl+Shift+P</code> (or <code>Cmd+Shift+P</code> on Mac) to open the command palette</li>
+                <li>Type "Python: Select Interpreter" and select it</li>
+                <li>Choose your project's virtual environment from the list</li>
+            </ol>
+            
+            <p><strong>Pro tip:</strong> You can create a <code>.vscode/settings.json</code> file in your project directory with project-specific settings. This helps when different projects need different environments or configurations.</p>
+            
+            <h4>Configuring Debugging</h4>
+            
+            <p>Proper debugging setup saves countless hours. Create a <code>launch.json</code> file in the <code>.vscode</code> directory:</p>
+            
+            <pre><code>{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Python: Flask",
+            "type": "python",
+            "request": "launch",
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "app.py",
+                "FLASK_ENV": "development"
+            },
+            "args": [
+                "run",
+                "--no-debugger",
+                "--no-reload"
+            ],
+            "jinja": true
+        }
+    ]
+}</code></pre>
+            
+            <p>This configuration gives you two debug profiles:</p>
+            <ul>
+                <li>One for debugging the current file you're working on</li>
+                <li>Another specifically for Flask applications</li>
+            </ul>
+            
+            <p><strong>Analogy:</strong> Debugging without proper tools is like trying to find a leak in your plumbing without being able to see through the walls. These debug configurations are like having X-ray vision for your code—you can see exactly what's happening inside as it runs.</p>
+        </section>
+
+        <section class="git-integration">
+            <h3>Git Integration</h3>
+            
+            <p>Git is the industry standard for version control. It's like having a time machine for your code—you can go back to any previous state and see how things evolved.</p>
+            
+            <h4>VS Code Git Configuration</h4>
+            
+            <p>VS Code has excellent built-in Git support, but we can enhance it with some settings:</p>
+            
+            <pre><code>{
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "git.autofetch": true,
+    "diffEditor.ignoreTrimWhitespace": false,
+    "git.inputValidationSubjectLength": 72,
+    "git.inputValidationLength": 500
+}</code></pre>
+            
+            <p>These settings:</p>
+            <ul>
+                <li>Enable smart commit (automatically stages all changes when there are no staged changes)</li>
+                <li>Disable confirmation when syncing with remote repositories</li>
+                <li>Enable automatic fetching of changes from remote repositories</li>
+                <li>Show whitespace changes in diffs</li>
+                <li>Set validation limits for commit messages following best practices</li>
+            </ul>
+            
+            <h4>Setting Up a .gitignore File</h4>
+            
+            <p>A good <code>.gitignore</code> file prevents unnecessary files from being tracked. Create one in your project root:</p>
+            
+            <pre><code># Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Docker
+.docker/
+
+# Environment Variables
+.env
+.env.local
+.env.development
+
+# Database
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Tests
+.coverage
+htmlcov/
+.pytest_cache/
+</code></pre>
+            
+            <p><strong>Metaphor:</strong> Think of <code>.gitignore</code> as the bouncer at your code's nightclub—it decides what gets in and what stays out. Without it, your repository gets cluttered with temporary files, build artifacts, and environment-specific settings that shouldn't be shared.</p>
+            
+            <h4>Git Hooks for Code Quality</h4>
+            
+            <p>Git hooks let you run scripts before or after Git events like commit or push. They're like automatic quality control for your code.</p>
+            
+            <p>Let's set up a pre-commit hook that runs our linters before allowing a commit:</p>
+            
+            <ol>
+                <li>Install pre-commit: <code>pip install pre-commit</code></li>
+                <li>Create a <code>.pre-commit-config.yaml</code> file in your project root:</li>
+            </ol>
+            
+            <pre><code>repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-yaml
+    -   id: check-added-large-files
+
+-   repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+    -   id: black
+
+-   repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+    -   id: isort
+        args: ["--profile", "black"]
+
+-   repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+    -   id: flake8
+        additional_dependencies: [flake8-docstrings]
+</code></pre>
+            
+            <ol start="3">
+                <li>Initialize pre-commit: <code>pre-commit install</code></li>
+            </ol>
+            
+            <p><strong>Real-world application:</strong> This setup catches style issues, formatting problems, and basic errors before they even make it into your commit history. It's like having a proofreader who checks your work before you submit it, ensuring consistently high-quality code.</p>
+        </section>
+
+        <section class="docker-integration">
+            <h3>Docker Integration</h3>
+            
+            <p>Docker ensures that your application runs the same way everywhere. It's like shipping your entire kitchen along with the meal you cooked—the recipient gets exactly the same experience you intended.</p>
+            
+            <h4>VS Code Docker Extension Setup</h4>
+            
+            <p>The Docker extension for VS Code provides seamless Docker integration:</p>
+            
+            <ol>
+                <li>Open the Extensions view (<code>Ctrl+Shift+X</code>)</li>
+                <li>Search for "Docker" and install the Microsoft Docker extension</li>
+                <li>After installation, you'll see a new Docker icon in the Activity Bar</li>
+            </ol>
+            
+            <p>This extension provides:</p>
+            <ul>
+                <li>Syntax highlighting for Dockerfiles</li>
+                <li>IntelliSense for Docker commands</li>
+                <li>A visual interface for managing containers, images, and volumes</li>
+                <li>Commands for building, running, and stopping containers</li>
+            </ul>
+            
+            <h4>Creating a Development Dockerfile</h4>
+            
+            <p>Let's create a development-focused Dockerfile that includes all the tools we need:</p>
+            
+            <pre><code># Dockerfile.dev
+FROM python:3.10-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    git \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install development tools
+RUN pip install --no-cache-dir black flake8 pytest isort mypy pre-commit
+
+# Keep container running
+CMD ["bash"]
+</code></pre>
+            
+            <p><strong>Explanation:</strong> This Dockerfile:</p>
+            <ul>
+                <li>Starts from a slim Python 3.10 image to keep the size down</li>
+                <li>Sets environment variables for better Python behavior in containers</li>
+                <li>Installs system-level dependencies needed for many Python packages</li>
+                <li>Installs your project's dependencies</li>
+                <li>Adds development tools for linting, formatting, and testing</li>
+                <li>By default, just starts a bash shell so we can work interactively</li>
+            </ul>
+            
+            <h4>Docker Compose for Development</h4>
+            
+            <p>Docker Compose makes it easy to run multi-container applications. Create a <code>docker-compose.yml</code> file:</p>
+            
+            <pre><code>version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+    ports:
+      - "5000:5000"
+    command: bash -c "flask run --host=0.0.0.0"
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=app_dev
+
+volumes:
+  postgres_data:
+</code></pre>
+            
+            <p><strong>Analogy:</strong> Docker Compose is like a restaurant recipe that includes not just how to cook each dish, but also how all the dishes work together to create a complete meal. It orchestrates all your containers to work as a unified system.</p>
+            
+            <h4>VS Code Remote Development with Docker</h4>
+            
+            <p>One of the most powerful features of VS Code is its ability to develop inside a container:</p>
+            
+            <ol>
+                <li>Install the "Remote - Containers" extension</li>
+                <li>Create a <code>.devcontainer/devcontainer.json</code> file:</li>
+            </ol>
+            
+            <pre><code>{
+    "name": "Python Development",
+    "dockerComposeFile": ["../docker-compose.yml"],
+    "service": "app",
+    "workspaceFolder": "/app",
+    "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-azuretools.vscode-docker",
+        "streetsidesoftware.code-spell-checker",
+        "eamodio.gitlens"
+    ],
+    "settings": {
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.formatting.provider": "black",
+        "editor.formatOnSave": true,
+        "python.linting.flake8Enabled": true
+    }
+}
+</code></pre>
+            
+            <ol start="3">
+                <li>Use the Command Palette to run "Remote-Containers: Reopen in Container"</li>
+            </ol>
+            
+            <p><strong>Real-world benefit:</strong> This setup eliminates the "it works on my machine" problem. New team members can be productive immediately—they just clone the repo, open it in VS Code, and all the tools and dependencies are automatically set up inside the container.</p>
+        </section>
+
+        <section class="extensions-tools">
+            <h3>Extensions and Tools for Productivity</h3>
+            
+            <p>The right extensions can supercharge your development workflow. Here are the essential ones for Python web development:</p>
+            
+            <h4>Essential VS Code Extensions</h4>
+            
+            <ul>
+                <li><strong>Python</strong> - Microsoft's official Python extension</li>
+                <li><strong>Pylance</strong> - Provides fast, feature-rich language support for Python</li>
+                <li><strong>GitLens</strong> - Supercharges Git capabilities within VS Code</li>
+                <li><strong>Docker</strong> - Makes it easy to build and manage Docker containers</li>
+                <li><strong>Remote Development</strong> - Allows development inside containers</li>
+                <li><strong>autoDocstring</strong> - Generates Python docstrings automatically</li>
+                <li><strong>Python Test Explorer</strong> - Visual test runner for Python tests</li>
+                <li><strong>Python Indent</strong> - Correct Python indentation</li>
+                <li><strong>Code Spell Checker</strong> - Catches common spelling errors in code</li>
+                <li><strong>Better Comments</strong> - Improves comment highlighting</li>
+            </ul>
+            
+            <p>You can install these from the command line:</p>
+            
+            <pre><code>code --install-extension ms-python.python
+code --install-extension ms-python.vscode-pylance
+code --install-extension eamodio.gitlens
+code --install-extension ms-azuretools.vscode-docker
+code --install-extension ms-vscode-remote.vscode-remote-extensionpack
+code --install-extension njpwerner.autodocstring
+code --install-extension littlefoxteam.vscode-python-test-adapter
+code --install-extension kevin-rose.vscode-python-indent
+code --install-extension streetsidesoftware.code-spell-checker
+code --install-extension aaron-bond.better-comments
+</code></pre>
+            
+            <h4>Command Line Tools for Python Development</h4>
+            
+            <p>Beyond VS Code, several command-line tools will enhance your workflow:</p>
+            
+            <pre><code># Install development tools
+pip install black         # Code formatting
+pip install flake8        # Linting
+pip install mypy          # Type checking
+pip install pytest        # Testing
+pip install isort         # Import sorting
+pip install pre-commit    # Git hooks
+pip install httpie        # HTTP client for API testing
+pip install pgcli         # Better PostgreSQL CLI
+pip install pipenv        # Better package management
+pip install python-dotenv # Environment variable management
+</code></pre>
+            
+            <p><strong>Metaphor:</strong> These tools are like having specialized kitchen gadgets. Sure, you could chop everything with a regular knife, but having a food processor, mandoline slicer, and garlic press makes you much more efficient at specific tasks.</p>
+            
+            <h4>Configuring Python Path Intelligence</h4>
+            
+            <p>For better import auto-completion and navigation, create a <code>pyrightconfig.json</code> file:</p>
+            
+            <pre><code>{
+    "include": [
+        "app",
+        "tests"
+    ],
+    "exclude": [
+        "**/__pycache__",
+        "**/.venv"
+    ],
+    "reportMissingImports": true,
+    "reportMissingTypeStubs": false,
+    "pythonVersion": "3.10",
+    "typeCheckingMode": "basic"
+}
+</code></pre>
+            
+            <p><strong>Real-world application:</strong> This configuration helps Pylance (VS Code's Python language server) understand your project structure and provide better code intelligence, reducing the time you spend tracking down import errors or navigating between files.</p>
+        </section>
+
+        <section class="putting-it-all-together">
+            <h3>Putting It All Together: Creating a Project Template</h3>
+            
+            <p>Now that we've configured all these tools, let's create a reusable project template. Create a directory structure like this:</p>
+            
+            <pre><code>project_template/
+├── .vscode/
+│   ├── settings.json
+│   └── launch.json
+├── .devcontainer/
+│   └── devcontainer.json
+├── app/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── models.py
+│   ├── routes.py
+│   └── utils.py
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py
+│   └── test_app.py
+├── .gitignore
+├── .pre-commit-config.yaml
+├── docker-compose.yml
+├── Dockerfile.dev
+├── requirements.txt
+├── pyrightconfig.json
+└── README.md
+</code></pre>
+            
+            <p><strong>Benefits of this setup:</strong></p>
+            <ul>
+                <li>Consistent project structure across all your applications</li>
+                <li>Immediate development readiness with all tools configured</li>
+                <li>Easy onboarding for new team members</li>
+                <li>Built-in best practices for code quality</li>
+                <li>Development environment isolation via Docker</li>
+                <li>Efficient debugging and testing workflows</li>
+            </ul>
+            
+            <p><strong>Analogy:</strong> This template is like a chef's mise en place—everything is prepared and in its place before you start cooking. When inspiration strikes, you can focus on creating rather than setting up tools.</p>
+        </section>
+
+        <section class="real-world-workflow">
+            <h3>A Day in the Life: A Real-World Development Workflow</h3>
+            
+            <p>Let's walk through how a typical development day looks with this setup:</p>
+            
+            <ol>
+                <li><strong>Start the environment</strong>: Open VS Code, open your project folder, and use "Remote-Containers: Reopen in Container"</li>
+                <li><strong>Pull latest changes</strong>: Use the Source Control tab to pull the latest changes from the remote repository</li>
+                <li><strong>Create a new feature branch</strong>: Click the branch name in the status bar and create a new branch for your feature</li>
+                <li><strong>Run the application</strong>: Use the debug configuration to start your Flask application with breakpoints ready</li>
+                <li><strong>Write code</strong>: As you code, your changes are automatically formatted on save, and linters highlight potential issues</li>
+                <li><strong>Run tests</strong>: Use the Test Explorer to run tests for your changes</li>
+                <li><strong>Commit changes</strong>: Stage and commit your changes in the Source Control tab (pre-commit hooks will check your code quality)</li>
+                <li><strong>Push your branch</strong>: Push your feature branch to the remote repository</li>
+                <li><strong>Create a pull request</strong>: Use GitLens or the GitHub PR extension to create a pull request</li>
+                <li><strong>Review and merge</strong>: After review and CI passes, merge your changes</li>
+            </ol>
+            
+            <p><strong>Real-world efficiency gain:</strong> With this workflow, you spend less time on setup, environment issues, and manual checks, and more time on actual problem-solving and feature development. Studies show that a well-configured development environment can reduce time spent on non-coding tasks by up to 60%.</p>
+        </section>
+
+        <section class="troubleshooting">
+            <h3>Common Issues and Troubleshooting</h3>
+            
+            <p>Even the best environments occasionally have problems. Here are solutions to common issues:</p>
+            
+            <h4>Container Startup Problems</h4>
+            <p><strong>Issue</strong>: VS Code can't connect to the container<br>
+            <strong>Solution</strong>: Check Docker service is running, try rebuilding with "Remote-Containers: Rebuild Container"</p>
+            
+            <h4>Python Environment Issues</h4>
+            <p><strong>Issue</strong>: VS Code isn't using the correct Python interpreter<br>
+            <strong>Solution</strong>: Use "Python: Select Interpreter" and choose the one in your container (/usr/local/bin/python)</p>
+            
+            <h4>Git Integration Problems</h4>
+            <p><strong>Issue</strong>: Git complains about line ending differences<br>
+            <strong>Solution</strong>: Set <code>git config --global core.autocrlf input</code> on Unix/Mac or <code>git config --global core.autocrlf true</code> on Windows</p>
+            
+            <h4>Pre-commit Hook Failures</h4>
+            <p><strong>Issue</strong>: Pre-commit hooks failing unexpectedly<br>
+            <strong>Solution</strong>: Run <code>pre-commit run --all-files</code> to see detailed errors, then fix them</p>
+            
+            <p><strong>Metaphor:</strong> Think of troubleshooting as debugging a recipe. When something doesn't taste right, a good chef knows to check the temperature, ingredients, and cooking time methodically—the same approach works for development environments.</p>
+        </section>
+
+        <section class="conclusion">
+            <h3>Conclusion and Next Steps</h3>
+            
+            <p>You now have a professional-grade development environment that integrates all the tools you need for Python web development. This foundation will serve you well throughout this course and your professional career.</p>
+            
+            <h4>Weekend Project</h4>
+            <p>For your weekend project, you'll apply what you've learned by setting up a containerized Python environment that includes:</p>
+            <ul>
+                <li>A Python 3.10+ container</li>
+                <li>VS Code configured for remote development in container</li>
+                <li>Git integration</li>
+                <li>Basic project structure for a web application</li>
+                <li>Documentation on how to use your setup</li>
+            </ul>
+            
+            <p>This project will solidify your understanding and give you a template you can use for all future projects in this course.</p>
+            
+            <h4>Additional Resources</h4>
+            <ul>
+                <li><a href="https://code.visualstudio.com/docs/python/python-tutorial">VS Code Python Tutorial</a></li>
+                <li><a href="https://docs.docker.com/compose/">Docker Compose Documentation</a></li>
+                <li><a href="https://git-scm.com/book/en/v2">Pro Git Book</a></li>
+                <li><a href="https://code.visualstudio.com/docs/remote/containers">Remote Development in Containers</a></li>
+            </ul>
+            
+            <p><strong>Remember:</strong> A well-configured development environment is an investment that pays dividends every day. The time you spend setting it up now will save you countless hours throughout your career.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

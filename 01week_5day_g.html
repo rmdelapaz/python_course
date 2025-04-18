@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekend Project: Containerized Python Environment Setup</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Weekend Project: Containerized Python Environment Setup</h1>
+        <h2>Creating a Complete Development Environment for Python Web Applications</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>Project Overview</h3>
+            <p>In this weekend project, you'll create a fully containerized Python development environment that you can use throughout the course and in your future development work. This environment will include a Python 3.10+ container, VS Code configured for remote development, Git integration, and a basic web application structure.</p>
+            
+            <p>Think of this project as building your own professional developer workshop—a consistent, portable space with all the tools you need, organized exactly how you want them. Just as a chef prepares their kitchen before cooking or a carpenter sets up their workshop before building furniture, we'll set up our development environment before diving into more complex programming tasks.</p>
+            
+            <p>By the end of this project, you'll have a powerful, isolated development environment that runs identically on any machine with Docker installed, eliminating the "it works on my machine" problem and ensuring consistent experiences across different computers and operating systems.</p>
+        </section>
+
+        <section class="problem_solving">
+            <h3>Problem-Solving Approach</h3>
+            
+            <h4>Step 1: Understand the Problem</h4>
+            <p>Our goal is to create a containerized Python environment that includes:</p>
+            <ul>
+                <li>A Python 3.10+ container: An isolated environment running Python 3.10 or newer</li>
+                <li>VS Code configured for remote development: The ability to edit code in VS Code while it runs inside the container</li>
+                <li>Git integration: Version control within the container</li>
+                <li>Basic project structure for a web application: A template for Python web development</li>
+                <li>Documentation: Clear instructions on how to use the setup</li>
+            </ul>
+            
+            <p>Let's break down what each component means:</p>
+            <ul>
+                <li><strong>Python Container:</strong> A Docker container that runs Python 3.10+ and includes necessary development tools</li>
+                <li><strong>VS Code Remote Development:</strong> Configuration that allows VS Code to connect to and work within the container</li>
+                <li><strong>Git Integration:</strong> Git installed in the container and configured for version control</li>
+                <li><strong>Project Structure:</strong> A standard directory layout for web applications</li>
+                <li><strong>Documentation:</strong> README files and other documentation explaining the setup</li>
+            </ul>
+            
+            <p>The main challenges we need to address are:</p>
+            <ul>
+                <li>Creating a Dockerfile that includes all necessary tools</li>
+                <li>Configuring VS Code to work with the container</li>
+                <li>Setting up proper volume mounts to persist code and Git history</li>
+                <li>Creating a sensible project structure that follows best practices</li>
+                <li>Documenting everything clearly for future reference</li>
+            </ul>
+            
+            <h4>Step 2: Devise a Plan</h4>
+            <p>Here's our step-by-step approach to building this containerized environment:</p>
+            
+            <ol>
+                <li>Create a project directory structure</li>
+                <li>Initialize Git repository</li>
+                <li>Create a Dockerfile for Python 3.10+ with development tools</li>
+                <li>Create docker-compose.yml for easy container management</li>
+                <li>Configure VS Code for remote development with devcontainer.json</li>
+                <li>Set up a basic Python web application structure</li>
+                <li>Create documentation with README.md</li>
+                <li>Test the complete environment</li>
+            </ol>
+            
+            <p>This plan follows a logical progression, starting with the basic structure and git initialization, then setting up the containerization, followed by editor configuration, and finally adding documentation.</p>
+            
+            <h4>Step 3: Execute the Plan</h4>
+            <p>Now we'll implement our plan step by step. I'll provide detailed instructions and code for each component.</p>
+            
+            <h4>Step 4: Review/Reflect</h4>
+            <p>After completing the implementation, we'll test the environment, verify that it meets all requirements, and review what we've learned.</p>
+        </section>
+
+        <section class="implementation">
+            <h3>Implementation</h3>
+            
+            <h4>Step 1: Create Project Directory Structure</h4>
+            <p>First, let's create a directory for our project and set up the basic structure:</p>
+            
+            <pre><code>mkdir python_web_container
+cd python_web_container
+
+# Create directories for our web application
+mkdir -p app/static app/templates app/tests
+
+# Create directories for container configuration
+mkdir -p .devcontainer .vscode
+</code></pre>
+            
+            <p>Here's what each directory will be used for:</p>
+            <ul>
+                <li><code>app/</code>: Main application package</li>
+                <li><code>app/static/</code>: Static files (CSS, JavaScript, images)</li>
+                <li><code>app/templates/</code>: HTML templates</li>
+                <li><code>app/tests/</code>: Unit and integration tests</li>
+                <li><code>.devcontainer/</code>: Configuration for VS Code remote development</li>
+                <li><code>.vscode/</code>: VS Code settings specific to this project</li>
+            </ul>
+            
+            <h4>Step 2: Initialize Git Repository</h4>
+            <p>Next, let's initialize a Git repository and create a basic .gitignore file:</p>
+            
+            <pre><code># Initialize Git repository
+git init
+
+# Create .gitignore file
+cat > .gitignore << EOL
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+
+# VS Code (excluding settings we want to commit)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Docker
+.docker/
+
+# Logs
+logs/
+*.log
+
+# Tests
+.coverage
+htmlcov/
+.pytest_cache/
+EOL
+
+# Make initial commit
+git add .gitignore
+git commit -m "Initial commit: Add .gitignore"
+</code></pre>
+            
+            <p>The .gitignore file is important because it prevents unnecessary files from being tracked by Git. This keeps your repository clean and efficient.</p>
+            
+            <h4>Step 3: Create Dockerfile</h4>
+            <p>Now, let's create a Dockerfile that defines our Python environment:</p>
+            
+            <pre><code>cat > Dockerfile << EOL
+FROM python:3.10-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/workspace
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \\
+    build-essential \\
+    git \\
+    curl \\
+    vim \\
+    && apt-get clean \\
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /workspace
+
+# Install Python development tools
+RUN pip install --no-cache-dir \\
+    flask \\
+    pytest \\
+    black \\
+    flake8 \\
+    mypy \\
+    python-dotenv \\
+    gunicorn
+
+# Keep container running
+CMD ["bash"]
+EOL
+</code></pre>
+            
+            <p>Let's understand what this Dockerfile does:</p>
+            <ul>
+                <li>Uses Python 3.10 as the base image</li>
+                <li>Sets environment variables to improve Python behavior in containers</li>
+                <li>Installs system dependencies including Git and build tools</li>
+                <li>Sets the working directory to /workspace</li>
+                <li>Installs Python packages for web development and code quality</li>
+                <li>Sets the default command to bash to keep the container running</li>
+            </ul>
+            
+            <p><strong>Analogy:</strong> Think of this Dockerfile as a recipe for building your development environment. Just as a recipe lists ingredients and preparation steps, this file specifies what components to include and how to configure them. Anyone with this recipe can reproduce the exact same environment.</p>
+            
+            <h4>Step 4: Create docker-compose.yml</h4>
+            <p>Docker Compose makes it easy to manage containers. Let's create a docker-compose.yml file:</p>
+            
+            <pre><code>cat > docker-compose.yml << EOL
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/workspace
+    ports:
+      - "5000:5000"  # Flask default port
+    environment:
+      - FLASK_APP=app/app.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+EOL
+</code></pre>
+            
+            <p>This docker-compose.yml file:</p>
+            <ul>
+                <li>Defines a service called "app" that builds using our Dockerfile</li>
+                <li>Mounts the current directory to /workspace in the container</li>
+                <li>Maps port 5000 from the container to the host</li>
+                <li>Sets environment variables for Flask development</li>
+            </ul>
+            
+            <p><strong>Real-world example:</strong> In professional development teams, docker-compose.yml files often define multiple services that work together—for example, a web server, database, cache, and background workers. This approach allows developers to spin up an entire application stack with a single command.</p>
+            
+            <h4>Step 5: Configure VS Code for Remote Development</h4>
+            <p>Now, let's configure VS Code to connect to our container. First, create a devcontainer.json file:</p>
+            
+            <pre><code>cat > .devcontainer/devcontainer.json << EOL
+{
+    "name": "Python Web Development",
+    "dockerComposeFile": ["../docker-compose.yml"],
+    "service": "app",
+    "workspaceFolder": "/workspace",
+    "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": false,
+        "python.linting.flake8Enabled": true,
+        "python.formatting.provider": "black",
+        "python.formatting.blackPath": "/usr/local/bin/black",
+        "editor.formatOnSave": true,
+        "editor.rulers": [88],
+        "python.linting.flake8Args": ["--max-line-length=88"],
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "python.testing.nosetestsEnabled": false,
+        "python.testing.pytestArgs": ["app/tests"]
+    },
+    "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-azuretools.vscode-docker",
+        "eamodio.gitlens",
+        "streetsidesoftware.code-spell-checker",
+        "njpwerner.autodocstring"
+    ],
+    "remoteUser": "root"
+}
+EOL
+</code></pre>
+            
+            <p>Then, let's create VS Code settings:</p>
+            
+            <pre><code>cat > .vscode/settings.json << EOL
+{
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+    "editor.rulers": [88],
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/*.pyc": true
+    }
+}
+EOL
+
+cat > .vscode/launch.json << EOL
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Flask",
+            "type": "python",
+            "request": "launch",
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "app/app.py",
+                "FLASK_ENV": "development",
+                "FLASK_DEBUG": "1"
+            },
+            "args": [
+                "run",
+                "--host=0.0.0.0",
+                "--no-debugger"
+            ],
+            "jinja": true
+        },
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        }
+    ]
+}
+EOL
+</code></pre>
+            
+            <p>These configuration files:</p>
+            <ul>
+                <li>Tell VS Code to connect to the Docker container</li>
+                <li>Configure Python tools like linters, formatters, and testing</li>
+                <li>Install useful VS Code extensions in the container</li>
+                <li>Set up debugging configurations for Flask</li>
+            </ul>
+            
+            <p><strong>Analogy:</strong> The devcontainer.json file acts like a bridge between your local VS Code and the container. It's similar to how a universal remote control connects to different devices—it creates a seamless connection that lets you work with remote code as if it were local.</p>
+            
+            <h4>Step 6: Set Up Basic Python Web Application</h4>
+            <p>Now, let's create a basic Flask application structure:</p>
+            
+            <pre><code>cat > app/app.py << EOL
+from flask import Flask, render_template
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return render_template('index.html', title="Home")
+
+@app.route('/about')
+def about():
+    return render_template('about.html', title="About")
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', debug=True)
+EOL
+
+cat > app/templates/base.html << EOL
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Python Web App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Python Web Application</h1>
+        <nav>
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('about') }}">About</a>
+        </nav>
+    </header>
+    
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 Python Web App</p>
+    </footer>
+</body>
+</html>
+EOL
+
+cat > app/templates/index.html << EOL
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Welcome to the Python Web App</h2>
+<p>This is a simple Flask application running in a Docker container.</p>
+<p>This application was created as part of the containerized Python environment weekend project.</p>
+{% endblock %}
+EOL
+
+cat > app/templates/about.html << EOL
+{% extends "base.html" %}
+
+{% block content %}
+<h2>About This Application</h2>
+<p>This application demonstrates a basic Flask structure with:</p>
+<ul>
+    <li>Containerized Python environment</li>
+    <li>VS Code integration</li>
+    <li>Template inheritance</li>
+    <li>Static file serving</li>
+</ul>
+{% endblock %}
+EOL
+
+mkdir -p app/static/css
+
+cat > app/static/css/style.css << EOL
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+nav {
+    margin-top: 10px;
+}
+
+nav a {
+    margin-right: 15px;
+    text-decoration: none;
+    color: #0066cc;
+}
+
+h1, h2 {
+    margin-bottom: 15px;
+}
+
+main {
+    margin-bottom: 30px;
+}
+
+footer {
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #666;
+}
+EOL
+
+cat > app/tests/test_app.py << EOL
+import pytest
+from app.app import app
+
+@pytest.fixture
+def client():
+    app.config['TESTING'] = True
+    with app.test_client() as client:
+        yield client
+
+def test_home_page(client):
+    """Test that the home page loads successfully."""
+    response = client.get('/')
+    assert response.status_code == 200
+    assert b'Welcome to the Python Web App' in response.data
+
+def test_about_page(client):
+    """Test that the about page loads successfully."""
+    response = client.get('/about')
+    assert response.status_code == 200
+    assert b'About This Application' in response.data
+EOL
+
+cat > requirements.txt << EOL
+Flask==2.3.3
+pytest==7.4.0
+black==23.7.0
+flake8==6.1.0
+mypy==1.5.1
+python-dotenv==1.0.0
+gunicorn==21.2.0
+EOL
+</code></pre>
+            
+            <p>This sets up a basic Flask application with:</p>
+            <ul>
+                <li>A main application file (app.py)</li>
+                <li>Templates with inheritance (base.html, index.html, about.html)</li>
+                <li>Static CSS (style.css)</li>
+                <li>Basic tests (test_app.py)</li>
+                <li>Requirements file listing dependencies</li>
+            </ul>
+            
+            <p><strong>Real-world application:</strong> This structure follows patterns used in production Flask applications. Template inheritance enables consistent layouts across pages, static files provide styling and client-side functionality, and tests ensure the application behaves as expected.</p>
+            
+            <h4>Step 7: Create Documentation</h4>
+            <p>Let's create a comprehensive README.md file that documents our setup:</p>
+            
+            <pre><code>cat > README.md << EOL
+# Containerized Python Web Development Environment
+
+A complete development environment for Python web applications, using Docker containers and VS Code.
+
+## Features
+
+- Python 3.10+ development container
+- VS Code integrated development environment with remote container support
+- Git version control
+- Basic Flask web application structure
+- Code quality tools (Black, Flake8, MyPy)
+- Testing framework (pytest)
+
+## Prerequisites
+
+- [Docker](https://www.docker.com/get-started)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- [Visual Studio Code](https://code.visualstudio.com/)
+- VS Code [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension
+
+## Getting Started
+
+### Clone the Repository
+
+\`\`\`bash
+git clone <repository-url>
+cd python_web_container
+\`\`\`
+
+### Open in VS Code
+
+\`\`\`bash
+code .
+\`\`\`
+
+### Start Development in Container
+
+1. When VS Code opens, you should see a notification that a Dev Container configuration file was detected.
+2. Click "Reopen in Container" to start the container and connect VS Code to it.
+3. If you don't see this notification, you can:
+   - Click the green icon in the bottom-left corner of VS Code
+   - Select "Remote-Containers: Reopen in Container"
+
+### Running the Application
+
+Once VS Code is connected to the container, you can:
+
+1. Open a terminal in VS Code (Terminal > New Terminal)
+2. Run the Flask application:
+   \`\`\`bash
+   flask run --host=0.0.0.0
+   \`\`\`
+3. Access the application at http://localhost:5000
+
+### Running Tests
+
+\`\`\`bash
+pytest app/tests
+\`\`\`
+
+## Project Structure
+
+\`\`\`
+python_web_container/
+├── .devcontainer/        # VS Code remote container configuration
+│   └── devcontainer.json
+├── .vscode/              # VS Code settings
+│   ├── launch.json       # Debug configuration
+│   └── settings.json     # Editor settings
+├── app/                  # Application package
+│   ├── static/           # Static files (CSS, JavaScript, images)
+│   │   └── css/
+│   │       └── style.css
+│   ├── templates/        # HTML templates
+│   │   ├── base.html
+│   │   ├── index.html
+│   │   └── about.html
+│   ├── tests/            # Test directory
+│   │   └── test_app.py
+│   └── app.py            # Main application file
+├── Dockerfile            # Docker configuration
+├── docker-compose.yml    # Container composition
+├── requirements.txt      # Python dependencies
+└── README.md             # This file
+\`\`\`
+
+## Customizing
+
+### Adding Python Packages
+
+1. Add the package to \`requirements.txt\`
+2. Rebuild the container:
+   - Click the green icon in the bottom-left corner
+   - Select "Remote-Containers: Rebuild Container"
+
+### Changing Python Version
+
+1. Update the first line in \`Dockerfile\` to specify a different Python version (e.g., \`FROM python:3.11-slim\`)
+2. Rebuild the container as described above
+
+## Troubleshooting
+
+### Container Won't Start
+
+- Ensure Docker is running
+- Check Docker logs: \`docker-compose logs\`
+- Try rebuilding: \`docker-compose build --no-cache\`
+
+### VS Code Not Connecting to Container
+
+- Ensure the Remote - Containers extension is installed
+- Try reloading VS Code: \`Ctrl+R\` or \`Cmd+R\` on Mac
+- Check the Remote - Containers extension output in VS Code
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+EOL
+</code></pre>
+            
+            <p>This README provides:</p>
+            <ul>
+                <li>An overview of the environment's features</li>
+                <li>Prerequisites for using it</li>
+                <li>Step-by-step instructions for getting started</li>
+                <li>Explanation of the project structure</li>
+                <li>Guidance for customization</li>
+                <li>Troubleshooting tips</li>
+            </ul>
+            
+            <h4>Step 8: Commit all files to Git</h4>
+            <pre><code>git add .
+git commit -m "Create containerized Python environment with VS Code integration"
+</code></pre>
+        </section>
+
+        <section class="testing">
+            <h3>Testing and Review</h3>
+            
+            <h4>Testing the Environment</h4>
+            <p>Let's verify that our containerized environment works correctly by following these steps:</p>
+            
+            <ol>
+                <li>Make sure Docker is running on your system</li>
+                <li>Open VS Code in the project directory: <code>code .</code></li>
+                <li>When VS Code prompts about a dev container configuration, click "Reopen in Container"</li>
+                <li>If not prompted, click the green icon in the bottom-left corner and select "Remote-Containers: Reopen in Container"</li>
+                <li>Wait for the container to build and VS Code to connect (this may take a few minutes the first time)</li>
+                <li>Once connected, open a terminal in VS Code (Terminal > New Terminal)</li>
+                <li>Run <code>python --version</code> to verify Python is available</li>
+                <li>Run <code>git --version</code> to verify Git is available</li>
+                <li>Run <code>flask run --host=0.0.0.0</code> to start the Flask application</li>
+                <li>Open a web browser and navigate to <code>http://localhost:5000</code> to see the application</li>
+                <li>Open a new terminal and run <code>pytest app/tests</code> to verify the tests pass</li>
+            </ol>
+            
+            <h4>Reflection: What We've Accomplished</h4>
+            <p>Let's review what we've built and why it matters:</p>
+            
+            <ul>
+                <li><strong>Consistency:</strong> This environment works the same on any system with Docker, eliminating "works on my machine" problems</li>
+                <li><strong>Isolation:</strong> The containerized environment doesn't interfere with other projects or system configurations</li>
+                <li><strong>Version Control:</strong> Git integration enables tracking changes and collaboration</li>
+                <li><strong>IDE Integration:</strong> VS Code connects seamlessly to the container, providing a full-featured development experience</li>
+                <li><strong>Good Practices:</strong> The structure follows Python and web development best practices</li>
+                <li><strong>Documentation:</strong> Clear documentation ensures others (or you in the future) can use the environment</li>
+            </ul>
+            
+            <p><strong>Real-world application:</strong> This approach mirrors how professional development teams create standardized environments. Companies like Spotify, Netflix, and many others use containerized development environments to ensure all developers have identical setups, reducing onboarding time and eliminating environment-related bugs.</p>
+        </section>
+
+        <section class="advanced_customization">
+            <h3>Advanced Customizations (Optional)</h3>
+            
+            <h4>Adding a Database</h4>
+            <p>For web applications, you often need a database. You can add PostgreSQL to your environment by updating the docker-compose.yml file:</p>
+            
+            <pre><code># Updated docker-compose.yml with PostgreSQL
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/workspace
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=app/app.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/devdb
+    depends_on:
+      - db
+  
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=devdb
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
+</code></pre>
+            
+            <p>You would also need to add database packages to your Python environment:</p>
+            
+            <pre><code># Add to requirements.txt
+psycopg2-binary==2.9.7
+SQLAlchemy==2.0.20
+</code></pre>
+            
+            <h4>Adding HTTPS with self-signed certificates</h4>
+            <p>For more realistic development, you might want to add HTTPS support:</p>
+            
+            <pre><code># Create a directory for certificates
+mkdir -p certs
+
+# Generate self-signed certificates (on Linux/Mac)
+openssl req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes -subj '/CN=localhost'
+</code></pre>
+            
+            <p>Then update your Flask application to use HTTPS:</p>
+            
+            <pre><code># Updated app.py
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', debug=True, ssl_context=('certs/cert.pem', 'certs/key.pem'))
+</code></pre>
+            
+            <h4>Adding Docker Compose services for frontend development</h4>
+            <p>If you're working on a project with a JavaScript frontend, you could add Node.js support:</p>
+            
+            <pre><code># Extended docker-compose.yml with Node.js
+version: '3.8'
+
+services:
+  app:
+    # Python backend configuration (as before)
+    
+  db:
+    # Database configuration (as before)
+    
+  frontend:
+    image: node:16
+    volumes:
+      - ./frontend:/workspace
+    working_dir: /workspace
+    ports:
+      - "3000:3000"
+    command: bash -c "npm install && npm start"
+</code></pre>
+        </section>
+
+        <section class="conclusion">
+            <h3>Conclusion</h3>
+            
+            <p>Congratulations! You've created a professional-grade containerized Python development environment that includes:</p>
+            
+            <ul>
+                <li>A Python 3.10+ container with all necessary development tools</li>
+                <li>VS Code configured for remote development</li>
+                <li>Git integration for version control</li>
+                <li>A basic project structure for web applications</li>
+                <li>Comprehensive documentation on how to use the setup</li>
+            </ul>
+            
+            <p>This environment provides several key benefits:</p>
+            
+            <ul>
+                <li><strong>Portability:</strong> Your development environment works identically on any machine with Docker</li>
+                <li><strong>Reproducibility:</strong> New team members can get the exact same setup with minimal effort</li>
+                <li><strong>Isolation:</strong> Dependencies and configurations are contained, avoiding conflicts</li>
+                <li><strong>Consistency:</strong> Development, testing, and production environments can use the same base configuration</li>
+            </ul>
+            
+            <p>As you progress through the course, you can extend this environment to include additional tools and services as needed. The foundation you've built will support increasingly complex web applications.</p>
+            
+            <p><strong>Final thought:</strong> Just as a chef's well-organized kitchen enables creativity in cooking, your containerized development environment enables creativity in programming by handling the technical details consistently. You're now ready to focus on the code rather than the environment.</p>
+        </section>
+
+        <section class="further_resources">
+            <h3>Further Resources</h3>
+            
+            <ul>
+                <li><a href="https://docs.docker.com/get-started/" target="_blank">Docker Getting Started Guide</a></li>
+                <li><a href="https://code.visualstudio.com/docs/remote/containers" target="_blank">VS Code Remote Development in Containers</a></li>
+                <li><a href="https://flask.palletsprojects.com/en/2.3.x/" target="_blank">Flask Documentation</a></li>
+                <li><a href="https://testdriven.io/blog/dockerizing-flask-with-postgres-gunicorn-and-nginx/" target="_blank">Dockerizing Flask Applications</a></li>
+                <li><a href="https://docs.github.com/en/get-started/quickstart/github-flow" target="_blank">GitHub Flow - Git Workflow Guide</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

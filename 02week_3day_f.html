@@ -3334,3 +3334,234 @@ class ConfigurationManager:
         
         # Set the value
         current[parts[-1]] = value
+        def save_to_file(self, file_path):
+        """Save the configuration to a JSON file."""
+        try:
+            # Create directory if it doesn't exist
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            
+            # Write to file
+            with open(file_path, 'w') as f:
+                json.dump(self.config, f, indent=2)
+            return True
+        except Exception as e:
+            print(f"Error saving config to {file_path}: {e}")
+            return False
+
+# Schema validator class
+class SchemaValidator:
+    """Schema validator for configuration data."""
+    
+    def __init__(self, schema):
+        """Initialize with a schema definition."""
+        self.schema = schema
+    
+    def validate(self, data, schema=None, path=None):
+        """Validate data against the schema."""
+        if schema is None:
+            schema = self.schema
+        
+        if path is None:
+            path = []
+        
+        errors = []
+        
+        # Check type
+        if "type" in schema:
+            expected_type = schema["type"]
+            if expected_type == "object":
+                if not isinstance(data, dict):
+                    errors.append((path, f"Expected object, got {type(data).__name__}"))
+                    return errors
+            elif expected_type == "array":
+                if not isinstance(data, list):
+                    errors.append((path, f"Expected array, got {type(data).__name__}"))
+                    return errors
+            elif expected_type == "string":
+                if not isinstance(data, str):
+                    errors.append((path, f"Expected string, got {type(data).__name__}"))
+            elif expected_type == "number":
+                if not isinstance(data, (int, float)):
+                    errors.append((path, f"Expected number, got {type(data).__name__}"))
+            elif expected_type == "boolean":
+                if not isinstance(data, bool):
+                    errors.append((path, f"Expected boolean, got {type(data).__name__}"))
+        
+        # Check required fields
+        if "required" in schema and isinstance(data, dict):
+            for field in schema["required"]:
+                if field not in data:
+                    errors.append((path, f"Missing required field: {field}"))
+        
+        # Check properties
+        if "properties" in schema and isinstance(data, dict):
+            for prop, prop_schema in schema["properties"].items():
+                if prop in data:
+                    prop_path = path + [prop]
+                    errors.extend(self.validate(data[prop], prop_schema, prop_path))
+        
+        # Check items in arrays
+        if "items" in schema and isinstance(data, list):
+            for i, item in enumerate(data):
+                item_path = path + [i]
+                errors.extend(self.validate(item, schema["items"], item_path))
+        
+        return errors
+    
+    def format_errors(self, errors):
+        """Format validation errors for human readability."""
+        result = []
+        for path, message in errors:
+            path_str = '.'.join(str(p) for p in path) if path else "root"
+            result.append(f"{path_str}: {message}")
+        return result
+
+# Test the configuration manager
+def test_config_manager():
+    """Test the configuration management system."""
+    # Define default configuration
+    default_config = {
+        "app": {
+            "name": "MyApp",
+            "debug": False,
+            "port": 3000
+        },
+        "database": {
+            "host": "localhost",
+            "port": 5432,
+            "name": "myapp",
+            "user": "admin"
+        },
+        "logging": {
+            "level": "INFO",
+            "file": "/var/log/myapp.log"
+        }
+    }
+    
+    # Define schema
+    schema = {
+        "type": "object",
+        "required": ["app", "database"],
+        "properties": {
+            "app": {
+                "type": "object",
+                "required": ["name", "port"],
+                "properties": {
+                    "name": {"type": "string"},
+                    "debug": {"type": "boolean"},
+                    "port": {"type": "number"}
+                }
+            },
+            "database": {
+                "type": "object",
+                "required": ["host", "name", "user"],
+                "properties": {
+                    "host": {"type": "string"},
+                    "port": {"type": "number"},
+                    "name": {"type": "string"},
+                    "user": {"type": "string"},
+                    "password": {"type": "string"}
+                }
+            },
+            "logging": {
+                "type": "object",
+                "properties": {
+                    "level": {"type": "string"},
+                    "file": {"type": "string"}
+                }
+            }
+        }
+    }
+    
+    # Create configuration manager
+    config_manager = ConfigurationManager(default_config)
+    config_manager.set_schema(schema)
+    
+    # Override with file configuration
+    file_config = {
+        "app": {
+            "debug": True
+        },
+        "database": {
+            "password": "secret"
+        }
+    }
+    
+    # Simulate loading from file
+    config_manager.merge_config(file_config)
+    
+    # Validate configuration
+    if config_manager.validate():
+        print("Configuration is valid")
+    else:
+        print("Configuration is invalid")
+    
+    # Access configuration
+    print(f"App name: {config_manager.get('app.name')}")
+    print(f"Debug mode: {config_manager.get('app.debug')}")
+    print(f"Database connection: {config_manager.get('database.user')}@{config_manager.get('database.host')}:{config_manager.get('database.port')}/{config_manager.get('database.name')}")
+    
+    # Modify configuration
+    config_manager.set("app.port", 8080)
+    config_manager.set("logging.level", "DEBUG")
+    
+    # Check updates
+    print(f"Updated port: {config_manager.get('app.port')}")
+    print(f"Updated log level: {config_manager.get('logging.level')}")
+    
+    # Save to file (commented out to avoid filesystem changes)
+    # config_manager.save_to_file("config.json")
+
+# Run the test
+test_config_manager()</code></pre>
+                </details>
+            </div>
+        </section>
+
+        <section class="next-steps">
+            <h3>Next Steps and Resources</h3>
+            
+            <p>Congratulations on completing our deep dive into nested data structures! Here are some ways to continue developing your skills:</p>
+            
+            <h4>Practice Challenges</h4>
+            <ul>
+                <li>Design a nested data structure for a blog platform with posts, comments, and user information</li>
+                <li>Implement a search function that can find values in deeply nested structures</li>
+                <li>Create a system to track changes to nested data structures</li>
+                <li>Convert between different nested formats (JSON, YAML, XML)</li>
+                <li>Design a custom serialization system for complex nested objects</li>
+            </ul>
+            
+            <h4>Further Reading</h4>
+            <ul>
+                <li><a href="https://www.python.org/doc/essays/graphs/" target="_blank">Python Patterns - Implementing Graphs</a></li>
+                <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON" target="_blank">Working with JSON</a></li>
+                <li><a href="https://yaml.org/spec/1.2/spec.html" target="_blank">YAML Specification</a></li>
+                <li><a href="https://jsonschema.net/" target="_blank">JSON Schema Validation</a></li>
+                <li><a href="https://www.oreilly.com/library/view/python-cookbook-3rd/9781449357337/" target="_blank">Python Cookbook - Chapter 6: Data Encoding and Processing</a></li>
+            </ul>
+            
+            <h4>Related Topics</h4>
+            <ul>
+                <li>Database Schema Design</li>
+                <li>API Design and Documentation</li>
+                <li>State Management in Web Applications</li>
+                <li>Recursive Data Structures</li>
+                <li>Tree and Graph Algorithms</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Python Full Stack Web Developer Course. All rights reserved.</p>
+        <p>
+            <a href="/index.html">Home</a> |
+            <a href="/syllabus.html">Syllabus</a> |
+            <a href="/resources.html">Resources</a> |
+            <a href="/contact.html">Contact</a>
+        </p>
+    </footer>
+
+    <script src="/scripts/main.js"></script>
+</body>
+</html>

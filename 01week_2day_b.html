@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Fundamentals: Repositories, Commits, Branches</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Git Fundamentals: Repositories, Commits, Branches</h1>
+        <h2>Python Full Stack Web Developer Course - Week 1: Tuesday</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>Understanding Git Core Concepts</h3>
+            <p>In our digital age, Git has become the foundation of modern software development. Whether you're building a personal project or collaborating with thousands of developers worldwide, understanding Git's core concepts is essential. Think of Git as the DNA of your codebase—it preserves the evolutionary history of your project and enables efficient collaboration.</p>
+            
+            <p>Today, we'll dive deep into the three fundamental pillars of Git: repositories, commits, and branches. By understanding these concepts thoroughly, you'll be equipped to handle any development scenario that comes your way.</p>
+        </section>
+
+        <section class="repositories">
+            <h3>Repositories: The Project's Timeline</h3>
+            
+            <h4>What is a Repository?</h4>
+            <p>A Git repository (or "repo") is like a project's digital time capsule. It contains your project's files and the entire history of changes made to those files. Think of it as a special kind of filesystem with a powerful time-travel mechanism built in.</p>
+            
+            <p>Unlike traditional file storage, a Git repository tracks not just what your files look like now, but what they looked like at every point in their history. It's similar to how a historian might preserve not just the final draft of a constitution, but every draft, annotation, and revision along the way.</p>
+            
+            <h4>The .git Directory</h4>
+            <p>When you initialize a Git repository, a hidden <code>.git</code> directory is created. This directory is the heart of Git's functionality—it's where Git stores all the data it needs to track your project. Think of the <code>.git</code> directory as the "backstage area" where all the magic happens.</p>
+            
+            <p>The <code>.git</code> directory contains:</p>
+            <ul>
+                <li><strong>Objects database:</strong> Where Git stores the content of files, directories, and other objects</li>
+                <li><strong>References:</strong> Pointers to commit objects (e.g., branches, tags)</li>
+                <li><strong>Configuration:</strong> Repository-specific settings</li>
+                <li><strong>Hooks:</strong> Scripts that can be triggered on certain events</li>
+                <li><strong>Logs:</strong> Records of updates to references</li>
+            </ul>
+            
+            <div class="code-example">
+                <code>$ ls -la .git</code>
+                <p>This command lists all contents of the .git directory</p>
+            </div>
+            
+            <h4>Types of Repositories</h4>
+            
+            <h5>Local Repository</h5>
+            <p>A local repository resides on your computer. It's where you make changes, create commits, and develop your project. Think of it as your personal workspace where you craft your code before sharing it with others.</p>
+            
+            <div class="code-example">
+                <code>$ git init</code>
+                <p>Creates a new local repository in the current directory</p>
+            </div>
+            
+            <div class="code-example">
+                <code>$ git init project_name</code>
+                <p>Creates a new directory with a Git repository inside</p>
+            </div>
+            
+            <h5>Remote Repository</h5>
+            <p>A remote repository is hosted on a server (like GitHub, GitLab, or Bitbucket) and allows for collaboration. Think of it as a central library where team members can share their work. Remote repositories enable multiple developers to work on the same project, each with their own local copy.</p>
+            
+            <div class="code-example">
+                <code>$ git remote add origin https://github.com/username/repository.git</code>
+                <p>Connects your local repository to a remote repository</p>
+            </div>
+            
+            <div class="code-example">
+                <code>$ git remote -v</code>
+                <p>Lists all remote repositories connected to your local repository</p>
+            </div>
+            
+            <h5>Bare Repository</h5>
+            <p>A bare repository doesn't contain a working directory—it only has the version control information. It's typically used as a central repository that developers push to and pull from, but not where they work directly. It's like a vault that stores the project's history but doesn't display the files themselves.</p>
+            
+            <div class="code-example">
+                <code>$ git init --bare</code>
+                <p>Creates a bare repository</p>
+            </div>
+            
+            <h4>Real-World Repository Example</h4>
+            <p>Let's create a repository for a simple Python web application:</p>
+            
+            <div class="code-example">
+                <code>$ mkdir flask_todo_app</code>
+                <code>$ cd flask_todo_app</code>
+                <code>$ git init</code>
+                <code>$ touch app.py README.md requirements.txt</code>
+                <code>$ mkdir templates static</code>
+            </div>
+            
+            <p>Now, let's add some initial content to our app.py file:</p>
+            
+            <div class="code-example">
+                <code>
+from flask import Flask, render_template, request, redirect, url_for
+
+app = Flask(__name__)
+
+todos = []
+
+@app.route('/')
+def index():
+    return render_template('index.html', todos=todos)
+
+@app.route('/add', methods=['POST'])
+def add():
+    todo = request.form.get('todo')
+    if todo:
+        todos.append(todo)
+    return redirect(url_for('index'))
+
+if __name__ == '__main__':
+    app.run(debug=True)
+                </code>
+            </div>
+            
+            <p>And let's create a simple requirements.txt file:</p>
+            
+            <div class="code-example">
+                <code>
+flask==2.0.1
+                </code>
+            </div>
+            
+            <p>Now we have a basic repository structure set up for our Flask to-do application.</p>
+        </section>
+
+        <section class="commits">
+            <h3>Commits: Snapshots in Time</h3>
+            
+            <h4>What is a Commit?</h4>
+            <p>A commit is a snapshot of your repository at a specific point in time. It's like taking a photograph of your entire project, capturing the state of all tracked files at that moment. Each commit is identified by a unique SHA-1 hash (a 40-character string that often looks like <code>4a5c9b2...</code>).</p>
+            
+            <p>Commits serve as the building blocks of your project's history. They allow you to see what changed, when it changed, and who changed it. Think of commits as journal entries in your project's diary, each one telling a story about a specific set of changes.</p>
+            
+            <h4>Anatomy of a Commit</h4>
+            <p>A commit contains the following information:</p>
+            <ul>
+                <li><strong>Snapshot of files:</strong> The state of all tracked files at the time of the commit</li>
+                <li><strong>Author and committer:</strong> Who created the changes and who committed them (often the same person)</li>
+                <li><strong>Timestamp:</strong> When the commit was created</li>
+                <li><strong>Commit message:</strong> A description of what changes were made and why</li>
+                <li><strong>Parent commit(s):</strong> Reference to the previous commit(s) in the history</li>
+            </ul>
+            
+            <h4>The Commit Process</h4>
+            
+            <h5>Staging Area (Index)</h5>
+            <p>Before creating a commit, you must first stage your changes. The staging area (or index) is like a preparation area where you select which changes will be included in your next commit. This allows you to craft purposeful, logical commits rather than including all changes at once.</p>
+            
+            <p>Think of the staging area as a photographer's composition frame—it lets you decide exactly what goes into your snapshot before you capture it.</p>
+            
+            <div class="code-example">
+                <code>$ git add filename.py</code>
+                <p>Stages changes in a specific file</p>
+            </div>
+            
+            <div class="code-example">
+                <code>$ git add .</code>
+                <p>Stages all changes in the current directory (and subdirectories)</p>
+            </div>
+            
+            <div class="code-example">
+                <code>$ git add -p</code>
+                <p>Interactively stage portions of files (very useful for creating focused commits)</p>
+            </div>
+            
+            <h5>Creating a Commit</h5>
+            <p>Once you've staged your changes, you can create a commit with a descriptive message. The commit message should clearly explain what changes were made and why they were necessary.</p>
+            
+            <div class="code-example">
+                <code>$ git commit -m "Add user authentication system"</code>
+                <p>Creates a commit with a short message</p>
+            </div>
+            
+            <div class="code-example">
+                <code>$ git commit</code>
+                <p>Opens a text editor for a more detailed commit message</p>
+            </div>
+            
+            <p>For more significant changes, it's recommended to write a more detailed commit message. A good format is:</p>
+            
+            <div class="code-example">
+                <code>
+Short summary (50 chars or less)
+
+More detailed explanation of what was changed and why.
+This can span multiple lines and go into detail about the
+motivations for the change, any trade-offs made, and any
+other relevant context.
+
+References to issue tracking, if applicable.
+                </code>
+            </div>
+            
+            <h4>Commit Best Practices</h4>
+            <ul>
+                <li><strong>Atomic commits:</strong> Each commit should represent a single logical change. Like a well-written paragraph, a commit should focus on one idea.</li>
+                <li><strong>Clear messages:</strong> Write descriptive commit messages that explain the "what" and "why" of your changes.</li>
+                <li><strong>Consistent style:</strong> Use a consistent format for commit messages across your project.</li>
+                <li><strong>Frequent commits:</strong> Commit often to create a detailed history and reduce the risk of losing work.</li>
+                <li><strong>Verified commits:</strong> For sensitive projects, consider using GPG signing to verify the authenticity of commits.</li>
+            </ul>
+            
+            <h4>Viewing Commit History</h4>
+            <p>Git provides several ways to explore your project's commit history:</p>
+            
+            <div class="code-example">
+                <code>$ git log</code>
+                <p>Shows the commit history with details</p>
+            </div>
+            
+            <div class="code-example">
+                <code>$ git log --oneline</code>
+                <p>Shows a compact commit history (one line per commit)</p>
+            </div>
+            
+            <div class="code-example">
+                <code>$ git log --graph --oneline --all</code>
+                <p>Shows a graphical representation of the commit history, including branches</p>
+            </div>
+            
+            <div class="code-example">
+                <code>$ git show commit_hash</code>
+                <p>Shows details about a specific commit</p>
+            </div>
+            
+            <h4>Practical Commit Example</h4>
+            <p>Let's continue with our Flask to-do app example. Now that we have our basic files, let's stage and commit them:</p>
+            
+            <div class="code-example">
+                <code>$ git add app.py README.md requirements.txt</code>
+                <code>$ git commit -m "Initial commit: Basic Flask to-do app structure"</code>
+            </div>
+            
+            <p>Now, let's add an index.html template:</p>
+            
+            <div class="code-example">
+                <code>$ touch templates/index.html</code>
+            </div>
+            
+            <p>Add this content to index.html:</p>
+            
+            <div class="code-example">
+                <code>
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Flask Todo App&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Todo List&lt;/h1&gt;
+    
+    &lt;form action="/add" method="post"&gt;
+        &lt;input type="text" name="todo" placeholder="Enter a todo item"&gt;
+        &lt;button type="submit"&gt;Add&lt;/button&gt;
+    &lt;/form&gt;
+    
+    &lt;ul&gt;
+        {% for todo in todos %}
+            &lt;li&gt;{{ todo }}&lt;/li&gt;
+        {% endfor %}
+    &lt;/ul&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+                </code>
+            </div>
+            
+            <p>Now, let's stage and commit this new file:</p>
+            
+            <div class="code-example">
+                <code>$ git add templates/index.html</code>
+                <code>$ git commit -m "Add index.html template for displaying todos"</code>
+            </div>
+            
+            <p>Let's check our commit history:</p>
+            
+            <div class="code-example">
+                <code>$ git log --oneline</code>
+                <p>This will show our two commits with their respective hashes and messages.</p>
+            </div>
+        </section>
+
+        <section class="branches">
+            <h3>Branches: Parallel Development Universes</h3>
+            
+            <h4>What is a Branch?</h4>
+            <p>A branch in Git is simply a movable pointer to a commit. Think of branches as parallel universes where you can develop features or fix bugs without affecting the main codebase. Branches allow multiple developers to work on different features simultaneously without interfering with each other.</p>
+            
+            <p>The default branch in Git is called "master" (in newer repositories, it's often called "main"). This branch typically represents the stable, production-ready version of your code.</p>
+            
+            <h4>The Power of Branching</h4>
+            <p>Branching is one of Git's most powerful features because it enables:</p>
+            <ul>
+                <li><strong>Feature isolation:</strong> Develop new features without affecting the stable codebase</li>
+                <li><strong>Parallel development:</strong> Multiple developers can work on different features simultaneously</li>
+                <li><strong>Experimentation:</strong> Try new ideas without committing to them</li>
+                <li><strong>Release management:</strong> Maintain different versions of your software</li>
+                <li><strong>Bug fixes:</strong> Fix issues in production code while still developing new features</li>
+            </ul>
+            
+            <p>Think of branches as alternate dimensions where you can safely experiment and develop. Once you're happy with your changes, you can merge these dimensions back together.</p>
+            
+            <h4>Creating and Switching Branches</h4>
+            
+            <div class="code-example">
+                <code>$ git branch</code>
+                <p>Lists all local branches (* indicates the current branch)</p>
+            </div>
+            
+            <div class="code-example">
+                <code>$ git branch feature-name</code>
+                <p>Creates a new branch named "feature-name" at the current commit</p>
+            </div>
+            
+            <div class="code-example">
+                <code>$ git checkout feature-name</code>
+                <p>Switches to the "feature-name" branch</p>
+            </div>
+            
+            <div class="code-example">
+                <code>$ git checkout -b feature-name</code>
+                <p>Creates a new branch and switches to it in one command</p>
+            </div>
+            
+            <div class="code-example">
+                <code>$ git branch -d feature-name</code>
+                <p>Deletes the "feature-name" branch (after it's been merged)</p>
+            </div>
+            
+            <div class="code-example">
+                <code>$ git branch -D feature-name</code>
+                <p>Force deletes the "feature-name" branch (even if not merged)</p>
+            </div>
+            
+            <h4>Branching Strategies</h4>
+            <p>Different teams use different branching strategies depending on their workflow needs. Here are some common patterns:</p>
+            
+            <h5>Feature Branching</h5>
+            <p>Create a new branch for each feature or task. Once the feature is complete, merge it back into the main branch. This approach keeps features isolated and enables parallel development.</p>
+            
+            <div class="code-example">
+                <code>$ git checkout -b feature/user-authentication</code>
+                <code># Make changes and commits</code>
+                <code>$ git checkout main</code>
+                <code>$ git merge feature/user-authentication</code>
+            </div>
+            
+            <h5>Git Flow</h5>
+            <p>A more structured branching model with specific branches for features, releases, and hotfixes. Git Flow is suitable for projects with scheduled releases.</p>
+            <ul>
+                <li><strong>main/master:</strong> Production-ready code</li>
+                <li><strong>develop:</strong> Integration branch for features</li>
+                <li><strong>feature/x:</strong> Individual feature branches</li>
+                <li><strong>release/x.y:</strong> Preparation for a new release</li>
+                <li><strong>hotfix/x.y.z:</strong> Quick fixes for production issues</li>
+            </ul>
+            
+            <h5>GitHub Flow</h5>
+            <p>A simpler model focusing on continuous delivery. Everything in the main branch is deployable, and all work happens in feature branches that are merged via pull requests.</p>
+            
+            <h5>Trunk-Based Development</h5>
+            <p>Developers work directly on the main branch or on short-lived feature branches that are merged frequently. This approach emphasizes continuous integration.</p>
+            
+            <h4>Merging Branches</h4>
+            <p>Once you've completed work on a branch, you'll want to integrate those changes back into your main branch. This process is called merging.</p>
+            
+            <div class="code-example">
+                <code>$ git checkout main</code>
+                <code>$ git merge feature-branch</code>
+                <p>Merges changes from "feature-branch" into the current branch (main)</p>
+            </div>
+            
+            <h5>Fast-Forward Merge</h5>
+            <p>If the main branch hasn't changed since you created your feature branch, Git can simply move the main pointer forward to match the feature branch. This is called a "fast-forward" merge.</p>
+            
+            <h5>Three-Way Merge</h5>
+            <p>If the main branch has changed since you created your feature branch, Git performs a three-way merge, combining the changes from both branches and creating a new merge commit.</p>
+            
+            <h5>Merge Conflicts</h5>
+            <p>Sometimes when merging, Git encounters changes in both branches that modify the same part of a file. This results in a merge conflict that requires manual resolution.</p>
+            
+            <div class="code-example">
+                <code>
+<<<<<<< HEAD
+def hello():
+    return "Hello, World!"
+=======
+def hello():
+    return "Hello, Git!"
+>>>>>>> feature-branch
+                </code>
+                <p>In this conflict, you need to decide which version to keep or combine them.</p>
+            </div>
+            
+            <h4>Practical Branching Example</h4>
+            <p>Let's continue with our Flask to-do app and add a feature branch for implementing deletion functionality:</p>
+            
+            <div class="code-example">
+                <code>$ git checkout -b feature/delete-todo</code>
+                <p>Creates and switches to a new branch for our delete feature</p>
+            </div>
+            
+            <p>Now, let's modify app.py to add a delete route:</p>
+            
+            <div class="code-example">
+                <code>
+from flask import Flask, render_template, request, redirect, url_for
+
+app = Flask(__name__)
+
+todos = []
+
+@app.route('/')
+def index():
+    return render_template('index.html', todos=todos)
+
+@app.route('/add', methods=['POST'])
+def add():
+    todo = request.form.get('todo')
+    if todo:
+        todos.append(todo)
+    return redirect(url_for('index'))
+
+@app.route('/delete/<int:index>')
+def delete(index):
+    if 0 <= index < len(todos):
+        todos.pop(index)
+    return redirect(url_for('index'))
+
+if __name__ == '__main__':
+    app.run(debug=True)
+                </code>
+            </div>
+            
+            <p>And update our index.html template to add delete links:</p>
+            
+            <div class="code-example">
+                <code>
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Flask Todo App&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Todo List&lt;/h1&gt;
+    
+    &lt;form action="/add" method="post"&gt;
+        &lt;input type="text" name="todo" placeholder="Enter a todo item"&gt;
+        &lt;button type="submit"&gt;Add&lt;/button&gt;
+    &lt;/form&gt;
+    
+    &lt;ul&gt;
+        {% for todo in todos %}
+            &lt;li&gt;
+                {{ todo }}
+                &lt;a href="/delete/{{ loop.index0 }}"&gt;(Delete)&lt;/a&gt;
+            &lt;/li&gt;
+        {% endfor %}
+    &lt;/ul&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+                </code>
+            </div>
+            
+            <p>Now, let's commit these changes on our feature branch:</p>
+            
+            <div class="code-example">
+                <code>$ git add app.py templates/index.html</code>
+                <code>$ git commit -m "Add delete functionality for todo items"</code>
+            </div>
+            
+            <p>Let's merge this feature back into the main branch:</p>
+            
+            <div class="code-example">
+                <code>$ git checkout main</code>
+                <code>$ git merge feature/delete-todo</code>
+            </div>
+            
+            <p>After a successful merge, we can delete the feature branch:</p>
+            
+            <div class="code-example">
+                <code>$ git branch -d feature/delete-todo</code>
+            </div>
+        </section>
+
+        <section class="advanced-topics">
+            <h3>Advanced Topics and Best Practices</h3>
+            
+            <h4>Rebasing: An Alternative to Merging</h4>
+            <p>Rebasing is another way to integrate changes from one branch to another. Instead of creating a merge commit, rebasing rewrites history by applying your branch's commits on top of the target branch. This creates a linear history but should be used with caution, especially on shared branches.</p>
+            
+            <div class="code-example">
+                <code>$ git checkout feature-branch</code>
+                <code>$ git rebase main</code>
+                <p>Replays your feature branch commits on top of the main branch</p>
+            </div>
+            
+            <h4>Stashing: Saving Work in Progress</h4>
+            <p>Sometimes you need to switch branches but aren't ready to commit your changes. Git's stash feature allows you to temporarily save your uncommitted changes and reapply them later.</p>
+            
+            <div class="code-example">
+                <code>$ git stash</code>
+                <p>Saves your uncommitted changes</p>
+            </div>
+            
+            <div class="code-example">
+                <code>$ git stash pop</code>
+                <p>Reapplies the most recently stashed changes</p>
+            </div>
+            
+            <h4>Cherry-Picking: Selecting Specific Commits</h4>
+            <p>Cherry-picking allows you to select specific commits from one branch and apply them to another branch. This is useful when you want to incorporate a specific fix without merging an entire branch.</p>
+            
+            <div class="code-example">
+                <code>$ git cherry-pick commit_hash</code>
+                <p>Applies the changes from the specified commit to your current branch</p>
+            </div>
+            
+            <h4>Remote Branches</h4>
+            <p>When collaborating with others, you'll work with remote branches that exist on the remote repository (like GitHub). Understanding how to interact with these is crucial for collaboration.</p>
+            
+            <div class="code-example">
+                <code>$ git branch -r</code>
+                <p>Lists remote branches</p>
+            </div>
+            
+            <div class="code-example">
+                <code>$ git checkout -b local-branch origin/remote-branch</code>
+                <p>Creates a local branch that tracks a remote branch</p>
+            </div>
+            
+            <div class="code-example">
+                <code>$ git push origin local-branch:remote-branch</code>
+                <p>Pushes your local branch to a remote branch</p>
+            </div>
+            
+            <h4>Best Practices for Repository, Commit, and Branch Management</h4>
+            <ul>
+                <li><strong>Descriptive branch names:</strong> Use naming conventions that make it clear what's being worked on (e.g., feature/user-auth, bugfix/login-error)</li>
+                <li><strong>Regular pushes:</strong> Push your local branches to remote regularly to back up your work</li>
+                <li><strong>Clean up merged branches:</strong> Delete branches after they're merged to keep your repository tidy</li>
+                <li><strong>Protect your main branch:</strong> Use branch protection rules to prevent direct commits to main/master</li>
+                <li><strong>Include a good README:</strong> Document your project's purpose, setup instructions, and contribution guidelines</li>
+                <li><strong>Use .gitignore:</strong> Exclude build artifacts, dependencies, and sensitive files from your repository</li>
+                <li><strong>Consistent commit messages:</strong> Follow a standard format for commit messages</li>
+            </ul>
+        </section>
+
+        <section class="exercise">
+            <h3>Hands-on Exercise: Repositories, Commits, and Branches</h3>
+            
+            <p>Now, let's practice these concepts with a step-by-step exercise:</p>
+            
+            <ol>
+                <li>Create a new repository for a simple calculator application:
+                    <div class="code-example">
+                        <code>$ mkdir git_calculator</code>
+                        <code>$ cd git_calculator</code>
+                        <code>$ git init</code>
+                    </div>
+                </li>
+                
+                <li>Create a basic calculator.py file:
+                    <div class="code-example">
+                        <code>
+# calculator.py
+
+def add(a, b):
+    return a + b
+
+def subtract(a, b):
+    return a - b
+                        </code>
+                    </div>
+                </li>
+                
+                <li>Make your initial commit:
+                    <div class="code-example">
+                        <code>$ git add calculator.py</code>
+                        <code>$ git commit -m "Initial commit: Basic calculator with add and subtract functions"</code>
+                    </div>
+                </li>
+                
+                <li>Create a branch for adding multiplication functionality:
+                    <div class="code-example">
+                        <code>$ git checkout -b feature/multiplication</code>
+                    </div>
+                </li>
+                
+                <li>Add a multiplication function to calculator.py:
+                    <div class="code-example">
+                        <code>
+# calculator.py
+
+def add(a, b):
+    return a + b
+
+def subtract(a, b):
+    return a - b
+
+def multiply(a, b):
+    return a * b
+                        </code>
+                    </div>
+                </li>
+                
+                <li>Commit your changes:
+                    <div class="code-example">
+                        <code>$ git add calculator.py</code>
+                        <code>$ git commit -m "Add multiplication function"</code>
+                    </div>
+                </li>
+                
+                <li>Switch back to the main branch:
+                    <div class="code-example">
+                        <code>$ git checkout main</code>
+                    </div>
+                </li>
+                
+                <li>Create another branch for division:
+                    <div class="code-example">
+                        <code>$ git checkout -b feature/division</code>
+                    </div>
+                </li>
+                
+                <li>Add a division function to calculator.py:
+                    <div class="code-example">
+                        <code>
+# calculator.py
+
+def add(a, b):
+    return a + b
+
+def subtract(a, b):
+    return a - b
+
+def divide(a, b):
+    if b == 0:
+        raise ValueError("Cannot divide by zero")
+    return a / b
+                        </code>
+                    </div>
+                </li>
+                
+                <li>Commit your changes:
+                    <div class="code-example">
+                        <code>$ git add calculator.py</code>
+                        <code>$ git commit -m "Add division function with zero check"</code>
+                    </div>
+                </li>
+                
+                <li>Switch back to main and merge the multiplication branch:
+                    <div class="code-example">
+                        <code>$ git checkout main</code>
+                        <code>$ git merge feature/multiplication</code>
+                    </div>
+                </li>
+                
+                <li>Now merge the division branch (this will create a merge conflict because both branches modified calculator.py):
+                    <div class="code-example">
+                        <code>$ git merge feature/division</code>
+                    </div>
+                </li>
+                
+                <li>Resolve the merge conflict by editing calculator.py to include all functions:
+                    <div class="code-example">
+                        <code>
+# calculator.py
+
+def add(a, b):
+    return a + b
+
+def subtract(a, b):
+    return a - b
+
+def multiply(a, b):
+    return a * b
+
+def divide(a, b):
+    if b == 0:
+        raise ValueError("Cannot divide by zero")
+    return a / b
+                        </code>
+                    </div>
+                </li>
+                
+                <li>Mark the conflict as resolved and complete the merge:
+                    <div class="code-example">
+                        <code>$ git add calculator.py</code>
+                        <code>$ git commit -m "Merge division feature and resolve conflicts"</code>
+                    </div>
+                </li>
+                
+                <li>Clean up your branches:
+                    <div class="code-example">
+                        <code>$ git branch -d feature/multiplication</code>
+                        <code>$ git branch -d feature/division</code>
+                    </div>
+                </li>
+                
+                <li>View your commit history with the branch graph:
+                    <div class="code-example">
+                        <code>$ git log --graph --oneline --all</code>
+                    </div>
+                </li>
+            </ol>
+        </section>
+
+        <section class="real-world-applications">
+            <h3>Real-World Applications and Case Studies</h3>
+            
+            <h4>Case Study 1: Small Web Development Team</h4>
+            <p>A small team of 4 developers working on a web application might use a simple feature branch workflow. Each developer creates branches for features they're working on, pushes them to GitHub, and creates pull requests when ready for review.</p>
+            
+            <p>Their typical workflow:</p>
+            <ol>
+                <li>Pull the latest main branch: <code>git pull origin main</code></li>
+                <li>Create a feature branch: <code>git checkout -b feature/user-settings</code></li>
+                <li>Make changes and commit regularly</li>
+                <li>Push the branch to GitHub: <code>git push origin feature/user-settings</code></li>
+                <li>Create a pull request for code review</li>
+                <li>Merge the PR after approval and delete the branch</li>
+            </ol>
+            
+            <h4>Case Study 2: Open Source Project</h4>
+            <p>Open source projects often use a fork-and-pull model. Contributors fork the main repository, create branches on their fork, and then create pull requests to the original repository.</p>
+            
+            <p>A typical contribution workflow:</p>
+            <ol>
+                <li>Fork the repository on GitHub</li>
+                <li>Clone your fork: <code>git clone https://github.com/yourusername/project.git</code></li>
+                <li>Add the original repo as upstream: <code>git remote add upstream https://github.com/original/project.git</code></li>
+                <li>Create a feature branch: <code>git checkout -b fix-login-bug</code></li>
+                <li>Make changes and commit</li>
+                <li>Push to your fork: <code>git push origin fix-login-bug</code></li>
+                <li>Create a pull request to the upstream repository</li>
+            </ol>
+            
+            <h4>Case Study 3: Enterprise Software Development</h4>
+            <p>Large enterprises often use a more complex Git Flow model with specific branches for different purposes. This provides structure for managing releases in a more controlled environment.</p>
+            
+            <p>Their typical workflow includes:</p>
+            <ul>
+                <li>Feature branches for new development</li>
+                <li>Develop branch for integration</li>
+                <li>Release branches for preparing releases</li>
+                <li>Hotfix branches for emergency fixes</li>
+                <li>Master/main branch representing production code</li>
+            </ul>
+        </section>
+
+        <section class="visualization">
+            <h3>Visualizing Git Concepts</h3>
+            
+            <p>Understanding Git concepts visually can help solidify your understanding:</p>
+            
+            <h4>Git Repository Visualization</h4>
+            <p>Imagine a repository as a tree with branches growing in different directions. The trunk represents your main branch, and each branch represents a different feature or bug fix. Commits are like growth rings on the tree, marking points in time.</p>
+            
+            <h4>Commit History Visualization</h4>
+            <p>Picture your commit history as a timeline with points (commits) connected by lines. Each point represents a snapshot of your code at a specific time. Branches are alternate timelines that can merge back into the main timeline.</p>
+            
+            <h4>Staging Area Visualization</h4>
+            <p>Think of your working directory, staging area, and repository as three distinct zones:</p>
+            <ul>
+                <li>Working directory: Your workshop where you actively modify files</li>
+                <li>Staging area: A packaging table where you prepare changes for shipping</li>
+                <li>Repository: A warehouse storing all your completed packages (commits)</li>
+            </ul>
+            
+            <p>Using visualization tools like <code>git log --graph</code> or GUI clients like GitKraken, SourceTree, or GitHub Desktop can help you better understand these concepts.</p>
+        </section>
+
+        <section class="conclusion">
+            <h3>Key Takeaways</h3>
+            
+            <ul>
+                <li><strong>Repositories</strong> are the containers for your project and its history, like a timeline of your project's evolution.</li>
+                <li><strong>Commits</strong> are snapshots of your code at specific points in time, capturing what changed, when, and by whom.</li>
+                <li><strong>Branches</strong> are parallel development paths that allow you to work on different features simultaneously without interference.</li>
+                <li>A solid understanding of these three core concepts provides the foundation for effective version control.</li>
+                <li>Establishing good habits with repositories, commits, and branches will make you a more effective developer and collaborator.</li>
+            </ul>
+            
+            <p>Remember, Git is a powerful tool that becomes more valuable as your projects grow in complexity and your teams expand. The investment you make in understanding these fundamentals will pay dividends throughout your development career.</p>
+        </section>
+
+        <section class="assignment">
+            <h3>Assignment: Git Repository Practice</h3>
+            
+            <p>Create your own Git repository that demonstrates your understanding of repositories, commits, and branches:</p>
+            
+            <ol>
+                <li>Initialize a new Git repository for a personal project (it can be a simple website, application, or tool)</li>
+                <li>Create at least 5 meaningful commits that show progressive development</li>
+                <li>Create at least 2 feature branches</li>
+                <li>Merge your feature branches back into the main branch</li>
+                <li>Document your process with screenshots or a written explanation</li>
+                <li>Push your repository to GitHub and share the link</li>
+            </ol>
+            
+            <p>Bonus challenge: Intentionally create a merge conflict and document how you resolved it.</p>
+        </section>
+
+        <section class="resources">
+            <h3>Additional Resources</h3>
+            
+            <ul>
+                <li><a href="https://git-scm.com/doc" target="_blank">Official Git Documentation</a></li>
+                <li><a href="https://learngitbranching.js.org/" target="_blank">Learn Git Branching</a> - An interactive visualization tool</li>
+                <li><a href="https://github.github.com/training-kit/" target="_blank">GitHub Training Kit</a></li>
+                <li><a href="https://guides.github.com/" target="_blank">GitHub Guides</a></li>
+                <li><a href="https://www.atlassian.com/git/tutorials" target="_blank">Atlassian Git Tutorials</a></li>
+                <li><a href="https://www.youtube.com/githubguides" target="_blank">GitHub Guides YouTube Channel</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

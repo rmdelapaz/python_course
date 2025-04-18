@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Request-Response Cycle</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 1, Monday: The Request-Response Cycle</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>The Web's Fundamental Conversation Pattern</h3>
+            <p>
+                Welcome to our exploration of the request-response cycle—the fundamental pattern of communication that powers virtually all web interactions. Building on our understanding of clients, servers, and HTTP, we'll now dive deeper into how these elements work together to create the dynamic web experiences we use every day.
+            </p>
+            <p>
+                Think of the request-response cycle as a conversation between two parties: one asks questions or makes requests (the client), and the other provides answers or services (the server). This back-and-forth exchange forms the backbone of web communication, from simple webpage loading to complex applications like online banking or social media platforms.
+            </p>
+            <p>
+                This file is located in the course materials folder as <code>week1_day1_request_response_cycle.html</code>.
+            </p>
+        </section>
+
+        <section class="cycle_overview">
+            <h3>The Request-Response Cycle: A Bird's-Eye View</h3>
+            <p>
+                At its most basic level, the request-response cycle consists of two primary actions:
+            </p>
+            <ol>
+                <li><strong>Request</strong>: A client sends a message asking for a specific resource or action</li>
+                <li><strong>Response</strong>: A server processes the request and returns an appropriate message</li>
+            </ol>
+            <p>
+                This cycle is like a game of ping-pong—each interaction is distinct and follows a clear pattern of back-and-forth communication. The beauty of this model lies in its simplicity and effectiveness. By breaking all web communication into these discrete exchanges, the web becomes remarkably scalable and resilient.
+            </p>
+            <p>
+                Let's visualize this cycle with a concrete example—loading a simple webpage:
+            </p>
+            <pre><code>
+Client (Browser)                                Server (www.example.com)
+     |                                               |
+     |  1. Request: GET /index.html HTTP/1.1         |
+     |---------------------------------------------->|
+     |                                               |  2. Process request
+     |                                               |     Find index.html
+     |                                               |     Generate response
+     |  3. Response: HTTP/1.1 200 OK                 |
+     |     (HTML content)                            |
+     |<----------------------------------------------|
+     |                                               |
+     |  4. Parse HTML, render page                   |
+     |                                               |
+            </code></pre>
+            <p>
+                This cycle repeats for every resource needed to render the complete webpage—HTML, CSS, JavaScript files, images, and any API calls made by the page.
+            </p>
+        </section>
+
+        <section class="anatomy_request">
+            <h3>Anatomy of an HTTP Request</h3>
+            <p>
+                Let's examine the components of an HTTP request in detail:
+            </p>
+            
+            <h4>Request Line</h4>
+            <p>
+                Every HTTP request begins with a request line that contains three crucial pieces of information:
+            </p>
+            <pre><code>
+METHOD /path/to/resource HTTP/version
+            </code></pre>
+            <ul>
+                <li><strong>HTTP Method</strong>: Indicates the action the client wants to perform (GET, POST, etc.)</li>
+                <li><strong>Request URI</strong>: Specifies the path to the requested resource</li>
+                <li><strong>HTTP Version</strong>: Indicates which version of HTTP the client is using</li>
+            </ul>
+            <p>
+                Examples of request lines:
+            </p>
+            <pre><code>
+GET /index.html HTTP/1.1
+POST /api/users HTTP/1.1
+PUT /api/products/45 HTTP/2
+DELETE /api/comments/12 HTTP/1.1
+            </code></pre>
+            <p>
+                The request line is like the address and instructions on an envelope—it tells the server what you want and where to find it.
+            </p>
+            
+            <h4>Request Headers</h4>
+            <p>
+                Headers provide additional information about the request and the client itself. They follow the request line and are formatted as key-value pairs:
+            </p>
+            <pre><code>
+Header-Name: header-value
+            </code></pre>
+            <p>
+                Common request headers include:
+            </p>
+            <ul>
+                <li><strong>Host</strong>: The domain name of the server (required in HTTP/1.1)
+                    <pre><code>Host: www.example.com</code></pre>
+                </li>
+                <li><strong>User-Agent</strong>: Information about the client's browser or application
+                    <pre><code>User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36</code></pre>
+                </li>
+                <li><strong>Accept</strong>: Media types the client can process
+                    <pre><code>Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8</code></pre>
+                </li>
+                <li><strong>Content-Type</strong>: Format of data in the request body (for POST/PUT)
+                    <pre><code>Content-Type: application/json</code></pre>
+                </li>
+                <li><strong>Content-Length</strong>: Size of the request body in bytes
+                    <pre><code>Content-Length: 348</code></pre>
+                </li>
+                <li><strong>Authorization</strong>: Authentication credentials
+                    <pre><code>Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</code></pre>
+                </li>
+                <li><strong>Cookie</strong>: Data previously sent from the server
+                    <pre><code>Cookie: session=abc123; preferences=dark-mode</code></pre>
+                </li>
+                <li><strong>Referer</strong>: URL of the page that linked to the requested resource
+                    <pre><code>Referer: https://www.example.com/products</code></pre>
+                </li>
+            </ul>
+            <p>
+                Headers are like the additional instructions and context you might include with a request—they provide important details that help the server process your request appropriately.
+            </p>
+            
+            <h4>Request Body</h4>
+            <p>
+                Some HTTP methods (particularly POST, PUT, and PATCH) include a request body that contains data to be processed by the server. The body is separated from the headers by a blank line.
+            </p>
+            <p>
+                Example of a POST request with a JSON body:
+            </p>
+            <pre><code>
+POST /api/users HTTP/1.1
+Host: api.example.com
+Content-Type: application/json
+Content-Length: 67
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "role": "user"
+}
+            </code></pre>
+            <p>
+                Example of a form submission:
+            </p>
+            <pre><code>
+POST /login HTTP/1.1
+Host: www.example.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 38
+
+username=johndoe&password=secret123
+            </code></pre>
+            <p>
+                The request body is like the contents of a package you're sending—it contains the actual data or information that needs to be processed.
+            </p>
+        </section>
+
+        <section class="anatomy_response">
+            <h3>Anatomy of an HTTP Response</h3>
+            <p>
+                After processing a request, the server sends back an HTTP response with several components:
+            </p>
+            
+            <h4>Status Line</h4>
+            <p>
+                Every HTTP response begins with a status line:
+            </p>
+            <pre><code>
+HTTP/version STATUS_CODE STATUS_TEXT
+            </code></pre>
+            <ul>
+                <li><strong>HTTP Version</strong>: The HTTP protocol version used</li>
+                <li><strong>Status Code</strong>: A three-digit code indicating the result of the request</li>
+                <li><strong>Status Text</strong>: A brief textual description of the status code</li>
+            </ul>
+            <p>
+                Examples of status lines:
+            </p>
+            <pre><code>
+HTTP/1.1 200 OK
+HTTP/1.1 404 Not Found
+HTTP/1.1 500 Internal Server Error
+HTTP/2 301 Moved Permanently
+            </code></pre>
+            <p>
+                The status line is like the initial verdict in a conversation—it immediately tells you whether your request was successful, redirected, rejected, or if something went wrong.
+            </p>
+            
+            <h4>Response Headers</h4>
+            <p>
+                Like request headers, response headers provide additional information about the response and the server:
+            </p>
+            <ul>
+                <li><strong>Content-Type</strong>: Format of the response body
+                    <pre><code>Content-Type: text/html; charset=UTF-8</code></pre>
+                </li>
+                <li><strong>Content-Length</strong>: Size of the response body in bytes
+                    <pre><code>Content-Length: 1256</code></pre>
+                </li>
+                <li><strong>Server</strong>: Information about the server software
+                    <pre><code>Server: nginx/1.18.0</code></pre>
+                </li>
+                <li><strong>Date</strong>: When the response was generated
+                    <pre><code>Date: Tue, 23 May 2023 14:28:53 GMT</code></pre>
+                </li>
+                <li><strong>Cache-Control</strong>: Directives for caching the response
+                    <pre><code>Cache-Control: max-age=3600, public</code></pre>
+                </li>
+                <li><strong>Set-Cookie</strong>: Cookies to be stored by the client
+                    <pre><code>Set-Cookie: session=abc123; Path=/; HttpOnly</code></pre>
+                </li>
+                <li><strong>Location</strong>: Used for redirects, specifies the new URL
+                    <pre><code>Location: https://www.example.com/new-page</code></pre>
+                </li>
+            </ul>
+            <p>
+                Response headers are like the handling instructions that come with a delivered package—they tell the client how to interpret and process the response.
+            </p>
+            
+            <h4>Response Body</h4>
+            <p>
+                The response body contains the requested data or content, separated from the headers by a blank line:
+            </p>
+            <pre><code>
+HTTP/1.1 200 OK
+Date: Tue, 23 May 2023 14:28:53 GMT
+Server: Apache/2.4.41 (Ubuntu)
+Content-Type: text/html; charset=UTF-8
+Content-Length: 138
+
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Example Page&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Hello, World!&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </code></pre>
+            <p>
+                For API responses, the body might contain JSON data:
+            </p>
+            <pre><code>
+HTTP/1.1 200 OK
+Date: Tue, 23 May 2023 14:30:12 GMT
+Content-Type: application/json
+Content-Length: 234
+
+{
+  "id": 42,
+  "name": "John Doe",
+  "email": "john@example.com",
+  "created_at": "2023-05-20T10:30:00Z",
+  "roles": ["user", "editor"],
+  "status": "active"
+}
+            </code></pre>
+            <p>
+                The response body is like the actual contents of a delivered package—it's the information or resource you requested in the first place.
+            </p>
+        </section>
+
+        <section class="cycle_detail">
+            <h3>The Complete Request-Response Cycle in Detail</h3>
+            <p>
+                Now let's walk through the entire request-response cycle in greater detail, from the moment a user takes an action to the final rendered result:
+            </p>
+            
+            <h4>Phase 1: Client Action and Request Formation</h4>
+            <ol>
+                <li>
+                    <strong>User Action</strong>:
+                    <ul>
+                        <li>User types a URL in the address bar</li>
+                        <li>User clicks a link</li>
+                        <li>User submits a form</li>
+                        <li>JavaScript makes an XMLHttpRequest or fetch request</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>URL Parsing</strong>:
+                    <ul>
+                        <li>Browser parses the URL to identify protocol, domain, path, etc.</li>
+                        <li>Browser extracts query parameters if present</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>DNS Resolution</strong>:
+                    <ul>
+                        <li>Browser checks if the domain's IP address is cached</li>
+                        <li>If not, a DNS query is performed to resolve the domain name to an IP address</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Connection Establishment</strong>:
+                    <ul>
+                        <li>Browser initiates a TCP connection to the server IP on the appropriate port (80 for HTTP, 443 for HTTPS)</li>
+                        <li>For HTTPS, a TLS handshake is performed to establish encryption</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Request Formation</strong>:
+                    <ul>
+                        <li>Browser constructs an HTTP request with appropriate method, headers, and body</li>
+                        <li>The browser adds cookies for the domain from its cookie jar</li>
+                    </ul>
+                </li>
+            </ol>
+            <p>
+                This phase is like preparing to place an order at a restaurant—deciding what you want, figuring out how to ask for it, finding the restaurant's location, and formulating your order.
+            </p>
+            
+            <h4>Phase 2: Request Transmission and Server Processing</h4>
+            <ol start="6">
+                <li>
+                    <strong>Request Transmission</strong>:
+                    <ul>
+                        <li>The HTTP request is sent across the network to the server</li>
+                        <li>The request passes through various network devices (routers, switches, etc.)</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Server Reception</strong>:
+                    <ul>
+                        <li>The web server (e.g., Nginx, Apache) receives the HTTP request</li>
+                        <li>The server parses the request line and headers</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Request Routing</strong>:
+                    <ul>
+                        <li>The web server determines how to handle the request based on configuration rules</li>
+                        <li>For static content, the server may directly serve a file</li>
+                        <li>For dynamic content, the server forwards the request to an application server</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Application Processing</strong>:
+                    <ul>
+                        <li>The application server (e.g., running Python/Flask) receives the request</li>
+                        <li>The application routes the request to the appropriate handler based on the URL path</li>
+                        <li>The application executes business logic, often interacting with databases or other services</li>
+                        <li>The application constructs a response (HTML, JSON, etc.)</li>
+                    </ul>
+                </li>
+            </ol>
+            <p>
+                This phase is like the restaurant receiving your order, the host directing it to the right station, the chef preparing your food according to the menu and your specifications, and plating it for service.
+            </p>
+            
+            <h4>Phase 3: Response Transmission and Client Processing</h4>
+            <ol start="10">
+                <li>
+                    <strong>Response Formation</strong>:
+                    <ul>
+                        <li>The server constructs an HTTP response with status code, headers, and body</li>
+                        <li>The server may add cookies, cache directives, and other metadata</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Response Transmission</strong>:
+                    <ul>
+                        <li>The HTTP response is sent back across the network to the client</li>
+                        <li>For HTTPS, the response is encrypted during transmission</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Client Reception</strong>:
+                    <ul>
+                        <li>The browser receives the complete HTTP response</li>
+                        <li>The browser parses the status line and headers</li>
+                        <li>The browser processes any Set-Cookie headers, storing cookies as directed</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Content Processing</strong>:
+                    <ul>
+                        <li>For HTML responses, the browser begins parsing the HTML document</li>
+                        <li>The browser constructs the Document Object Model (DOM)</li>
+                        <li>As the browser discovers additional resources (CSS, JavaScript, images), it initiates new request-response cycles for each</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Rendering and Display</strong>:
+                    <ul>
+                        <li>The browser applies CSS styles to the DOM, creating the render tree</li>
+                        <li>The browser performs layout calculations to determine element positions</li>
+                        <li>The browser paints the page to the screen</li>
+                        <li>JavaScript executes, potentially modifying the DOM and triggering reflows/repaints</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Post-Load Activity</strong>:
+                    <ul>
+                        <li>JavaScript may make additional asynchronous requests (AJAX/fetch)</li>
+                        <li>User interactions may trigger new request-response cycles</li>
+                        <li>WebSocket connections may establish persistent communication</li>
+                    </ul>
+                </li>
+            </ol>
+            <p>
+                This phase is like your order being delivered to your table, you receiving it, examining the presentation, taking your first bite, and potentially ordering additional items as your meal progresses.
+            </p>
+        </section>
+
+        <section class="backend_perspective">
+            <h3>Request-Response from the Backend Perspective</h3>
+            <p>
+                As full stack developers, it's important to understand how the request-response cycle is handled on the server side. Let's explore this using Python frameworks as examples:
+            </p>
+            
+            <h4>Processing Requests in Flask</h4>
+            <p>
+                Flask is a lightweight Python web framework that handles the request-response cycle through route decorators:
+            </p>
+            <pre><code>
+from flask import Flask, request, render_template, jsonify
+
+app = Flask(__name__)
+
+@app.route('/hello')
+def hello():
+    # 1. Flask receives the HTTP request
+    # 2. Flask matches the URL path to this route
+    # 3. Flask calls this function to handle the request
+    
+    # 4. Access information from the request object
+    user_agent = request.headers.get('User-Agent')
+    query_param = request.args.get('name', 'World')
+    
+    # 5. Generate a response (HTML in this case)
+    return f"&lt;h1&gt;Hello, {query_param}!&lt;/h1&gt;&lt;p&gt;Your browser: {user_agent}&lt;/p&gt;"
+
+@app.route('/api/data', methods=['POST'])
+def receive_data():
+    # Handle POST requests with JSON data
+    if request.is_json:
+        # Parse JSON from request body
+        data = request.get_json()
+        
+        # Process the data (in a real app, this might involve database operations)
+        result = {"status": "success", "received": data}
+        
+        # Return JSON response
+        return jsonify(result), 201  # 201 Created status code
+    else:
+        # Return error for non-JSON requests
+        return jsonify({"error": "Content-Type must be application/json"}), 415
+            </code></pre>
+            <p>
+                In this Flask example, you can see how:
+            </p>
+            <ul>
+                <li>Route decorators map URL patterns to handler functions</li>
+                <li>The <code>request</code> object provides access to all request details (headers, query parameters, body)</li>
+                <li>Different response types can be generated (HTML text, JSON via <code>jsonify</code>)</li>
+                <li>Status codes can be explicitly returned (default is 200 OK)</li>
+            </ul>
+            
+            <h4>Processing Requests in Django</h4>
+            <p>
+                Django, a more comprehensive framework, handles request-response through views and URL patterns:
+            </p>
+            <pre><code>
+# urls.py
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('hello/', views.hello_view, name='hello'),
+    path('api/data/', views.data_view, name='data'),
+]
+
+# views.py
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+def hello_view(request):
+    # 1. Django routes the request to this view based on urls.py
+    
+    # 2. Access information from the request object
+    user_agent = request.META.get('HTTP_USER_AGENT', '')
+    query_param = request.GET.get('name', 'World')
+    
+    # 3. Generate an HTML response
+    return HttpResponse(
+        f"&lt;h1&gt;Hello, {query_param}!&lt;/h1&gt;&lt;p&gt;Your browser: {user_agent}&lt;/p&gt;"
+    )
+
+@csrf_exempt  # For demonstration only - real code should handle CSRF properly
+def data_view(request):
+    if request.method == 'POST':
+        try:
+            # Parse JSON data from request body
+            data = json.loads(request.body)
+            
+            # Process the data
+            result = {"status": "success", "received": data}
+            
+            # Return JSON response
+            return JsonResponse(result, status=201)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+    else:
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+            </code></pre>
+            <p>
+                In the Django example:
+            </p>
+            <ul>
+                <li>URL patterns are defined separately in <code>urls.py</code></li>
+                <li>View functions receive <code>request</code> objects with all request details</li>
+                <li>Different response classes handle various content types (<code>HttpResponse</code>, <code>JsonResponse</code>)</li>
+                <li>Status codes can be explicitly set through the <code>status</code> parameter</li>
+            </ul>
+            <p>
+                Both frameworks abstract away the low-level details of HTTP while giving you full access to request information and control over the response. This pattern—routing requests to handler functions that generate responses—is common across most web frameworks, regardless of language.
+            </p>
+        </section>
+
+        <section class="frontend_perspective">
+            <h3>Request-Response from the Frontend Perspective</h3>
+            <p>
+                Modern frontend development often involves making requests to APIs and handling responses dynamically. Let's explore how this works in JavaScript:
+            </p>
+            
+            <h4>Making Requests with Fetch API</h4>
+            <p>
+                The Fetch API is a modern JavaScript interface for making HTTP requests:
+            </p>
+            <pre><code>
+// Simple GET request
+fetch('https://api.example.com/data')
+  .then(response => {
+    // Check if the request was successful
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    // Parse the JSON response body
+    return response.json();
+  })
+  .then(data => {
+    // Process the data
+    console.log('Data received:', data);
+    // Update the UI with the data
+    displayData(data);
+  })
+  .catch(error => {
+    // Handle any errors
+    console.error('Fetch error:', error);
+    showErrorMessage(error.message);
+  });
+
+// POST request with JSON data
+fetch('https://api.example.com/users', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer token123' // Optional authentication
+  },
+  body: JSON.stringify({
+    name: 'John Doe',
+    email: 'john@example.com'
+  })
+})
+  .then(response => response.json())
+  .then(data => console.log('User created:', data))
+  .catch(error => console.error('Error creating user:', error));
+            </code></pre>
+            <p>
+                With the Fetch API, you can:
+            </p>
+            <ul>
+                <li>Make any type of HTTP request (GET, POST, PUT, DELETE, etc.)</li>
+                <li>Set custom headers, including authentication tokens</li>
+                <li>Send structured data as JSON</li>
+                <li>Handle responses asynchronously with Promises</li>
+                <li>Process different response formats (JSON, text, blobs, etc.)</li>
+            </ul>
+            
+            <h4>Using Async/Await for Cleaner Code</h4>
+            <p>
+                Modern JavaScript uses async/await to write more readable asynchronous code:
+            </p>
+            <pre><code>
+async function fetchUserData(userId) {
+  try {
+    // Show loading state
+    showLoadingIndicator();
+    
+    // Make the request
+    const response = await fetch(`https://api.example.com/users/${userId}`);
+    
+    // Check for errors
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
+    // Parse and return the data
+    const userData = await response.json();
+    return userData;
+  } catch (error) {
+    // Handle errors
+    console.error('Failed to fetch user data:', error);
+    showErrorMessage('Could not load user data. Please try again later.');
+    return null;
+  } finally {
+    // Clean up (always runs)
+    hideLoadingIndicator();
+  }
+}
+
+// Usage
+async function loadUserProfile() {
+  const userId = getCurrentUserId();
+  const userData = await fetchUserData(userId);
+  
+  if (userData) {
+    displayUserProfile(userData);
+  }
+}
+            </code></pre>
+            <p>
+                This approach provides:
+            </p>
+            <ul>
+                <li>More readable, sequential-looking code despite being asynchronous</li>
+                <li>Cleaner error handling with try/catch</li>
+                <li>Ability to use await for multiple sequential requests</li>
+                <li>Proper cleanup with finally blocks</li>
+            </ul>
+            
+            <h4>Managing Loading and Error States</h4>
+            <p>
+                A critical part of handling the request-response cycle in the frontend is managing UI states:
+            </p>
+            <pre><code>
+async function loadProducts() {
+  const productListElement = document.getElementById('product-list');
+  const errorElement = document.getElementById('error-message');
+  const loadingElement = document.getElementById('loading-spinner');
+  
+  // Initialize UI state
+  errorElement.style.display = 'none';
+  productListElement.innerHTML = '';
+  loadingElement.style.display = 'block';
+  
+  try {
+    // Make the request
+    const response = await fetch('https://api.example.com/products');
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
+    const products = await response.json();
+    
+    // Success state: Display products
+    products.forEach(product => {
+      const productElement = document.createElement('div');
+      productElement.className = 'product-card';
+      productElement.innerHTML = `
+        &lt;h3&gt;${product.name}&lt;/h3&gt;
+        &lt;p&gt;${product.description}&lt;/p&gt;
+        &lt;span class="price"&gt;$${product.price.toFixed(2)}&lt;/span&gt;
+        &lt;button onclick="addToCart(${product.id})"&gt;Add to Cart&lt;/button&gt;
+      `;
+      productListElement.appendChild(productElement);
+    });
+  } catch (error) {
+    // Error state: Show error message
+    console.error('Failed to load products:', error);
+    errorElement.textContent = 'Failed to load products. Please try again.';
+    errorElement.style.display = 'block';
+  } finally {
+    // Hide loading spinner in any case
+    loadingElement.style.display = 'none';
+  }
+}
+            </code></pre>
+            <p>
+                This pattern demonstrates:
+            </p>
+            <ul>
+                <li>Three distinct UI states: Loading, Success, and Error</li>
+                <li>Clear feedback to users about the current state</li>
+                <li>Graceful error handling that preserves user experience</li>
+                <li>Cleanup that always happens regardless of outcome</li>
+            </ul>
+            <p>
+                Managing these states is crucial for creating responsive, user-friendly applications that communicate effectively about the status of operations.
+            </p>
+        </section>
+
+        <section class="common_response_codes">
+            <h3>Common HTTP Status Codes in Practice</h3>
+            <p>
+                Let's explore how common HTTP status codes are used in real-world scenarios, with examples of when you might encounter or use them:
+            </p>
+            
+            <h4>Successful Responses (2xx)</h4>
+            <ul>
+                <li>
+                    <strong>200 OK</strong> - Standard success response
+                    <ul>
+                        <li>When: Returning HTML for a webpage, successful GET request to an API</li>
+                        <li>Example: <code>return render_template('index.html')</code> in Flask</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>201 Created</strong> - Resource successfully created
+                    <ul>
+                        <li>When: After successfully creating a new user, product, or other resource</li>
+                        <li>Example: <code>return jsonify(new_user), 201</code> after adding to database</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>204 No Content</strong> - Success with no response body
+                    <ul>
+                        <li>When: After successful DELETE operations or updates that don't return data</li>
+                        <li>Example: <code>return '', 204</code> after deleting a resource</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h4>Redirection (3xx)</h4>
+            <ul>
+                <li>
+                    <strong>301 Moved Permanently</strong> - Resource has permanently relocated
+                    <ul>
+                        <li>When: Website structure has changed, URLs have been reorganized</li>
+                        <li>Example: <code>return redirect('/new-location', code=301)</code></li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>302 Found</strong> - Temporary redirect
+                    <ul>
+                        <li>When: Redirecting after form submission, temporary changes</li>
+                        <li>Example: <code>return redirect('/dashboard')</code> after login</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>304 Not Modified</strong> - Resource hasn't changed
+                    <ul>
+                        <li>When: Browser has a cached version that's still valid</li>
+                        <li>Example: Server compares If-Modified-Since header with resource timestamp</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h4>Client Errors (4xx)</h4>
+            <ul>
+                <li>
+                    <strong>400 Bad Request</strong> - Request has invalid syntax
+                    <ul>
+                        <li>When: Missing required fields, invalid data format</li>
+                        <li>Example: <code>return jsonify({'error': 'Missing required field: email'}), 400</code></li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>401 Unauthorized</strong> - Authentication required
+                    <ul>
+                        <li>When: Protected resource accessed without valid credentials</li>
+                        <li>Example: <code>return jsonify({'error': 'Authentication required'}), 401</code></li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>403 Forbidden</strong> - Authorization failure
+                    <ul>
+                        <li>When: User is authenticated but lacks permission</li>
+                        <li>Example: <code>return jsonify({'error': 'Insufficient permissions'}), 403</code></li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>404 Not Found</strong> - Resource doesn't exist
+                    <ul>
+                        <li>When: URL doesn't match any routes, database record not found</li>
+                        <li>Example: <code>return render_template('404.html'), 404</code></li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>422 Unprocessable Entity</strong> - Validation failure
+                    <ul>
+                        <li>When: Request format is correct but content has semantic errors</li>
+                        <li>Example: <code>return jsonify({'error': 'Email already in use'}), 422</code></li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>429 Too Many Requests</strong> - Rate limit exceeded
+                    <ul>
+                        <li>When: User has made too many requests in a given time period</li>
+                        <li>Example: <code>return jsonify({'error': 'Rate limit exceeded. Try again in 60 seconds'}), 429</code></li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h4>Server Errors (5xx)</h4>
+            <ul>
+                <li>
+                    <strong>500 Internal Server Error</strong> - Unexpected server error
+                    <ul>
+                        <li>When: Unhandled exceptions, database connection failures</li>
+                        <li>Example: Generated automatically when your code raises an unhandled exception</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>502 Bad Gateway</strong> - Invalid response from upstream server
+                    <ul>
+                        <li>When: Your API server calls another service that returns errors</li>
+                        <li>Example: When a reverse proxy can't connect to the application server</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>503 Service Unavailable</strong> - Server temporarily unavailable
+                    <ul>
+                        <li>When: Server is overloaded, under maintenance</li>
+                        <li>Example: <code>return render_template('maintenance.html'), 503</code></li>
+                    </ul>
+                </li>
+            </ul>
+            <p>
+                Choosing the appropriate status code for your responses is an important part of RESTful API design and provides valuable information to clients about how their requests were processed.
+            </p>
+        </section>
+
+        <section class="advanced_concepts">
+            <h3>Advanced Request-Response Patterns</h3>
+            <p>
+                Beyond the basic request-response cycle, several advanced patterns have evolved to address specific needs in web applications:
+            </p>
+            
+            <h4>AJAX and Partial Page Updates</h4>
+            <p>
+                Asynchronous JavaScript and XML (AJAX) allows parts of a webpage to be updated without reloading the entire page:
+            </p>
+            <pre><code>
+// JavaScript - Updating a specific section of the page
+document.getElementById('refresh-button').addEventListener('click', async function() {
+  const notificationContainer = document.getElementById('notifications');
+  notificationContainer.innerHTML = '&lt;div class="loading"&gt;Loading...&lt;/div&gt;';
+  
+  try {
+    const response = await fetch('/api/notifications');
+    const notifications = await response.json();
+    
+    // Update just this section of the page
+    notificationContainer.innerHTML = '';
+    if (notifications.length === 0) {
+      notificationContainer.innerHTML = '&lt;p&gt;No new notifications.&lt;/p&gt;';
+    } else {
+      notifications.forEach(notification => {
+        const element = document.createElement('div');
+        element.className = 'notification';
+        element.innerHTML = `
+          &lt;h4&gt;${notification.title}&lt;/h4&gt;
+          &lt;p&gt;${notification.message}&lt;/p&gt;
+          &lt;span class="time"&gt;${notification.time}&lt;/span&gt;
+        `;
+        notificationContainer.appendChild(element);
+      });
+    }
+  } catch (error) {
+    notificationContainer.innerHTML = '&lt;p class="error"&gt;Failed to load notifications.&lt;/p&gt;';
+  }
+});
+            </code></pre>
+            <p>
+                This pattern:
+            </p>
+            <ul>
+                <li>Improves user experience by avoiding full page reloads</li>
+                <li>Reduces bandwidth usage by transferring only the needed data</li>
+                <li>Creates more responsive applications</li>
+            </ul>
+            
+            <h4>Long Polling</h4>
+            <p>
+                Long polling is a technique where the server holds a request open until new data is available:
+            </p>
+            <pre><code>
+// JavaScript - Client-side long polling
+function longPoll() {
+  fetch('/api/messages/poll')
+    .then(response => response.json())
+    .then(data => {
+      // Process new messages
+      data.messages.forEach(message => {
+        displayMessage(message);
+      });
+      
+      // Immediately start a new long poll request
+      longPoll();
+    })
+    .catch(error => {
+      console.error('Long polling error:', error);
+      // Wait before retrying to avoid flooding server on error
+      setTimeout(longPoll, 5000);
+    });
+}
+
+// Start long polling when page loads
+longPoll();
+
+// Server-side in Python/Flask
+@app.route('/api/messages/poll')
+def poll_messages():
+    user_id = get_current_user_id()
+    
+    # Check for new messages with a timeout
+    for i in range(30):  # 30-second maximum polling time
+        new_messages = check_new_messages(user_id)
+        if new_messages:
+            return jsonify({'messages': new_messages})
+        
+        # No messages yet, wait a second before checking again
+        time.sleep(1)
+    
+    # No new messages after timeout
+    return jsonify({'messages': []})
+            </code></pre>
+            <p>
+                Long polling provides:
+            </p>
+            <ul>
+                <li>Near real-time updates without constant polling</li>
+                <li>Works across all browsers, including older ones</li>
+                <li>Simpler implementation than WebSockets</li>
+            </ul>
+            
+            <h4>Server-Sent Events (SSE)</h4>
+            <p>
+                SSE enables servers to push updates to clients over a single HTTP connection:
+            </p>
+            <pre><code>
+// JavaScript - Client-side SSE
+const eventSource = new EventSource('/api/events');
+
+eventSource.onmessage = function(event) {
+  const data = JSON.parse(event.data);
+  console.log('Received event:', data);
+  updateUI(data);
+};
+
+eventSource.onerror = function(error) {
+  console.error('SSE error:', error);
+  eventSource.close();
+  // Reconnect after delay
+  setTimeout(() => {
+    setupEventSource();
+  }, 5000);
+};
+
+// Server-side in Python/Flask
+@app.route('/api/events')
+def events():
+    def generate():
+        # SSE requires specific format
+        yield "data: {\"message\": \"Connected to event stream\"}\n\n"
+        
+        while True:
+            # Check for new events
+            event = check_for_new_events()
+            if event:
+                yield f"data: {json.dumps(event)}\n\n"
+            
+            time.sleep(1)
+    
+    return Response(generate(), mimetype='text/event-stream')
+            </code></pre>
+            <p>
+                Server-Sent Events are useful for:
+            </p>
+            <ul>
+                <li>One-way server-to-client notifications</li>
+                <li>Applications that need real-time updates (dashboards, news feeds)</li>
+                <li>Lighter weight than WebSockets for one-way communication</li>
+            </ul>
+            
+            <h4>WebSockets</h4>
+            <p>
+                WebSockets provide a persistent, bidirectional communication channel:
+            </p>
+            <pre><code>
+// JavaScript - Client-side WebSocket
+const socket = new WebSocket('wss://example.com/socket');
+
+socket.onopen = function(event) {
+  console.log('Connection established');
+  // Send authentication information
+  socket.send(JSON.stringify({
+    type: 'auth',
+    token: localStorage.getItem('auth_token')
+  }));
+};
+
+socket.onmessage = function(event) {
+  const data = JSON.parse(event.data);
+  console.log('Message from server:', data);
+  
+  switch (data.type) {
+    case 'chat_message':
+      displayChatMessage(data.message);
+      break;
+    case 'user_status':
+      updateUserStatus(data.user_id, data.status);
+      break;
+    // Handle other message types
+  }
+};
+
+// Send messages to the server
+function sendMessage(text) {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({
+      type: 'chat_message',
+      text: text,
+      room_id: currentRoomId
+    }));
+  }
+}
+
+// Python server-side WebSocket with Flask-SocketIO
+from flask_socketio import SocketIO, emit, join_room, leave_room
+
+socketio = SocketIO(app)
+
+@socketio.on('connect')
+def handle_connect():
+    print('Client connected')
+
+@socketio.on('auth')
+def handle_auth(data):
+    user = authenticate_user(data.get('token'))
+    if user:
+        # Store user info in session
+        session['user_id'] = user.id
+        emit('auth_success', {'user': user.to_dict()})
+    else:
+        emit('auth_failed', {'message': 'Invalid token'})
+
+@socketio.on('chat_message')
+def handle_message(data):
+    if 'user_id' not in session:
+        return
+    
+    # Process and store the message
+    message = create_message(
+        user_id=session['user_id'],
+        room_id=data.get('room_id'),
+        text=data.get('text')
+    )
+    
+    # Broadcast to everyone in the room
+    emit('chat_message', message.to_dict(), room=data.get('room_id'))
+            </code></pre>
+            <p>
+                WebSockets excel for:
+            </p>
+            <ul>
+                <li>Real-time applications requiring bidirectional communication</li>
+                <li>Chat applications, collaborative editors, multiplayer games</li>
+                <li>Scenarios where low latency is critical</li>
+            </ul>
+        </section>
+
+        <section class="optimization">
+            <h3>Optimizing the Request-Response Cycle</h3>
+            <p>
+                The efficiency of the request-response cycle directly impacts user experience. Here are key optimization strategies:
+            </p>
+            
+            <h4>Caching</h4>
+            <p>
+                Caching stores copies of resources to reduce server load and speed up responses:
+            </p>
+            <pre><code>
+# Flask example with caching
+from flask import Flask, request, jsonify
+from flask_caching import Cache
+
+app = Flask(__name__)
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
+# Cache this view for 10 minutes
+@app.route('/api/products')
+@cache.cached(timeout=600)
+def get_products():
+    # Expensive database query
+    products = Product.query.all()
+    return jsonify([p.to_dict() for p in products])
+
+# Cache with dynamic parameters
+@app.route('/api/product/<int:product_id>')
+@cache.memoize(timeout=300)
+def get_product(product_id):
+    # This result is cached based on the product_id argument
+    product = Product.query.get_or_404(product_id)
+    return jsonify(product.to_dict())
+
+# HTTP caching headers
+@app.route('/api/categories')
+def get_categories():
+    categories = Category.query.all()
+    response = jsonify([c.to_dict() for c in categories])
+    
+    # Add caching headers
+    response.cache_control.max_age = 3600  # Cache for one hour
+    response.cache_control.public = True   # Allow caching by CDNs
+    
+    return response
+            </code></pre>
+            <p>
+                Effective caching:
+            </p>
+            <ul>
+                <li>Reduces server load by serving cached responses</li>
+                <li>Improves response times for clients</li>
+                <li>Can be implemented at multiple levels (browser, CDN, application, database)</li>
+            </ul>
+            
+            <h4>Compression</h4>
+            <p>
+                Compressing response data reduces transfer size and time:
+            </p>
+            <pre><code>
+# Flask with compression
+from flask import Flask
+from flask_compress import Compress
+
+app = Flask(__name__)
+Compress(app)  # Automatically compresses responses
+
+@app.route('/api/large-data')
+def get_large_data():
+    # This response will be compressed (if client accepts it)
+    large_data = generate_large_json()
+    return jsonify(large_data)
+
+# JavaScript client checking for compressed responses
+fetch('/api/large-data')
+  .then(response => {
+    // Check if response was compressed
+    const encoding = response.headers.get('Content-Encoding');
+    console.log('Response compression:', encoding || 'none');
+    return response.json();
+  })
+  .then(data => processData(data));
+            </code></pre>
+            <p>
+                Benefits of compression:
+            </p>
+            <ul>
+                <li>Significantly reduces bandwidth usage (often 70%+ reduction)</li>
+                <li>Improves load times, especially on slower connections</li>
+                <li>Can be transparently handled by web servers and frameworks</li>
+            </ul>
+            
+            <h4>Connection Optimizations</h4>
+            <p>
+                Modern browsers use several techniques to optimize connections:
+            </p>
+            <ul>
+                <li><strong>Connection Pooling</strong>: Reuse connections for multiple requests</li>
+                <li><strong>HTTP/2 Multiplexing</strong>: Send multiple requests over a single connection</li>
+                <li><strong>TCP Fast Open</strong>: Reduce handshake overhead for repeat connections</li>
+            </ul>
+            <p>
+                Server-side configuration to support these features:
+            </p>
+            <pre><code>
+# Nginx configuration example for HTTP/2
+server {
+    listen 443 ssl http2;  # Enable HTTP/2
+    server_name example.com;
+    
+    ssl_certificate /path/to/cert.pem;
+    ssl_certificate_key /path/to/key.pem;
+    
+    # Optimize SSL
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    
+    # Enable TCP Fast Open
+    tcp_fastopen on;
+    
+    # Other configuration...
+}
+            </code></pre>
+            
+            <h4>Data Efficiency</h4>
+            <p>
+                Being mindful of data size and structure improves performance:
+            </p>
+            <pre><code>
+# API Pagination example in Flask
+@app.route('/api/products')
+def get_products():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    
+    # Limit to reasonable values
+    per_page = min(per_page, 100)
+    
+    # Get paginated results
+    products = Product.query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    return jsonify({
+        'items': [p.to_dict() for p in products.items],
+        'total': products.total,
+        'pages': products.pages,
+        'current_page': page
+    })
+
+# Field filtering to reduce response size
+@app.route('/api/users/<int:user_id>')
+def get_user(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    # Get requested fields or use default set
+    fields = request.args.get('fields', 'id,name,email')
+    field_list = fields.split(',')
+    
+    # Filter to only requested fields
+    allowed_fields = {'id', 'name', 'email', 'created_at', 'role'}
+    requested_fields = set(field_list) & allowed_fields
+    
+    # Create filtered response
+    result = {field: getattr(user, field) for field in requested_fields if hasattr(user, field)}
+    return jsonify(result)
+            </code></pre>
+            <p>
+                These approaches:
+            </p>
+            <ul>
+                <li>Reduce unnecessary data transfer</li>
+                <li>Allow clients to request only what they need</li>
+                <li>Enable handling of large datasets that would otherwise cause performance issues</li>
+            </ul>
+            
+            <h4>Backend Performance</h4>
+            <p>
+                The server's processing speed directly affects response time:
+            </p>
+            <ul>
+                <li><strong>Database Optimization</strong>: Proper indexing, query optimization</li>
+                <li><strong>Asynchronous Processing</strong>: Handle slow operations outside the request cycle</li>
+                <li><strong>Caching Expensive Operations</strong>: Store results of complex calculations</li>
+            </ul>
+            <pre><code>
+# Example of asynchronous processing in Flask
+from flask import Flask, jsonify
+from celery import Celery
+
+app = Flask(__name__)
+celery = Celery(app.name, broker='redis://localhost:6379/0')
+
+# Task that will run in the background
+@celery.task
+def process_large_report(report_parameters):
+    # This could take minutes to complete
+    report_data = generate_large_report(report_parameters)
+    
+    # Store the result somewhere the user can retrieve it later
+    save_report_result(report_data)
+    
+    # Notify user (email, push notification, etc.)
+    notify_user_report_complete(report_parameters['user_id'])
+
+@app.route('/api/reports/generate', methods=['POST'])
+def generate_report():
+    parameters = request.json
+    
+    # Validate parameters
+    if not valid_report_parameters(parameters):
+        return jsonify({'error': 'Invalid parameters'}), 400
+    
+    # Start background task
+    task = process_large_report.delay(parameters)
+    
+    # Return immediately with the task ID
+    return jsonify({
+        'status': 'processing',
+        'task_id': task.id,
+        'message': 'Report generation started. You will be notified when complete.'
+    })
+            </code></pre>
+        </section>
+
+        <section class="practical_exercise">
+            <h3>Practical Exercise: Building a Simple Request-Response Application</h3>
+            <p>
+                Let's reinforce our understanding by building a minimal but complete application that demonstrates the request-response cycle:
+            </p>
+            
+            <h4>Backend (Flask)</h4>
+            <pre><code>
+# app.py
+from flask import Flask, jsonify, request, render_template
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)  # Allow cross-origin requests for this example
+
+# In-memory "database" for simplicity
+todos = [
+    {"id": 1, "task": "Learn HTML", "completed": True},
+    {"id": 2, "task": "Learn CSS", "completed": True},
+    {"id": 3, "task": "Learn JavaScript", "completed": False},
+    {"id": 4, "task": "Learn Python", "completed": False},
+    {"id": 5, "task": "Learn Flask", "completed": False}
+]
+
+# Serve the HTML page
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+# API endpoints
+@app.route('/api/todos', methods=['GET'])
+def get_todos():
+    # Return all todos
+    return jsonify(todos)
+
+@app.route('/api/todos/<int:todo_id>', methods=['GET'])
+def get_todo(todo_id):
+    # Find the specific todo
+    todo = next((t for t in todos if t['id'] == todo_id), None)
+    if todo:
+        return jsonify(todo)
+    return jsonify({"error": "Todo not found"}), 404
+
+@app.route('/api/todos', methods=['POST'])
+def create_todo():
+    # Create a new todo
+    if not request.json or 'task' not in request.json:
+        return jsonify({"error": "Invalid request"}), 400
+    
+    # Generate a new ID (in a real app, the database would handle this)
+    new_id = max(todo['id'] for todo in todos) + 1
+    
+    new_todo = {
+        "id": new_id,
+        "task": request.json['task'],
+        "completed": request.json.get('completed', False)
+    }
+    
+    todos.append(new_todo)
+    return jsonify(new_todo), 201
+
+@app.route('/api/todos/<int:todo_id>', methods=['PUT'])
+def update_todo(todo_id):
+    # Update an existing todo
+    todo = next((t for t in todos if t['id'] == todo_id), None)
+    if not todo:
+        return jsonify({"error": "Todo not found"}), 404
+        
+    if not request.json:
+        return jsonify({"error": "Invalid request"}), 400
+        
+    # Update fields if provided
+    if 'task' in request.json:
+        todo['task'] = request.json['task']
+    if 'completed' in request.json:
+        todo['completed'] = request.json['completed']
+        
+    return jsonify(todo)
+
+@app.route('/api/todos/<int:todo_id>', methods=['DELETE'])
+def delete_todo(todo_id):
+    # Delete a todo
+    global todos
+    initial_count = len(todos)
+    todos = [t for t in todos if t['id'] != todo_id]
+    
+    if len(todos) < initial_count:
+        return '', 204  # No content response for successful delete
+    return jsonify({"error": "Todo not found"}), 404
+
+if __name__ == '__main__':
+    app.run(debug=True)
+            </code></pre>
+            
+            <h4>Frontend (HTML/JavaScript)</h4>
+            <pre><code>
+<!-- templates/index.html -->
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Todo Application&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .todo-item.completed .task-text {
+            text-decoration: line-through;
+            color: #888;
+        }
+        .loading, .error {
+            padding: 20px;
+            text-align: center;
+        }
+        .loading {
+            color: #888;
+        }
+        .error {
+            color: #d9534f;
+        }
+        form {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 8px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #4cae4c;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Todo List&lt;/h1&gt;
+    
+    &lt;form id="todo-form"&gt;
+        &lt;input type="text" id="new-todo" placeholder="Add a new task..." required&gt;
+        &lt;button type="submit"&gt;Add&lt;/button&gt;
+    &lt;/form&gt;
+    
+    &lt;div id="loading" class="loading"&gt;Loading todos...&lt;/div&gt;
+    &lt;div id="error" class="error" style="display: none"&gt;&lt;/div&gt;
+    &lt;div id="todo-list"&gt;&lt;/div&gt;
+    
+    &lt;script&gt;
+        // Elements
+        const todoForm = document.getElementById('todo-form');
+        const newTodoInput = document.getElementById('new-todo');
+        const todoList = document.getElementById('todo-list');
+        const loadingElement = document.getElementById('loading');
+        const errorElement = document.getElementById('error');
+        
+        // API URL (would be configured for production)
+        const API_URL = '/api/todos';
+        
+        // Initialize the app
+        loadTodos();
+        
+        // Event listeners
+        todoForm.addEventListener('submit', handleFormSubmit);
+        
+        // Load all todos from the API
+        async function loadTodos() {
+            // Show loading state
+            loadingElement.style.display = 'block';
+            errorElement.style.display = 'none';
+            todoList.innerHTML = '';
+            
+            try {
+                // Make the request
+                const response = await fetch(API_URL);
+                
+                // Check for errors
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                // Parse the JSON response
+                const todos = await response.json();
+                
+                // Render todos
+                renderTodoList(todos);
+            } catch (error) {
+                // Show error message
+                console.error('Failed to load todos:', error);
+                errorElement.textContent = `Failed to load todos: ${error.message}`;
+                errorElement.style.display = 'block';
+            } finally {
+                // Hide loading state
+                loadingElement.style.display = 'none';
+            }
+        }
+        
+        // Render the todo list
+        function renderTodoList(todos) {
+            todoList.innerHTML = '';
+            
+            if (todos.length === 0) {
+                todoList.innerHTML = '&lt;p&gt;No todos yet. Add one above!&lt;/p&gt;';
+                return;
+            }
+            
+            todos.forEach(todo => {
+                const todoElement = document.createElement('div');
+                todoElement.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+                todoElement.innerHTML = `
+                    &lt;input type="checkbox" data-id="${todo.id}" ${todo.completed ? 'checked' : ''}&gt;
+                    &lt;span class="task-text"&gt;${todo.task}&lt;/span&gt;
+                    &lt;button class="delete-btn" data-id="${todo.id}"&gt;Delete&lt;/button&gt;
+                `;
+                
+                // Add event listeners
+                const checkbox = todoElement.querySelector('input[type="checkbox"]');
+                checkbox.addEventListener('change', () => toggleTodoComplete(todo.id, !todo.completed));
+                
+                const deleteBtn = todoElement.querySelector('.delete-btn');
+                deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
+                
+                todoList.appendChild(todoElement);
+            });
+        }
+        
+        // Handle form submission to create a new todo
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            const task = newTodoInput.value.trim();
+            if (!task) return;
+            
+            try {
+                // Show loading/disable form
+                todoForm.classList.add('loading');
+                newTodoInput.disabled = true;
+                
+                // Make the request
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ task })
+                });
+                
+                // Check for errors
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                // Clear the input
+                newTodoInput.value = '';
+                
+                // Reload todos to show the new one
+                loadTodos();
+            } catch (error) {
+                console.error('Failed to add todo:', error);
+                alert(`Failed to add todo: ${error.message}`);
+            } finally {
+                // Re-enable form
+                todoForm.classList.remove('loading');
+                newTodoInput.disabled = false;
+            }
+        }
+        
+        // Toggle a todo's completed status
+        async function toggleTodoComplete(id, completed) {
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ completed })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                // Update the UI
+                const todoItem

@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Truthiness - Understanding Boolean Evaluation</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Truthiness</h1>
+        <h2>Week 2 Day 2: Control Flow Fundamentals</h2>
+    </header>
+
+    <main>
+        <section class="intro">
+            <h3>Introduction to Truthiness in Python</h3>
+            <p>
+                Welcome to our exploration of "truthiness" in Python! This concept might sound whimsical, but it's actually a powerful feature that makes Python code more expressive and concise. Understanding truthiness is essential for writing idiomatic Python and understanding how the language evaluates expressions in boolean contexts.
+            </p>
+            <p>
+                Think of truthiness as Python's way of seeing the world in shades of gray, not just black and white. Rather than limiting boolean evaluation to True and False values alone, Python considers the inherent "truthiness" or "falsiness" of different values across all data types.
+            </p>
+            <p>
+                The code for this lesson can be found in the <code>/week2/day2/python_truthiness.py</code> file in your course repository.
+            </p>
+        </section>
+
+        <section class="boolean_context">
+            <h3>Boolean Context in Python</h3>
+            <p>
+                Before diving into truthiness, let's understand what a "boolean context" is. In Python, certain constructs expect or require a boolean value (True or False) to make decisions. These include:
+            </p>
+            
+            <ul>
+                <li>Conditional statements (<code>if</code>, <code>elif</code>, <code>else</code>)</li>
+                <li>While loops (<code>while</code> condition)</li>
+                <li>Boolean operators (<code>and</code>, <code>or</code>, <code>not</code>)</li>
+                <li>Comprehension filters (<code>[x for x in items if condition]</code>)</li>
+                <li>The built-in <code>bool()</code> function</li>
+            </ul>
+            
+            <p>
+                In these contexts, Python needs to interpret any value as either True or False. This interpretation is what we call "truthiness."
+            </p>
+
+            <pre><code># Examples of boolean contexts
+x = 42
+
+# if statement
+if x:
+    print("x is truthy")
+
+# while loop
+while x:
+    print("x is truthy")
+    break  # prevent infinite loop
+
+# Boolean operators
+result = x and "x is truthy"
+print(result)  # prints: x is truthy
+
+# List comprehension with filter
+numbers = [0, 1, 2, 0, 3, 0]
+non_zero = [num for num in numbers if num]
+print(non_zero)  # prints: [1, 2, 3]
+
+# bool() function
+print(bool(x))  # prints: True</code></pre>
+
+            <p>
+                In each of these examples, Python needs to evaluate whether <code>x</code> (which is 42) is truthy or falsy. As we'll see, the number 42 is considered truthy in Python.
+            </p>
+        </section>
+
+        <section class="truthy_falsy">
+            <h3>Truthy and Falsy Values</h3>
+            <p>
+                In Python, values of any data type are implicitly converted to boolean values when used in a boolean context. The rules are remarkably simple:
+            </p>
+            
+            <h4>Falsy Values</h4>
+            <p>
+                The following values are considered <strong>falsy</strong> (evaluate to <code>False</code> in a boolean context):
+            </p>
+            
+            <ul>
+                <li><code>False</code>: The boolean value False</li>
+                <li><code>None</code>: Python's null value</li>
+                <li><code>0</code>: Zero in any numeric type (0, 0.0, 0j)</li>
+                <li><code>""</code>: Empty string</li>
+                <li><code>[]</code>: Empty list</li>
+                <li><code>()</code>: Empty tuple</li>
+                <li><code>{}</code>: Empty dictionary</li>
+                <li><code>set()</code>: Empty set</li>
+                <li>Objects that implement <code>__bool__()</code> to return <code>False</code> or <code>__len__()</code> to return <code>0</code></li>
+            </ul>
+            
+            <h4>Truthy Values</h4>
+            <p>
+                <strong>Everything else</strong> is considered <strong>truthy</strong> (evaluates to <code>True</code> in a boolean context). Common truthy values include:
+            </p>
+            
+            <ul>
+                <li><code>True</code>: The boolean value True</li>
+                <li>Non-zero numbers: <code>42</code>, <code>-1</code>, <code>3.14</code>, etc.</li>
+                <li>Non-empty strings: <code>"hello"</code>, <code>"0"</code>, <code>" "</code> (space)</li>
+                <li>Non-empty collections: <code>[0]</code>, <code>(False,)</code>, <code>{"key": None}</code></li>
+                <li>Most objects (unless specifically designed to be falsy)</li>
+            </ul>
+            
+            <h4>Testing Truthiness</h4>
+            <pre><code># Let's test the truthiness of various values
+values_to_test = [
+    True, False,         # Boolean values
+    0, 1, -1, 42, 0.0,   # Numbers
+    "", "hello", " ",    # Strings
+    [], [0], [False],    # Lists
+    (), (0,),            # Tuples
+    {}, {"key": None},   # Dictionaries
+    None                 # None value
+]
+
+for value in values_to_test:
+    if value:
+        result = "truthy"
+    else:
+        result = "falsy"
+    
+    print(f"{value!r} is {result}")
+
+# Output:
+# True is truthy
+# False is falsy
+# 0 is falsy
+# 1 is truthy
+# -1 is truthy
+# 42 is truthy
+# 0.0 is falsy
+# '' is falsy
+# 'hello' is truthy
+# ' ' is truthy
+# [] is falsy
+# [0] is truthy
+# [False] is truthy
+# () is falsy
+# (0,) is truthy
+# {} is falsy
+# {'key': None} is truthy
+# None is falsy</code></pre>
+
+            <p>
+                The <code>!r</code> in the f-string uses the <code>repr()</code> function, which helps distinguish between similar-looking values like empty string <code>''</code> and empty space <code>' '</code>.
+            </p>
+            
+            <h4>The Mental Model: Emptiness and Zeroness</h4>
+            <p>
+                To understand truthiness intuitively, think of Python as considering "emptiness" or "zeroness" as falsy:
+            </p>
+            <ul>
+                <li>Empty containers have nothing in them (falsy)</li>
+                <li>Zero values represent "nothing" in quantity (falsy)</li>
+                <li><code>None</code> represents the absence of a value (falsy)</li>
+                <li><code>False</code> itself is obviously falsy</li>
+            </ul>
+            <p>
+                Anything that has "something" (non-empty, non-zero, not None, not False) is truthy.
+            </p>
+        </section>
+
+        <section class="practices">
+            <h3>Practical Applications of Truthiness</h3>
+            <p>
+                Truthiness enables elegant, concise code patterns that are considered Pythonic. Let's explore some common use cases.
+            </p>
+            
+            <h4>Checking for Empty Collections</h4>
+            <pre><code># Non-Pythonic way
+if len(my_list) > 0:
+    print("List has elements")
+
+# Pythonic way using truthiness
+if my_list:
+    print("List has elements")
+
+# Non-Pythonic way
+if len(my_string) == 0:
+    print("String is empty")
+
+# Pythonic way using truthiness
+if not my_string:
+    print("String is empty")</code></pre>
+
+            <h4>Providing Default Values</h4>
+            <pre><code># Get a value with a default if not provided
+def get_name(user_data):
+    # Without truthiness
+    if "name" in user_data and user_data["name"] is not None and user_data["name"] != "":
+        return user_data["name"]
+    else:
+        return "Guest"
+    
+    # With truthiness - much cleaner!
+    return user_data.get("name") or "Guest"</code></pre>
+
+            <p>
+                Here, the <code>or</code> operator returns the first truthy value it encounters. If <code>user_data.get("name")</code> is falsy (None, empty string), it returns "Guest".
+            </p>
+            
+            <h4>Conditional Execution</h4>
+            <pre><code># Without truthiness
+if condition is not None and condition is not False and condition != 0 and condition != "" and condition != [] and condition != {}:
+    perform_action()
+
+# With truthiness
+if condition:
+    perform_action()</code></pre>
+
+            <h4>Guard Clauses and Early Returns</h4>
+            <pre><code>def process_data(data):
+    # Check if data is provided
+    if not data:
+        return "No data provided"
+    
+    # Continue processing with data
+    result = perform_calculations(data)
+    return result</code></pre>
+
+            <p>
+                This pattern, called a "guard clause," allows us to quickly return from a function if the input doesn't meet our requirements.
+            </p>
+            
+            <h4>Filtering Collections</h4>
+            <pre><code># Remove all falsy values from a list
+data = [0, 1, "", "hello", [], [1, 2], None, True, False]
+
+# Using truthiness with list comprehension
+truthy_values = [x for x in data if x]
+print(truthy_values)  # [1, 'hello', [1, 2], True]
+
+# Using truthiness with filter()
+truthy_values = list(filter(None, data))  # filter(None, ...) keeps only truthy values
+print(truthy_values)  # [1, 'hello', [1, 2], True]</code></pre>
+
+            <h4>Real-World Example: Form Validation</h4>
+            <pre><code>def validate_form(form_data):
+    """Validate a form and return any error messages."""
+    errors = []
+    
+    # Check required fields
+    required_fields = ["username", "email", "password"]
+    for field in required_fields:
+        # Value must be truthy (not empty)
+        if not form_data.get(field):
+            errors.append(f"{field.capitalize()} is required")
+    
+    # Validate email format if provided
+    email = form_data.get("email")
+    if email and "@" not in email:
+        errors.append("Email format is invalid")
+    
+    # Validate password strength if provided
+    password = form_data.get("password")
+    if password:
+        if len(password) < 8:
+            errors.append("Password must be at least 8 characters")
+        if password.isalpha() or password.isdigit():
+            errors.append("Password must contain both letters and numbers")
+    
+    # If we have any errors, return them, otherwise return success message
+    return {
+        "success": not errors,  # True if errors list is empty (falsy)
+        "message": "Form submitted successfully" if not errors else "Please fix the errors",
+        "errors": errors
+    }
+
+# Test the validation
+form1 = {
+    "username": "alice123",
+    "email": "alice@example.com",
+    "password": "securepass123"
+}
+
+form2 = {
+    "username": "",
+    "email": "not-an-email",
+    "password": "weak"
+}
+
+print(validate_form(form1))
+print(validate_form(form2))</code></pre>
+
+            <p>
+                This example demonstrates how truthiness can simplify form validation by easily checking if required fields have values and using the truthiness of error lists to determine overall success.
+            </p>
+        </section>
+
+        <section class="bool_vs_truthiness">
+            <h3>bool() vs. Truthiness Evaluation</h3>
+            <p>
+                While truthiness is about how Python evaluates values in boolean contexts, the built-in <code>bool()</code> function explicitly converts a value to a boolean. The results are the same:
+            </p>
+            
+            <pre><code># These are equivalent
+if value:
+    print("value is truthy")
+
+if bool(value):
+    print("value is truthy")
+
+# But explicit conversion might be clearer in some contexts
+print(bool(0))         # False
+print(bool(""))        # False
+print(bool([]))        # False
+print(bool(42))        # True
+print(bool("hello"))   # True
+print(bool([1, 2, 3])) # True</code></pre>
+
+            <p>
+                The <code>bool()</code> function can be useful when you want to make the boolean conversion explicit or store the result as a boolean value.
+            </p>
+        </section>
+
+        <section class="custom_objects">
+            <h3>Custom Objects and Truthiness</h3>
+            <p>
+                When you create custom classes in Python, you can control how their instances behave in boolean contexts by implementing the <code>__bool__()</code> or <code>__len__()</code> methods.
+            </p>
+            
+            <h4>The <code>__bool__()</code> Method</h4>
+            <p>
+                This method should return <code>True</code> or <code>False</code> and is called when an object is used in a boolean context.
+            </p>
+            
+            <pre><code>class Account:
+    def __init__(self, balance=0):
+        self.balance = balance
+    
+    def __bool__(self):
+        # Account is truthy if it has a positive balance
+        return self.balance > 0
+
+# Usage
+account1 = Account(100)
+account2 = Account(0)
+
+if account1:
+    print("Account 1 has funds")  # This will print
+
+if account2:
+    print("Account 2 has funds")  # This won't print</code></pre>
+
+            <h4>The <code>__len__()</code> Method</h4>
+            <p>
+                If <code>__bool__()</code> is not defined, Python falls back to <code>__len__()</code>. If the length is zero, the object is considered falsy; otherwise, it's truthy.
+            </p>
+            
+            <pre><code>class Basket:
+    def __init__(self):
+        self.items = []
+    
+    def add(self, item):
+        self.items.append(item)
+    
+    def __len__(self):
+        # Returns the number of items in the basket
+        return len(self.items)
+
+# Usage
+basket = Basket()
+
+if not basket:
+    print("Basket is empty")  # This will print
+
+basket.add("apple")
+
+if basket:
+    print("Basket has items")  # This will print</code></pre>
+
+            <h4>Fallback Behavior</h4>
+            <p>
+                If neither <code>__bool__()</code> nor <code>__len__()</code> is defined, instances of custom classes are always considered truthy.
+            </p>
+            
+            <pre><code>class EmptyClass:
+    pass
+
+obj = EmptyClass()
+print(bool(obj))  # Always True</code></pre>
+
+            <h4>Real-World Example: Smart Connection Class</h4>
+            <pre><code>class DatabaseConnection:
+    def __init__(self, host, username, password):
+        self.host = host
+        self.username = username
+        self.password = password
+        self.connection = None
+        self.connected = False
+        self.last_error = None
+    
+    def connect(self):
+        try:
+            # Simulate connecting to a database
+            print(f"Connecting to {self.host}...")
+            
+            # In a real implementation, this would actually connect
+            # For this example, we'll simulate success if the host is valid
+            if self.host and self.username and self.password:
+                self.connected = True
+                self.last_error = None
+                print("Connection successful!")
+            else:
+                self.connected = False
+                self.last_error = "Invalid connection parameters"
+                print("Connection failed: Invalid parameters")
+                
+        except Exception as e:
+            self.connected = False
+            self.last_error = str(e)
+            print(f"Connection failed: {e}")
+    
+    def execute(self, query):
+        if not self:  # Uses our __bool__ method
+            print("Cannot execute query: Not connected")
+            return None
+            
+        print(f"Executing: {query}")
+        # Simulate query execution
+        return ["result1", "result2"]
+    
+    def __bool__(self):
+        # Connection is truthy only if it's actually connected
+        return self.connected
+
+# Usage example
+db = DatabaseConnection("db.example.com", "user", "password")
+
+# Try to use before connecting
+if not db:
+    print("Database is not connected yet")
+
+result = db.execute("SELECT * FROM users")  # Will fail
+
+# Connect and try again
+db.connect()
+
+if db:
+    print("Database is now connected")
+
+result = db.execute("SELECT * FROM users")  # Will succeed
+print(f"Results: {result}")
+
+# Bad connection example
+bad_db = DatabaseConnection("", "", "")
+bad_db.connect()
+
+if not bad_db:
+    print("Bad DB is not connected")</code></pre>
+
+            <p>
+                This example shows how implementing <code>__bool__()</code> can create a more intuitive API where users can simply check <code>if connection:</code> rather than having to remember to check <code>if connection.connected:</code>.
+            </p>
+        </section>
+
+        <section class="gotchas">
+            <h3>Common Gotchas and Pitfalls</h3>
+            <p>
+                While truthiness is powerful, there are some common pitfalls to be aware of:
+            </p>
+            
+            <h4>Be Careful with Numeric Inputs</h4>
+            <pre><code>def process_quantity(quantity):
+    # Bug: This will treat 0 as "not provided"
+    if not quantity:
+        return "Quantity not provided"
+    
+    return f"Processing {quantity} items"
+
+print(process_quantity(5))   # "Processing 5 items"
+print(process_quantity(0))   # "Quantity not provided" - Oops!
+
+# Better approach - explicitly check for None
+def process_quantity_better(quantity):
+    if quantity is None:
+        return "Quantity not provided"
+    
+    return f"Processing {quantity} items"
+
+print(process_quantity_better(0))   # "Processing 0 items" - Correct!</code></pre>
+
+            <h4>Confusing Empty Collections with Invalid Data</h4>
+            <pre><code>def get_average(numbers):
+    # Bug: This treats empty lists as invalid input
+    if not numbers:
+        return "Invalid input"
+    
+    return sum(numbers) / len(numbers)
+
+print(get_average([1, 2, 3]))  # 2.0
+print(get_average([]))  # "Invalid input" - But is an empty list really invalid?
+
+# Better approach - be specific about what's invalid
+def get_average_better(numbers):
+    if numbers is None:
+        return "No numbers provided"
+    
+    if not numbers:  # Empty list
+        return 0  # Or perhaps "No numbers to average"
+    
+    return sum(numbers) / len(numbers)
+
+print(get_average_better([]))  # 0 - More meaningful</code></pre>
+
+            <h4>Forgetting that Empty String is Falsy</h4>
+            <pre><code>def format_username(username):
+    # Bug: This treats empty strings as "not provided"
+    if not username:
+        return "Guest"
+    
+    return username.title()
+
+print(format_username("alice"))  # "Alice"
+print(format_username(""))  # "Guest"
+print(format_username(" "))  # " " - Unexpected! A space is truthy!</code></pre>
+
+            <p>
+                If you want to treat both empty strings and whitespace-only strings as falsy, you should explicitly check:
+            </p>
+            
+            <pre><code>def format_username_better(username):
+    if not username or username.isspace():
+        return "Guest"
+    
+    return username.title()</code></pre>
+
+            <h4>Explicit is Sometimes Better than Implicit</h4>
+            <p>
+                While truthiness enables concise code, sometimes being explicit is better for readability and maintainability:
+            </p>
+            
+            <pre><code># Using truthiness
+if user_list:
+    # Do something with non-empty list
+
+# Being explicit
+if len(user_list) > 0:
+    # Do something with non-empty list
+
+# Using truthiness
+if response:
+    # Process response
+
+# Being explicit about what we're checking
+if response.status_code == 200:
+    # Process successful response</code></pre>
+
+            <p>
+                The Zen of Python (accessible by typing <code>import this</code> in a Python interpreter) includes the principle: "Explicit is better than implicit." Sometimes, more explicit code makes your intentions clearer to others (and your future self).
+            </p>
+        </section>
+
+        <section class="truthiness_other_languages">
+            <h3>Truthiness in Python vs. Other Languages</h3>
+            <p>
+                Truthiness behavior varies across programming languages. Understanding these differences can help avoid bugs when switching between languages.
+            </p>
+            
+            <h4>JavaScript</h4>
+            <p>
+                JavaScript has similar truthiness concepts but with some important differences:
+            </p>
+            <ul>
+                <li>Both <code>0</code> and <code>""</code> (empty string) are falsy in JavaScript and Python</li>
+                <li>In JavaScript, additional falsy values include <code>NaN</code>, <code>undefined</code>, and <code>null</code></li>
+                <li>In JavaScript, empty arrays <code>[]</code> and empty objects <code>{}</code> are <strong>truthy</strong>, unlike Python where they're falsy</li>
+            </ul>
+            
+            <h4>Ruby</h4>
+            <p>
+                Ruby is much stricter: only <code>nil</code> (Ruby's equivalent of <code>None</code>) and <code>false</code> are falsy. Everything else, including <code>0</code>, empty strings, and empty collections, is truthy.
+            </p>
+            
+            <h4>C/C++</h4>
+            <p>
+                In C and C++, numeric <code>0</code> is falsy, and any other number is truthy. Pointers are truthy if non-null and falsy if null.
+            </p>
+            
+            <h4>PHP</h4>
+            <p>
+                PHP has complex truthiness rules, with values like <code>0</code>, <code>"0"</code>, empty arrays, <code>null</code>, and unset variables all considered falsy.
+            </p>
+            
+            <p>
+                The differences highlight the importance of understanding the specific truthiness rules of each language you work with. When in doubt, it's safer to be explicit about your conditions.
+            </p>
+        </section>
+
+        <section class="best_practices">
+            <h3>Best Practices for Using Truthiness</h3>
+            <p>
+                Here are some guidelines for using truthiness effectively in your Python code:
+            </p>
+            
+            <h4>Use Truthiness for Its Strength</h4>
+            <ul>
+                <li>Checking if collections (lists, dicts, strings) have elements</li>
+                <li>Providing default values with the <code>or</code> operator</li>
+                <li>Writing guard clauses for early returns</li>
+                <li>Filtering collections to remove falsy values</li>
+            </ul>
+            
+            <h4>Be Explicit When Necessary</h4>
+            <ul>
+                <li>When dealing with numeric inputs where 0 might be a valid value</li>
+                <li>When checking for specific conditions (e.g., <code>status_code == 200</code> instead of just <code>status_code</code>)</li>
+                <li>When working with functions that might legitimately return falsy values</li>
+            </ul>
+            
+            <h4>Consider Context and Readability</h4>
+            <ul>
+                <li>Choose whichever approach makes your code most readable in context</li>
+                <li>Add comments if the behavior might not be obvious to others</li>
+                <li>Be consistent in your approach throughout your codebase</li>
+            </ul>
+            
+            <h4>Think About Edge Cases</h4>
+            <ul>
+                <li>What happens if a value is <code>0</code>?</li>
+                <li>What about an empty string that just has whitespace (<code>" "</code>)?</li>
+                <li>Could your function ever receive <code>None</code> as input?</li>
+            </ul>
+            
+            <pre><code># Example of a well-balanced approach
+def send_notification(user, message, priority=None):
+    """Send a notification to a user."""
+    # Guard clause using truthiness - makes sense for required parameters
+    if not user or not message:
+        return {"success": False, "error": "User and message are required"}
+    
+    # Explicit check for specific values - more clear than truthiness here
+    if priority is not None and priority not in ["low", "medium", "high"]:
+        return {"success": False, "error": "Invalid priority level"}
+    
+    # Default value using truthiness with 'or'
+    actual_priority = priority or "medium"
+    
+    # Rest of the function...
+    return {
+        "success": True, 
+        "sent_to": user,
+        "priority": actual_priority
+    }</code></pre>
+        </section>
+
+        <section class="exercises">
+            <h3>Practice Exercises</h3>
+            <p>
+                To solidify your understanding of truthiness in Python, try these exercises. Solutions will be reviewed in class.
+            </p>
+            
+            <ol>
+                <li>
+                    <p><strong>Basic Truthiness Checking</strong>: Write a function <code>classify_value(value)</code> that takes any value and returns the string "truthy" or "falsy" based on the value's truthiness in Python.</p>
+                </li>
+                <li>
+                    <p><strong>Default Arguments</strong>: Write a function <code>get_user_info(user_data)</code> that extracts user information from a dictionary. It should return a new dictionary with name, email, and role keys. If any value is missing from the input, provide defaults ("Anonymous", "no-email", and "guest" respectively).</p>
+                </li>
+                <li>
+                    <p><strong>Collection Filtering</strong>: Write a function <code>remove_falsy(items)</code> that takes a list and returns a new list with all falsy values removed.</p>
+                </li>
+                <li>
+                    <p><strong>Smart Object Implementation</strong>: Create a <code>Task</code> class with properties for title, completed status, and due date. Implement <code>__bool__</code> so that a Task is considered truthy if it is not completed and the due date is in the future (assuming <code>due_date</code> is a datetime object).</p>
+                </li>
+                <li>
+                    <p><strong>Form Validator</strong>: Expand the form validation example to include more sophisticated rules: usernames must be at least 3 characters, emails must contain '@', and passwords must be at least 8 characters. Use truthiness where appropriate.</p>
+                </li>
+                <li>
+                    <p><strong>Debugging Truthiness</strong>: Given the following code, identify and fix the truthiness-related bugs:
+                    <pre><code>def process_payment(amount, user_account):
+    if not amount:
+        return "Invalid amount"
+    
+    if not user_account["balance"]:
+        return "Insufficient funds"
+    
+    # Process payment...
+    return "Payment successful"</code></pre>
+                    </p>
+                    <p>(Hint: Think about valid inputs that might be incorrectly treated as invalid)</p>
+                </li>
+                <li>
+                    <p><strong>Advanced Challenge</strong>: Create a function <code>safe_get(dictionary, keys, default=None)</code> that can navigate nested dictionaries using a list of keys. If any key in the path doesn't exist or points to a falsy value, it should return the default value. For example, <code>safe_get(user, ["profile", "contact", "email"], "no-email")</code> should safely navigate the nested structure.</p>
+                </li>
+            </ol>
+        </section>
+
+        <section class="practical_examples">
+            <h3>Practical Examples</h3>
+            <p>
+                Let's explore some real-world scenarios where truthiness in Python shines.
+            </p>
+            
+            <h4>Configuration Management</h4>
+            <pre><code>def initialize_app(config=None):
+    """Initialize an application with given config or defaults."""
+    # Fallback to empty dict if config is None
+    config = config or {}
+    
+    # Get values with defaults using 'or'
+    database_url = config.get('DATABASE_URL') or "sqlite:///default.db"
+    debug_mode = config.get('DEBUG') or False
+    log_level = config.get('LOG_LEVEL') or "INFO"
+    max_connections = config.get('MAX_CONNECTIONS') or 10
+    
+    # Note: Be careful with numeric settings that might be 0
+    timeout = config.get('TIMEOUT')
+    if timeout is None:  # Explicit check for None
+        timeout = 30  # Default
+    
+    return {
+        "database_url": database_url,
+        "debug_mode": debug_mode,
+        "log_level": log_level,
+        "max_connections": max_connections,
+        "timeout": timeout
+    }
+
+# Usage
+app_config = initialize_app({
+    'DATABASE_URL': 'postgresql://user:pass@localhost/mydb',
+    'DEBUG': True,
+    'TIMEOUT': 0  # Valid value that would be lost with truthiness check
+})
+
+print(app_config)</code></pre>
+
+            <h4>Command Line Argument Parser</h4>
+            <pre><code>def parse_arguments(args):
+    """
+    Parse command line arguments into a structured format.
+    Example: --name=John --age=30 --verbose
+    """
+    parsed = {
+        "flags": [],
+        "options": {}
+    }
+    
+    for arg in args:
+        if arg.startswith('--'):
+            # Remove leading dashes
+            arg = arg[2:]
+            
+            # Check if it's a key=value option
+            if '=' in arg:
+                key, value = arg.split('=', 1)
+                parsed["options"][key] = value
+            else:
+                # It's a flag (boolean option)
+                parsed["flags"].append(arg)
+    
+    return parsed
+
+def run_command(command, args=None):
+    """Run a command with the given arguments."""
+    args = args or []  # Default to empty list if None
+    parsed_args = parse_arguments(args)
+    
+    # Extract commonly used options with defaults
+    verbose = "verbose" in parsed_args["flags"]
+    output_file = parsed_args["options"].get("output") or "output.txt"
+    
+    # Run the command...
+    print(f"Running command: {command}")
+    print(f"Verbose mode: {'enabled' if verbose else 'disabled'}")
+    print(f"Output will be saved to: {output_file}")
+    
+    # Rest of implementation...
+
+# Usage
+run_command("build", ["--verbose", "--output=build.log"])
+run_command("test")  # Uses defaults</code></pre>
+
+            <h4>Data Analysis Pipeline</h4>
+            <pre><code>def analyze_dataset(data, options=None):
+    """Analyze a dataset with configurable options."""
+    options = options or {}
+    
+    # Extract options with defaults using truthiness
+    normalize = options.get('normalize') or False
+    ignore_outliers = options.get('ignore_outliers') or False
+    dimensions = options.get('dimensions') or ['x', 'y']
+    
+    # Guard clause
+    if not data:
+        return {
+            "error": "No data provided",
+            "results": None
+        }
+    
+    # Process the data
+    processed_data = []
+    
+    for item in data:
+        # Skip items missing required dimensions
+        if not all(dim in item for dim in dimensions):
+            continue
+            
+        # Deep copy to avoid modifying original
+        processed_item = item.copy()
+        
+        # Apply normalization if enabled
+        if normalize:
+            for dim in dimensions:
+                processed_item[dim] = normalize_value(processed_item[dim])
+        
+        processed_data.append(processed_item)
+    
+    # Calculate results
+    if not processed_data:
+        return {
+            "error": "No valid data points after processing",
+            "results": None
+        }
+    
+    results = calculate_statistics(processed_data, dimensions, ignore_outliers)
+    
+    return {
+        "error": None,
+        "results": results
+    }
+
+# Simulate the other functions
+def normalize_value(value):
+    return value / 100
+
+def calculate_statistics(data, dimensions, ignore_outliers):
+    # Placeholder for actual statistics calculation
+    return {
+        "count": len(data),
+        "dimensions": dimensions,
+        "outliers_ignored": ignore_outliers
+    }
+
+# Sample usage
+dataset = [
+    {"x": 10, "y": 20, "category": "A"},
+    {"x": 15, "y": 30, "category": "B"},
+    {"x": 5, "y": 10, "category": "A"},
+    {"category": "C"},  # Missing dimensions
+    {"x": 25, "y": 50, "category": "B"}
+]
+
+result = analyze_dataset(dataset, {
+    "normalize": True,
+    "dimensions": ["x", "y"]
+})
+
+print(result)</code></pre>
+
+            <h4>Building a Smart Cache with Truthiness</h4>
+            <pre><code>class SmartCache:
+    def __init__(self, max_size=100):
+        self.cache = {}
+        self.max_size = max_size
+        self.hits = 0
+        self.misses = 0
+    
+    def get(self, key, default=None):
+        """
+        Get a value from the cache.
+        Returns the value if found, otherwise the default.
+        Uses truthiness to handle None values correctly.
+        """
+        if key in self.cache:
+            value = self.cache[key]
+            self.hits += 1
+            # Use 'is None' to explicitly check for None
+            # so we don't confuse it with other falsy values
+            return value if value is not None else default
+        else:
+            self.misses += 1
+            return default
+    
+    def set(self, key, value):
+        """Add or update a value in the cache."""
+        # Clean up if we're at capacity
+        if len(self.cache) >= self.max_size and key not in self.cache:
+            self._evict_one()
+        
+        self.cache[key] = value
+    
+    def _evict_one(self):
+        """Remove one item from the cache (simplistic implementation)."""
+        if self.cache:
+            # Just remove the first key for this example
+            del self.cache[next(iter(self.cache))]
+    
+    def __bool__(self):
+        """Cache is truthy if it contains any items."""
+        return bool(self.cache)
+    
+    def __len__(self):
+        """Return the number of items in the cache."""
+        return len(self.cache)
+    
+    @property
+    def hit_ratio(self):
+        """Calculate the cache hit ratio."""
+        total = self.hits + self.misses
+        return self.hits / total if total > 0 else 0
+    
+    def __str__(self):
+        """String representation showing cache stats."""
+        return f"Cache: {len(self)} items, {self.hit_ratio:.2%} hit ratio"
+
+# Usage example
+cache = SmartCache(max_size=5)
+
+# Add some items
+cache.set("user:1", {"name": "Alice", "role": "admin"})
+cache.set("user:2", {"name": "Bob", "role": "user"})
+cache.set("settings", {"theme": "dark", "notifications": True})
+cache.set("counter", 0)  # Falsy value
+cache.set("empty_list", [])  # Falsy value
+
+# Retrieve items
+user1 = cache.get("user:1")
+print(user1)  # {"name": "Alice", "role": "admin"}
+
+# Truthiness in action with default values
+counter = cache.get("counter")
+print(counter)  # 0 (the actual cached value, not the default)
+
+# Testing how falsy values are handled
+empty_list = cache.get("empty_list")
+print(empty_list)  # [] (the actual cached value)
+
+# Missing key with default
+missing = cache.get("not_in_cache", "DEFAULT")
+print(missing)  # "DEFAULT"
+
+# Using the cache's own truthiness
+if cache:
+    print(f"Cache has {len(cache)} items")
+else:
+    print("Cache is empty")
+
+print(cache)  # Print cache stats</code></pre>
+
+            <p>
+                This example demonstrates how a proper understanding of truthiness helps us create more robust code, especially when handling edge cases like None values versus other falsy values.
+            </p>
+        </section>
+
+        <section class="conclusion">
+            <h3>Conclusion</h3>
+            <p>
+                Truthiness is a powerful and elegant feature of Python that enables more expressive, concise code. By understanding how Python evaluates different values in boolean contexts, you can write more Pythonic code that's both readable and robust.
+            </p>
+            <p>
+                Key takeaways from this lesson:
+            </p>
+            <ul>
+                <li>Python considers empty values (empty collections, 0, None, False) as falsy, and everything else as truthy</li>
+                <li>Truthiness enables elegant patterns like default values, guard clauses, and collection filtering</li>
+                <li>Custom objects can define their own truthiness behavior with <code>__bool__()</code> or <code>__len__()</code></li>
+                <li>Being explicit is sometimes better than relying on implicit truthiness, especially for edge cases</li>
+                <li>Other programming languages have different truthiness rules, so be careful when switching languages</li>
+            </ul>
+            <p>
+                As you continue your Python journey, pay attention to how truthiness is used in libraries and frameworks. Understanding this concept will help you read and write Python code more effectively, recognizing the elegant patterns that make Python such a joy to use.
+            </p>
+            <p>
+                For further exploration, see the official Python documentation on <a href="https://docs.python.org/3/library/stdtypes.html#truth-value-testing" target="_blank">Truth Value Testing</a>.
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

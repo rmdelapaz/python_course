@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nested Conditionals and Loops in Python</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Nested Conditionals and Loops in Python</h1>
+        <h2>Week 2 Day 2: Control Flow Fundamentals</h2>
+    </header>
+
+    <main>
+        <section class="intro">
+            <h3>Introduction to Nested Control Structures</h3>
+            <p>
+                Welcome to our deep dive into nested conditionals and loops in Python! Just as architectural complexity arises from combining simple elements, programming complexity emerges from nesting basic control structures. Today, we'll explore how to build sophisticated program logic by placing conditionals inside conditionals, loops inside loops, and various combinations of both.
+            </p>
+            <p>
+                Think of nested control structures as Russian nesting dolls—each one contains another, creating layers of decision-making and repetition that allow our programs to handle complex scenarios. In real-world programming, nesting is unavoidable and essential for solving multifaceted problems.
+            </p>
+            <p>
+                The code for this lesson can be found in the <code>/week2/day2/nested_structures.py</code> file in your course repository.
+            </p>
+        </section>
+
+        <section class="nested_conditionals">
+            <h3>Nested Conditionals</h3>
+            <p>
+                A nested conditional is simply an <code>if</code>, <code>elif</code>, or <code>else</code> statement that contains another conditional statement within its block. This creates a hierarchy of decisions, where the inner decision is only considered when the outer condition is met.
+            </p>
+            
+            <h4>Basic Structure</h4>
+            <pre><code>if outer_condition:
+    # Outer condition is True
+    if inner_condition:
+        # Both outer and inner conditions are True
+        perform_action_a()
+    else:
+        # Outer condition is True, but inner condition is False
+        perform_action_b()
+else:
+    # Outer condition is False
+    perform_action_c()</code></pre>
+
+            <p>
+                This pattern creates a decision tree with different execution paths. Let's look at some practical examples.
+            </p>
+
+            <h4>Example: Loan Approval System</h4>
+            <pre><code>def evaluate_loan_application(credit_score, income, loan_amount):
+    """
+    Evaluate a loan application based on multiple criteria.
+    Returns a tuple of (approved, reason).
+    """
+    if credit_score >= 700:  # First level: Good credit
+        if income >= 50000:  # Second level: Sufficient income
+            if loan_amount <= income * 0.3:  # Third level: Reasonable loan amount
+                return True, "Loan approved based on excellent criteria"
+            else:
+                return False, "Loan amount exceeds 30% of income"
+        else:
+            if loan_amount <= income * 0.15:  # Low income but very small loan
+                return True, "Loan approved with limited amount"
+            else:
+                return False, "Insufficient income for requested loan amount"
+    else:  # Lower credit score
+        if credit_score >= 600:  # Medium credit
+            if income >= 70000 and loan_amount <= income * 0.15:
+                return True, "Loan approved with conditions"
+            else:
+                return False, "Credit score and income/loan ratio not sufficient"
+        else:  # Poor credit
+            return False, "Credit score below minimum threshold"
+
+# Test with various scenarios
+test_cases = [
+    (750, 60000, 15000),  # Good credit, good income, reasonable loan
+    (750, 60000, 30000),  # Good credit, good income, high loan
+    (750, 40000, 5000),   # Good credit, lower income, small loan
+    (650, 75000, 10000),  # Medium credit, good income, small loan
+    (650, 50000, 10000),  # Medium credit, medium income, medium loan
+    (550, 90000, 10000)   # Poor credit, excellent income, small loan
+]
+
+for case in test_cases:
+    credit, income, loan = case
+    approved, reason = evaluate_loan_application(credit, income, loan)
+    
+    print(f"Credit: {credit}, Income: ${income}, Loan: ${loan}")
+    print(f"Decision: {'APPROVED' if approved else 'DENIED'}")
+    print(f"Reason: {reason}")
+    print("-" * 50)</code></pre>
+
+            <p>
+                This loan approval system demonstrates nested conditionals with three levels of decision-making. The decision tree branches based on credit score, income, and loan amount, creating a sophisticated approval process that reflects real-world financial decision-making.
+            </p>
+
+            <h4>Example: Weather Activity Recommender</h4>
+            <pre><code>def recommend_activity(temperature, precipitation, wind_speed):
+    """
+    Recommend an activity based on weather conditions.
+    """
+    if precipitation == "none":  # No precipitation
+        if temperature > 80:  # Hot weather
+            if wind_speed < 10:  # Low wind
+                return "Go swimming"
+            else:  # Windy
+                return "Go sailing"
+        elif temperature > 60:  # Warm weather
+            if wind_speed < 15:  # Low to moderate wind
+                return "Go hiking"
+            else:  # Windy
+                return "Go flying a kite"
+        else:  # Cool weather
+            return "Go for a scenic drive"
+    elif precipitation == "rain":  # Rainy
+        if temperature > 70:  # Warm rain
+            return "Visit a museum"
+        else:  # Cold rain
+            return "Stay home and read a book"
+    elif precipitation == "snow":  # Snowy
+        if temperature > 25:  # Not too cold
+            return "Go sledding"
+        else:  # Very cold
+            return "Build a snowman"
+    else:  # Other conditions (fog, hail, etc.)
+        return "Indoor activities recommended"
+
+# Test with various weather conditions
+weather_conditions = [
+    (85, "none", 5),     # Hot, clear, calm
+    (85, "none", 20),    # Hot, clear, windy
+    (65, "none", 10),    # Warm, clear, light wind
+    (65, "none", 25),    # Warm, clear, windy
+    (45, "none", 5),     # Cool, clear, calm
+    (75, "rain", 5),     # Warm, rainy, calm
+    (55, "rain", 15),    # Cool, rainy, windy
+    (30, "snow", 10),    # Cold, snowy, light wind
+    (15, "snow", 5),     # Very cold, snowy, calm
+    (65, "fog", 5)       # Warm, foggy, calm
+]
+
+for condition in weather_conditions:
+    temp, precip, wind = condition
+    activity = recommend_activity(temp, precip, wind)
+    
+    print(f"Weather: {temp}°F, {precip}, {wind} mph wind")
+    print(f"Recommended activity: {activity}")
+    print("-" * 50)</code></pre>
+
+            <p>
+                This activity recommender demonstrates how nested conditionals can model a decision process with multiple factors. The outer condition checks precipitation, while inner conditions evaluate temperature and wind speed, resulting in activity recommendations tailored to specific weather combinations.
+            </p>
+
+            <h4>Flattening Nested Conditionals</h4>
+            <p>
+                While nested conditionals are sometimes necessary, deeply nested structures can lead to "the pyramid of doom" or "arrow code"—code that indents so far right that it becomes difficult to read and maintain. Here are techniques to flatten nested conditionals:
+            </p>
+
+            <h5>Using Compound Conditions</h5>
+            <pre><code># Nested approach
+def check_eligibility_nested(age, citizenship, residence_years):
+    if age >= 18:
+        if citizenship == "yes":
+            if residence_years >= 5:
+                return "Eligible"
+            else:
+                return "Not eligible: insufficient residence years"
+        else:
+            return "Not eligible: not a citizen"
+    else:
+        return "Not eligible: under 18"
+
+# Flattened with compound conditions
+def check_eligibility_flat(age, citizenship, residence_years):
+    if age < 18:
+        return "Not eligible: under 18"
+    if citizenship != "yes":
+        return "Not eligible: not a citizen"
+    if residence_years < 5:
+        return "Not eligible: insufficient residence years"
+    
+    return "Eligible"</code></pre>
+
+            <p>
+                The flattened version is more readable and avoids the deep nesting. This approach uses early returns for failure cases, which is a common pattern in programming.
+            </p>
+
+            <h5>Using Logical Operators</h5>
+            <pre><code># Nested approach
+def check_order_nested(stock, credit, shipping):
+    if stock > 0:
+        if credit > 100:
+            if shipping == "available":
+                return "Order processed"
+            else:
+                return "No shipping available"
+        else:
+            return "Insufficient credit"
+    else:
+        return "Out of stock"
+
+# Flattened with logical operators
+def check_order_flat(stock, credit, shipping):
+    if stock <= 0:
+        return "Out of stock"
+    if credit <= 100:
+        return "Insufficient credit"
+    if shipping != "available":
+        return "No shipping available"
+    
+    return "Order processed"
+
+# Alternative using a single compound condition
+def check_order_compound(stock, credit, shipping):
+    if stock > 0 and credit > 100 and shipping == "available":
+        return "Order processed"
+    else:
+        # Determine the specific reason
+        if stock <= 0:
+            return "Out of stock"
+        if credit <= 100:
+            return "Insufficient credit"
+        return "No shipping available"</code></pre>
+
+            <p>
+                Both flattened versions eliminate the deep nesting, making the code more maintainable. The first approach uses early returns for failure cases, while the second uses a compound condition for the success case. Either approach is valid, but early returns often lead to cleaner code.
+            </p>
+
+            <h4>Real-World Example: E-commerce Order Processing</h4>
+            <pre><code>def process_order(order):
+    """
+    Process an e-commerce order through a series of validation
+    and fulfillment steps.
+    """
+    # Extract order details
+    customer_id = order.get("customer_id")
+    items = order.get("items", [])
+    payment_method = order.get("payment_method")
+    shipping_address = order.get("shipping_address")
+    promo_code = order.get("promo_code")
+    
+    # Validate customer
+    if not customer_id:
+        return {"status": "error", "message": "Customer ID is required"}
+    
+    customer = get_customer(customer_id)
+    if not customer:
+        return {"status": "error", "message": "Customer not found"}
+    
+    if customer["status"] == "blocked":
+        return {"status": "error", "message": "Customer account is blocked"}
+    
+    # Validate items
+    if not items:
+        return {"status": "error", "message": "No items in order"}
+    
+    # Check inventory and calculate total
+    order_total = 0
+    unavailable_items = []
+    
+    for item in items:
+        product_id = item.get("product_id")
+        quantity = item.get("quantity", 1)
+        
+        product = get_product(product_id)
+        if not product:
+            unavailable_items.append(f"Product {product_id} not found")
+            continue
+        
+        if product["inventory"] < quantity:
+            unavailable_items.append(f"Insufficient inventory for {product['name']}")
+            continue
+        
+        item_price = product["price"] * quantity
+        order_total += item_price
+    
+    if unavailable_items:
+        return {
+            "status": "error", 
+            "message": "Some items are unavailable",
+            "details": unavailable_items
+        }
+    
+    # Apply promotion if valid
+    if promo_code:
+        promo = get_promotion(promo_code)
+        if promo and promo["active"]:
+            if promo["min_purchase"] <= order_total:
+                if promo["type"] == "percentage":
+                    discount = order_total * (promo["value"] / 100)
+                else:  # Fixed amount
+                    discount = promo["value"]
+                
+                order_total -= discount
+            else:
+                return {
+                    "status": "error",
+                    "message": f"Order total does not meet minimum for promo code {promo_code}"
+                }
+        else:
+            return {"status": "error", "message": "Invalid or expired promo code"}
+    
+    # Validate payment method
+    if not payment_method:
+        return {"status": "error", "message": "Payment method is required"}
+    
+    if payment_method["type"] == "credit_card":
+        if payment_method.get("expired", False):
+            return {"status": "error", "message": "Credit card is expired"}
+        
+        if not validate_credit_card(payment_method):
+            return {"status": "error", "message": "Invalid credit card information"}
+    elif payment_method["type"] == "paypal":
+        if not validate_paypal(payment_method):
+            return {"status": "error", "message": "Invalid PayPal account"}
+    else:
+        return {"status": "error", "message": "Unsupported payment method"}
+    
+    # Validate shipping address
+    if not shipping_address:
+        return {"status": "error", "message": "Shipping address is required"}
+    
+    if not shipping_address.get("country") or not shipping_address.get("zip_code"):
+        return {"status": "error", "message": "Incomplete shipping address"}
+    
+    # Check if we ship to the customer's country
+    if shipping_address["country"] not in get_supported_countries():
+        return {"status": "error", "message": f"We don't ship to {shipping_address['country']}"}
+    
+    # All validations passed, process the order
+    return {
+        "status": "success",
+        "message": "Order processed successfully",
+        "order_id": generate_order_id(),
+        "total": order_total,
+        "estimated_delivery": calculate_delivery_date(shipping_address)
+    }
+
+# Simulate the helper functions
+def get_customer(customer_id):
+    # In a real system, this would query a database
+    customers = {
+        "C001": {"name": "Alice Smith", "status": "active"},
+        "C002": {"name": "Bob Jones", "status": "blocked"},
+    }
+    return customers.get(customer_id)
+
+def get_product(product_id):
+    # In a real system, this would query a database
+    products = {
+        "P001": {"name": "Laptop", "price": 999.99, "inventory": 5},
+        "P002": {"name": "Smartphone", "price": 499.99, "inventory": 10},
+        "P003": {"name": "Headphones", "price": 99.99, "inventory": 0},
+    }
+    return products.get(product_id)
+
+def get_promotion(promo_code):
+    # In a real system, this would query a database
+    promotions = {
+        "SUMMER20": {"active": True, "type": "percentage", "value": 20, "min_purchase": 100},
+        "WELCOME10": {"active": False, "type": "percentage", "value": 10, "min_purchase": 50},
+        "FREESHIP": {"active": True, "type": "fixed", "value": 15, "min_purchase": 75},
+    }
+    return promotions.get(promo_code)
+
+def validate_credit_card(payment_info):
+    # In a real system, this would call a payment processor API
+    return len(payment_info.get("card_number", "")) == 16
+
+def validate_paypal(payment_info):
+    # In a real system, this would call PayPal's API
+    return "@" in payment_info.get("email", "")
+
+def get_supported_countries():
+    return ["USA", "Canada", "UK", "Australia", "Germany", "France", "Japan"]
+
+def generate_order_id():
+    import random
+    return f"ORD-{random.randint(10000, 99999)}"
+
+def calculate_delivery_date(address):
+    import datetime
+    # In a real system, this would calculate based on shipping method and distance
+    today = datetime.datetime.now()
+    delivery_date = today + datetime.timedelta(days=5)
+    return delivery_date.strftime("%Y-%m-%d")
+
+# Test with a sample order
+sample_order = {
+    "customer_id": "C001",
+    "items": [
+        {"product_id": "P001", "quantity": 1},
+        {"product_id": "P002", "quantity": 2}
+    ],
+    "payment_method": {
+        "type": "credit_card",
+        "card_number": "1234567890123456",
+        "expired": False
+    },
+    "shipping_address": {
+        "street": "123 Main St",
+        "city": "Boston",
+        "state": "MA",
+        "zip_code": "02108",
+        "country": "USA"
+    },
+    "promo_code": "SUMMER20"
+}
+
+result = process_order(sample_order)
+print("Order Processing Result:")
+for key, value in result.items():
+    print(f"{key}: {value}")</code></pre>
+
+            <p>
+                This e-commerce order processing example demonstrates a real-world approach to nested conditionals. Instead of deeply nested structures, it uses early returns for validation failures, creating a flatter, more maintainable code structure. Each section validates one aspect of the order, returning an error if the validation fails, or continuing to the next validation if it passes.
+            </p>
+        </section>
+
+        <section class="nested_loops">
+            <h3>Nested Loops</h3>
+            <p>
+                Nested loops occur when one loop is placed inside another. The inner loop completes its entire cycle of iterations for each iteration of the outer loop. This pattern is essential for working with multi-dimensional data structures or when you need to compare each element with every other element.
+            </p>
+            
+            <h4>Basic Structure</h4>
+            <pre><code>for outer_item in outer_sequence:
+    # This code runs for each item in the outer sequence
+    for inner_item in inner_sequence:
+        # This code runs for each item in the inner sequence
+        # For each outer_item, the inner loop runs completely
+        process(outer_item, inner_item)</code></pre>
+
+            <p>
+                With nested loops, if the outer sequence has M items and the inner sequence has N items, the inner loop body executes M × N times. This multiplicative effect is something to be mindful of when dealing with large datasets.
+            </p>
+
+            <h4>Example: Multiplication Table</h4>
+            <pre><code>def print_multiplication_table(n):
+    """
+    Print a multiplication table for numbers 1 through n.
+    """
+    # Print the header row
+    print("   |", end="")
+    for i in range(1, n + 1):
+        print(f"{i:3}", end="")
+    print("\n---+" + "---" * n)
+    
+    # Print each row of the table
+    for i in range(1, n + 1):
+        print(f"{i:2} |", end="")
+        
+        for j in range(1, n + 1):
+            print(f"{i * j:3}", end="")
+            
+        print()  # Move to the next line after each row
+
+# Generate a 10x10 multiplication table
+print_multiplication_table(10)</code></pre>
+
+            <p>
+                This multiplication table example demonstrates the classic use case for nested loops: working with two-dimensional data. The outer loop iterates through the rows, while the inner loop generates the columns for each row.
+            </p>
+
+            <h4>Example: Finding Prime Pairs (Twin Primes)</h4>
+            <pre><code>def is_prime(n):
+    """Check if a number is prime."""
+    if n < 2:
+        return False
+    
+    # Check divisibility up to the square root
+    for i in range(2, int(n**0.5) + 1):
+        if n % i == 0:
+            return False
+    
+    return True
+
+def find_twin_primes(limit):
+    """
+    Find all twin primes up to the given limit.
+    Twin primes are pairs of primes that differ by 2.
+    """
+    twin_primes = []
+    
+    for i in range(3, limit + 1):
+        # Check if both i and i-2 are prime
+        if is_prime(i) and is_prime(i - 2):
+            twin_primes.append((i - 2, i))
+    
+    return twin_primes
+
+# Find all twin primes up to 100
+twin_primes = find_twin_primes(100)
+print("Twin prime pairs up to 100:")
+for pair in twin_primes:
+    print(pair)</code></pre>
+
+            <p>
+                This twin prime finder uses a nested loop structure, though the inner loop is hidden within the <code>is_prime</code> function. For each number in the outer loop, the inner loop checks its divisibility by all smaller numbers, demonstrating how nested loops are often compartmentalized into separate functions for clarity.
+            </p>
+
+            <h4>Example: Working with Matrices</h4>
+            <pre><code>def matrix_operations():
+    # Define two 3x3 matrices
+    matrix_a = [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+    ]
+    
+    matrix_b = [
+        [9, 8, 7],
+        [6, 5, 4],
+        [3, 2, 1]
+    ]
+    
+    # Add matrices: C = A + B
+    print("Matrix Addition:")
+    matrix_c = []
+    
+    for i in range(len(matrix_a)):
+        row = []
+        for j in range(len(matrix_a[0])):
+            row.append(matrix_a[i][j] + matrix_b[i][j])
+        matrix_c.append(row)
+    
+    print_matrix(matrix_c)
+    
+    # Multiply matrices: D = A * B
+    print("\nMatrix Multiplication:")
+    matrix_d = []
+    
+    for i in range(len(matrix_a)):
+        row = []
+        for j in range(len(matrix_b[0])):
+            value = 0
+            for k in range(len(matrix_b)):
+                value += matrix_a[i][k] * matrix_b[k][j]
+            row.append(value)
+        matrix_d.append(row)
+    
+    print_matrix(matrix_d)
+    
+    # Transpose matrix A
+    print("\nTranspose of Matrix A:")
+    matrix_a_transpose = []
+    
+    for j in range(len(matrix_a[0])):
+        row = []
+        for i in range(len(matrix_a)):
+            row.append(matrix_a[i][j])
+        matrix_a_transpose.append(row)
+    
+    print_matrix(matrix_a_transpose)
+
+def print_matrix(matrix):
+    """Print a matrix in a readable format."""
+    for row in matrix:
+        print("[", end="")
+        for j, val in enumerate(row):
+            print(f"{val:3}", end="")
+            if j < len(row) - 1:
+                print(",", end="")
+        print(" ]")
+
+# Run the matrix operations
+matrix_operations()</code></pre>
+
+            <p>
+                This matrix operations example showcases nested loops for working with multi-dimensional arrays. Matrix addition uses two levels of nesting (rows and columns), while matrix multiplication requires three levels (rows, columns, and the summation index).
+            </p>
+
+            <h4>Optimizing Nested Loops</h4>
+            <p>
+                Nested loops can become performance bottlenecks, especially with large datasets. Here are strategies to optimize them:
+            </p>
+
+            <h5>Minimize Work in Inner Loops</h5>
+            <pre><code># Less efficient - function call in inner loop
+def calculate_distances_inefficient(points):
+    distances = []
+    
+    for i in range(len(points)):
+        for j in range(i + 1, len(points)):
+            # Function call inside inner loop
+            distance = calculate_distance(points[i], points[j])
+            distances.append((i, j, distance))
+    
+    return distances
+
+# More efficient - calculations directly in inner loop
+def calculate_distances_efficient(points):
+    distances = []
+    
+    for i in range(len(points)):
+        x1, y1 = points[i]
+        
+        for j in range(i + 1, len(points)):
+            x2, y2 = points[j]
+            
+            # Direct calculation without function call
+            distance = ((x2 - x1)**2 + (y2 - y1)**2)**0.5
+            distances.append((i, j, distance))
+    
+    return distances
+
+def calculate_distance(p1, p2):
+    """Calculate Euclidean distance between two points."""
+    x1, y1 = p1
+    x2, y2 = p2
+    return ((x2 - x1)**2 + (y2 - y1)**2)**0.5
+
+# Test with sample points
+points = [(1, 2), (5, 6), (3, 8), (7, 3), (2, 5)]
+
+# Compare performance (in a real scenario with many points, the difference would be more significant)
+import time
+
+start = time.time()
+result1 = calculate_distances_inefficient(points)
+end = time.time()
+print(f"Inefficient method: {end - start:.6f} seconds")
+
+start = time.time()
+result2 = calculate_distances_efficient(points)
+end = time.time()
+print(f"Efficient method: {end - start:.6f} seconds")</code></pre>
+
+            <p>
+                The efficient version eliminates the function call overhead in the inner loop and pre-computes values used in each iteration of the inner loop. For large datasets, these optimizations can significantly improve performance.
+            </p>
+
+            <h5>Breaking Out of Nested Loops</h5>
+            <pre><code>def find_value_in_matrix(matrix, target):
+    """
+    Find the first occurrence of a target value in a matrix.
+    Returns the position as (row, column) or None if not found.
+    """
+    for i in range(len(matrix)):
+        for j in range(len(matrix[i])):
+            if matrix[i][j] == target:
+                return (i, j)  # Found it, return position
+    
+    return None  # Not found
+
+# Alternative approach using a flag and break
+def find_value_with_break(matrix, target):
+    """
+    Same functionality using break statements.
+    """
+    found = False
+    position = None
+    
+    for i in range(len(matrix)):
+        if found:
+            break
+            
+        for j in range(len(matrix[i])):
+            if matrix[i][j] == target:
+                position = (i, j)
+                found = True
+                break
+    
+    return position
+
+# Another approach: wrapping in a function and using return
+def find_value_with_function(matrix, target):
+    """
+    Same functionality using a separate function.
+    """
+    def search():
+        for i in range(len(matrix)):
+            for j in range(len(matrix[i])):
+                if matrix[i][j] == target:
+                    return (i, j)
+        return None
+    
+    return search()
+
+# Test with a sample matrix
+sample_matrix = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]
+]
+
+# All three methods should find the position of 5
+print(find_value_in_matrix(sample_matrix, 5))
+print(find_value_with_break(sample_matrix, 5))
+print(find_value_with_function(sample_matrix, 5))
+
+# All three methods should return None for 10
+print(find_value_in_matrix(sample_matrix, 10))
+print(find_value_with_break(sample_matrix, 10))
+print(find_value_with_function(sample_matrix, 10))</code></pre>
+
+            <p>
+                This example demonstrates three approaches to breaking out of nested loops:
+            </p>
+            <ol>
+                <li>The first function simply returns from the function when the value is found.</li>
+                <li>The second uses a flag variable to signal when to break from both loops.</li>
+                <li>The third encapsulates the nested loops in a separate function and returns from that function.</li>
+            </ol>
+            <p>
+                All three approaches are valid, but returning from a function is often the cleanest solution.
+            </p>
+
+            <h4>Real-World Example: Image Processing</h4>
+            <pre><code>def apply_image_filter(image, filter_type):
+    """
+    Apply a filter to an image represented as a 2D array of pixel values.
+    Each pixel is a value from 0 (black) to 255 (white).
+    """
+    # Get image dimensions
+    height = len(image)
+    width = len(image[0]) if height > 0 else 0
+    
+    # Create a new image to store the result
+    result = [[0 for _ in range(width)] for _ in range(height)]
+    
+    if filter_type == "invert":
+        # Invert the colors (255 - pixel_value)
+        for i in range(height):
+            for j in range(width):
+                result[i][j] = 255 - image[i][j]
+    
+    elif filter_type == "blur":
+        # Apply a simple box blur (average of surrounding pixels)
+        for i in range(height):
+            for j in range(width):
+                # Calculate average of neighboring pixels
+                total = 0
+                count = 0
+                
+                # Check a 3x3 area around the current pixel
+                for di in range(-1, 2):
+                    for dj in range(-1, 2):
+                        ni, nj = i + di, j + dj
+                        
+                        # Check if the neighbor is within bounds
+                        if 0 <= ni < height and 0 <= nj < width:
+                            total += image[ni][nj]
+                            count += 1
+                
+                # Calculate the average
+                result[i][j] = total // count
+    
+    elif filter_type == "edge_detect":
+        # Simple edge detection using differences between adjacent pixels
+        for i in range(1, height - 1):
+            for j in range(1, width - 1):
+                # Calculate gradient in x and y directions
+                gx = abs(image[i+1][j] - image[i-1][j])
+                gy = abs(image[i][j+1] - image[i][j-1])
+                
+                # Combine gradients
+                result[i][j] = min(255, gx + gy)
+                
+        # Set border pixels to 0
+        for i in range(height):
+            result[i][0] = result[i][width-1] = 0
+        for j in range(width):
+            result[0][j] = result[height-1][j] = 0
+    
+    else:
+        # Unknown filter, return the original image
+        return image
+    
+    return result
+
+def print_image(image, char_map=' .:-=+*#%@'):
+    """
+    Print an image using ASCII characters to represent different pixel values.
+    """
+    for row in image:
+        for pixel in row:
+            # Map pixel value to an ASCII character based on brightness
+            idx = min(pixel * len(char_map) // 256, len(char_map) - 1)
+            print(char_map[idx], end='')
+        print()
+
+# Create a simple 10x10 image (a diagonal line)
+image = [[0 for _ in range(10)] for _ in range(10)]
+for i in range(10):
+    image[i][i] = 255  # White diagonal
+
+# Apply different filters
+print("Original Image:")
+print_image(image)
+
+print("\nInverted Image:")
+inverted = apply_image_filter(image, "invert")
+print_image(inverted)
+
+print("\nBlurred Image:")
+blurred = apply_image_filter(image, "blur")
+print_image(blurred)
+
+print("\nEdge Detection:")
+edges = apply_image_filter(image, "edge_detect")
+print_image(edges)</code></pre>
+
+            <p>
+                This image processing example demonstrates how nested loops are used to process two-dimensional data. The outer loop iterates over rows, while the inner loop processes each pixel in the row. The blur filter uses four levels of nested loops: two for iterating over the image and two more for the surrounding pixels.
+            </p>
+        </section>
+
+        <section class="combined_structures">
+            <h3>Combining Conditionals and Loops</h3>
+            <p>
+                The most sophisticated control flow patterns emerge when we combine conditionals with loops. This combination allows for dynamic iteration behavior based on conditionals, enabling complex algorithms and data processing.
+            </p>
+            
+            <h4>Example: Conway's Game of Life</h4>
+            <pre><code>def game_of_life(grid, generations):
+    """
+    Implement Conway's Game of Life cellular automaton.
+    The grid is a 2D array where 1 represents a live cell and 0 represents a dead cell.
+    """
+    # Get grid dimensions
+    rows = len(grid)
+    cols = len(grid[0]) if rows > 0 else 0
+    
+    # Make a copy of the initial grid
+    current_grid = [[grid[i][j] for j in range(cols)] for i in range(rows)]
+    
+    # Run for the specified number of generations
+    for gen in range(generations):
+        # Create a new grid for the next generation
+        next_grid = [[0 for _ in range(cols)] for _ in range(rows)]
+        
+        # Apply the rules to each cell
+        for i in range(rows):
+            for j in range(cols):
+                # Count live neighbors
+                live_neighbors = 0
+                
+                for di in range(-1, 2):
+                    for dj in range(-1, 2):
+                        if di == 0 and dj == 0:
+                            continue  # Skip the cell itself
+                            
+                        ni, nj = i + di, j + dj
+                        
+                        # Check bounds and count live neighbors
+                        if 0 <= ni < rows and 0 <= nj < cols and current_grid[ni][nj] == 1:
+                            live_neighbors += 1
+                
+                # Apply the rules of Life
+                if current_grid[i][j] == 1:  # Cell is alive
+                    if live_neighbors < 2 or live_neighbors > 3:
+                        next_grid[i][j] = 0  # Cell dies
+                    else:
+                        next_grid[i][j] = 1  # Cell survives
+                else:  # Cell is dead
+                    if live_neighbors == 3:
+                        next_grid[i][j] = 1  # Cell becomes alive
+                    else:
+                        next_grid[i][j] = 0  # Cell remains dead
+        
+        # Update current grid for the next generation
+        current_grid = next_grid
+        
+        # Print the current generation
+        print(f"Generation {gen + 1}:")
+        print_grid(current_grid)
+        print()
+    
+    return current_grid
+
+def print_grid(grid):
+    """Print the grid using characters for better visualization."""
+    for row in grid:
+        for cell in row:
+            print("■" if cell == 1 else "□", end=" ")
+        print()
+
+# Test with a glider pattern
+glider = [
+    [0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 0, 1, 0],
+    [0, 1, 1, 1, 0],
+    [0, 0, 0, 0, 0]
+]
+
+print("Initial Grid:")
+print_grid(glider)
+print()
+
+# Run for 4 generations
+game_of_life(glider, 4)</code></pre>
+
+            <p>
+                Conway's Game of Life is a classic example of combining nested loops with conditionals. The algorithm uses loops to iterate over each cell in the grid and conditionals to apply the rules of the game based on the cell's current state and its neighbors.
+            </p>
+
+            <h4>Example: Data Filtering and Transformation</h4>
+            <pre><code>def process_student_data(students, courses):
+    """
+    Process and analyze student course data.
+    
+    students: List of student records
+    courses: List of course records
+    """
+    # Gather statistics by course and student
+    course_stats = {}
+    student_stats = {}
+    
+    # Initialize course statistics
+    for course in courses:
+        course_id = course["id"]
+        course_stats[course_id] = {
+            "enrollment": 0,
+            "pass_count": 0,
+            "fail_count": 0,
+            "top_students": []
+        }
+    
+    # Process each student's data
+    for student in students:
+        student_id = student["id"]
+        student_name = student["name"]
+        
+        # Initialize stats for this student
+        student_stats[student_id] = {
+            "name": student_name,
+            "courses_taken": 0,
+            "courses_passed": 0,
+            "gpa": 0.0,
+            "top_course": None,
+            "top_grade": 0
+        }
+        
+        # Skip inactive students
+        if student["status"] != "active":
+            continue
+        
+        total_grade_points = 0
+        total_credits = 0
+        
+        # Process each enrollment for this student
+        for enrollment in student["enrollments"]:
+            course_id = enrollment["course_id"]
+            grade = enrollment["grade"]
+            
+            # Skip if the course isn't in our course list
+            if course_id not in course_stats:
+                continue
+            
+            # Update student count for this course
+            course_stats[course_id]["enrollment"] += 1
+            
+            # Get course details
+            course = next((c for c in courses if c["id"] == course_id), None)
+            if not course:
+                continue
+                
+            credits = course["credits"]
+            student_stats[student_id]["courses_taken"] += 1
+            
+            # Calculate grade points for GPA
+            if grade >= 90:
+                grade_letter = "A"
+                grade_points = 4.0
+            elif grade >= 80:
+                grade_letter = "B"
+                grade_points = 3.0
+            elif grade >= 70:
+                grade_letter = "C"
+                grade_points = 2.0
+            elif grade >= 60:
+                grade_letter = "D"
+                grade_points = 1.0
+            else:
+                grade_letter = "F"
+                grade_points = 0.0
+            
+            # Update course pass/fail stats
+            if grade_points >= 1.0:  # D or better
+                course_stats[course_id]["pass_count"] += 1
+                student_stats[student_id]["courses_passed"] += 1
+            else:
+                course_stats[course_id]["fail_count"] += 1
+            
+            # Track student's best course
+            if grade > student_stats[student_id]["top_grade"]:
+                student_stats[student_id]["top_grade"] = grade
+                student_stats[student_id]["top_course"] = course["name"]
+            
+            # Add to GPA calculation
+            total_grade_points += grade_points * credits
+            total_credits += credits
+            
+            # Check if this student should be in the top students for this course
+            if grade >= 90:
+                # Add student to top students for this course
+                if len(course_stats[course_id]["top_students"]) < 3:
+                    # Top 3 list not full yet
+                    course_stats[course_id]["top_students"].append({
+                        "name": student_name,
+                        "grade": grade
+                    })
+                else:
+                    # Check if this student should replace someone in the top 3
+                    min_top_grade = min(s["grade"] for s in course_stats[course_id]["top_students"])
+                    if grade > min_top_grade:
+                        # Replace the lowest grade in the top 3
+                        for i, s in enumerate(course_stats[course_id]["top_students"]):
+                            if s["grade"] == min_top_grade:
+                                course_stats[course_id]["top_students"][i] = {
+                                    "name": student_name,
+                                    "grade": grade
+                                }
+                                break
+        
+        # Calculate GPA if the student took any courses
+        if total_credits > 0:
+            student_stats[student_id]["gpa"] = round(total_grade_points / total_credits, 2)
+    
+    # Add pass rate to course stats
+    for course_id, stats in course_stats.items():
+        if stats["enrollment"] > 0:
+            stats["pass_rate"] = round(stats["pass_count"] / stats["enrollment"] * 100, 1)
+        else:
+            stats["pass_rate"] = 0.0
+    
+    return {
+        "course_stats": course_stats,
+        "student_stats": student_stats
+    }
+
+# Sample data
+courses = [
+    {"id": "CS101", "name": "Introduction to Programming", "credits": 3},
+    {"id": "CS102", "name": "Data Structures", "credits": 4},
+    {"id": "MATH101", "name": "Calculus I", "credits": 4},
+    {"id": "ENG101", "name": "English Composition", "credits": 3}
+]
+
+students = [
+    {
+        "id": "S001",
+        "name": "Alice Smith",
+        "status": "active",
+        "enrollments": [
+            {"course_id": "CS101", "grade": 95},
+            {"course_id": "MATH101", "grade": 87},
+            {"course_id": "ENG101", "grade": 82}
+        ]
+    },
+    {
+        "id": "S002",
+        "name": "Bob Johnson",
+        "status": "active",
+        "enrollments": [
+            {"course_id": "CS101", "grade": 72},
+            {"course_id": "CS102", "grade": 65},
+            {"course_id": "MATH101", "grade": 55}
+        ]
+    },
+    {
+        "id": "S003",
+        "name": "Charlie Brown",
+        "status": "inactive",
+        "enrollments": [
+            {"course_id": "CS101", "grade": 85},
+            {"course_id": "ENG101", "grade": 91}
+        ]
+    },
+    {
+        "id": "S004",
+        "name": "Diana Prince",
+        "status": "active",
+        "enrollments": [
+            {"course_id": "CS101", "grade": 92},
+            {"course_id": "CS102", "grade": 88},
+            {"course_id": "MATH101", "grade": 94},
+            {"course_id": "ENG101", "grade": 89}
+        ]
+    }
+]
+
+# Process the data
+results = process_student_data(students, courses)
+
+# Print student statistics
+print("Student Statistics:")
+for student_id, stats in results["student_stats"].items():
+    print(f"\n{stats['name']} (ID: {student_id}):")
+    print(f"  Courses Taken: {stats['courses_taken']}")
+    print(f"  Courses Passed: {stats['courses_passed']}")
+    print(f"  GPA: {stats['gpa']}")
+    print(f"  Best Course: {stats['top_course']} ({stats['top_grade']})")
+
+# Print course statistics
+print("\nCourse Statistics:")
+for course_id, stats in results["course_stats"].items():
+    course_name = next(c["name"] for c in courses if c["id"] == course_id)
+    print(f"\n{course_name} ({course_id}):")
+    print(f"  Enrollment: {stats['enrollment']} students")
+    print(f"  Pass Rate: {stats['pass_rate']}%")
+    print("  Top Students:")
+    for student in stats["top_students"]:
+        print(f"    - {student['name']} ({student['grade']})")</code></pre>
+
+            <p>
+                This comprehensive data processing example combines multiple levels of loops with various conditional checks to analyze student performance data. It demonstrates several important patterns:
+            </p>
+            <ul>
+                <li>Skipping certain records based on status checks (<code>if student["status"] != "active": continue</code>)</li>
+                <li>Nested iteration over related data structures (students and their enrollments)</li>
+                <li>Complex conditional logic for grading and statistics</li>
+                <li>Maintaining running calculations (GPA, top students) through the processing loop</li>
+            </ul>
+            <p>
+                This example reflects real-world data processing scenarios where you need to filter, transform, and aggregate information across multiple related datasets.
+            </p>
+        </section>
+
+        <section class="best_practices">
+            <h3>Best Practices and Pitfalls</h3>
+            <p>
+                Here are some guidelines to help you write clean, efficient, and maintainable code with nested control structures:
+            </p>
+            
+            <h4>Best Practices</h4>
+            <ol>
+                <li>
+                    <strong>Keep nesting shallow</strong>: Try to limit nesting to 2-3 levels. Deep nesting makes code hard to read and maintain.
+                    <pre><code># Instead of this:
+if condition1:
+    if condition2:
+        if condition3:
+            # Deep nesting
+            
+# Consider this:
+if not condition1:
+    return  # Early return
+if not condition2:
+    return  # Early return
+if not condition3:
+    return  # Early return
+    
+# Main logic here (no nesting)</code></pre>
+                </li>
+                <li>
+                    <strong>Extract complex conditions into named variables</strong>:
+                    <pre><code># Instead of this:
+if user.age >= 18 and user.country in allowed_countries and user.verified and not user.is_banned:
+    # Allow access
+    
+# Use this:
+is_adult = user.age >= 18
+is_from_allowed_country = user.country in allowed_countries
+is_verified = user.verified
+is_not_banned = not user.is_banned
+
+if is_adult and is_from_allowed_country and is_verified and is_not_banned:
+    # Allow access</code></pre>
+                </li>
+                <li>
+                    <strong>Extract nested logic into functions</strong>:
+                    <pre><code># Instead of this:
+for user in users:
+    for post in user.posts:
+        # Complex nested logic here
+        
+# Use this:
+def process_post(post):
+    # Complex logic here
+    
+for user in users:
+    for post in user.posts:
+        process_post(post)</code></pre>
+                </li>
+                <li>
+                    <strong>Use early returns or continues to flatten code</strong>:
+                    <pre><code># Instead of this:
+def process_order(order):
+    if order.is_valid:
+        if order.has_items:
+            if order.payment_confirmed:
+                # Process the order
+            else:
+                return "Payment not confirmed"
+        else:
+            return "No items in order"
+    else:
+        return "Invalid order"
+        
+# Use this:
+def process_order(order):
+    if not order.is_valid:
+        return "Invalid order"
+        
+    if not order.has_items:
+        return "No items in order"
+        
+    if not order.payment_confirmed:
+        return "Payment not confirmed"
+        
+    # Process the order</code></pre>
+                </li>
+                <li>
+                    <strong>Watch out for loop variable overwrites</strong>:
+                    <pre><code># Problematic: inner loop overwrites outer loop variable
+for i in range(5):
+    # Some code
+    for i in range(3):  # Overwrites outer i!
+        print(i)
+    print(f"Outer i: {i}")  # i is now 2, not the outer loop value
+    
+# Better: use different variable names
+for i in range(5):
+    # Some code
+    for j in range(3):  # Different variable name
+        print(j)
+    print(f"Outer i: {i}")  # i is still the outer loop value</code></pre>
+                </li>
+                <li>
+                    <strong>Be mindful of performance with nested loops</strong>:
+                    <pre><code># O(n^2) time complexity
+for i in range(n):
+    for j in range(n):
+        # Operations here execute n^2 times
+        
+# If n is large, consider if there's a more efficient algorithm</code></pre>
+                </li>
+            </ol>
+            
+            <h4>Common Pitfalls</h4>
+            <ol>
+                <li>
+                    <strong>Infinite loops</strong>: Always ensure loop conditions can eventually become false.
+                    <pre><code># Dangerous - may never terminate
+while True:
+    # ...
+    if some_condition:
+        break  # Make sure this condition can be met!
+    
+# Also problematic if i never changes inside the loop
+i = 0
+while i < 10:
+    # Operations that don't modify i
+    # Whoops, i never changes!</code></pre>
+                </li>
+                <li>
+                    <strong>Off-by-one errors</strong>: Be careful with loop bounds, especially with nested loops.
+                    <pre><code># Correct matrix traversal
+for i in range(height):
+    for j in range(width):
+        process_pixel(image[i][j])
+        
+# Incorrect: might access out of bounds
+for i in range(height):
+    for j in range(length):  # Should be width, not length!
+        process_pixel(image[i][j])</code></pre>
+                </li>
+                <li>
+                    <strong>Indentation errors</strong>: In Python, indentation defines the structure, so be careful with it.
+                    <pre><code># Intended behavior
+for i in range(5):
+    if i % 2 == 0:
+        print(f"{i} is even")
+    else:
+        print(f"{i} is odd")
+        
+# Incorrect indentation changes behavior
+for i in range(5):
+    if i % 2 == 0:
+        print(f"{i} is even")
+else:  # Incorrectly indented - belongs to 'for', not 'if'
+    print(f"{i} is odd")  # Only executes after loop completes normally</code></pre>
+                </li>
+                <li>
+                    <strong>Modifying collections during iteration</strong>:
+                    <pre><code># Problematic: modifying list while iterating
+for item in my_list:
+    if condition(item):
+        my_list.remove(item)  # Modifies the list being iterated
+        
+# Better: create a new list
+new_list = [item for item in my_list if not condition(item)]
+# Or use a copy
+for item in my_list[:]:  # Iterate over a copy
+    if condition(item):
+        my_list.remove(item)</code></pre>
+                </li>
+                <li>
+                    <strong>Assuming loop body always executes</strong>:
+                    <pre><code># Dangerous assumption
+for item in items:
+    # Code here might never run if items is empty
+    found_item = item
+    break
+    
+# If items is empty, found_item will be undefined
+print(found_item)  # NameError if items was empty</code></pre>
+                </li>
+            </ol>
+        </section>
+
+        <section class="conclusion">
+            <h3>Conclusion</h3>
+            <p>
+                Nested conditionals and loops are powerful tools that allow you to create sophisticated control flow in your programs. By nesting decision structures and repetition, you can handle complex data processing, multi-dimensional data, and intricate algorithms.
+            </p>
+            <p>
+                As you've seen through the examples in this lesson, real-world programming often requires the combination of these control structures. From image processing to data analysis, game simulations to order processing systems, nested control structures are essential for tackling complex problems.
+            </p>
+            <p>
+                However, with great power comes great responsibility. Deep nesting can lead to code that's difficult to read and maintain, so it's important to follow best practices like extracting complex logic into functions, using early returns, and keeping nesting levels shallow when possible.
+            </p>
+            <p>
+                As you continue your Python journey, you'll develop an intuition for when to use nested structures and when to refactor them into separate functions or alternative patterns. This balance between expressiveness and readability is at the heart of good programming practice.
+            </p>
+            <p>
+                For further practice, try implementing the examples from this lesson, modifying them to solve your own problems, or refactoring them to make them more efficient and readable. Remember that mastering control flow is a foundational skill that will serve you throughout your programming career.
+            </p>
+        </section>
+
+        <section class="exercises">
+            <h3>Practice Exercises</h3>
+            <p>
+                To reinforce your understanding of nested control structures, try these exercises:
+            </p>
+            <ol>
+                <li>
+                    <p><strong>Pattern Printing</strong>: Write a program that uses nested loops to print the following pattern:</p>
+                    <pre>*
+**
+***
+****
+*****</pre>
+                    <p>Then modify it to print a pyramid:</p>
+                    <pre>    *
+   ***
+  *****
+ *******
+*********</pre>
+                </li>
+                <li>
+                    <p><strong>Matrix Diagonal Sum</strong>: Write a function that calculates the sum of the main diagonal and the anti-diagonal of a square matrix.</p>
+                </li>
+                <li>
+                    <p><strong>Nested Data Processing</strong>: Given a list of dictionaries representing students, where each student has a list of subject grades, calculate the average grade for each student and the overall class average.</p>
+                </li>
+                <li>
+                    <p><strong>Sudoku Validator</strong>: Write a function that checks if a completed 9x9 Sudoku puzzle is valid according to the game rules (each row, column, and 3x3 sub-grid must contain all digits 1-9 without repetition).</p>
+                </li>
+                <li>
+                    <p><strong>Text Analysis</strong>: Write a program that reads a text file and counts the frequency of each word, ignoring case and punctuation. Then print the top 5 most frequent words.</p>
+                </li>
+                <li>
+                    <p><strong>Advanced Challenge</strong>: Implement a simplified version of the A* pathfinding algorithm to find the shortest path through a 2D grid from a start point to an end point, avoiding obstacles. This will require nested loops and complex conditional logic.</p>
+                </li>
+            </ol>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creating a Docker Compose Setup with Python and Database</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Creating a Docker Compose Setup with Python and Database</h1>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>Introduction</h3>
+            <p>In this tutorial, we'll create a Docker Compose setup that runs a Python application alongside a database service. This pattern is fundamental for developing multi-service applications, particularly web applications that need to persist data. We'll use PostgreSQL as our database, but the concepts apply to any database system.</p>
+            
+            <p>We'll follow George Polya's four-step problem solving method to approach this task systematically:</p>
+            <ol>
+                <li><strong>Understand the Problem</strong>: What are we trying to accomplish?</li>
+                <li><strong>Devise a Plan</strong>: How will we approach the solution?</li>
+                <li><strong>Carry Out the Plan</strong>: Implement our solution step by step</li>
+                <li><strong>Look Back</strong>: Review our solution and consider alternatives</li>
+            </ol>
+        </section>
+
+        <section class="understand">
+            <h3>Step 1: Understand the Problem</h3>
+            
+            <p>Our task is to create a Docker Compose setup with a Python service and a simple database. Let's break down what this means:</p>
+            
+            <ul>
+                <li>We need to create a Python application that can connect to a database</li>
+                <li>We need to set up a database service (PostgreSQL in our case)</li>
+                <li>We need to define a Docker Compose configuration that runs both services</li>
+                <li>The services need to be able to communicate with each other</li>
+                <li>We need to ensure data persistence for the database</li>
+            </ul>
+            
+            <p><strong>Expected Input:</strong> Configuration files (Docker Compose, Dockerfile, Python code)</p>
+            <p><strong>Expected Output:</strong> A running multi-container application with a Python service connected to a database</p>
+            
+            <p><strong>Prerequisites:</strong></p>
+            <ul>
+                <li>Docker and Docker Compose installed on your machine</li>
+                <li>Basic knowledge of Python</li>
+                <li>Basic understanding of SQL and databases</li>
+            </ul>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> Think of Docker Compose as a restaurant manager who coordinates multiple services. The Python application is like a chef who prepares meals (processes data), while the database is like the pantry where ingredients (data) are stored. Docker Compose makes sure both the chef and pantry work together seamlessly, ensuring ingredients are available when needed and stored properly after use.</p>
+            </div>
+        </section>
+
+        <section class="plan">
+            <h3>Step 2: Devise a Plan</h3>
+            
+            <p>To create our Docker Compose setup with a Python service and database, we'll follow these steps:</p>
+            
+            <ol>
+                <li>Create a new project directory structure</li>
+                <li>Create a simple Python application that connects to the database</li>
+                <li>Create a Dockerfile for the Python application</li>
+                <li>Create a docker-compose.yml file that defines both services</li>
+                <li>Run the application with Docker Compose</li>
+                <li>Test the database connection</li>
+            </ol>
+            
+            <p><strong>Simplified Whiteboard Plan:</strong></p>
+            <ol>
+                <li>Create project structure:
+                    <pre>
+python_db_compose/
+├── python_app/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── app.py
+└── docker-compose.yml</pre>
+                </li>
+                <li>In app.py: Write code to connect to PostgreSQL and perform simple operations</li>
+                <li>In requirements.txt: Add psycopg2-binary for PostgreSQL connection</li>
+                <li>In Dockerfile: Create a container for the Python application</li>
+                <li>In docker-compose.yml:
+                    <ul>
+                        <li>Define a python_app service based on our Dockerfile</li>
+                        <li>Define a db service using the official PostgreSQL image</li>
+                        <li>Configure network communication between services</li>
+                        <li>Set up volume for database persistence</li>
+                    </ul>
+                </li>
+                <li>Run with: <code>docker-compose up</code></li>
+            </ol>
+        </section>
+
+        <section class="execute">
+            <h3>Step 3: Carry Out the Plan</h3>
+            
+            <p>Now, let's implement our plan step by step:</p>
+            
+            <h4>Step 3.1: Create Project Directory Structure</h4>
+            <p>First, let's create our project directory and the necessary files:</p>
+            
+            <pre><code>mkdir -p python_db_compose/python_app
+cd python_db_compose</code></pre>
+            
+            <h4>Step 3.2: Create Python Application</h4>
+            <p>Let's create our Python application that will connect to PostgreSQL and perform basic operations:</p>
+            
+            <p>File: <code>python_db_compose/python_app/app.py</code></p>
+            <pre><code>import os
+import time
+import psycopg2
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+
+# Database connection parameters
+DB_HOST = os.environ.get("DB_HOST", "db")
+DB_NAME = os.environ.get("DB_NAME", "postgres")
+DB_USER = os.environ.get("DB_USER", "postgres")
+DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
+DB_PORT = os.environ.get("DB_PORT", "5432")
+
+# Function to connect to the database
+def connect_to_db():
+    conn = None
+    try:
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            port=DB_PORT
+        )
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+        return conn
+    except Exception as e:
+        print(f"Error connecting to the database: {e}")
+        return None
+
+# Function to create a table if it doesn't exist
+def create_table(conn):
+    with conn.cursor() as cur:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS messages (
+                id SERIAL PRIMARY KEY,
+                content TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+        print("Table 'messages' is ready")
+
+# Function to insert a message
+def insert_message(conn, content):
+    with conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO messages (content) VALUES (%s) RETURNING id",
+            (content,)
+        )
+        message_id = cur.fetchone()[0]
+        print(f"Inserted message with ID: {message_id}")
+        return message_id
+
+# Function to retrieve all messages
+def get_all_messages(conn):
+    with conn.cursor() as cur:
+        cur.execute("SELECT id, content, created_at FROM messages ORDER BY created_at DESC")
+        rows = cur.fetchall()
+        for row in rows:
+            print(f"Message {row[0]}: {row[1]} (at {row[2]})")
+        return rows
+
+def main():
+    # Wait for the database service to be ready
+    print("Waiting for database to be ready...")
+    time.sleep(5)
+    
+    # Connect to the database
+    print("Connecting to the database...")
+    conn = None
+    
+    # Retry logic for database connection
+    retry_count = 0
+    max_retries = 5
+    while retry_count < max_retries:
+        conn = connect_to_db()
+        if conn:
+            break
+        print(f"Connection attempt {retry_count + 1} failed. Retrying in 5 seconds...")
+        retry_count += 1
+        time.sleep(5)
+    
+    if not conn:
+        print("Failed to connect to the database after multiple attempts.")
+        return
+    
+    print("Connected to the database successfully!")
+    
+    # Create table if it doesn't exist
+    create_table(conn)
+    
+    # Insert some sample messages
+    insert_message(conn, "Hello from Docker Compose!")
+    insert_message(conn, "This is a message stored in PostgreSQL")
+    insert_message(conn, "Python and PostgreSQL working together with Docker Compose")
+    
+    # Retrieve and display all messages
+    print("\nRetrieving all messages:")
+    get_all_messages(conn)
+    
+    # Close connection
+    conn.close()
+    print("\nDatabase connection closed.")
+    
+    # Keep the container running for demonstration purposes
+    print("\nApplication completed. Container will keep running...")
+    while True:
+        time.sleep(60)
+
+if __name__ == "__main__":
+    main()</code></pre>
+            
+            <p>Now let's create a requirements.txt file for our Python application:</p>
+            
+            <p>File: <code>python_db_compose/python_app/requirements.txt</code></p>
+            <pre><code>psycopg2-binary==2.9.5</code></pre>
+            
+            <h4>Step 3.3: Create Dockerfile for Python Application</h4>
+            <p>Let's create a Dockerfile for our Python application:</p>
+            
+            <p>File: <code>python_db_compose/python_app/Dockerfile</code></p>
+            <pre><code># Use Python 3.9 slim as base image
+FROM python:3.9-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements file
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY app.py .
+
+# Command to run the application
+CMD ["python", "app.py"]</code></pre>
+            
+            <h4>Step 3.4: Create Docker Compose Configuration</h4>
+            <p>Now, let's create the docker-compose.yml file that will define our services:</p>
+            
+            <p>File: <code>python_db_compose/docker-compose.yml</code></p>
+            <pre><code>version: '3'
+
+services:
+  python_app:
+    build: ./python_app
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_PORT=5432
+
+  db:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:</code></pre>
+            
+            <p>Let's break down what each part of the Docker Compose file does:</p>
+            <ul>
+                <li><code>version: '3'</code>: Specifies the Docker Compose file format version</li>
+                <li><code>services:</code>: Defines the services that make up our application</li>
+                <li><code>python_app:</code>: Our Python application service
+                    <ul>
+                        <li><code>build: ./python_app</code>: Tells Docker Compose to build the image using the Dockerfile in the python_app directory</li>
+                        <li><code>depends_on: - db</code>: Ensures the db service starts before the python_app service</li>
+                        <li><code>environment:</code>: Sets environment variables for database connection</li>
+                    </ul>
+                </li>
+                <li><code>db:</code>: Our PostgreSQL database service
+                    <ul>
+                        <li><code>image: postgres:13-alpine</code>: Uses the official PostgreSQL Alpine image</li>
+                        <li><code>environment:</code>: Sets PostgreSQL configuration</li>
+                        <li><code>volumes:</code>: Mounts a volume for data persistence</li>
+                    </ul>
+                </li>
+                <li><code>volumes:</code>: Defines named volumes that can be mounted by services</li>
+            </ul>
+            
+            <h4>Step 3.5: Run the Docker Compose Setup</h4>
+            <p>Now that we have created all the necessary files, let's run our Docker Compose setup:</p>
+            
+            <pre><code>cd python_db_compose
+docker-compose up</code></pre>
+            
+            <p>This command will:</p>
+            <ol>
+                <li>Build the Python application image using the Dockerfile</li>
+                <li>Pull the PostgreSQL image if it doesn't exist locally</li>
+                <li>Create and start containers for both services</li>
+                <li>Set up the network for communication between containers</li>
+                <li>Create and mount the volume for database persistence</li>
+            </ol>
+            
+            <p>You should see output from both services in your terminal. The Python application will:</p>
+            <ol>
+                <li>Wait for the database to be ready</li>
+                <li>Connect to the database</li>
+                <li>Create the messages table if it doesn't exist</li>
+                <li>Insert three sample messages</li>
+                <li>Retrieve and display all messages</li>
+                <li>Keep the container running</li>
+            </ol>
+            
+            <p>The output should look something like this:</p>
+            
+            <pre><code>db_1          | PostgreSQL init process complete; ready for start up.
+db_1          | 
+db_1          | 2023-04-16 12:34:56.789 UTC [1] LOG:  starting PostgreSQL 13.7 on x86_64-pc-linux-musl
+db_1          | 2023-04-16 12:34:56.789 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+python_app_1  | Waiting for database to be ready...
+python_app_1  | Connecting to the database...
+python_app_1  | Connected to the database successfully!
+python_app_1  | Table 'messages' is ready
+python_app_1  | Inserted message with ID: 1
+python_app_1  | Inserted message with ID: 2
+python_app_1  | Inserted message with ID: 3
+python_app_1  | 
+python_app_1  | Retrieving all messages:
+python_app_1  | Message 3: Python and PostgreSQL working together with Docker Compose (at 2023-04-16 12:35:05.123456)
+python_app_1  | Message 2: This is a message stored in PostgreSQL (at 2023-04-16 12:35:04.123456)
+python_app_1  | Message 1: Hello from Docker Compose! (at 2023-04-16 12:35:03.123456)
+python_app_1  | 
+python_app_1  | Database connection closed.
+python_app_1  | 
+python_app_1  | Application completed. Container will keep running...</code></pre>
+            
+            <p>To stop the containers, press Ctrl+C in the terminal, or run <code>docker-compose down</code> in another terminal.</p>
+
+            <div class="explanation">
+                <p><strong>What's happening behind the scenes:</strong></p>
+                <ol>
+                    <li>Docker Compose creates a default network for our services</li>
+                    <li>The db service starts and initializes the PostgreSQL database</li>
+                    <li>The python_app service waits for the database to be ready</li>
+                    <li>Inside the network, the db service is accessible to python_app using the hostname "db"</li>
+                    <li>The Python application connects to the database using the environment variables we set</li>
+                    <li>The database data is persisted in a volume, so it survives container restarts</li>
+                </ol>
+            </div>
+        </section>
+
+        <section class="review">
+            <h3>Step 4: Look Back</h3>
+            
+            <p>Now that we've created our solution, let's review what we've accomplished and consider alternatives or improvements:</p>
+            
+            <h4>What We Learned</h4>
+            <ul>
+                <li>How to create a multi-container application with Docker Compose</li>
+                <li>How to configure communication between Python and a database container</li>
+                <li>How to persist database data using volumes</li>
+                <li>How to use environment variables for configuration</li>
+                <li>How to handle service dependencies with depends_on</li>
+            </ul>
+            
+            <h4>Alternative Solutions</h4>
+            
+            <h5>Alternative 1: Using Environment File</h5>
+            <p>Instead of setting environment variables directly in the docker-compose.yml file, we can use a .env file:</p>
+            
+            <p>File: <code>python_db_compose/.env</code></p>
+            <pre><code>DB_HOST=db
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_PORT=5432</code></pre>
+            
+            <p>Then modify docker-compose.yml:</p>
+            
+            <pre><code>version: '3'
+
+services:
+  python_app:
+    build: ./python_app
+    depends_on:
+      - db
+    env_file:
+      - .env
+
+  db:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:</code></pre>
+            
+            <p>This approach keeps sensitive information out of your docker-compose.yml file and allows for easier environment-specific configuration.</p>
+            
+            <h5>Alternative 2: Using a Web Framework</h5>
+            <p>For a more realistic application, you might use a web framework like Flask:</p>
+            
+            <p>Additional requirements in requirements.txt:</p>
+            <pre><code>flask==2.0.1
+psycopg2-binary==2.9.5</code></pre>
+            
+            <p>Modified app.py with Flask:</p>
+            <pre><code>import os
+import time
+import psycopg2
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+# Database connection parameters (same as before)
+DB_HOST = os.environ.get("DB_HOST", "db")
+DB_NAME = os.environ.get("DB_NAME", "postgres")
+DB_USER = os.environ.get("DB_USER", "postgres")
+DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
+DB_PORT = os.environ.get("DB_PORT", "5432")
+
+# Database functions (same as before)
+def connect_to_db():
+    # ... (same as previous example)
+
+def create_table(conn):
+    # ... (same as previous example)
+
+def insert_message(conn, content):
+    # ... (same as previous example)
+
+def get_all_messages(conn):
+    with conn.cursor() as cur:
+        cur.execute("SELECT id, content, created_at FROM messages ORDER BY created_at DESC")
+        rows = cur.fetchall()
+        return [{"id": row[0], "content": row[1], "created_at": row[2].isoformat()} for row in rows]
+
+@app.route('/')
+def index():
+    return jsonify({"message": "Hello from the Python-PostgreSQL API!"})
+
+@app.route('/messages', methods=['GET'])
+def get_messages():
+    conn = connect_to_db()
+    if not conn:
+        return jsonify({"error": "Database connection failed"}), 500
+    
+    try:
+        messages = get_all_messages(conn)
+        return jsonify({"messages": messages})
+    finally:
+        conn.close()
+
+@app.route('/setup', methods=['GET'])
+def setup_db():
+    conn = connect_to_db()
+    if not conn:
+        return jsonify({"error": "Database connection failed"}), 500
+    
+    try:
+        create_table(conn)
+        insert_message(conn, "Hello from Docker Compose!")
+        insert_message(conn, "This is a message stored in PostgreSQL")
+        insert_message(conn, "Python and PostgreSQL working together with Docker Compose")
+        return jsonify({"message": "Database setup complete"})
+    finally:
+        conn.close()
+
+if __name__ == "__main__":
+    # Wait for the database to be ready
+    time.sleep(5)
+    
+    # Try to connect to the database and set up the table
+    retry_count = 0
+    max_retries = 5
+    conn = None
+    
+    while retry_count < max_retries and not conn:
+        conn = connect_to_db()
+        if conn:
+            create_table(conn)
+            conn.close()
+            break
+        print(f"Database connection attempt {retry_count + 1} failed. Retrying...")
+        retry_count += 1
+        time.sleep(5)
+    
+    # Run the Flask application
+    app.run(host="0.0.0.0", port=5000)</code></pre>
+            
+            <p>Modified Dockerfile:</p>
+            <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app.py .
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]</code></pre>
+            
+            <p>Modified docker-compose.yml:</p>
+            <pre><code>version: '3'
+
+services:
+  python_app:
+    build: ./python_app
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_PORT=5432
+    ports:
+      - "5000:5000"
+
+  db:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:</code></pre>
+            
+            <p>With this setup, you can navigate to http://localhost:5000/setup to initialize the database and http://localhost:5000/messages to retrieve messages as JSON.</p>
+            
+            <h5>Alternative 3: Using Docker Compose Healthchecks</h5>
+            <p>Instead of using sleep to wait for the database, we can use Docker Compose healthchecks:</p>
+            
+            <pre><code>version: '3'
+
+services:
+  python_app:
+    build: ./python_app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_PORT=5432
+
+  db:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:</code></pre>
+            
+            <p>This approach is more robust as it ensures the database is actually ready to accept connections before starting the Python application.</p>
+            
+            <h4>Considerations and Best Practices</h4>
+            <ul>
+                <li><strong>Security:</strong> Don't hardcode passwords in your docker-compose.yml file; use environment variables or secrets</li>
+                <li><strong>Data persistence:</strong> Ensure important data is stored in volumes</li>
+                <li><strong>Error handling:</strong> Add robust error handling in your application to deal with database connection issues</li>
+                <li><strong>Scaling:</strong> For production, consider using a connection pool to handle multiple concurrent database connections</li>
+                <li><strong>Development vs Production:</strong> Use different Docker Compose files for development and production environments</li>
+            </ul>
+            
+            <div class="real-world-application">
+                <p><strong>Real-world application:</strong> This pattern of using Docker Compose to run a Python application with a database is extremely common in web development. For example, you might use this approach to develop a Flask or Django web application with a PostgreSQL database for user data, a Redis container for caching, and perhaps an Nginx container for serving static files - all orchestrated with Docker Compose.</p>
+            </div>
+        </section>
+
+        <section class="extensions">
+            <h3>Further Explorations</h3>
+            
+            <p>Here are some ways to extend this project and continue learning:</p>
+            
+            <h4>Adding a Web Framework</h4>
+            <p>Expand the application with a full web framework like Flask or Django to create a complete web application.</p>
+            
+            <h4>Adding API Endpoints</h4>
+            <p>Create RESTful API endpoints to create, read, update, and delete messages.</p>
+            
+            <h4>Adding More Services</h4>
+            <p>Add additional services to your Docker Compose setup, such as:</p>
+            <ul>
+                <li>Redis for caching</li>
+                <li>Nginx for serving static files</li>
+                <li>Adminer or pgAdmin for database management</li>
+            </ul>
+            
+            <p>Example docker-compose.yml with additional services:</p>
+            <pre><code>version: '3'
+
+services:
+  python_app:
+    build: ./python_app
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+    ports:
+      - "5000:5000"
+
+  db:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  adminer:
+    image: adminer
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:</code></pre>
+            
+            <h4>Using Database Migrations</h4>
+            <p>Instead of creating tables directly in the application, use a migration tool like Alembic (for SQLAlchemy) or the built-in migrations in Django.</p>
+            
+            <h4>Implementing Production Best Practices</h4>
+            <ul>
+                <li>Split Docker Compose configuration into development and production files</li>
+                <li>Add proper logging configuration</li>
+                <li>Implement connection pooling</li>
+                <li>Use Docker secrets for sensitive information</li>
+                <li>Add monitoring and health checks</li>
+            </ul>
+        </section>
+
+        <section class="troubleshooting">
+            <h3>Common Issues and Troubleshooting</h3>
+            
+            <h4>Issue: "Failed to connect to the database"</h4>
+            <p><strong>Possible causes:</strong></p>
+            <ul>
+                <li>Database container isn't ready yet</li>
+                <li>Incorrect environment variables</li>
+                <li>Network connectivity issues between containers</li>
+            </ul>
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li>Add more robust retry logic with longer delays</li>
+                <li>Use Docker Compose healthchecks as shown in Alternative 3</li>
+                <li>Check environment variables match between services</li>
+            </ul>
+            
+            <h4>Issue: "Permission denied" when accessing the database</h4>
+            <p><strong>Possible causes:</strong></p>
+            <ul>
+                <li>Incorrect database credentials</li>
+                <li>Database is not initialized correctly</li>
+            </ul>
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li>Verify environment variables match between services</li>
+                <li>Check the logs of the database container: <code>docker-compose logs db</code></li>
+            </ul>
+            
+            <h4>Issue: "Data lost after restarting containers"</h4>
+            <p><strong>Possible causes:</strong></p>
+            <ul>
+                <li>Volume not configured correctly</li>
+                <li>Using <code>docker-compose down -v</code> which removes volumes</li>
+            </ul>
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li>Ensure volumes are properly defined in docker-compose.yml</li>
+                <li>Use <code>docker-compose down</code> without the -v flag</li>
+                <li>Use docker volume commands to inspect volumes: <code>docker volume ls</code></li>
+            </ul>
+            
+            <h4>Issue: "Container exits immediately"</h4>
+            <p><strong>Possible causes:</strong></p>
+            <ul>
+                <li>Error in the Python script</li>
+                <li>Command specified in Dockerfile is incorrect</li>
+            </ul>
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li>Check logs: <code>docker-compose logs python_app</code></li>
+                <li>Run container with an interactive shell: <code>docker-compose run python_app bash</code></li>
+            </ul>
+        </section>
+
+        <section class="additional-resources">
+            <h3>Additional Resources</h3>
+            
+            <ul>
+                <li><a href="https://docs.docker.com/compose/">Docker Compose Documentation</a> - Official Docker Compose documentation</li>
+                <li><a href="https://docs.docker.com/compose/compose-file/">Docker Compose File Reference</a> - Detailed reference for docker-compose.yml</li>
+                <li><a href="https://pythonspeed.com/docker/">Docker for Python Development</a> - Best practices for Python in Docker</li>
+                <li><a href="https://docs.sqlalchemy.org/en/14/core/engines.html">SQLAlchemy Engine Configuration</a> - For more advanced database connections</li>
+            </ul>
+        </section>
+
+        <section class="conclusion">
+            <h3>Conclusion</h3>
+            
+            <p>In this tutorial, we've created a Docker Compose setup with a Python service and a PostgreSQL database. We followed George Polya's four-step problem-solving method:</p>
+            
+            <ol>
+                <li>We understood the problem of creating a multi-container application with Docker Compose</li>
+                <li>We devised a plan with clear steps for implementation</li>
+                <li>We carried out the plan, creating all necessary files and running our Docker Compose setup</li>
+                <li>We looked back, reviewing our solution and exploring alternatives and improvements</li>
+            </ol>
+            
+            <p>This setup serves as a foundation for more complex applications. The skills you've learned here - defining services, configuring networks, setting up volumes, and connecting services - are fundamental to containerized application development and will be valuable as you build more sophisticated systems.</p>
+            
+            <p>Docker Compose makes it easy to define and share complex applications with multiple services. By using Docker Compose, you can ensure consistent development environments across your team and simplify both development and deployment processes.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

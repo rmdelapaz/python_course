@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creating a docker-compose.yml File - Full Stack Python Developer Course</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Creating a docker-compose.yml File</h1>
+        <h2>Week 1 - Thursday</h2>
+    </header>
+
+    <main>
+        <section class="course-intro">
+            <h3>Lecture Overview</h3>
+            <p>Today we'll explore how to create a docker-compose.yml file, the cornerstone of Docker Compose that allows us to define multi-container applications in a single file. By the end of this session, you'll understand the structure, syntax, and best practices for authoring docker-compose.yml files for your development projects.</p>
+        </section>
+
+        <section>
+            <h3>Understanding the docker-compose.yml File</h3>
+            <p>The docker-compose.yml file is a YAML (YAML Ain't Markup Language) file that defines services, networks, and volumes for a Docker application. It's the blueprint that tells Docker Compose exactly how to build, connect, and run your multi-container application.</p>
+            
+            <div class="key-points">
+                <h4>Why Use docker-compose.yml?</h4>
+                <ul>
+                    <li><strong>Configuration as code:</strong> Your entire application infrastructure is defined in a single file</li>
+                    <li><strong>Reproducibility:</strong> Anyone with your docker-compose.yml can recreate your exact environment</li>
+                    <li><strong>Version control:</strong> Track changes to your infrastructure alongside your application code</li>
+                    <li><strong>Simplicity:</strong> Eliminate long, complex docker run commands</li>
+                    <li><strong>Development/production parity:</strong> Use similar configurations across environments</li>
+                </ul>
+            </div>
+            
+            <div class="analogy">
+                <h4>Analogy: Recipe Book</h4>
+                <p>Think of a docker-compose.yml file as a recipe book for your application:</p>
+                <ul>
+                    <li>The <strong>ingredients list</strong> (services) specifies what components you need</li>
+                    <li>The <strong>preparation instructions</strong> (configuration) detail how each component should be prepared</li>
+                    <li>The <strong>assembly instructions</strong> (networks) explain how components connect together</li>
+                    <li>The <strong>storage containers</strong> (volumes) determine where and how ingredients are stored</li>
+                </ul>
+                <p>Just as a recipe ensures consistent results each time you cook, a docker-compose.yml ensures consistent environments each time you deploy.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>YAML Basics for Docker Compose</h3>
+            <p>Before diving into docker-compose.yml specifics, let's review some fundamental YAML syntax that you'll use frequently:</p>
+            
+            <h4>Key-Value Pairs</h4>
+            <pre><code>key: value</code></pre>
+            
+            <h4>Nested Objects (Indentation Matters!)</h4>
+            <pre><code>parent:
+  child1: value1
+  child2: value2</code></pre>
+            
+            <h4>Lists/Arrays</h4>
+            <pre><code>items:
+  - item1
+  - item2
+  - item3</code></pre>
+            
+            <h4>Alternative List Syntax</h4>
+            <pre><code>items: [item1, item2, item3]</code></pre>
+            
+            <h4>Multi-line Strings</h4>
+            <pre><code>description: |
+  This is a multi-line
+  string that preserves
+  line breaks.</code></pre>
+            
+            <h4>Environment Variables</h4>
+            <pre><code>environment:
+  KEY1: value1
+  KEY2: value2
+
+# Alternative syntax
+environment:
+  - KEY1=value1
+  - KEY2=value2</code></pre>
+            
+            <div class="example">
+                <h4>Common YAML Mistakes to Avoid</h4>
+                <ul>
+                    <li><strong>Inconsistent indentation:</strong> YAML is very particular about spaces (usually 2 spaces per level)</li>
+                    <li><strong>Using tabs instead of spaces:</strong> Always use spaces for indentation in YAML</li>
+                    <li><strong>Missing spaces after colons:</strong> Always put a space after a colon in key-value pairs</li>
+                    <li><strong>Incorrect list syntax:</strong> Make sure dash items have proper indentation and spacing</li>
+                    <li><strong>Unquoted special characters:</strong> If your values contain special characters, use quotes</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>docker-compose.yml Basic Structure</h3>
+            <p>A typical docker-compose.yml file has the following main sections:</p>
+            
+            <pre><code>version: '3'  # Docker Compose file format version
+
+services:      # Containers to be built and run
+  service1:
+    # configuration for service1
+  
+  service2:
+    # configuration for service2
+
+networks:      # Network definitions (optional)
+  network1:
+    # configuration for network1
+
+volumes:       # Volume definitions (optional)
+  volume1:
+    # configuration for volume1</code></pre>
+            
+            <h4>Version</h4>
+            <p>The version key defines which version of the Compose file format you're using. This affects what features are available:</p>
+            <ul>
+                <li><strong>Version 1:</strong> Legacy, not recommended for new projects</li>
+                <li><strong>Version 2:</strong> Added networking and volume features</li>
+                <li><strong>Version 3:</strong> Designed for both Docker Compose and Docker Swarm (recommended for most projects)</li>
+                <li><strong>Version 3.x:</strong> Sub-versions with incremental features</li>
+            </ul>
+            
+            <p>For most development projects, use version 3:</p>
+            <pre><code>version: '3'</code></pre>
+            
+            <h4>Services</h4>
+            <p>The services section defines the containers that make up your application. Each service gets its own section with configuration options:</p>
+            <pre><code>services:
+  web:          # service name
+    build: ./web  # path to Dockerfile
+    ports:
+      - "8000:8000"
+      
+  database:     # another service name
+    image: postgres:13  # use existing image
+    volumes:
+      - db_data:/var/lib/postgresql/data</code></pre>
+            
+            <h4>Networks</h4>
+            <p>The networks section defines custom networks for your services:</p>
+            <pre><code>networks:
+  frontend:    # network name
+    driver: bridge
+  
+  backend:     # another network name
+    driver: bridge</code></pre>
+            
+            <h4>Volumes</h4>
+            <p>The volumes section defines named volumes that services can use for persistent data:</p>
+            <pre><code>volumes:
+  db_data:     # volume name</code></pre>
+            
+            <div class="analogy">
+                <h4>Analogy: Building Blueprint</h4>
+                <p>A docker-compose.yml is like an architectural blueprint:</p>
+                <ul>
+                    <li>The <strong>version</strong> indicates which building code standards you're following</li>
+                    <li>The <strong>services</strong> section defines the rooms and their purposes</li>
+                    <li>The <strong>networks</strong> section outlines the hallways and connections between rooms</li>
+                    <li>The <strong>volumes</strong> section designates storage areas and closets</li>
+                </ul>
+                <p>Just as a blueprint ensures all contractors build the same structure, your docker-compose.yml ensures all developers run the same environment.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Defining Services in Detail</h3>
+            <p>The services section is the heart of your docker-compose.yml file. Let's explore the most common service configuration options:</p>
+            
+            <h4>Image vs. Build</h4>
+            <p>You can either use an existing image or build a custom one:</p>
+            <pre><code># Using an existing image
+services:
+  database:
+    image: mysql:8.0
+
+# Building a custom image
+services:
+  web:
+    build: ./web  # Path to directory containing Dockerfile
+
+# More detailed build configuration
+services:
+  api:
+    build:
+      context: ./api  # Build context (directory)
+      dockerfile: Dockerfile.dev  # Custom Dockerfile name
+      args:  # Build arguments
+        BUILD_ENV: development</code></pre>
+            
+            <h4>Ports</h4>
+            <p>Map container ports to host ports:</p>
+            <pre><code>services:
+  web:
+    ports:
+      - "8000:8000"  # HOST:CONTAINER format
+      - "8001:8001"
+      
+  admin:
+    # Alternative short syntax
+    ports: ["9000:9000", "9001:9001"]</code></pre>
+            
+            <h4>Environment Variables</h4>
+            <p>Set environment variables for containers:</p>
+            <pre><code>services:
+  web:
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=development_key
+      - DATABASE_URL=postgres://user:password@db:5432/dbname
+      
+  # Alternative key-value syntax
+  api:
+    environment:
+      NODE_ENV: development
+      API_KEY: your_api_key</code></pre>
+            
+            <h4>Volumes</h4>
+            <p>Mount volumes to containers for persistent data or development:</p>
+            <pre><code>services:
+  web:
+    volumes:
+      - ./app:/app  # HOST:CONTAINER path binding
+      - logs:/var/log  # Named volume
+
+  db:
+    volumes:
+      - db_data:/var/lib/postgresql/data  # Named volume
+
+volumes:
+  logs:  # Define named volumes
+  db_data:</code></pre>
+            
+            <h4>Depends On</h4>
+            <p>Express dependencies between services:</p>
+            <pre><code>services:
+  web:
+    depends_on:
+      - db
+      - redis
+  
+  worker:
+    depends_on:
+      - db
+      - redis</code></pre>
+            
+            <h4>Networks</h4>
+            <p>Connect services to networks:</p>
+            <pre><code>services:
+  web:
+    networks:
+      - frontend
+      - backend
+  
+  db:
+    networks:
+      - backend
+
+networks:
+  frontend:
+  backend:</code></pre>
+            
+            <h4>Restart Policy</h4>
+            <p>Define how services behave when they exit:</p>
+            <pre><code>services:
+  web:
+    restart: always  # Always restart container
+  
+  db:
+    restart: unless-stopped  # Restart unless explicitly stopped
+  
+  worker:
+    restart: on-failure  # Restart only on failure</code></pre>
+            
+            <h4>Command</h4>
+            <p>Override the default command defined in the Dockerfile:</p>
+            <pre><code>services:
+  web:
+    image: python:3.9
+    command: python manage.py runserver 0.0.0.0:8000
+  
+  # Multi-line command
+  worker:
+    command: |
+      bash -c "
+        python -m pip install -r requirements.txt &&
+        python worker.py
+      "</code></pre>
+            
+            <div class="example">
+                <h4>Real-world Example: Django Application</h4>
+                <p>Here's a more complete example of a Django application with PostgreSQL:</p>
+                <pre><code>version: '3'
+
+services:
+  web:
+    build: ./web
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./web:/code
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - DATABASE_URL=postgres://postgres:password@db:5432/postgres
+    depends_on:
+      - db
+    networks:
+      - web_network
+      - db_network
+    restart: on-failure
+  
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=password
+    networks:
+      - db_network
+    restart: always
+
+networks:
+  web_network:
+  db_network:
+
+volumes:
+  postgres_data:</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Advanced Service Configuration</h3>
+            <p>Let's explore some more advanced service configuration options:</p>
+            
+            <h4>Healthchecks</h4>
+            <p>Define how Docker should check if a container is healthy:</p>
+            <pre><code>services:
+  web:
+    image: nginx
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s  # Grace period to start up</code></pre>
+            
+            <h4>Resource Constraints</h4>
+            <p>Limit resources (CPU, memory) used by containers:</p>
+            <pre><code>services:
+  web:
+    image: nginx
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M</code></pre>
+            
+            <h4>Configs and Secrets</h4>
+            <p>For Docker Swarm mode, define configurations and secrets:</p>
+            <pre><code>services:
+  web:
+    image: nginx
+    configs:
+      - source: nginx_config
+        target: /etc/nginx/nginx.conf
+    secrets:
+      - source: site_cert
+        target: /etc/nginx/ssl/site.crt
+
+configs:
+  nginx_config:
+    file: ./nginx.conf
+
+secrets:
+  site_cert:
+    file: ./site.crt</code></pre>
+            
+            <h4>User and Working Directory</h4>
+            <p>Set the user and working directory for a container:</p>
+            <pre><code>services:
+  app:
+    image: my-app
+    user: "1000:1000"  # Run as specific UID:GID
+    working_dir: /app  # Set working directory</code></pre>
+            
+            <h4>Custom Container Name</h4>
+            <p>Specify a custom name for the container:</p>
+            <pre><code>services:
+  db:
+    image: postgres
+    container_name: my_project_database  # Instead of auto-generated name</code></pre>
+            
+            <h4>Expose vs. Ports</h4>
+            <p>Understand the difference between exposing and publishing ports:</p>
+            <pre><code>services:
+  web:
+    image: nginx
+    expose:
+      - "80"  # Expose to linked services but not to host
+  
+  api:
+    image: my-api
+    ports:
+      - "8080:80"  # Publish to host and linked services</code></pre>
+            
+            <div class="example">
+                <h4>Advanced Example: Complex Web Application</h4>
+                <pre><code>version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - static_files:/var/www/static
+    depends_on:
+      - web
+    networks:
+      - frontend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+  
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.prod
+      args:
+        - BUILD_ENV=production
+    volumes:
+      - static_files:/app/static
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/app
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+    depends_on:
+      - db
+      - redis
+    networks:
+      - frontend
+      - backend
+    healthcheck:
+      test: ["CMD", "python", "manage.py", "check_health"]
+      interval: 60s
+    restart: always
+  
+  worker:
+    build:
+      context: ./worker
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/app
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backend
+    restart: always
+  
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=app
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user"]
+      interval: 30s
+    restart: always
+  
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - backend
+    restart: always
+
+networks:
+  frontend:
+  backend:
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_files:</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Using Environment Variables</h3>
+            <p>Environment variables are crucial for configuration and keeping sensitive data out of your docker-compose.yml file.</p>
+            
+            <h4>Environment Variables in docker-compose.yml</h4>
+            <p>You can refer to environment variables from the shell using the ${VARIABLE} syntax:</p>
+            <pre><code>services:
+  web:
+    image: myapp:${APP_VERSION:-latest}  # Use APP_VERSION or default to 'latest'
+    environment:
+      - SECRET_KEY=${SECRET_KEY}  # Reference host environment variable
+      - DEBUG=${DEBUG:-False}  # With default value</code></pre>
+            
+            <h4>Using .env Files</h4>
+            <p>Docker Compose automatically loads variables from a .env file in the same directory:</p>
+            <pre><code># .env file
+APP_VERSION=1.0.0
+SECRET_KEY=your_secret_key
+DEBUG=True</code></pre>
+            
+            <p>You can also specify a custom .env file:</p>
+            <pre><code># Run with custom .env file
+docker-compose --env-file .env.development up</code></pre>
+            
+            <h4>Using env_file</h4>
+            <p>You can also specify environment files for specific services:</p>
+            <pre><code>services:
+  web:
+    env_file:
+      - .env.web
+      - .env.common
+  
+  db:
+    env_file:
+      - .env.db
+      - .env.common</code></pre>
+            
+            <h4>Environment Variable Precedence</h4>
+            <p>When the same variable appears in multiple places, this is the order of precedence (highest to lowest):</p>
+            <ol>
+                <li>Environment variables set in the shell</li>
+                <li>Values in the environment section of docker-compose.yml</li>
+                <li>Values in env_file files (later files take precedence)</li>
+                <li>Values in the .env file</li>
+                <li>Default values in variable substitution ${VAR:-default}</li>
+            </ol>
+            
+            <div class="example">
+                <h4>Practical Environment Variable Example</h4>
+                <p>Here's how to structure your files:</p>
+                <pre><code># .env (Base environment variables)
+COMPOSE_PROJECT_NAME=myproject
+POSTGRES_PASSWORD=db_password
+DEBUG=False
+
+# .env.development (Environment-specific overrides)
+DEBUG=True
+LOG_LEVEL=DEBUG
+
+# docker-compose.yml
+version: '3'
+
+services:
+  web:
+    build: ./web
+    environment:
+      - DEBUG=${DEBUG}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
+    ports:
+      - "8000:8000"
+    
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:</code></pre>
+                
+                <p>Now run with:</p>
+                <pre><code># For development
+docker-compose --env-file .env.development up
+
+# For production (uses .env by default)
+docker-compose up</code></pre>
+            </div>
+            
+            <div class="analogy">
+                <h4>Analogy: Recipe Variations</h4>
+                <p>Using environment variables is like creating a flexible recipe:</p>
+                <ul>
+                    <li>The main recipe (docker-compose.yml) describes the basic instructions</li>
+                    <li>Environment variables are like annotations for specific tastes (spicy, mild, etc.)</li>
+                    <li>The .env file is your default set of preferences</li>
+                    <li>Different .env files are like variations of the recipe for different occasions</li>
+                </ul>
+                <p>This allows you to adjust your "recipe" for different situations without rewriting the entire thing.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Networking in docker-compose.yml</h3>
+            <p>Docker Compose creates a default network for your application, but you can define custom networks for more control.</p>
+            
+            <h4>Default Networking</h4>
+            <p>By default, Docker Compose creates a single network for your app:</p>
+            <ul>
+                <li>All services are connected to this network</li>
+                <li>Containers can reach each other using service names as hostnames</li>
+                <li>The network name is based on the project name (directory name by default)</li>
+            </ul>
+            
+            <h4>Custom Networks</h4>
+            <p>Define custom networks for more control and isolation:</p>
+            <pre><code>networks:
+  frontend:
+    driver: bridge  # Default driver
+  
+  backend:
+    driver: bridge
+    ipam:  # IP Address Management
+      config:
+        - subnet: 172.16.238.0/24
+          gateway: 172.16.238.1</code></pre>
+            
+            <h4>Connecting Services to Networks</h4>
+            <p>Assign services to specific networks:</p>
+            <pre><code>services:
+  web:
+    # Connected to frontend and backend networks
+    networks:
+      - frontend
+      - backend
+  
+  db:
+    # Connected only to backend network
+    networks:
+      - backend</code></pre>
+            
+            <h4>Network Aliases</h4>
+            <p>Provide additional DNS names for a service:</p>
+            <pre><code>services:
+  web:
+    networks:
+      backend:
+        aliases:
+          - api.local
+          - admin.local</code></pre>
+            
+            <h4>External Networks</h4>
+            <p>Use pre-existing networks:</p>
+            <pre><code>networks:
+  existing_network:
+    external: true  # Use a pre-existing network</code></pre>
+            
+            <div class="example">
+                <h4>Network Isolation Example</h4>
+                <p>Here's an example of network isolation for a three-tier application:</p>
+                <pre><code>version: '3'
+
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    networks:
+      - frontend
+  
+  api:
+    build: ./api
+    networks:
+      - frontend
+      - backend
+  
+  db:
+    image: postgres:13
+    networks:
+      - backend
+
+networks:
+  frontend:
+    # Public-facing network
+  backend:
+    # Internal network, more restricted</code></pre>
+                
+                <p>In this setup:</p>
+                <ul>
+                    <li>Nginx and API can communicate (frontend network)</li>
+                    <li>API and Database can communicate (backend network)</li>
+                    <li>Nginx cannot directly access the Database (network isolation)</li>
+                </ul>
+            </div>
+            
+            <div class="analogy">
+                <h4>Analogy: Office Floor Plan</h4>
+                <p>Networks in Docker Compose are like different areas in an office:</p>
+                <ul>
+                    <li>The <strong>frontend network</strong> is like the reception area (accessible to visitors)</li>
+                    <li>The <strong>backend network</strong> is like the employee-only area (more restricted)</li>
+                    <li>Some services (like API) have access to both areas</li>
+                    <li>Network aliases are like having multiple names on your office door</li>
+                    <li>External networks are like connecting to the building's shared spaces</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Volumes in docker-compose.yml</h3>
+            <p>Volumes provide persistent storage and data sharing between containers.</p>
+            
+            <h4>Types of Volume Mounts</h4>
+            <ul>
+                <li><strong>Named volumes:</strong> Persistent storage managed by Docker</li>
+                <li><strong>Host bind mounts:</strong> Map host directories to container paths</li>
+                <li><strong>Anonymous volumes:</strong> Docker-managed volumes without explicit names</li>
+            </ul>
+            
+            <h4>Defining Named Volumes</h4>
+            <pre><code>volumes:
+  postgres_data:  # Simply declare it
+  
+  redis_data:
+    # Optional: specify a custom name
+    name: myapp_redis_data
+    
+  backups:
+    # Use a specific driver
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/mnt/backup'</code></pre>
+            
+            <h4>Using Volumes in Services</h4>
+            <pre><code>services:
+  web:
+    volumes:
+      # Named volume
+      - logs:/var/log/app
+      
+      # Host bind mount (relative path)
+      - ./src:/app/src
+      
+      # Host bind mount (absolute path)
+      - /var/www/html:/usr/share/nginx/html
+      
+      # Anonymous volume
+      - /tmp/cache
+      
+      # Read-only mount
+      - ./config:/app/config:ro</code></pre>
+            
+            <h4>Volume Configuration Options</h4>
+            <pre><code>volumes:
+  db_data:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/data/db'
+    labels:
+      com.example.environment: "production"
+      com.example.backup: "weekly"</code></pre>
+            
+            <h4>External Volumes</h4>
+            <p>Use pre-existing volumes:</p>
+            <pre><code>volumes:
+  existing_volume:
+    external: true</code></pre>
+            
+            <div class="example">
+                <h4>Data Persistence Example</h4>
+                <p>Using volumes for different data persistence needs:</p>
+                <pre><code>version: '3'
+
+services:
+  web:
+    build: ./web
+    volumes:
+      # Source code for development
+      - ./web:/app
+      # Shared static files
+      - static_files:/app/static
+      # Logs
+      - logs:/var/log/app
+  
+  db:
+    image: postgres:13
+    volumes:
+      # Database data
+      - postgres_data:/var/lib/postgresql/data
+      # Database initialization scripts
+      - ./scripts/db:/docker-entrypoint-initdb.d
+      # Backup location
+      - ./backups:/backups
+  
+  nginx:
+    image: nginx:alpine
+    volumes:
+      # Configuration files
+      - ./nginx/conf:/etc/nginx/conf.d:ro
+      # Shared static files
+      - static_files:/usr/share/nginx/html/static:ro
+
+volumes:
+  postgres_data:
+  static_files:
+  logs:</code></pre>
+            </div>
+            
+            <div class="analogy">
+                <h4>Analogy: Storage Solutions</h4>
+                <p>Different types of volumes in Docker Compose are like different storage solutions:</p>
+                <ul>
+                    <li><strong>Named volumes</strong> are like renting storage units - Docker manages them, and they persist even when you're not using them</li>
+                    <li><strong>Host bind mounts</strong> are like using your own garage for storage - you know exactly where things are on your host</li>
+                    <li><strong>Anonymous volumes</strong> are like temporary storage lockers - useful but harder to find later</li>
+                    <li><strong>Read-only mounts</strong> are like reference libraries - you can look but not modify</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Practical Example: Full-stack Application</h3>
+            <p>Let's build a docker-compose.yml file for a complete full-stack Python application:</p>
+            
+            <pre><code>version: '3.8'
+
+services:
+  # Nginx service for serving static files and reverse proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - static_volume:/usr/share/nginx/html/static
+      - media_volume:/usr/share/nginx/html/media
+    depends_on:
+      - web
+    networks:
+      - frontend
+    restart: unless-stopped
+
+  # Django web application
+  web:
+    build: 
+      context: ./web
+      dockerfile: Dockerfile
+    command: gunicorn app.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - ./web:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
+    expose:
+      - "8000"
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379/0
+      - DEBUG=${DEBUG:-False}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost}
+    depends_on:
+      - db
+      - redis
+    networks:
+      - frontend
+      - backend
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Celery worker for background tasks
+  celery:
+    build: 
+      context: ./web
+      dockerfile: Dockerfile
+    command: celery -A app worker -l info
+    volumes:
+      - ./web:/app
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379/0
+      - DEBUG=${DEBUG:-False}
+      - SECRET_KEY=${SECRET_KEY}
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backend
+    restart: on-failure
+
+  # Celery beat for scheduled tasks
+  celery_beat:
+    build: 
+      context: ./web
+      dockerfile: Dockerfile
+    command: celery -A app beat -l info
+    volumes:
+      - ./web:/app
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379/0
+      - DEBUG=${DEBUG:-False}
+      - SECRET_KEY=${SECRET_KEY}
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backend
+    restart: on-failure
+
+  # PostgreSQL database
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+      - ./db/backups:/backups
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-app}
+    networks:
+      - backend
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and as message broker
+  redis:
+    image: redis:6-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PgAdmin for database management (development only)
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    depends_on:
+      - db
+    networks:
+      - backend
+    profiles:
+      - dev  # Only start with docker-compose --profile dev up
+
+networks:
+  frontend:
+  backend:
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  media_volume:</code></pre>
+            
+            <h4>Corresponding .env File</h4>
+            <pre><code># Project settings
+COMPOSE_PROJECT_NAME=myapp
+
+# PostgreSQL settings
+POSTGRES_USER=app_user
+POSTGRES_PASSWORD=secure_password
+POSTGRES_DB=app_db
+
+# Django settings
+DEBUG=False
+SECRET_KEY=your_secure_django_secret_key
+ALLOWED_HOSTS=localhost,myapp.example.com
+
+# PgAdmin settings
+PGADMIN_EMAIL=admin@example.com
+PGADMIN_PASSWORD=admin_password</code></pre>
+            
+            <h4>Using Profiles</h4>
+            <p>Notice the pgadmin service has a profiles section. This allows you to start certain services only when needed:</p>
+            <pre><code># Start all services except pgadmin
+docker-compose up -d
+
+# Start all services including pgadmin
+docker-compose --profile dev up -d</code></pre>
+            
+            <div class="explanation">
+                <h4>Explanation of this Setup</h4>
+                <ul>
+                    <li><strong>Networks:</strong>
+                        <ul>
+                            <li>Frontend network for web-facing services</li>
+                            <li>Backend network for internal services</li>
+                        </ul>
+                    </li>
+                    <li><strong>Volumes:</strong>
+                        <ul>
+                            <li>postgres_data for database persistence</li>
+                            <li>redis_data for cache persistence</li>
+                            <li>static_volume and media_volume shared between web and nginx</li>
+                        </ul>
+                    </li>
+                    <li><strong>Service Dependencies:</strong>
+                        <ul>
+                            <li>Web depends on database and Redis</li>
+                            <li>Nginx depends on web</li>
+                            <li>Celery worker and beat depend on database and Redis</li>
+                        </ul>
+                    </li>
+                    <li><strong>Environment Variables:</strong>
+                        <ul>
+                            <li>Loaded from .env file</li>
+                            <li>Default values provided where appropriate</li>
+                        </ul>
+                    </li>
+                    <li><strong>Health Checks:</strong>
+                        <ul>
+                            <li>Ensure services are truly ready, not just running</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Best Practices for docker-compose.yml Files</h3>
+            <p>Follow these guidelines to create maintainable and reliable docker-compose.yml files:</p>
+            
+            <h4>Organization and Documentation</h4>
+            <ul>
+                <li><strong>Use comments:</strong> Document non-obvious choices and configurations</li>
+                <li><strong>Group related services:</strong> Keep related services together in the file</li>
+                <li><strong>Maintain a consistent structure:</strong> Follow a standard format across projects</li>
+                <li><strong>Create a README:</strong> Document how to use your docker-compose setup</li>
+            </ul>
+            
+            <h4>Security Best Practices</h4>
+            <ul>
+                <li><strong>Use environment variables for secrets:</strong> Never hardcode sensitive data</li>
+                <li><strong>Apply the principle of least privilege:</strong> Restrict container capabilities</li>
+                <li><strong>Use read-only mounts where possible:</strong> Prevent accidental overwrites</li>
+                <li><strong>Limit exposed ports:</strong> Only expose what's necessary</li>
+                <li><strong>Use networks for isolation:</strong> Separate frontend and backend concerns</li>
+            </ul>
+            
+            <h4>Development vs. Production</h4>
+            <ul>
+                <li><strong>Use multiple compose files:</strong> Base file plus environment-specific overrides</li>
+                <li><strong>Consider using profiles:</strong> For development-only services</li>
+                <li><strong>Volume mounts for development:</strong> Map source code for live reloading</li>
+                <li><strong>Production-ready health checks:</strong> Ensure services are truly ready</li>
+            </ul>
+            
+            <h4>Multiple Compose Files</h4>
+            <p>For different environments, use override files:</p>
+            <ul>
+                <li><strong>docker-compose.yml:</strong> Base configuration</li>
+                <li><strong>docker-compose.override.yml:</strong> Development defaults (loaded automatically)</li>
+                <li><strong>docker-compose.prod.yml:</strong> Production overrides</li>
+            </ul>
+            
+            <pre><code># Base configuration (docker-compose.yml)
+version: '3'
+services:
+  web:
+    build: ./web
+    image: myapp:latest
+
+# Development overrides (docker-compose.override.yml)
+version: '3'
+services:
+  web:
+    volumes:
+      - ./web:/app
+    environment:
+      - DEBUG=True
+
+# Production overrides (docker-compose.prod.yml)
+version: '3'
+services:
+  web:
+    restart: always
+    environment:
+      - DEBUG=False</code></pre>
+            
+            <p>Running with overrides:</p>
+            <pre><code># Development (uses docker-compose.yml + docker-compose.override.yml)
+docker-compose up
+
+# Production (uses docker-compose.yml + docker-compose.prod.yml)
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d</code></pre>
+            
+            <h4>Scale and Performance</h4>
+            <ul>
+                <li><strong>Consider resource constraints:</strong> Set memory and CPU limits</li>
+                <li><strong>Design for horizontal scaling:</strong> Allow multiple instances of stateless services</li>
+                <li><strong>Monitor container health:</strong> Implement health checks</li>
+                <li><strong>Optimize build context:</strong> Use .dockerignore files</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Example: docker-compose.yml for Multiple Environments</h4>
+                <p>Base configuration (docker-compose.yml):</p>
+                <pre><code>version: '3.8'
+
+services:
+  web:
+    build: ./web
+    image: myapp:latest
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+
+volumes:
+  postgres_data:</code></pre>
+                
+                <p>Development overrides (docker-compose.override.yml):</p>
+                <pre><code>version: '3.8'
+
+services:
+  web:
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./web:/app
+    environment:
+      - DEBUG=True
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/app_dev
+    command: python manage.py runserver 0.0.0.0:8000
+
+  db:
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=app_dev
+    ports:
+      - "5432:5432"  # Exposed for local development tools
+
+  # Additional development services
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    networks:
+      - app-network</code></pre>
+                
+                <p>Production overrides (docker-compose.prod.yml):</p>
+                <pre><code>version: '3.8'
+
+services:
+  web:
+    restart: always
+    expose:
+      - "8000"
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgres://app_user:${DB_PASSWORD}@db:5432/app_prod
+    command: gunicorn app.wsgi:application --bind 0.0.0.0:8000
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/prod:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/ssl
+    depends_on:
+      - web
+    networks:
+      - app-network
+    restart: always
+
+  db:
+    restart: always
+    environment:
+      - POSTGRES_USER=app_user
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=app_prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Validation and Debugging</h3>
+            <p>It's important to validate your docker-compose.yml file before using it:</p>
+            
+            <h4>Validating a docker-compose.yml File</h4>
+            <pre><code># Check syntax and configuration
+docker-compose config
+
+# Check without starting services
+docker-compose config --quiet</code></pre>
+            
+            <h4>Common Errors and Solutions</h4>
+            <table>
+                <tr>
+                    <th>Error</th>
+                    <th>Possible Solution</th>
+                </tr>
+                <tr>
+                    <td>YAML syntax error</td>
+                    <td>Check indentation, colons, and spacing</td>
+                </tr>
+                <tr>
+                    <td>Service not found</td>
+                    <td>Check service name in depends_on, links, etc.</td>
+                </tr>
+                <tr>
+                    <td>Port is already allocated</td>
+                    <td>Change host port or stop conflicting service</td>
+                </tr>
+                <tr>
+                    <td>Volume not found</td>
+                    <td>Ensure the volume is defined in the volumes section</td>
+                </tr>
+                <tr>
+                    <td>Build context not found</td>
+                    <td>Check if the build path exists and is correct</td>
+                </tr>
+                <tr>
+                    <td>Network not found</td>
+                    <td>Verify network name and definition</td>
+                </tr>
+            </table>
+            
+            <h4>Debugging Tips</h4>
+            <ul>
+                <li>Use <code>docker-compose ps</code> to check service status</li>
+                <li>Use <code>docker-compose logs [service]</code> to view service logs</li>
+                <li>Use <code>docker-compose exec [service] bash</code> to enter a running container</li>
+                <li>Test services separately before integrating</li>
+                <li>Start with a minimal configuration and build up</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Assignment: Create Your First docker-compose.yml</h3>
+            <p>Now it's time to apply what you've learned by creating your own docker-compose.yml file.</p>
+            
+            <h4>Requirements:</h4>
+            <ol>
+                <li>Create a docker-compose.yml file for a Python application with a database.</li>
+                <li>Include at least one named volume for data persistence.</li>
+                <li>Configure appropriate environment variables.</li>
+                <li>Set up a development configuration with volume mounts for live code updates.</li>
+                <li>Create a README.md file explaining how to use your docker-compose setup.</li>
+            </ol>
+            
+            <h4>Project Structure:</h4>
+            <pre><code>python_db_project/
+├── docker-compose.yml
+├── .env
+├── README.md
+├── app/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── app.py
+└── database/
+    └── init/
+        └── init.sql</code></pre>
+            
+            <h4>Suggested Steps:</h4>
+            <ol>
+                <li>Start by defining your services (Python app and database)</li>
+                <li>Configure volumes for persistent data</li>
+                <li>Set up environment variables</li>
+                <li>Configure networking if needed</li>
+                <li>Validate your compose file with <code>docker-compose config</code></li>
+                <li>Test your setup with <code>docker-compose up</code></li>
+            </ol>
+            
+            <h4>Bonus Challenges:</h4>
+            <ul>
+                <li>Add a third service (e.g., Redis for caching)</li>
+                <li>Create separate development and production configurations</li>
+                <li>Implement health checks for your services</li>
+                <li>Configure resource constraints for containers</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Further Resources</h3>
+            <ul>
+                <li><a href="https://docs.docker.com/compose/compose-file/" target="_blank">Docker Compose File Reference</a></li>
+                <li><a href="https://docs.docker.com/compose/env-file/" target="_blank">Using Environment Variables in Compose</a></li>
+                <li><a href="https://docs.docker.com/compose/networking/" target="_blank">Networking in Compose</a></li>
+                <li><a href="https://docs.docker.com/compose/production/" target="_blank">Using Compose in Production</a></li>
+                <li><a href="https://github.com/docker/awesome-compose" target="_blank">Awesome Docker Compose Examples</a></li>
+                <li><a href="https://yaml.org/spec/1.2/spec.html" target="_blank">YAML Specification</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

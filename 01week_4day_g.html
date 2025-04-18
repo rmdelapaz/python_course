@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hot Reloading with Mounted Volumes - Full Stack Python Developer Course</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Hot Reloading with Mounted Volumes</h1>
+        <h2>Week 1 - Thursday</h2>
+    </header>
+
+    <main>
+        <section class="course-intro">
+            <h3>Lecture Overview</h3>
+            <p>In this session, we'll explore how to set up hot reloading with mounted volumes in Docker Compose. This powerful combination enables a seamless development experience where code changes are instantly reflected in your running application without manual restarts. By the end of this lecture, you'll understand how to configure your development environment for rapid feedback cycles, making you a more productive developer.</p>
+        </section>
+
+        <section>
+            <h3>Understanding Hot Reloading</h3>
+            <p>Before diving into Docker specifics, let's understand what hot reloading is and why it's valuable for development.</p>
+            
+            <h4>What is Hot Reloading?</h4>
+            <p>Hot reloading (sometimes called live reloading) is a development technique that automatically updates your running application when code changes are detected, without requiring a full restart. This dramatically speeds up the development feedback cycle.</p>
+            
+            <h4>Benefits of Hot Reloading</h4>
+            <ul>
+                <li><strong>Faster development cycles</strong> - See changes immediately without manual restarts</li>
+                <li><strong>Maintained application state</strong> - Many hot reloaders preserve application state during updates</li>
+                <li><strong>Improved developer experience</strong> - Less context switching between editing and testing</li>
+                <li><strong>Reduced waiting time</strong> - No need to wait for application startup after each change</li>
+                <li><strong>Easier debugging</strong> - Immediate feedback when fixing issues</li>
+            </ul>
+            
+            <h4>Hot Reloading vs. Live Reloading vs. Hot Module Replacement</h4>
+            <p>These terms are sometimes used interchangeably, but have subtle differences:</p>
+            <ul>
+                <li><strong>Live Reloading</strong> - Refreshes the entire application when files change (full page reload in web apps)</li>
+                <li><strong>Hot Reloading</strong> - Updates only the changed parts of the application while preserving state</li>
+                <li><strong>Hot Module Replacement (HMR)</strong> - Most sophisticated approach, replacing specific modules while maintaining application state and without refreshing the entire page</li>
+            </ul>
+            
+            <div class="analogy">
+                <h4>Analogy: Home Renovation</h4>
+                <p>Different types of reloading are like different approaches to home renovation:</p>
+                <ul>
+                    <li><strong>Manual reloading</strong> is like demolishing and rebuilding the entire house when you want to repaint a room. It's thorough but inefficient.</li>
+                    <li><strong>Live reloading</strong> is like temporarily moving out of the house during renovations. The work gets done, but you have to move everything back in afterward (losing your "state").</li>
+                    <li><strong>Hot reloading</strong> is like renovating a room while you continue to live in the house. There's minimal disruption, and you don't have to move your belongings.</li>
+                    <li><strong>Hot Module Replacement</strong> is like having magical renovation elves who can replace your kitchen cabinets while you're cooking, without disturbing your meal preparation or requiring you to put away your utensils.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Volume Mounts: The Foundation for Hot Reloading</h3>
+            <p>Docker volume mounts create the foundation that makes hot reloading possible in containerized environments.</p>
+            
+            <h4>How Volume Mounts Enable Hot Reloading</h4>
+            <p>When you mount a directory from your host machine into a Docker container, any changes to files in that directory are immediately visible inside the container. This means:</p>
+            <ul>
+                <li>You can edit code on your host machine with your favorite editor</li>
+                <li>Changes are instantly synchronized to the container's filesystem</li>
+                <li>If your application has hot reload capabilities, it will detect these changes</li>
+                <li>The application can then automatically reload the changed parts</li>
+            </ul>
+            
+            <h4>Key Volume Mount Types for Development</h4>
+            <p>For development with hot reloading, we primarily use bind mounts:</p>
+            <pre><code>services:
+  web:
+    build: ./app
+    volumes:
+      - ./app:/app  # Bind mount from host to container</code></pre>
+            
+            <p>This bind mount maps the <code>./app</code> directory on your host to the <code>/app</code> directory in the container.</p>
+            
+            <h4>What to Mount and What Not to Mount</h4>
+            <p>When setting up volume mounts for hot reloading, consider:</p>
+            <ul>
+                <li><strong>Do mount:</strong>
+                    <ul>
+                        <li>Source code files that you'll be editing</li>
+                        <li>Templates, static assets, and configuration files</li>
+                        <li>Any files you want to modify during development</li>
+                    </ul>
+                </li>
+                <li><strong>Don't mount:</strong>
+                    <ul>
+                        <li>Dependency directories (node_modules, virtualenv, etc.)</li>
+                        <li>Build artifacts or compiled files</li>
+                        <li>Large binary files that won't change</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <div class="example">
+                <h4>Example: Selective Volume Mounting</h4>
+                <pre><code>services:
+  web:
+    build: ./app
+    volumes:
+      - ./app/src:/app/src              # Mount source code
+      - ./app/templates:/app/templates  # Mount templates
+      - ./app/static:/app/static        # Mount static files
+      # Don't mount dependencies or build files</code></pre>
+                <p>This approach provides a good balance between hot reloading capability and performance.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Hot Reloading with Different Frameworks</h3>
+            <p>Different languages and frameworks have different approaches to hot reloading. Let's explore how to set it up for common technologies.</p>
+            
+            <h4>Python Flask</h4>
+            <p>Flask includes a development server with hot reloading capabilities:</p>
+            <pre><code># docker-compose.yml
+services:
+  flask-app:
+    build: ./flask-app
+    volumes:
+      - ./flask-app:/app
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development  # Enables debug mode with auto-reload
+    ports:
+      - "5000:5000"
+    command: flask run --host=0.0.0.0</code></pre>
+            
+            <p>In Flask, setting <code>FLASK_ENV=development</code> enables debug mode, which includes auto-reloading when files change.</p>
+            
+            <h4>Python Django</h4>
+            <p>Django's development server also includes hot reloading:</p>
+            <pre><code># docker-compose.yml
+services:
+  django-app:
+    build: ./django-app
+    volumes:
+      - ./django-app:/app
+    ports:
+      - "8000:8000"
+    command: python manage.py runserver 0.0.0.0:8000</code></pre>
+            
+            <p>Django's <code>runserver</code> command automatically watches for file changes and reloads the application.</p>
+            
+            <h4>Node.js with Nodemon</h4>
+            <p>For Node.js applications, Nodemon provides hot reloading:</p>
+            <pre><code># docker-compose.yml
+services:
+  node-app:
+    build: ./node-app
+    volumes:
+      - ./node-app:/app
+      - /app/node_modules  # Don't mount node_modules
+    ports:
+      - "3000:3000"
+    command: npx nodemon app.js</code></pre>
+            
+            <p>Note the use of <code>/app/node_modules</code> without a host path. This creates an anonymous volume that prevents the host's node_modules folder (if any) from overriding the container's.</p>
+            
+            <p>You'll need to include nodemon in your project:</p>
+            <pre><code># package.json
+{
+  "name": "node-app",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}</code></pre>
+            
+            <h4>React with Create React App</h4>
+            <p>React applications built with Create React App have hot reloading built in:</p>
+            <pre><code># docker-compose.yml
+services:
+  react-app:
+    build: ./react-app
+    volumes:
+      - ./react-app:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - CHOKIDAR_USEPOLLING=true  # Improves file watching in Docker
+    command: npm start</code></pre>
+            
+            <p>The <code>CHOKIDAR_USEPOLLING=true</code> environment variable improves file change detection inside Docker.</p>
+            
+            <h4>Vue.js with Vue CLI</h4>
+            <p>Vue.js applications created with Vue CLI also support hot reloading:</p>
+            <pre><code># docker-compose.yml
+services:
+  vue-app:
+    build: ./vue-app
+    volumes:
+      - ./vue-app:/app
+      - /app/node_modules
+    ports:
+      - "8080:8080"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    command: npm run serve</code></pre>
+            
+            <div class="example">
+                <h4>Framework-specific Hot Reload Configuration</h4>
+                <table>
+                    <tr>
+                        <th>Framework</th>
+                        <th>Command</th>
+                        <th>Environment Variables</th>
+                        <th>Notes</th>
+                    </tr>
+                    <tr>
+                        <td>Flask</td>
+                        <td><code>flask run --host=0.0.0.0</code></td>
+                        <td><code>FLASK_ENV=development</code></td>
+                        <td>Debug mode must be enabled</td>
+                    </tr>
+                    <tr>
+                        <td>Django</td>
+                        <td><code>python manage.py runserver 0.0.0.0:8000</code></td>
+                        <td>None required</td>
+                        <td>Built-in to runserver</td>
+                    </tr>
+                    <tr>
+                        <td>Express (Node.js)</td>
+                        <td><code>npx nodemon app.js</code></td>
+                        <td>None required</td>
+                        <td>Requires nodemon</td>
+                    </tr>
+                    <tr>
+                        <td>React</td>
+                        <td><code>npm start</code></td>
+                        <td><code>CHOKIDAR_USEPOLLING=true</code></td>
+                        <td>Uses webpack-dev-server</td>
+                    </tr>
+                    <tr>
+                        <td>Vue.js</td>
+                        <td><code>npm run serve</code></td>
+                        <td><code>CHOKIDAR_USEPOLLING=true</code></td>
+                        <td>Uses vue-cli-service</td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <section>
+            <h3>Practical Implementation: Python Flask Example</h3>
+            <p>Let's create a complete example of a Flask application with hot reloading using Docker Compose.</p>
+            
+            <h4>Project Structure</h4>
+            <pre><code>flask_hot_reload/
+├── docker-compose.yml
+├── app/
+│   ├── Dockerfile
+│   ├── app.py
+│   ├── requirements.txt
+│   └── templates/
+│       └── index.html
+└── README.md</code></pre>
+            
+            <h4>Step 1: Create Flask Application</h4>
+            <p>First, let's create a simple Flask application in <code>app/app.py</code>:</p>
+            <pre><code>from flask import Flask, render_template
+import os
+
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return render_template('index.html', message="Hello from Flask!")
+
+@app.route('/info')
+def info():
+    return {
+        'app_name': 'Flask Hot Reload Demo',
+        'environment': os.environ.get('FLASK_ENV', 'development'),
+        'debug_mode': app.debug
+    }
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)</code></pre>
+            
+            <h4>Step 2: Create HTML Template</h4>
+            <p>Create <code>app/templates/index.html</code>:</p>
+            <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Flask Hot Reload Demo&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .message {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            border-left: 5px solid #3498db;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="container"&gt;
+        &lt;h1&gt;Flask Hot Reload Demo&lt;/h1&gt;
+        &lt;div class="message"&gt;
+            &lt;p&gt;{{ message }}&lt;/p&gt;
+            &lt;p&gt;Edit the files on your host machine to see hot reloading in action.&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            
+            <h4>Step 3: Create Requirements File</h4>
+            <p>Create <code>app/requirements.txt</code>:</p>
+            <pre><code>flask==2.0.1
+werkzeug==2.0.1</code></pre>
+            
+            <h4>Step 4: Create Dockerfile</h4>
+            <p>Create <code>app/Dockerfile</code>:</p>
+            <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# No need to COPY app code - we'll use a volume mount
+
+ENV PYTHONUNBUFFERED=1
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=development
+
+EXPOSE 5000
+
+CMD ["flask", "run", "--host=0.0.0.0"]</code></pre>
+            
+            <h4>Step 5: Create Docker Compose File</h4>
+            <p>Create <code>docker-compose.yml</code> in the project root:</p>
+            <pre><code>version: '3.8'
+
+services:
+  web:
+    build: ./app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app:/app
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - PORT=5000</code></pre>
+            
+            <h4>Step 6: Start the Application</h4>
+            <pre><code>cd flask_hot_reload
+docker-compose up</code></pre>
+            
+            <h4>Step 7: Test Hot Reloading</h4>
+            <ol>
+                <li>Open your browser and visit <a href="http://localhost:5000">http://localhost:5000</a></li>
+                <li>Now, let's make some changes to see hot reloading in action:
+                    <ul>
+                        <li>Edit <code>app/app.py</code> to change the message:
+                            <pre><code>@app.route('/')
+def hello():
+    return render_template('index.html', message="Hot reloading is awesome!")</code></pre>
+                        </li>
+                        <li>Edit <code>app/templates/index.html</code> to change the styling:
+                            <pre><code>h1 {
+    color: #e74c3c;  /* Change color to red */
+    border-bottom: 2px solid #e74c3c;
+    padding-bottom: 10px;
+}</code></pre>
+                        </li>
+                    </ul>
+                </li>
+                <li>Refresh your browser and see the changes immediately without restarting the container</li>
+            </ol>
+            
+            <div class="analogy">
+                <h4>Analogy: Magic Canvas</h4>
+                <p>Hot reloading with mounted volumes is like having a magic canvas where:</p>
+                <ul>
+                    <li>You're painting on one side (your local machine)</li>
+                    <li>An audience is watching the painting from the other side (the browser)</li>
+                    <li>Every brushstroke you make appears instantly on both sides</li>
+                    <li>You don't need to flip the canvas or show the audience a new painting</li>
+                    <li>The painting continues to evolve in real-time as you work</li>
+                </ul>
+                <p>This is dramatically different from traditional development where you'd need to finish the entire painting, then show it to the audience, get feedback, and start a new painting.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Advanced Hot Reloading Techniques</h3>
+            <p>Now that we understand the basics, let's explore some advanced techniques for hot reloading.</p>
+            
+            <h4>Hot Module Replacement in JavaScript Applications</h4>
+            <p>Hot Module Replacement (HMR) is a more sophisticated form of hot reloading that preserves application state:</p>
+            <pre><code># docker-compose.yml for a React application with HMR
+services:
+  react-app:
+    build: ./react-app
+    volumes:
+      - ./react-app:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - FAST_REFRESH=true  # Enable Fast Refresh (React's implementation of HMR)
+    command: npm start</code></pre>
+            
+            <p>In a React application, you can use HMR by:</p>
+            <pre><code>// In your index.js
+if (module.hot) {
+  module.hot.accept();
+}</code></pre>
+            
+            <h4>Using Docker Compose Watch</h4>
+            <p>Docker Compose v2.22.0 and later includes a <code>watch</code> feature that can enhance hot reloading:</p>
+            <pre><code># docker-compose.yml with watch configuration
+services:
+  web:
+    build: ./app
+    ports:
+      - "5000:5000"
+    develop:
+      watch:
+        - path: ./app
+          target: /app
+          action: sync</code></pre>
+            
+            <p>To use this feature, run:</p>
+            <pre><code>docker compose watch</code></pre>
+            
+            <h4>Advanced Python Hot Reloading with Watchdog</h4>
+            <p>For more control over Python reloading, you can use Watchdog with Flask:</p>
+            <pre><code># Add to requirements.txt
+watchdog==2.1.6
+
+# docker-compose.yml
+services:
+  flask-app:
+    build: ./flask-app
+    volumes:
+      - ./flask-app:/app
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - WATCHDOG_IGNORE_DIRECTORIES=__pycache__,*.pyc
+    command: flask run --host=0.0.0.0 --extra-files templates/</code></pre>
+            
+            <h4>Database Schema Updates</h4>
+            <p>For applications with databases, you might want to automatically apply schema changes:</p>
+            <pre><code># For Flask with SQLAlchemy
+services:
+  flask-app:
+    build: ./flask-app
+    volumes:
+      - ./flask-app:/app
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+    command: sh -c "flask db upgrade && flask run --host=0.0.0.0"</code></pre>
+            
+            <div class="example">
+                <h4>Advanced React Hot Reloading Configuration</h4>
+                <p>For React applications, you can enhance hot reloading with a custom <code>.env</code> file:</p>
+                <pre><code># .env in your React project
+FAST_REFRESH=true
+CHOKIDAR_USEPOLLING=true
+WDS_SOCKET_PORT=0  # This helps with Docker port mapping issues
+REACT_EDITOR=code  # Opens errors in VS Code</code></pre>
+                
+                <p>And configure <code>docker-compose.yml</code>:</p>
+                <pre><code>services:
+  react-app:
+    build: ./react-app
+    volumes:
+      - ./react-app:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - WDS_SOCKET_HOST=localhost  # For WebSocket connections through Docker
+      - WDS_SOCKET_PORT=3000
+    command: npm start</code></pre>
+                
+                <p>This configuration provides a smoother hot reloading experience for React applications in Docker.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Performance Optimization for Hot Reloading</h3>
+            <p>Hot reloading with mounted volumes can sometimes face performance challenges. Here's how to optimize your setup:</p>
+            
+            <h4>Volume Mount Performance</h4>
+            <ul>
+                <li><strong>Mount selectively</strong> - Only mount directories that need hot reloading</li>
+                <li><strong>Exclude node_modules</strong> - Use anonymous volumes for dependencies</li>
+                <li><strong>Avoid mounting build directories</strong> - Keep build artifacts in the container</li>
+                <li><strong>Use bind mounts for code, named volumes for data</strong> - Balance performance and persistence</li>
+            </ul>
+            
+            <h4>Optimize for Different Operating Systems</h4>
+            <p>Performance can vary across operating systems:</p>
+            <ul>
+                <li><strong>Linux</strong> - Generally the best performance with Docker</li>
+                <li><strong>macOS</strong> - Use consistent mounts with Docker Desktop settings:
+                    <pre><code># For macOS in docker-compose.yml
+volumes:
+  - ./app:/app:delegated  # Improves performance by prioritizing container's view</code></pre>
+                </li>
+                <li><strong>Windows</strong> - Use WSL2 for better performance:
+                    <ul>
+                        <li>Store your project in the WSL2 filesystem, not Windows</li>
+                        <li>Use Linux file paths in your Docker Compose files</li>
+                        <li>Use VS Code's Remote - WSL extension for editing</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h4>File Watching Optimizations</h4>
+            <ul>
+                <li><strong>Use polling when necessary</strong> - Some environments need polling for consistent file watching</li>
+                <li><strong>Ignore directories that change frequently</strong> - Exclude temporary files, logs, etc.</li>
+                <li><strong>Throttle file watchers</strong> - Prevent too many reload triggers</li>
+            </ul>
+            
+            <pre><code># Example of optimized file watching for Express.js
+services:
+  node-app:
+    command: npx nodemon --watch src --ignore src/logs --delay 1 app.js</code></pre>
+            
+            <div class="analogy">
+                <h4>Analogy: Traffic Management</h4>
+                <p>Optimizing hot reloading is like managing traffic flow in a city:</p>
+                <ul>
+                    <li><strong>Selective mounting</strong> is like creating express lanes for important traffic</li>
+                    <li><strong>Excluding node_modules</strong> is like redirecting heavy trucks to bypasses</li>
+                    <li><strong>File watching optimizations</strong> are like installing smart traffic lights that respond efficiently</li>
+                    <li><strong>OS-specific optimizations</strong> are like adapting traffic patterns to the specific geography of each neighborhood</li>
+                </ul>
+                <p>Just as good traffic management makes a city more efficient, good hot reloading optimizations make development more productive.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Troubleshooting Hot Reloading Issues</h3>
+            <p>Hot reloading can sometimes be tricky to get working correctly. Here are common issues and solutions:</p>
+            
+            <h4>Issue 1: Changes Not Being Detected</h4>
+            <p><strong>Symptoms:</strong> You make changes to files but the application doesn't reload</p>
+            <p><strong>Possible Solutions:</strong></p>
+            <ul>
+                <li>Verify your volume mounts are correct</li>
+                <li>Check if file watching is enabled in your application</li>
+                <li>Try enabling polling for file watching</li>
+                <li>Ensure your editor is saving the files correctly</li>
+                <li>Check file permissions</li>
+            </ul>
+            <p><strong>Example fix for React applications:</strong></p>
+            <pre><code># In docker-compose.yml
+environment:
+  - CHOKIDAR_USEPOLLING=true</code></pre>
+            
+            <h4>Issue 2: Application Restarts but Doesn't Reflect Changes</h4>
+            <p><strong>Symptoms:</strong> You can see in logs that the application is restarting, but your changes aren't visible</p>
+            <p><strong>Possible Solutions:</strong></p>
+            <ul>
+                <li>Clear browser cache or hard refresh (Ctrl+F5 or Cmd+Shift+R)</li>
+                <li>Check if you're editing the correct files</li>
+                <li>Verify the application is actually using the mounted files</li>
+                <li>Look for errors in the application logs</li>
+            </ul>
+            
+            <h4>Issue 3: Hot Reloading Causes Application Errors</h4>
+            <p><strong>Symptoms:</strong> Changes cause crashes or errors in the application</p>
+            <p><strong>Possible Solutions:</strong></p>
+            <ul>
+                <li>Make smaller, incremental changes</li>
+                <li>Check application logs for specific errors</li>
+                <li>Ensure all required files are updated together</li>
+                <li>For Python, check for syntax errors before saving</li>
+            </ul>
+            
+            <h4>Issue 4: Hot Reloading is Too Slow</h4>
+            <p><strong>Symptoms:</strong> There's a significant delay between making changes and seeing them</p>
+            <p><strong>Possible Solutions:</strong></p>
+            <ul>
+                <li>Optimize volume mounts as described in the performance section</li>
+                <li>Use a more efficient file watching mechanism</li>
+                <li>Reduce the size of the watched directory</li>
+                <li>Consider OS-specific optimizations</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Debugging Hot Reloading</h4>
+                <p>To debug hot reloading issues, follow these steps:</p>
+                <ol>
+                    <li>Check container logs for reload events:
+                        <pre><code>docker-compose logs -f</code></pre>
+                    </li>
+                    <li>Verify that file changes are visible in the container:
+                        <pre><code>docker-compose exec service_name ls -la /path/to/file
+# Create a test file on host
+touch test-file.txt
+# Check if it appears in container
+docker-compose exec service_name ls -la /path/to/test-file.txt</code></pre>
+                    </li>
+                    <li>Test the file watching mechanism:
+                        <pre><code># For Python Flask applications
+docker-compose exec web python -c "import flask; print(flask.__version__)"
+# Check if debug mode is enabled
+docker-compose exec web flask --help
+# Check environment variables
+docker-compose exec web env | grep FLASK</code></pre>
+                    </li>
+                    <li>Restart the application with more verbose logging:
+                        <pre><code># For Flask
+docker-compose exec web flask run --host=0.0.0.0 --debug</code></pre>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <section>
+            <h3>Real-world Example: Full Stack Application</h3>
+            <p>Let's create a more complete example with a full stack application using Flask for the backend, React for the frontend, and a PostgreSQL database.</p>
+            
+            <h4>Project Structure</h4>
+            <pre><code>fullstack_hot_reload/
+├── docker-compose.yml
+├── backend/
+│   ├── Dockerfile
+│   ├── app.py
+│   └── requirements.txt
+├── frontend/
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── public/
+│   └── src/
+└── .env</code></pre>
+            
+            <h4>Backend Setup</h4>
+            <p>Create <code>backend/app.py</code>:</p>
+            <pre><code>from flask import Flask, jsonify
+from flask_cors import CORS
+import os
+
+app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
+
+@app.route('/api/hello')
+def hello():
+    return jsonify({
+        'message': 'Hello from Flask!',
+        'environment': os.environ.get('FLASK_ENV', 'development')
+    })
+
+@app.route('/api/data')
+def get_data():
+    # This data can be modified to test hot reloading
+    return jsonify({
+        'items': [
+            {'id': 1, 'name': 'Item 1'},
+            {'id': 2, 'name': 'Item 2'},
+            {'id': 3, 'name': 'Item 3'}
+        ]
+    })
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)</code></pre>
+            
+            <p>Create <code>backend/requirements.txt</code>:</p>
+            <pre><code>flask==2.0.1
+flask-cors==3.0.10
+werkzeug==2.0.1</code></pre>
+            
+            <p>Create <code>backend/Dockerfile</code>:</p>
+            <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+ENV PYTHONUNBUFFERED=1
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=development
+
+EXPOSE 5000
+
+CMD ["flask", "run", "--host=0.0.0.0"]</code></pre>
+            
+            <h4>Frontend Setup</h4>
+            <p>For a React frontend, you can use Create React App to generate the basic structure. Here's the <code>frontend/Dockerfile</code>:</p>
+            <pre><code>FROM node:14
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm install
+
+ENV PATH /app/node_modules/.bin:$PATH
+ENV CHOKIDAR_USEPOLLING=true
+ENV WDS_SOCKET_PORT=0
+
+EXPOSE 3000
+
+CMD ["npm", "start"]</code></pre>
+            
+            <p>Create a simple React component in <code>frontend/src/App.js</code>:</p>
+            <pre><code>import React, { useState, useEffect } from 'react';
+import './App.css';
+
+function App() {
+  const [message, setMessage] = useState('');
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch message from backend API
+    fetch('http://localhost:5000/api/hello')
+      .then(response => response.json())
+      .then(data => {
+        setMessage(data.message);
+        setLoading(false);
+      });
+    
+    // Fetch items from backend API
+    fetch('http://localhost:5000/api/data')
+      .then(response => response.json())
+      .then(data => {
+        setItems(data.items);
+      });
+  }, []);
+
+  return (
+    <div className="App">
+      <header className="App-header">
+        <h1>Full Stack Hot Reloading Demo</h1>
+        {loading ? (
+          <p>Loading...</p>
+        ) : (
+          <div>
+            <p className="message">{message}</p>
+            <p>Edit <code>src/App.js</code> and save to reload the frontend.</p>
+            <p>Edit <code>backend/app.py</code> and save to reload the backend.</p>
+            
+            <h2>Items from API:</h2>
+            <ul>
+              {items.map(item => (
+                <li key={item.id}>{item.name}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </header>
+    </div>
+  );
+}
+
+export default App;</code></pre>
+            
+            <h4>Docker Compose Configuration</h4>
+            <p>Create <code>docker-compose.yml</code>:</p>
+            <pre><code>version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WDS_SOCKET_PORT=0
+      - REACT_APP_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+    restart: unless-stopped</code></pre>
+            
+            <h4>Running and Testing the Application</h4>
+            <pre><code>cd fullstack_hot_reload
+docker-compose up</code></pre>
+            
+            <p>Now you can:</p>
+            <ol>
+                <li>Access the React frontend at <a href="http://localhost:3000">http://localhost:3000</a></li>
+                <li>Access the Flask API at <a href="http://localhost:5000/api/hello">http://localhost:5000/api/hello</a></li>
+                <li>Test hot reloading by:
+                    <ul>
+                        <li>Editing <code>frontend/src/App.js</code> to change the UI</li>
+                        <li>Editing <code>backend/app.py</code> to change the API responses</li>
+                    </ul>
+                </li>
+            </ol>
+            
+            <div class="example">
+                <h4>Testing Backend Hot Reloading</h4>
+                <p>To demonstrate backend hot reloading, modify the data API in <code>backend/app.py</code>:</p>
+                <pre><code>@app.route('/api/data')
+def get_data():
+    # Modified data to test hot reloading
+    return jsonify({
+        'items': [
+            {'id': 1, 'name': 'Modified Item 1'},
+            {'id': 2, 'name': 'Modified Item 2'},
+            {'id': 3, 'name': 'Modified Item 3'},
+            {'id': 4, 'name': 'New Item 4'}
+        ]
+    })</code></pre>
+                
+                <p>Save the file and refresh the frontend. You should see the updated data without restarting any containers.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Hot Reloading Best Practices</h3>
+            <p>Based on real-world experience, here are best practices for hot reloading with mounted volumes:</p>
+            
+            <h4>Configuration Best Practices</h4>
+            <ul>
+                <li><strong>Use the right development server</strong> - Ensure you're using a server with hot reload capabilities</li>
+                <li><strong>Configure appropriate volume mounts</strong> - Mount only what's needed for development</li>
+                <li><strong>Set environment variables</strong> - Enable development mode and debugging features</li>
+                <li><strong>Use consistent file paths</strong> - Avoid path issues across different operating systems</li>
+                <li><strong>Enable verbose logging</strong> - Makes it easier to debug reload issues</li>
+            </ul>
+            
+            <h4>Development Workflow Best Practices</h4>
+            <ul>
+                <li><strong>Make incremental changes</strong> - Small changes are less likely to break hot reloading</li>
+                <li><strong>Pay attention to logs</strong> - Watch for reload events and errors</li>
+                <li><strong>Use browser developer tools</strong> - Helps identify frontend issues</li>
+                <li><strong>Disable caching during development</strong> - Prevents stale content issues</li>
+                <li><strong>Test on multiple browsers</strong> - Some hot reloading issues are browser-specific</li>
+            </ul>
+            
+            <h4>Project Structure Best Practices</h4>
+            <ul>
+                <li><strong>Organize code for hot reloading</strong> - Structure your project to support efficient reloading</li>
+                <li><strong>Separate dependency management</strong> - Keep dependencies in the container, not mounted volumes</li>
+                <li><strong>Use .dockerignore files</strong> - Prevent unnecessary files from being included</li>
+                <li><strong>Maintain consistent line endings</strong> - Prevents issues across different operating systems</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Example: Comprehensive .dockerignore</h4>
+                <p>Create a comprehensive <code>.dockerignore</code> file to exclude unnecessary files:</p>
+                <pre><code># Version control
+.git
+.gitignore
+
+# Dependencies
+node_modules
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Development files
+.vscode
+.idea
+*.log
+coverage
+.nyc_output
+.env
+.env.*
+
+# Build artifacts
+dist
+build
+*.egg-info
+
+# Documentation
+docs
+README.md
+LICENSE
+
+# Test files
+tests
+test
+*.test.js
+*.spec.js</code></pre>
+                
+                <p>This helps improve build performance and reduces the image size.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Practical Exercise: Setting Up Hot Reloading</h3>
+            <p>Now it's time to practice setting up hot reloading by yourself. Choose one of these exercises based on your interests:</p>
+            
+            <h4>Exercise Option 1: Python Flask Hot Reloading</h4>
+            <ol>
+                <li>Create a new project directory with this structure:
+                    <pre><code>flask_exercise/
+├── docker-compose.yml
+├── app/
+│   ├── Dockerfile
+│   ├── app.py
+│   ├── requirements.txt
+│   └── templates/
+│       └── index.html</code></pre>
+                </li>
+                <li>Create a Flask application with at least two routes</li>
+                <li>Configure Docker Compose with volume mounts and environment variables for hot reloading</li>
+                <li>Test hot reloading by making changes to routes, templates, and adding static files</li>
+                <li>Add a simple database (SQLite is fine) and test hot reloading with model changes</li>
+            </ol>
+            
+            <h4>Exercise Option 2: React Hot Module Replacement</h4>
+            <ol>
+                <li>Create a new project directory with this structure:
+                    <pre><code>react_exercise/
+├── docker-compose.yml
+├── app/
+│   ├── Dockerfile
+│   ├── public/
+│   └── src/
+│       ├── App.js
+│       └── components/</code></pre>
+                </li>
+                <li>Create a React application with at least two components</li>
+                <li>Configure Docker Compose with optimized volume mounts for React development</li>
+                <li>Enable Hot Module Replacement in your configuration</li>
+                <li>Test HMR by making changes to components and styles</li>
+                <li>Add a mock API service and test state preservation during hot reloading</li>
+            </ol>
+            
+            <p>For either exercise, focus on implementing best practices for hot reloading performance and troubleshooting any issues that arise.</p>
+        </section>
+
+        <section>
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li><strong>Hot reloading combined with volume mounts</strong> provides a powerful development workflow</li>
+                <li><strong>Different frameworks have different hot reloading mechanisms</strong>, but the principles are similar</li>
+                <li><strong>Properly configured volumes</strong> are essential for effective hot reloading</li>
+                <li><strong>Performance optimizations</strong> can significantly improve the development experience</li>
+                <li><strong>Troubleshooting skills</strong> are important for resolving hot reloading issues</li>
+                <li><strong>Best practices</strong> help ensure a smooth development workflow across team members</li>
+            </ul>
+            
+            <p>By mastering hot reloading with mounted volumes, you'll dramatically improve your development efficiency and reduce the time between making changes and seeing the results.</p>
+        </section>
+
+        <section>
+            <h3>Further Resources</h3>
+            <ul>
+                <li><a href="https://docs.docker.com/storage/volumes/" target="_blank">Docker Volumes Documentation</a></li>
+                <li><a href="https://docs.docker.com/compose/compose-file/compose-file-v3/#volumes" target="_blank">Docker Compose Volumes Documentation</a></li>
+                <li><a href="https://docs.docker.com/docker-for-mac/osxfs-caching/" target="_blank">Docker Desktop Volume Caching (macOS)</a></li>
+                <li><a href="https://blog.docker.com/2020/08/docker-compose-watch-mode/" target="_blank">Docker Compose Watch Mode</a></li>
+                <li><a href="https://flask.palletsprojects.com/en/2.0.x/cli/#auto-restart" target="_blank">Flask Auto-restart Documentation</a></li>
+                <li><a href="https://create-react-app.dev/docs/developing-components-in-isolation/" target="_blank">Create React App Hot Reloading</a></li>
+                <li><a href="https://webpack.js.org/concepts/hot-module-replacement/" target="_blank">Webpack Hot Module Replacement</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building and Running Your Own Image</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Building and Running Your Own Image</h1>
+        <h2>Week 1, Wednesday - Afternoon Session</h2>
+    </header>
+
+    <main>
+        <section class="lecture-intro">
+            <h3>Lecture Overview</h3>
+            <p>Now that we understand the basics of Dockerfiles, let's explore the complete process of building and running your own custom Docker images. In this session, we'll cover the entire workflow from creating a Dockerfile to running and debugging containers based on your custom images. We'll build several practical examples and explore strategies for optimizing your Docker images for different use cases.</p>
+        </section>
+
+        <section>
+            <h3>The Image Building Process</h3>
+            
+            <p>Before diving into specific examples, let's understand how Docker builds images from Dockerfiles.</p>
+            
+            <h4>Understanding Docker Build Context</h4>
+            <p>When you run <code>docker build</code>, Docker sends the entire "build context" to the Docker daemon. The build context includes all files and directories in the path or URL specified at the end of the build command.</p>
+            
+            <pre><code>docker build -t myimage:tag .</code></pre>
+            
+            <p>In this example, the <code>.</code> represents the current directory, which becomes the build context. This is important to understand because:</p>
+            <ul>
+                <li>A large build context can slow down the build process</li>
+                <li>Only files within the build context can be used in <code>COPY</code> and <code>ADD</code> instructions</li>
+                <li>You can use <code>.dockerignore</code> to exclude files from the build context</li>
+            </ul>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> The build context is like packing a suitcase for a trip. You gather all the items you might need (files in your directory), but you can also decide to leave certain things behind (.dockerignore files). Once packed, you hand your suitcase to the airline (Docker daemon). If your suitcase is too large or contains prohibited items, you'll have problems – just like with Docker builds.</p>
+            </div>
+            
+            <h4>The Build Process in Detail</h4>
+            <p>When Docker builds an image, it follows these steps:</p>
+            <ol>
+                <li>Send the build context to the Docker daemon</li>
+                <li>Process instructions in the Dockerfile sequentially</li>
+                <li>For each instruction:
+                    <ul>
+                        <li>Check if there's a cached layer that can be reused</li>
+                        <li>If not, create a temporary container from the previous layer</li>
+                        <li>Execute the instruction in the temporary container</li>
+                        <li>Commit the changes as a new layer</li>
+                        <li>Remove the temporary container</li>
+                    </ul>
+                </li>
+                <li>Tag the final image with the specified name and tag</li>
+            </ol>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> Keep your build context as small as possible by using <code>.dockerignore</code> files to exclude unnecessary files and directories. This speeds up the build process and reduces the risk of accidentally including sensitive information.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Essential Build Commands and Options</h3>
+            
+            <h4>Basic Build Command</h4>
+            <p>The basic syntax for building a Docker image is:</p>
+            
+            <pre><code>docker build [OPTIONS] PATH | URL</code></pre>
+            
+            <p>Common options include:</p>
+            <ul>
+                <li><code>-t, --tag</code>: Name and optionally tag the image (e.g., <code>name:tag</code>)</li>
+                <li><code>-f, --file</code>: Specify the Dockerfile to use (default is <code>PATH/Dockerfile</code>)</li>
+                <li><code>--no-cache</code>: Do not use cache when building the image</li>
+                <li><code>--pull</code>: Always attempt to pull a newer version of the base image</li>
+                <li><code>--build-arg</code>: Set build-time variables (to be used with <code>ARG</code> in the Dockerfile)</li>
+            </ul>
+            
+            <h4>Tagging Strategies</h4>
+            <p>Tags help you identify and version your images. Common tagging strategies include:</p>
+            <ul>
+                <li><strong>Semantic versioning</strong>: <code>myapp:1.0.0</code>, <code>myapp:1.0.1</code>, etc.</li>
+                <li><strong>Environment tags</strong>: <code>myapp:development</code>, <code>myapp:production</code></li>
+                <li><strong>Git commit/branch</strong>: <code>myapp:git-abc123</code>, <code>myapp:feature-login</code></li>
+                <li><strong>Date-based</strong>: <code>myapp:20230415</code></li>
+                <li><strong>Multiple tags</strong>: You can apply multiple tags to the same image</li>
+            </ul>
+            
+            <pre><code># Apply multiple tags to the same build
+docker build -t myapp:1.0 -t myapp:latest .</code></pre>
+            
+            <h4>Using Build Arguments</h4>
+            <p>Build arguments allow you to pass variables to the build process using <code>ARG</code> instructions in your Dockerfile:</p>
+            
+            <pre><code># In your Dockerfile
+ARG VERSION=3.9
+FROM python:${VERSION}-slim
+
+# Build with a custom version
+docker build --build-arg VERSION=3.10 -t myapp .</code></pre>
+            
+            <div class="note">
+                <p><strong>Note:</strong> Build arguments are only available during the build process and are not persisted in the final image. For values that need to be available at runtime, use <code>ENV</code> instructions instead.</p>
+            </div>
+            
+            <h4>Building from Different Sources</h4>
+            <p>You can build images from various sources:</p>
+            <ul>
+                <li><strong>Local directory</strong>: <code>docker build -t myapp .</code></li>
+                <li><strong>Git repository</strong>: <code>docker build -t myapp https://github.com/username/repo.git</code></li>
+                <li><strong>Tarball</strong>: <code>docker build -t myapp http://server/context.tar.gz</code></li>
+                <li><strong>Standard input</strong>: <code>docker build -t myapp -</code> (Dockerfile from stdin)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Example 1: Building a Python Web Application</h3>
+            
+            <p>Let's build a simple Flask web application image, step by step.</p>
+            
+            <h4>Step 1: Create Project Structure</h4>
+            <p>First, create a new directory for your project and set up the basic files:</p>
+            
+            <pre><code>mkdir flask_app
+cd flask_app
+</code></pre>
+            
+            <p>Create a file named <code>app.py</code> with this content:</p>
+            
+            <pre><code>from flask import Flask, render_template
+import os
+
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    environment = os.environ.get('FLASK_ENV', 'development')
+    return render_template('index.html', environment=environment)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+</code></pre>
+            
+            <p>Create a templates directory and an <code>index.html</code> file inside it:</p>
+            
+            <pre><code>mkdir templates
+</code></pre>
+            
+            <p>Add this content to <code>templates/index.html</code>:</p>
+            
+            <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Docker Flask App&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h1 {
+            color: #333;
+        }
+        .environment {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #f0f0f0;
+            border-radius: 3px;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="container"&gt;
+        &lt;h1&gt;Hello from Docker!&lt;/h1&gt;
+        &lt;p&gt;This is a Flask application running inside a Docker container.&lt;/p&gt;
+        &lt;p&gt;Current environment: &lt;span class="environment"&gt;{{ environment }}&lt;/span&gt;&lt;/p&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+            
+            <p>Create a <code>requirements.txt</code> file with these dependencies:</p>
+            
+            <pre><code>flask==2.0.1
+gunicorn==20.1.0
+</code></pre>
+            
+            <h4>Step 2: Create a Dockerfile</h4>
+            <p>Now, create a <code>Dockerfile</code> in the project root:</p>
+            
+            <pre><code># Use Python 3.9 slim as the base image
+FROM python:3.9-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FLASK_APP=app.py
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Expose port
+EXPOSE 5000
+
+# Run the application
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+</code></pre>
+            
+            <h4>Step 3: Create a .dockerignore File</h4>
+            <p>Create a <code>.dockerignore</code> file to exclude unnecessary files from the build context:</p>
+            
+            <pre><code>.git
+.gitignore
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.env
+.venv
+.idea/
+.vscode/
+*.swp
+Dockerfile
+docker-compose.yml
+README.md
+</code></pre>
+            
+            <h4>Step 4: Build the Image</h4>
+            <p>Now, let's build the image:</p>
+            
+            <pre><code>docker build -t flask-app:1.0 .
+</code></pre>
+            
+            <p>This command will:</p>
+            <ol>
+                <li>Send the build context to the Docker daemon</li>
+                <li>Process each instruction in the Dockerfile</li>
+                <li>Create a new image named <code>flask-app</code> with the tag <code>1.0</code></li>
+            </ol>
+            
+            <p>You should see output showing the progress of each step:</p>
+            
+            <pre><code>Sending build context to Docker daemon  6.656kB
+Step 1/8 : FROM python:3.9-slim
+ ---> 8c705081f50d
+Step 2/8 : ENV PYTHONDONTWRITEBYTECODE=1     PYTHONUNBUFFERED=1     FLASK_APP=app.py
+ ---> Running in 6ce8e46488fd
+Removing intermediate container 6ce8e46488fd
+ ---> 9d53d0d5b1fd
+Step 3/8 : WORKDIR /app
+...
+Successfully built f8b2f81f83a
+Successfully tagged flask-app:1.0
+</code></pre>
+            
+            <h4>Step 5: Verify the Image</h4>
+            <p>Check that your image was created successfully:</p>
+            
+            <pre><code>docker images
+</code></pre>
+            
+            <p>You should see your new image listed:</p>
+            
+            <pre><code>REPOSITORY   TAG       IMAGE ID       CREATED         SIZE
+flask-app    1.0       f8b2f81f83a   2 minutes ago   128MB
+python       3.9-slim  8c705081f50d   2 weeks ago     124MB
+</code></pre>
+            
+            <p>You can also inspect the image to see its metadata:</p>
+            
+            <pre><code>docker inspect flask-app:1.0
+</code></pre>
+            
+            <h4>Step 6: Run a Container from Your Image</h4>
+            <p>Now, let's run a container from the image we just built:</p>
+            
+            <pre><code>docker run -d -p 5000:5000 --name flask-container flask-app:1.0
+</code></pre>
+            
+            <p>This command:</p>
+            <ul>
+                <li><code>-d</code>: Runs the container in detached mode (background)</li>
+                <li><code>-p 5000:5000</code>: Maps port 5000 in the container to port 5000 on the host</li>
+                <li><code>--name flask-container</code>: Names the container "flask-container"</li>
+                <li><code>flask-app:1.0</code>: Specifies the image to use</li>
+            </ul>
+            
+            <h4>Step 7: Test Your Application</h4>
+            <p>Open your web browser and navigate to <code>http://localhost:5000</code>. You should see your Flask application running with the "Hello from Docker!" message.</p>
+            
+            <h4>Step 8: Check Container Logs</h4>
+            <p>To see the logs from your container:</p>
+            
+            <pre><code>docker logs flask-container
+</code></pre>
+            
+            <p>You should see output from Gunicorn showing that your application is running.</p>
+            
+            <h4>Step 9: Stop and Remove the Container</h4>
+            <p>When you're done, stop and remove the container:</p>
+            
+            <pre><code>docker stop flask-container
+docker rm flask-container
+</code></pre>
+            
+            <div class="real-world-application">
+                <p><strong>Real-world application:</strong> This pattern of building a custom image for a web application is extremely common in professional development. Teams typically create Dockerfiles for their applications, build images during CI/CD processes, and deploy those images to staging and production environments. The image contains everything the application needs to run, ensuring consistency across environments.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Example 2: Multi-Stage Build for a React Application</h3>
+            
+            <p>Let's create a more complex example using multi-stage builds to create an optimized image for a React frontend application.</p>
+            
+            <h4>Step 1: Create Project Structure</h4>
+            <p>For this example, let's assume we have a basic React application created with Create React App. We'll focus on the Dockerfile and building process:</p>
+            
+            <pre><code>mkdir react_app
+cd react_app
+</code></pre>
+            
+            <p>For brevity, we won't create an entire React app structure here. In a real scenario, you'd have the standard React application files.</p>
+            
+            <h4>Step 2: Create a Multi-Stage Dockerfile</h4>
+            <p>Create a <code>Dockerfile</code> with multi-stage build:</p>
+            
+            <pre><code># Stage 1: Build the React application
+FROM node:16-alpine as build
+
+# Set working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy application code
+COPY . .
+
+# Build the application
+RUN npm run build
+
+# Stage 2: Serve the built application with NGINX
+FROM nginx:alpine
+
+# Copy NGINX configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy built files from the build stage
+COPY --from=build /app/build /usr/share/nginx/html
+
+# Expose port
+EXPOSE 80
+
+# Start NGINX
+CMD ["nginx", "-g", "daemon off;"]
+</code></pre>
+            
+            <h4>Step 3: Create NGINX Configuration</h4>
+            <p>Create a file named <code>nginx.conf</code>:</p>
+            
+            <pre><code>server {
+    listen 80;
+    server_name localhost;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Serve static files
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Cache static assets
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+    }
+}
+</code></pre>
+            
+            <h4>Step 4: Create .dockerignore</h4>
+            <p>Create a <code>.dockerignore</code> file:</p>
+            
+            <pre><code>node_modules
+build
+.git
+.gitignore
+README.md
+Dockerfile
+.dockerignore
+</code></pre>
+            
+            <h4>Step 5: Build the Image</h4>
+            <p>Build the multi-stage image:</p>
+            
+            <pre><code>docker build -t react-app:1.0 .
+</code></pre>
+            
+            <p>During the build process, you'll see Docker executing both stages:</p>
+            <ol>
+                <li>First building the React application with Node.js</li>
+                <li>Then creating a smaller final image with just NGINX and the built files</li>
+            </ol>
+            
+            <h4>Step 6: Run a Container from the Image</h4>
+            <p>Now run a container from your optimized image:</p>
+            
+            <pre><code>docker run -d -p 80:80 --name react-container react-app:1.0
+</code></pre>
+            
+            <p>Visit <code>http://localhost</code> in your browser to see the React application running.</p>
+            
+            <div class="explanation">
+                <p><strong>Benefits of this multi-stage approach:</strong></p>
+                <ul>
+                    <li><strong>Smaller final image</strong>: The final image only contains NGINX and the built files, not Node.js or development dependencies</li>
+                    <li><strong>Improved security</strong>: Fewer components means less attack surface</li>
+                    <li><strong>Better performance</strong>: NGINX is optimized for serving static files</li>
+                    <li><strong>Separation of concerns</strong>: Build environment and runtime environment are separate</li>
+                </ul>
+                <p>The final image might be around 25MB, whereas a single-stage build including Node.js would be over 1GB.</p>
+            </div>
+            
+            <div class="real-world-application">
+                <p><strong>Real-world application:</strong> This multi-stage build pattern is the industry standard for building frontend applications. In production environments, this approach keeps images small and secure while optimizing performance. Many companies will further enhance this pattern with CDN integration and automated deployments.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Example 3: Building a Microservices Application</h3>
+            
+            <p>Let's look at a more complex example where we build a simple microservices application with a backend API and a database.</p>
+            
+            <h4>Project Structure</h4>
+            <p>For this example, we'll create a simplified structure with an API service and a database service:</p>
+            
+            <pre><code>mkdir microservices_demo
+cd microservices_demo
+mkdir api
+</code></pre>
+            
+            <h4>Step 1: Create the API Service</h4>
+            <p>In the <code>api</code> directory, create the following files:</p>
+            
+            <p><code>api/app.py</code>:</p>
+            <pre><code>from flask import Flask, jsonify
+import os
+import psycopg2
+
+app = Flask(__name__)
+
+def get_db_connection():
+    conn = psycopg2.connect(
+        host=os.environ.get('DB_HOST', 'db'),
+        database=os.environ.get('DB_NAME', 'postgres'),
+        user=os.environ.get('DB_USER', 'postgres'),
+        password=os.environ.get('DB_PASSWORD', 'postgres')
+    )
+    return conn
+
+@app.route('/api/health')
+def health():
+    return jsonify({"status": "healthy"})
+
+@app.route('/api/items')
+def get_items():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM items;')
+    items = [{"id": row[0], "name": row[1]} for row in cur.fetchall()]
+    cur.close()
+    conn.close()
+    return jsonify(items)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+</code></pre>
+            
+            <p><code>api/requirements.txt</code>:</p>
+            <pre><code>flask==2.0.1
+psycopg2-binary==2.9.1
+gunicorn==20.1.0
+</code></pre>
+            
+            <p><code>api/Dockerfile</code>:</p>
+            <pre><code>FROM python:3.9-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+</code></pre>
+            
+            <h4>Step 2: Create Docker Compose File</h4>
+            <p>In the root directory, create a <code>docker-compose.yml</code> file to orchestrate the services:</p>
+            
+            <pre><code>version: '3'
+
+services:
+  api:
+    build: ./api
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  postgres_data:
+</code></pre>
+            
+            <h4>Step 3: Create Database Initialization Script</h4>
+            <p>Create an <code>init.sql</code> file in the root directory to initialize the database:</p>
+            
+            <pre><code>CREATE TABLE IF NOT EXISTS items (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+INSERT INTO items (name) VALUES ('Item 1');
+INSERT INTO items (name) VALUES ('Item 2');
+INSERT INTO items (name) VALUES ('Item 3');
+</code></pre>
+            
+            <h4>Step 4: Build and Run with Docker Compose</h4>
+            <p>Now, build and run the entire application with Docker Compose:</p>
+            
+            <pre><code>docker-compose up --build
+</code></pre>
+            
+            <p>This command will:</p>
+            <ol>
+                <li>Build the API service image using its Dockerfile</li>
+                <li>Pull the Postgres image from Docker Hub</li>
+                <li>Create the defined volumes and networks</li>
+                <li>Start all services in the correct order</li>
+            </ol>
+            
+            <h4>Step 5: Test the Application</h4>
+            <p>Open your browser or use curl to test the API endpoints:</p>
+            
+            <pre><code>curl http://localhost:5000/api/health
+curl http://localhost:5000/api/items
+</code></pre>
+            
+            <p>You should see the health status and the list of items from the database.</p>
+            
+            <h4>Step 6: Stop the Application</h4>
+            <p>To stop the application and clean up:</p>
+            
+            <pre><code>docker-compose down
+</code></pre>
+            
+            <p>To remove the volumes as well:</p>
+            
+            <pre><code>docker-compose down -v
+</code></pre>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> In a microservices architecture, it's common to have a separate Dockerfile for each service, allowing independent development and deployment. Docker Compose is a great tool for local development, while Kubernetes or other orchestration systems are typically used in production.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Image Optimization Strategies</h3>
+            
+            <p>Let's explore strategies to optimize your Docker images for different requirements.</p>
+            
+            <h4>Minimizing Image Size</h4>
+            <p>Smaller images have several advantages:</p>
+            <ul>
+                <li>Faster downloads and deployments</li>
+                <li>Reduced storage costs</li>
+                <li>Smaller attack surface</li>
+                <li>Improved container startup time</li>
+            </ul>
+            
+            <p>Strategies to minimize image size:</p>
+            <ol>
+                <li><strong>Use slim or alpine base images</strong>:
+                    <pre><code># Standard Python image: ~900MB
+FROM python:3.9
+
+# Slim variant: ~150MB
+FROM python:3.9-slim
+
+# Alpine variant: ~45MB
+FROM python:3.9-alpine</code></pre>
+                </li>
+                <li><strong>Multi-stage builds</strong> to separate build and runtime environments</li>
+                <li><strong>Clean up in the same layer</strong> you create files:
+                    <pre><code>RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc && \
+    pip install mypackage && \
+    apt-get purge -y --auto-remove gcc && \
+    rm -rf /var/lib/apt/lists/*</code></pre>
+                </li>
+                <li><strong>Use <code>.dockerignore</code></strong> to exclude unnecessary files</li>
+                <li><strong>Minimize the number of layers</strong> by combining related operations</li>
+            </ol>
+            
+            <div class="example">
+                <p><strong>Example: Optimizing a Python application image</strong></p>
+                <pre><code># Before optimization
+FROM python:3.9
+WORKDIR /app
+COPY . .
+RUN pip install -r requirements.txt
+CMD ["python", "app.py"]
+
+# After optimization
+FROM python:3.9-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD ["python", "app.py"]</code></pre>
+                <p>The optimized version:</p>
+                <ul>
+                    <li>Uses the slim variant of Python</li>
+                    <li>Copies only the requirements file first to leverage caching</li>
+                    <li>Uses --no-cache-dir to avoid storing package cache</li>
+                </ul>
+            </div>
+            
+            <h4>Alpine vs. Debian-based Images</h4>
+            <p>Alpine-based images are much smaller but come with tradeoffs:</p>
+            
+            <table>
+                <tr>
+                    <th></th>
+                    <th>Alpine-based</th>
+                    <th>Debian-based (slim)</th>
+                </tr>
+                <tr>
+                    <td>Size</td>
+                    <td>Very small (~5-50MB base)</td>
+                    <td>Small-medium (~100-200MB base)</td>
+                </tr>
+                <tr>
+                    <td>C libraries</td>
+                    <td>musl libc</td>
+                    <td>glibc</td>
+                </tr>
+                <tr>
+                    <td>Package manager</td>
+                    <td>apk</td>
+                    <td>apt</td>
+                </tr>
+                <tr>
+                    <td>Binary compatibility</td>
+                    <td>Sometimes problematic</td>
+                    <td>Generally good</td>
+                </tr>
+                <tr>
+                    <td>Build complexity</td>
+                    <td>May require build dependencies</td>
+                    <td>Usually simpler</td>
+                </tr>
+            </table>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> For Python applications, <code>python:3.x-slim</code> is often a good default choice. It provides a good balance of size and compatibility. Use Alpine if size is critical and you've tested thoroughly with your dependencies.</p>
+            </div>
+            
+            <h4>Build Speed Optimization</h4>
+            <p>To optimize build speed and leverage caching effectively:</p>
+            <ol>
+                <li><strong>Order instructions from least to most frequently changed</strong></li>
+                <li><strong>Separate dependency installation from code copying</strong></li>
+                <li><strong>Use buildkit</strong> for improved performance:
+                    <pre><code>DOCKER_BUILDKIT=1 docker build -t myapp .</code></pre>
+                </li>
+                <li><strong>Consider using dependency caching</strong> for large projects:
+                    <pre><code># In docker-compose.yml
+services:
+  app:
+    build:
+      context: .
+      cache_from:
+        - myapp:latest</code></pre>
+                </li>
+            </ol>
+        </section>
+
+        <section>
+            <h3>Running and Managing Images</h3>
+            
+            <p>Once you've built your images, it's important to understand how to effectively run and manage them.</p>
+            
+            <h4>Run Options in Detail</h4>
+            <p>The <code>docker run</code> command has many options to customize container behavior:</p>
+            
+            <pre><code>docker run [OPTIONS] IMAGE [COMMAND] [ARG...]</code></pre>
+            
+            <p>Common options include:</p>
+            <ul>
+                <li><code>-d, --detach</code>: Run in background</li>
+                <li><code>-p, --publish</code>: Map ports (host:container)</li>
+                <li><code>-v, --volume</code>: Mount volumes</li>
+                <li><code>-e, --env</code>: Set environment variables</li>
+                <li><code>--name</code>: Assign a name to the container</li>
+                <li><code>--rm</code>: Remove container when it exits</li>
+                <li><code>--network</code>: Connect to a network</li>
+                <li><code>--restart</code>: Restart policy (e.g., always, on-failure)</li>
+                <li><code>--memory</code>, <code>--cpus</code>: Resource constraints</li>
+            </ul>
+            
+            <div class="example">
+                <p><strong>Example: Running a container with various options</strong></p>
+                <pre><code>docker run \
+  -d \
+  --name app \
+  -p 8080:5000 \
+  -v data:/app/data \
+  -e DEBUG=true \
+  -e API_KEY=secret \
+  --restart always \
+  --memory 512m \
+  --cpus 0.5 \
+  myapp:latest</code></pre>
+                <p>This command:</p>
+                <ul>
+                    <li>Runs the container in detached mode</li>
+                    <li>Names it "app"</li>
+                    <li>Maps host port 8080 to container port 5000</li>
+                    <li>Mounts a volume named "data" to /app/data</li>
+                    <li>Sets environment variables</li>
+                    <li>Configures automatic restart</li>
+                    <li>Limits memory to 512MB and CPU to half a core</li>
+                </ul>
+            </div>
+            
+            <h4>Environment Variables and Configuration</h4>
+            <p>Environment variables are a key mechanism for configuring containerized applications:</p>
+            
+            <pre><code># Setting variables in the Dockerfile
+ENV API_URL=https://api.example.com
+ENV DEBUG=false
+
+# Overriding at runtime
+docker run -e DEBUG=true -e API_URL=https://staging-api.example.com myapp</code></pre>
+            
+            <p>For sensitive configuration, consider:</p>
+            <ul>
+                <li><strong>Docker secrets</strong> (in Docker Swarm)</li>
+                <li><strong>Environment variable files</strong>:
+                    <pre><code># env-file.txt
+API_KEY=secret_key
+DATABASE_URL=postgres://user:pass@db:5432/dbname
+
+# Using the file
+docker run --env-file env-file.txt myapp</code></pre>
+                </li>
+                <li><strong>Mounting configuration files</strong> as volumes</li>
+            </ul>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> Never hardcode sensitive information in your Dockerfile. Use environment variables, secrets management, or mounted configuration files to provide sensitive values at runtime.</p>
+            </div>
+            
+            <h4>Container Lifecycle Management</h4>
+            <p>Understanding container lifecycle commands:</p>
+            <ul>
+                <li><code>docker start/stop/restart</code>: Control running state</li>
+                <li><code>docker pause/unpause</code>: Temporarily freeze container</li>
+                <li><code>docker kill</code>: Send SIGKILL to force stop</li>
+                <li><code>docker rm</code>: Remove a container</li>
+                <li><code>docker logs</code>: View container logs</li>
+                <li><code>docker exec</code>: Run commands in a running container</li>
+                <li><code>docker inspect</code>: View container details</li>
+                <li><code>docker stats</code>: Monitor resource usage</li>
+            </ul>
+            
+            <div class="example">
+                <p><strong>Common management patterns:</strong></p>
+                <pre><code># Start a stopped container
+docker start container_name
+
+# View logs with follow (-f)
+docker logs -f container_name
+
+# Execute a command in a running container
+docker exec -it container_name bash
+
+# Remove all stopped containers
+docker container prune
+
+# Get detailed information about a container
+docker inspect container_name
+
+# View resource usage
+docker stats</code></pre>
+            </div>
+            
+            <h4>Data Management with Volumes</h4>
+            <p>For data that needs to persist beyond container lifecycles, use volumes:</p>
+            
+            <pre><code># Create a named volume
+docker volume create mydata
+
+# Run a container with the volume
+docker run -v mydata:/app/data myapp
+
+# Use bind mounts for development
+docker run -v $(pwd):/app myapp
+
+# Inspect volume
+docker volume inspect mydata
+
+# Remove volume
+docker volume rm mydata
+
+# Remove all unused volumes
+docker volume prune</code></pre>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> Use named volumes for production data and bind mounts for development. Regularly back up important volumes, and include volume cleanup in your maintenance procedures.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Debugging and Troubleshooting</h3>
+            
+            <p>Even with well-designed images, issues can arise. Let's explore debugging strategies.</p>
+            
+            <h4>Build-time Debugging</h4>
+            <p>When your build fails, try these approaches:</p>
+            <ol>
+                <li><strong>Examine build output carefully</strong> for error messages</li>
+                <li><strong>Debug intermediate stages</strong>:
+                    <pre><code># Find the last successful layer
+docker build -t debug-image . || true
+# Start a container from that layer
+docker run -it debug-image bash</code></pre>
+                </li>
+                <li><strong>Add diagnostic commands</strong> to your Dockerfile:
+                    <pre><code>RUN ls -la /app
+RUN pip list
+RUN env</code></pre>
+                </li>
+                <li><strong>Try a different base image</strong> if facing compatibility issues</li>
+            </ol>
+            
+            <h4>Runtime Debugging</h4>
+            <p>To troubleshoot running containers:</p>
+            <ol>
+                <li><strong>Check container status</strong>: <code>docker ps -a</code></li>
+                <li><strong>View logs</strong>: <code>docker logs container_name</code></li>
+                <li><strong>Execute commands inside the container</strong>:
+                    <pre><code>docker exec -it container_name bash
+# Inside the container
+ps aux
+cat /var/log/app.log
+netstat -tulpn</code></pre>
+                </li>
+                <li><strong>Inspect container configuration</strong>: <code>docker inspect container_name</code></li>
+                <li><strong>Check resource usage</strong>: <code>docker stats container_name</code></li>
+            </ol>
+            
+            <h4>Common Issues and Solutions</h4>
+            <table>
+                <tr>
+                    <th>Issue</th>
+                    <th>Possible Causes</th>
+                    <th>Solutions</th>
+                </tr>
+                <tr>
+                    <td>Container exits immediately</td>
+                    <td>No foreground process, command error</td>
+                    <td>
+                        <ul>
+                            <li>Check CMD/ENTRYPOINT</li>
+                            <li>Run with -it and a shell to debug</li>
+                            <li>Check application logs</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Port binding fails</td>
+                    <td>Port already in use, permissions</td>
+                    <td>
+                        <ul>
+                            <li>Check if another container/process is using the port</li>
+                            <li>Try a different host port</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Volume mount issues</td>
+                    <td>Path permissions, path doesn't exist</td>
+                    <td>
+                        <ul>
+                            <li>Check file permissions</li>
+                            <li>Verify paths on host and container</li>
+                            <li>Use absolute paths</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Network connectivity issues</td>
+                    <td>DNS issues, network isolation</td>
+                    <td>
+                        <ul>
+                            <li>Check with ping/curl inside container</li>
+                            <li>Verify DNS configuration</li>
+                            <li>Check network settings</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Resource constraints</td>
+                    <td>Out of memory, CPU throttling</td>
+                    <td>
+                        <ul>
+                            <li>Monitor with docker stats</li>
+                            <li>Increase resource limits</li>
+                            <li>Optimize application</li>
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> Build good observability into your containers with proper logging and health checks. This makes troubleshooting much easier when problems arise.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Moving to Production</h3>
+            
+            <p>When moving from development to production, consider these additional aspects:</p>
+            
+            <h4>Image Tagging and Versioning</h4>
+            <p>Implement a consistent tagging strategy:</p>
+            <ul>
+                <li><strong>Semantic versioning</strong>: <code>myapp:1.2.3</code></li>
+                <li><strong>Git-based</strong>: <code>myapp:git-abcdef1</code> (commit hash)</li>
+                <li><strong>Build identifiers</strong>: <code>myapp:build-123</code></li>
+                <li><strong>Environment tags</strong>: <code>myapp:production</code></li>
+            </ul>
+            
+            <pre><code># Example tagging script in CI
+VERSION=$(cat VERSION)
+GIT_HASH=$(git rev-parse --short HEAD)
+BUILD_ID=${CI_BUILD_NUMBER}
+
+docker build -t myapp:${VERSION} \
+  -t myapp:${VERSION}-${GIT_HASH} \
+  -t myapp:build-${BUILD_ID} \
+  -t myapp:latest .</code></pre>
+            
+            <h4>Security Considerations</h4>
+            <ul>
+                <li><strong>Scan images for vulnerabilities</strong>:
+                    <pre><code>docker scan myapp:1.0</code></pre>
+                </li>
+                <li><strong>Use non-root users</strong> in containers:
+                    <pre><code>USER app</code></pre>
+                </li>
+                <li><strong>Apply the principle of least privilege</strong></li>
+                <li><strong>Keep base images updated</strong> with security patches</li>
+                <li><strong>Use read-only filesystems</strong> where possible:
+                    <pre><code>docker run --read-only myapp</code></pre>
+                </li>
+            </ul>
+            
+            <h4>CI/CD Integration</h4>
+            <p>Automate image building and testing in your CI/CD pipeline:</p>
+            <ol>
+                <li>Build images on each commit</li>
+                <li>Run automated tests against the images</li>
+                <li>Scan for vulnerabilities</li>
+                <li>Push to a registry</li>
+                <li>Deploy to staging/production</li>
+            </ol>
+            
+            <div class="example">
+                <p><strong>Example GitHub Actions workflow:</strong></p>
+                <pre><code>name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Build Image
+        run: docker build -t myapp:${{ github.sha }} .
+      
+      - name: Test Image
+        run: |
+          docker run --rm myapp:${{ github.sha }} pytest
+      
+      - name: Login to Registry
+        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+      
+      - name: Push Image
+        run: |
+          docker tag myapp:${{ github.sha }} username/myapp:latest
+          docker tag myapp:${{ github.sha }} username/myapp:${{ github.sha }}
+          docker push username/myapp:latest
+          docker push username/myapp:${{ github.sha }}</code></pre>
+            </div>
+            
+            <h4>Container Orchestration</h4>
+            <p>For production, consider using orchestration tools like:</p>
+            <ul>
+                <li><strong>Kubernetes</strong>: For complex, scalable deployments</li>
+                <li><strong>Docker Swarm</strong>: Simpler alternative built into Docker</li>
+                <li><strong>Amazon ECS/EKS</strong>: AWS container services</li>
+                <li><strong>Google Kubernetes Engine</strong>: Google Cloud's Kubernetes service</li>
+                <li><strong>Azure Container Instances/AKS</strong>: Microsoft Azure's container services</li>
+            </ul>
+            
+            <div class="note">
+                <p><strong>Note:</strong> Orchestration tools handle deployment, scaling, networking, load balancing, and self-healing for containerized applications.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Practical Exercises</h3>
+            
+            <h4>Exercise 1: Flask Application with Environment Configuration</h4>
+            <p>Extend the Flask application from Example 1 to support different environments:</p>
+            <ol>
+                <li>Modify the Dockerfile to accept a build argument for the environment</li>
+                <li>Use a runtime environment variable to control debug mode</li>
+                <li>Build the image for both development and production</li>
+                <li>Run containers from both images and observe the differences</li>
+            </ol>
+            
+            <div class="solution">
+                <p><strong>Modified Dockerfile:</strong></p>
+                <pre><code>FROM python:3.9-slim
+
+ARG ENVIRONMENT=development
+ENV FLASK_ENV=${ENVIRONMENT} \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FLASK_APP=app.py
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]</code></pre>
+                
+                <p><strong>Building for different environments:</strong></p>
+                <pre><code>docker build -t flask-app:dev --build-arg ENVIRONMENT=development .
+docker build -t flask-app:prod --build-arg ENVIRONMENT=production .</code></pre>
+                
+                <p><strong>Running the containers:</strong></p>
+                <pre><code>docker run -d -p 5001:5000 --name flask-dev flask-app:dev
+docker run -d -p 5002:5000 --name flask-prod flask-app:prod</code></pre>
+            </div>
+            
+            <h4>Exercise 2: Multi-Stage Build for a Python Application</h4>
+            <p>Create a multi-stage Dockerfile for a Python application:</p>
+            <ol>
+                <li>First stage: Build and test the application</li>
+                <li>Second stage: Create a minimal runtime image</li>
+                <li>Ensure only the necessary files are included in the final image</li>
+            </ol>
+            
+            <div class="solution">
+                <p><strong>Multi-stage Dockerfile for Python:</strong></p>
+                <pre><code># Stage 1: Build and test
+FROM python:3.9 AS builder
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+RUN pytest
+
+# Stage 2: Runtime
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY --from=builder /app/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY --from=builder /app/*.py /app/
+COPY --from=builder /app/templates /app/templates
+COPY --from=builder /app/static /app/static
+
+EXPOSE 5000
+
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]</code></pre>
+            </div>
+            
+            <h4>Exercise 3: Optimizing Image Size</h4>
+            <p>Take an existing Dockerfile and optimize it for size:</p>
+            <ol>
+                <li>Start with a basic Dockerfile that installs dependencies</li>
+                <li>Optimize it using the techniques we've discussed</li>
+                <li>Compare the size before and after optimization</li>
+            </ol>
+            
+            <div class="solution">
+                <p><strong>Before optimization:</strong></p>
+                <pre><code>FROM python:3.9
+
+WORKDIR /app
+
+COPY . .
+
+RUN apt-get update
+RUN apt-get install -y gcc
+RUN pip install -r requirements.txt
+RUN apt-get install -y curl
+
+CMD ["python", "app.py"]</code></pre>
+                
+                <p><strong>After optimization:</strong></p>
+                <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc curl && \
+    pip install --no-cache-dir -r requirements.txt && \
+    apt-get purge -y --auto-remove gcc && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY app.py .
+
+CMD ["python", "app.py"]</code></pre>
+                
+                <p>The optimized version:</p>
+                <ul>
+                    <li>Uses a slim base image</li>
+                    <li>Combines apt-get commands to reduce layers</li>
+                    <li>Uses --no-install-recommends to reduce dependencies</li>
+                    <li>Cleans up build dependencies and apt cache</li>
+                    <li>Copies only the necessary files</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Key Takeaways</h3>
+            
+            <ul>
+                <li>The Docker build context is all files in the specified path, which can be optimized with <code>.dockerignore</code></li>
+                <li>Docker builds images layer by layer, caching when possible for efficiency</li>
+                <li>Optimizing image size improves download speed, security, and resource usage</li>
+                <li>Multi-stage builds are powerful for creating efficient, production-ready images</li>
+                <li>Different base images (full, slim, alpine) offer tradeoffs between size and compatibility</li>
+                <li>Container runtime configuration can be controlled with environment variables and runtime options</li>
+                <li>Volumes provide persistent storage that survives container lifecycle</li>
+                <li>Debugging tools include logs, exec, inspect, and stats commands</li>
+                <li>Production deployments require additional consideration for security, tagging, and orchestration</li>
+            </ul>
+            
+            <p>With these skills, you're now equipped to build, optimize, and run Docker images for a wide range of applications!</p>
+        </section>
+
+        <section>
+            <h3>Looking Ahead</h3>
+            
+            <p>In our next session, we'll explore Docker Compose in more depth, learning how to orchestrate multi-container applications for development and testing. We'll see how to define complex application stacks with networking, volumes, and environment configuration.</p>
+        </section>
+
+        <section>
+            <h3>Discussion Questions</h3>
+            
+            <ol>
+                <li>How would you approach containerizing an existing application? What factors would you consider first?</li>
+                <li>When would you choose to use multi-stage builds, and how might they benefit different types of applications?</li>
+                <li>What strategies would you use to minimize image size for a Python web application while ensuring good performance?</li>
+                <li>How might container security considerations differ between development and production environments?</li>
+                <li>What advantages might a microservices approach with multiple containers have over a monolithic container? When might it not be appropriate?</li>
+            </ol>
+        </section>
+
+        <section>
+            <h3>Additional Resources</h3>
+            
+            <ul>
+                <li><a href="https://docs.docker.com/engine/reference/commandline/build/" target="_blank">Docker Build Reference</a> - Complete documentation for the build command</li>
+                <li><a href="https://docs.docker.com/develop/develop-images/multistage-build/" target="_blank">Multi-Stage Builds</a> - Detailed guide to multi-stage builds</li>
+                <li><a href="https://docs.docker.com/engine/reference/commandline/run/" target="_blank">Docker Run Reference</a> - All run command options</li>
+                <li><a href="https://docs.docker.com/config/containers/resource_constraints/" target="_blank">Resource Constraints</a> - How to manage container resources</li>
+                <li><a href="https://snyk.io/blog/10-docker-image-security-best-practices/" target="_blank">Docker Image Security Best Practices</a> - Guide to securing your Docker images</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For JavaScript Developers: Comparing Node.js and Python Container Setups</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>For JavaScript Developers: Comparing Node.js and Python Container Setups</h1>
+        <h2>Week 1, Wednesday - Afternoon Session</h2>
+    </header>
+
+    <main>
+        <section class="lecture-intro">
+            <h3>Lecture Overview</h3>
+            <p>As a JavaScript developer, you're likely familiar with containerizing Node.js applications. In this session, we'll explore how Python container setups compare to Node.js, highlighting similarities and differences to help you transition smoothly. We'll cover environment setup, dependency management, development workflows, and production considerations for both ecosystems.</p>
+        </section>
+
+        <section>
+            <h3>Base Image Selection</h3>
+            
+            <p>One of the first decisions when containerizing an application is choosing a base image. Let's compare the options available for Node.js and Python.</p>
+            
+            <h4>Node.js Base Images</h4>
+            <p>Node.js official images on Docker Hub offer several variants:</p>
+            <ul>
+                <li><strong>node:18</strong> - Full image with build tools (~900MB)</li>
+                <li><strong>node:18-slim</strong> - Debian-based minimal image (~200MB)</li>
+                <li><strong>node:18-alpine</strong> - Alpine-based minimal image (~50MB)</li>
+            </ul>
+            
+            <h4>Python Base Images</h4>
+            <p>Python official images follow a similar pattern:</p>
+            <ul>
+                <li><strong>python:3.9</strong> - Full image with build tools (~900MB)</li>
+                <li><strong>python:3.9-slim</strong> - Debian-based minimal image (~150MB)</li>
+                <li><strong>python:3.9-alpine</strong> - Alpine-based minimal image (~45MB)</li>
+            </ul>
+            
+            <div class="comparison-table">
+                <table>
+                    <tr>
+                        <th>Variant</th>
+                        <th>Node.js</th>
+                        <th>Python</th>
+                        <th>Best Used For</th>
+                    </tr>
+                    <tr>
+                        <td>Full</td>
+                        <td>node:18</td>
+                        <td>python:3.9</td>
+                        <td>Complex build requirements, native extensions</td>
+                    </tr>
+                    <tr>
+                        <td>Slim</td>
+                        <td>node:18-slim</td>
+                        <td>python:3.9-slim</td>
+                        <td>Balance of size and compatibility</td>
+                    </tr>
+                    <tr>
+                        <td>Alpine</td>
+                        <td>node:18-alpine</td>
+                        <td>python:3.9-alpine</td>
+                        <td>Minimal size, simple applications</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="note">
+                <p><strong>Note for JS developers:</strong> Just like in the Node.js world where Alpine images can cause issues with native modules (like bcrypt or node-sass), Python Alpine images can have problems with certain packages that require compilation (like numpy or pandas). When in doubt, start with the slim variant.</p>
+            </div>
+            
+            <h4>Example Dockerfile Comparison</h4>
+            <p>Here's a basic comparison of Dockerfiles for a simple web application:</p>
+            
+            <div class="code-comparison">
+                <h5>Node.js Dockerfile:</h5>
+                <pre><code>FROM node:18-slim
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+CMD ["node", "server.js"]</code></pre>
+                
+                <h5>Python Dockerfile:</h5>
+                <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 5000
+CMD ["python", "app.py"]</code></pre>
+            </div>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> Think of base images like foundations for a house. Full images are like foundations with a full workshop and all possible tools included. Slim images include just the essential construction tools, while Alpine images are minimalist foundations with only the bare necessities. The choice depends on what you're building and what trade-offs you're willing to make between size and convenience.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Dependency Management</h3>
+            
+            <p>The most significant difference you'll notice when moving from Node.js to Python is how dependencies are managed.</p>
+            
+            <h4>Node.js Dependency Management</h4>
+            <p>In Node.js, dependencies are managed using:</p>
+            <ul>
+                <li><strong>package.json</strong> - Lists dependencies with version constraints</li>
+                <li><strong>package-lock.json</strong> or <strong>yarn.lock</strong> - Locks exact versions</li>
+                <li><strong>node_modules/</strong> - Directory where dependencies are installed</li>
+            </ul>
+            
+            <h4>Python Dependency Management</h4>
+            <p>Python typically uses:</p>
+            <ul>
+                <li><strong>requirements.txt</strong> - Lists packages with version constraints</li>
+                <li><strong>Pipfile</strong> and <strong>Pipfile.lock</strong> - Modern alternative using pipenv</li>
+                <li><strong>poetry.lock</strong> - Another modern alternative using Poetry</li>
+                <li><strong>Virtual environments</strong> - Isolated environments for dependencies</li>
+            </ul>
+            
+            <div class="comparison-table">
+                <table>
+                    <tr>
+                        <th>Node.js</th>
+                        <th>Python</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td>package.json</td>
+                        <td>requirements.txt</td>
+                        <td>Listing dependencies</td>
+                    </tr>
+                    <tr>
+                        <td>package-lock.json</td>
+                        <td>Pipfile.lock / poetry.lock</td>
+                        <td>Locking exact versions</td>
+                    </tr>
+                    <tr>
+                        <td>npm install</td>
+                        <td>pip install -r requirements.txt</td>
+                        <td>Installing dependencies</td>
+                    </tr>
+                    <tr>
+                        <td>node_modules/</td>
+                        <td>venv/ or .venv/ (virtual environment)</td>
+                        <td>Where dependencies are stored</td>
+                    </tr>
+                    <tr>
+                        <td>npm scripts</td>
+                        <td>No direct equivalent (often custom scripts)</td>
+                        <td>Running common tasks</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <h4>Dockerized Dependency Installation</h4>
+            <p>The approach to installing dependencies in containers is similar but with some key differences:</p>
+            
+            <div class="code-comparison">
+                <h5>Node.js dependency installation in Dockerfile:</h5>
+                <pre><code># Copy dependency files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci  # For production (uses package-lock.json)
+# or
+RUN npm install  # For development</code></pre>
+                
+                <h5>Python dependency installation in Dockerfile:</h5>
+                <pre><code># Copy dependency files
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt</code></pre>
+            </div>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> In both Node.js and Python containers, copy only the dependency definition files first, before copying the rest of your code. This leverages Docker's layer caching to avoid reinstalling dependencies when only your application code changes.</p>
+            </div>
+            
+            <div class="note">
+                <p><strong>Note for JS developers:</strong> Unlike Node.js, Python doesn't have a built-in concept of "development" vs "production" dependencies. You'll typically manage this with separate requirements files (e.g., requirements.txt and requirements-dev.txt) or by using tools like Pipenv or Poetry that support this distinction.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Application Structure and Workflow</h3>
+            
+            <p>The application structure and development workflow differ between Node.js and Python environments.</p>
+            
+            <h4>Application Entry Points</h4>
+            
+            <div class="comparison-table">
+                <table>
+                    <tr>
+                        <th>Node.js</th>
+                        <th>Python</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <ul>
+                                <li>Defined in package.json's "main" field</li>
+                                <li>Typically server.js or index.js</li>
+                                <li>Started with node server.js</li>
+                            </ul>
+                        </td>
+                        <td>
+                            <ul>
+                                <li>No standard entry point</li>
+                                <li>Often app.py, main.py, or run.py</li>
+                                <li>Started with python app.py</li>
+                            </ul>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            
+            <h4>Development Servers</h4>
+            
+            <div class="comparison-table">
+                <table>
+                    <tr>
+                        <th>Node.js</th>
+                        <th>Python</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <ul>
+                                <li>nodemon for auto-reloading</li>
+                                <li>Express for API servers</li>
+                                <li>Next.js/Nuxt.js dev servers</li>
+                            </ul>
+                        </td>
+                        <td>
+                            <ul>
+                                <li>Flask's development server</li>
+                                <li>Django's runserver</li>
+                                <li>Uvicorn/Hypercorn for ASGI apps</li>
+                            </ul>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            
+            <h4>Hot Reloading in Containers</h4>
+            <p>For development workflows, you'll want code changes to be reflected immediately in your containers:</p>
+            
+            <div class="code-comparison">
+                <h5>Node.js development container:</h5>
+                <pre><code># Dockerfile
+FROM node:18-slim
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+# Don't copy code - will be mounted
+EXPOSE 3000
+
+# Use nodemon for hot reloading
+CMD ["npx", "nodemon", "server.js"]</code></pre>
+                
+                <h5>Running with mounted code:</h5>
+                <pre><code>docker run -it --rm -v $(pwd):/app -p 3000:3000 node-app</code></pre>
+                
+                <h5>Python development container:</h5>
+                <pre><code># Dockerfile
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Don't copy code - will be mounted
+EXPOSE 5000
+
+# Flask development server with hot reload
+CMD ["flask", "run", "--host=0.0.0.0"]</code></pre>
+                
+                <h5>Running with mounted code:</h5>
+                <pre><code>docker run -it --rm -v $(pwd):/app -p 5000:5000 -e FLASK_APP=app.py -e FLASK_ENV=development python-app</code></pre>
+            </div>
+            
+            <div class="note">
+                <p><strong>Note for JS developers:</strong> Python doesn't have a direct equivalent to npm scripts. While you might be used to defining scripts in package.json, Python projects typically use Makefiles, shell scripts, or tools like invoke or tox for task automation.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Environment Variables and Configuration</h3>
+            
+            <p>Both Node.js and Python applications commonly use environment variables for configuration, especially in containerized environments.</p>
+            
+            <h4>Environment Variables Usage</h4>
+            
+            <div class="code-comparison">
+                <h5>Node.js environment variables:</h5>
+                <pre><code>// Accessing environment variables
+const port = process.env.PORT || 3000;
+const dbUrl = process.env.DATABASE_URL;
+const nodeEnv = process.env.NODE_ENV || 'development';</code></pre>
+                
+                <h5>Python environment variables:</h5>
+                <pre><code>import os
+
+# Accessing environment variables
+port = os.environ.get('PORT', 5000)
+db_url = os.environ.get('DATABASE_URL')
+flask_env = os.environ.get('FLASK_ENV', 'development')</code></pre>
+            </div>
+            
+            <h4>Environment Variables in Dockerfile</h4>
+            <p>Setting environment variables in Dockerfiles is identical for both:</p>
+            
+            <pre><code># Setting environment variables
+ENV NODE_ENV=production PORT=3000
+# or
+ENV FLASK_ENV=production PORT=5000</code></pre>
+            
+            <h4>Configuration Libraries Comparison</h4>
+            
+            <div class="comparison-table">
+                <table>
+                    <tr>
+                        <th>Node.js</th>
+                        <th>Python</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td>dotenv</td>
+                        <td>python-dotenv</td>
+                        <td>Loading .env files</td>
+                    </tr>
+                    <tr>
+                        <td>config</td>
+                        <td>configparser</td>
+                        <td>Hierarchical configuration</td>
+                    </tr>
+                    <tr>
+                        <td>convict</td>
+                        <td>pydantic</td>
+                        <td>Configuration validation</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="example">
+                <p><strong>Example: Using dotenv in both ecosystems</strong></p>
+                
+                <h5>Node.js dotenv:</h5>
+                <pre><code>// Load environment variables from .env file
+require('dotenv').config();
+
+const port = process.env.PORT || 3000;</code></pre>
+                
+                <h5>Python dotenv:</h5>
+                <pre><code>from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
+
+port = os.environ.get('PORT', 5000)</code></pre>
+            </div>
+            
+            <div class="note">
+                <p><strong>Note for JS developers:</strong> Both ecosystems follow similar patterns for environment-based configuration, making this aspect of the transition relatively smooth. The main difference is how variables are accessed (process.env in Node.js vs os.environ in Python).</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Multi-Stage Builds</h3>
+            
+            <p>Multi-stage builds are a powerful Docker feature used in both Node.js and Python applications to create smaller, more secure production images.</p>
+            
+            <h4>Node.js Multi-Stage Build</h4>
+            <pre><code># Build stage
+FROM node:18 AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+
+# For applications with a build step
+RUN npm run build
+
+# Production stage
+FROM node:18-slim
+
+WORKDIR /app
+
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+
+EXPOSE 3000
+CMD ["node", "dist/server.js"]</code></pre>
+            
+            <h4>Python Multi-Stage Build</h4>
+            <pre><code># Build stage
+FROM python:3.9 AS build
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
+
+# Production stage
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY --from=build /app/wheels /wheels
+COPY --from=build /app/requirements.txt .
+
+RUN pip install --no-cache --no-index --find-links=/wheels -r requirements.txt && \
+    rm -rf /wheels
+
+COPY . .
+
+EXPOSE 5000
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]</code></pre>
+            
+            <div class="explanation">
+                <p><strong>What's happening in the Python example:</strong></p>
+                <ol>
+                    <li>The first stage uses the full Python image to build wheel files (pre-built packages)</li>
+                    <li>The second stage uses the slim Python image and copies only the wheel files</li>
+                    <li>Dependencies are installed from the wheels rather than from PyPI</li>
+                    <li>Application code is copied to the production image</li>
+                    <li>The application is run using Gunicorn (a production WSGI server)</li>
+                </ol>
+            </div>
+            
+            <div class="note">
+                <p><strong>Note for JS developers:</strong> While the details differ, the multi-stage build pattern is conceptually identical between Node.js and Python. The key difference is what constitutes the "build" step—in Node.js it's often compiling TypeScript or bundling for production, while in Python it might involve pre-building wheels or compiling C extensions.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Production Server Considerations</h3>
+            
+            <p>A key difference between Node.js and Python in containerized environments is how production servers are typically set up.</p>
+            
+            <h4>Node.js Production Servers</h4>
+            <p>In Node.js applications:</p>
+            <ul>
+                <li>Often the Node.js process itself serves requests (using Express, Fastify, etc.)</li>
+                <li>Process managers like PM2 might be used for resilience</li>
+                <li>Clustering is available via the cluster module or PM2</li>
+                <li>A reverse proxy (NGINX) is optional but common</li>
+            </ul>
+            
+            <h4>Python Production Servers</h4>
+            <p>Python web applications typically use a multi-component setup:</p>
+            <ul>
+                <li>WSGI/ASGI server (Gunicorn, uWSGI, Uvicorn) runs the Python application</li>
+                <li>Multiple worker processes handle requests concurrently</li>
+                <li>A reverse proxy (NGINX) is almost always used in production</li>
+            </ul>
+            
+            <div class="comparison-table">
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Node.js Example</th>
+                        <th>Python Example</th>
+                    </tr>
+                    <tr>
+                        <td>Application Server</td>
+                        <td>Node.js with Express</td>
+                        <td>Flask/Django with Gunicorn</td>
+                    </tr>
+                    <tr>
+                        <td>Concurrency Model</td>
+                        <td>Event loop (single-threaded)</td>
+                        <td>Multiple worker processes</td>
+                    </tr>
+                    <tr>
+                        <td>Process Management</td>
+                        <td>PM2 or Docker restart policies</td>
+                        <td>Gunicorn master or Docker restart policies</td>
+                    </tr>
+                    <tr>
+                        <td>Typical Dockerfile CMD</td>
+                        <td><code>CMD ["node", "server.js"]</code></td>
+                        <td><code>CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]</code></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="example">
+                <p><strong>Example: Production-ready Python container with Gunicorn</strong></p>
+                <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt gunicorn
+
+COPY . .
+
+EXPOSE 5000
+
+# Run with 4 worker processes
+CMD ["gunicorn", "--workers=4", "--bind=0.0.0.0:5000", "app:app"]</code></pre>
+            </div>
+            
+            <div class="note">
+                <p><strong>Note for JS developers:</strong> The biggest adjustment when moving from Node.js to Python for web applications is understanding that the development server (like Flask's built-in server) is never used in production. Instead, a dedicated WSGI/ASGI server runs your application. This is conceptually similar to how you might use nodemon in development but Node.js directly in production.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Development Workflows: Side-by-Side Comparison</h3>
+            
+            <p>Let's compare complete development workflows for containerized Node.js and Python applications.</p>
+            
+            <h4>Node.js Express Application</h4>
+            
+            <p><strong>Project structure:</strong></p>
+            <pre><code>.
+├── Dockerfile
+├── docker-compose.yml
+├── package.json
+├── package-lock.json
+├── src/
+│   ├── server.js
+│   ├── routes/
+│   └── controllers/
+└── .dockerignore</code></pre>
+            
+            <p><strong>package.json:</strong></p>
+            <pre><code>{
+  "name": "node-app",
+  "version": "1.0.0",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}</code></pre>
+            
+            <p><strong>Dockerfile:</strong></p>
+            <pre><code>FROM node:18-slim
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]</code></pre>
+            
+            <p><strong>docker-compose.yml:</strong></p>
+            <pre><code>version: '3'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./src:/app/src
+    environment:
+      - NODE_ENV=development</code></pre>
+            
+            <h4>Python Flask Application</h4>
+            
+            <p><strong>Project structure:</strong></p>
+            <pre><code>.
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+├── app.py
+├── templates/
+├── static/
+└── .dockerignore</code></pre>
+            
+            <p><strong>requirements.txt:</strong></p>
+            <pre><code>flask==2.0.1
+python-dotenv==0.19.0</code></pre>
+            
+            <p><strong>Dockerfile:</strong></p>
+            <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 5000
+
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=development
+
+CMD ["flask", "run", "--host=0.0.0.0"]</code></pre>
+            
+            <p><strong>docker-compose.yml:</strong></p>
+            <pre><code>version: '3'
+
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development</code></pre>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> Use Docker Compose for development in both ecosystems. It simplifies managing volumes for hot reloading, environment variables, and connections to other services like databases.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Handling Database Connections</h3>
+            
+            <p>Connecting to databases from containerized applications follows similar patterns in both ecosystems.</p>
+            
+            <h4>Connecting to Databases</h4>
+            
+            <div class="code-comparison">
+                <h5>Node.js with PostgreSQL:</h5>
+                <pre><code>// Using node-postgres
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME || 'myapp',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'postgres'
+});
+
+async function query(text, params) {
+  const result = await pool.query(text, params);
+  return result.rows;
+}</code></pre>
+                
+                <h5>Python with PostgreSQL:</h5>
+                <pre><code># Using psycopg2
+import os
+import psycopg2
+
+def get_db_connection():
+    return psycopg2.connect(
+        host=os.environ.get('DB_HOST', 'localhost'),
+        port=os.environ.get('DB_PORT', 5432),
+        database=os.environ.get('DB_NAME', 'myapp'),
+        user=os.environ.get('DB_USER', 'postgres'),
+        password=os.environ.get('DB_PASSWORD', 'postgres')
+    )
+
+def query(text, params=None):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(text, params or ())
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows</code></pre>
+            </div>
+            
+            <h4>Using Docker Compose for Local Development with Databases</h4>
+            <p>The Docker Compose setup is nearly identical for both ecosystems:</p>
+            
+            <pre><code>version: '3'
+
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"  # or 3000:3000 for Node.js
+    volumes:
+      - .:/app
+    environment:
+      - DB_HOST=db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=myapp
+    depends_on:
+      - db
+      
+  db:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=myapp
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      
+volumes:
+  postgres_data:</code></pre>
+            
+            <div class="note">
+                <p><strong>Note for JS developers:</strong> While the database connection code looks different, the patterns are similar - both use connection pools, parameterized queries, and environment variables for configuration. The key difference is that Python doesn't have as mature an ecosystem of ORMs comparable to Sequelize or TypeORM (though SQLAlchemy and Django ORM are powerful alternatives).</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Common Pitfalls and Solutions</h3>
+            
+            <p>When transitioning from Node.js to Python containers, be aware of these common issues:</p>
+            
+            <h4>File Permissions</h4>
+            <p>Python applications may handle file permissions differently than Node.js applications:</p>
+            
+            <div class="pitfall">
+                <p><strong>Pitfall:</strong> Files created inside a Python container might be owned by root, causing permission issues when mounted to the host.</p>
+                <p><strong>Solution:</strong> Create a non-root user in your Dockerfile and set appropriate permissions:</p>
+                <pre><code># Create a non-root user
+RUN adduser --disabled-password --gecos "" appuser
+USER appuser
+
+# Or when working with specific directories
+RUN mkdir -p /app/data && chown -R appuser:appuser /app/data</code></pre>
+            </div>
+            
+            <h4>PYTHONPATH and Import Issues</h4>
+            <p>Python's import system can be confusing for JavaScript developers:</p>
+            
+            <div class="pitfall">
+                <p><strong>Pitfall:</strong> Python imports might not work the same way in containers as they do locally.</p>
+                <p><strong>Solution:</strong> Set the PYTHONPATH environment variable or use proper package structure:</p>
+                <pre><code># In Dockerfile
+ENV PYTHONPATH=/app
+
+# Or in docker-compose.yml
+environment:
+  - PYTHONPATH=/app</code></pre>
+            </div>
+            
+            <h4>Hot Reloading Differences</h4>
+            <p>Hot reloading works differently in Python:</p>
+            
+            <div class="pitfall">
+                <p><strong>Pitfall:</strong> Python development servers may not detect all file changes.</p>
+                <p><strong>Solution:</strong> For Flask, ensure FLASK_ENV=development is set. For other frameworks, you might need specific tools:</p>
+                <pre><code># For Flask
+ENV FLASK_ENV=development
+
+# For Django
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+# For FastAPI with uvicorn
+CMD ["uvicorn", "main:app", "--reload", "--host", "0.0.0.0"]</code></pre>
+            </div>
+            
+            <h4>Process Management</h4>
+            <p>Python web servers handle processes differently than Node.js:</p>
+            
+            <div class="pitfall">
+                <p><strong>Pitfall:</strong> Running Python web applications directly without proper process management.</p>
+                <p><strong>Solution:</strong> Use appropriate WSGI/ASGI servers:</p>
+                <pre><code># For Flask/Django
+CMD ["gunicorn", "--workers=4", "--bind=0.0.0.0:5000", "app:app"]
+
+# For ASGI applications (FastAPI, Starlette)
+CMD ["uvicorn", "main:app", "--workers", "4", "--host", "0.0.0.0"]</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Complete Examples: Side by Side</h3>
+            
+            <p>Let's look at complete, production-ready setups for both ecosystems.</p>
+            
+            <h4>Node.js Express Application</h4>
+            
+            <p><strong>Dockerfile:</strong></p>
+            <pre><code># Build stage
+FROM node:18 AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+
+# Production stage
+FROM node:18-slim
+
+WORKDIR /app
+
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/src ./src
+
+# Create a non-root user
+RUN adduser --disabled-password --gecos "" nodejs
+USER nodejs
+
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s \
+  CMD node -e "const http = require('http'); const options = { hostname: 'localhost', port: 3000, path: '/health', timeout: 2000 }; const req = http.get(options, (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }); req.on('error', () => process.exit(1)); req.end()"
+
+# Production command
+CMD ["node", "src/server.js"]</code></pre>
+            
+            <p><strong>docker-compose.production.yml:</strong></p>
+            <pre><code>version: '3'
+
+services:
+  app:
+    image: my-node-app:1.0
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=db
+    depends_on:
+      - db
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+      
+  db:
+    image: postgres:13-alpine
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=production_password
+      
+volumes:
+  postgres_data:</code></pre>
+            
+            <h4>Python Flask Application</h4>
+            
+            <p><strong>Dockerfile:</strong></p>
+            <pre><code># Build stage
+FROM python:3.9 AS build
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
+
+# Production stage
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY --from=build /app/wheels /wheels
+COPY --from=build /app/requirements.txt .
+
+RUN pip install --no-cache --no-index --find-links=/wheels -r requirements.txt && \
+    rm -rf /wheels
+
+COPY . .
+
+# Create a non-root user
+RUN adduser --disabled-password --gecos "" pyuser
+USER pyuser
+
+EXPOSE 5000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s \
+  CMD curl --fail http://localhost:5000/health || exit 1
+
+# Production command with Gunicorn
+CMD ["gunicorn", "--workers=4", "--bind=0.0.0.0:5000", "app:app"]</code></pre>
+            
+            <p><strong>docker-compose.production.yml:</strong></p>
+            <pre><code>version: '3'
+
+services:
+  app:
+    image: my-flask-app:1.0
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - DB_HOST=db
+    depends_on:
+      - db
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+      
+  db:
+    image: postgres:13-alpine
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=production_password
+      
+volumes:
+  postgres_data:</code></pre>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> Regardless of whether you're using Node.js or Python, the core Docker best practices remain the same:</p>
+                <ul>
+                    <li>Use multi-stage builds for smaller production images</li>
+                    <li>Run as a non-root user for security</li>
+                    <li>Include health checks for monitoring container health</li>
+                    <li>Use appropriate process management for production</li>
+                    <li>Set proper restart policies for resilience</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Transition Guide for JavaScript Developers</h3>
+            
+            <p>Here are some tips to help you transition from Node.js to Python containers:</p>
+            
+            <h4>Conceptual Mapping</h4>
+            <table>
+                <tr>
+                    <th>Node.js Concept</th>
+                    <th>Python Equivalent</th>
+                </tr>
+                <tr>
+                    <td>npm/yarn</td>
+                    <td>pip, pipenv, or poetry</td>
+                </tr>
+                <tr>
+                    <td>package.json</td>
+                    <td>requirements.txt or setup.py</td>
+                </tr>
+                <tr>
+                    <td>Express</td>
+                    <td>Flask or Django</td>
+                </tr>
+                <tr>
+                    <td>Nodemon</td>
+                    <td>Flask debug mode or watchdog</td>
+                </tr>
+                <tr>
+                    <td>Jest/Mocha</td>
+                    <td>pytest or unittest</td>
+                </tr>
+                <tr>
+                    <td>ESLint</td>
+                    <td>pylint or flake8</td>
+                </tr>
+                <tr>
+                    <td>PM2</td>
+                    <td>Gunicorn or Supervisor</td>
+                </tr>
+                <tr>
+                    <td>Sequelize/TypeORM</td>
+                    <td>SQLAlchemy or Django ORM</td>
+                </tr>
+            </table>
+            
+            <h4>Recommended Approach</h4>
+            <ol>
+                <li><strong>Start with Flask:</strong> It's more Express-like than Django and easier to learn</li>
+                <li><strong>Use Docker Compose for development:</strong> It simplifies environment setup</li>
+                <li><strong>Begin with simple applications:</strong> Avoid complex dependencies initially</li>
+                <li><strong>Learn Python's package structure:</strong> It's different from Node.js's module system</li>
+                <li><strong>Start with requirements.txt:</strong> Before moving to more complex tools like Poetry</li>
+            </ol>
+            
+            <h4>Key Python Libraries for Node.js Developers</h4>
+            <ul>
+                <li><strong>Flask/FastAPI:</strong> Express-like web frameworks</li>
+                <li><strong>SQLAlchemy:</strong> Powerful ORM (like Sequelize)</li>
+                <li><strong>Marshmallow/Pydantic:</strong> Schema validation (like Joi/zod)</li>
+                <li><strong>pytest:</strong> Testing framework (like Jest)</li>
+                <li><strong>requests:</strong> HTTP client (like axios/node-fetch)</li>
+                <li><strong>celery:</strong> Task queue (like Bull)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Key Takeaways</h3>
+            
+            <ul>
+                <li>Container fundamentals are the same between Node.js and Python, making the transition easier</li>
+                <li>Python uses requirements.txt instead of package.json for dependency management</li>
+                <li>Development servers in Python need explicit configuration for hot reloading</li>
+                <li>Production Python web applications use WSGI/ASGI servers (like Gunicorn) rather than running directly</li>
+                <li>Docker Compose workflows are nearly identical between the ecosystems</li>
+                <li>Multi-stage builds work similarly but with different optimization targets</li>
+                <li>Python applications often follow a more explicit pattern for database connections</li>
+                <li>Both ecosystems share best practices for container security and optimization</li>
+            </ul>
+            
+            <p>With this knowledge, you're well-equipped to transfer your Node.js container expertise to Python projects!</p>
+        </section>
+
+        <section>
+            <h3>Looking Ahead</h3>
+            
+            <p>In our next session, we'll explore Docker Compose in more detail and see how it can help manage complex application setups with multiple services. We'll build on the knowledge from this comparison to develop a multi-container application using Python.</p>
+        </section>
+
+        <section>
+            <h3>Discussion Questions</h3>
+            
+            <ol>
+                <li>How does Python's approach to dependency management compare to Node.js's? What advantages or disadvantages do you see in each approach?</li>
+                <li>Why might Python's production server setup (with WSGI/ASGI servers) be beneficial compared to Node.js's direct execution model?</li>
+                <li>How would you adapt your existing Node.js containerization practices when working with Python applications?</li>
+                <li>What challenges might a team face when maintaining both Node.js and Python containers in the same project?</li>
+                <li>How do the different concurrency models (Node.js event loop vs. Python's process-based concurrency) affect container configuration and resource allocation?</li>
+            </ol>
+        </section>
+
+        <section>
+            <h3>Additional Resources</h3>
+            
+            <ul>
+                <li><a href="https://docs.docker.com/language/python/" target="_blank">Docker Python Language Guide</a> - Official Docker documentation for Python</li>
+                <li><a href="https://docs.docker.com/language/nodejs/" target="_blank">Docker Node.js Language Guide</a> - Official Docker documentation for Node.js</li>
+                <li><a href="https://flask.palletsprojects.com/en/2.0.x/deploying/" target="_blank">Flask Deployment Options</a> - Guide to deploying Flask applications</li>
+                <li><a href="https://pythonspeed.com/docker/" target="_blank">Python in Docker Production Guide</a> - Best practices for Python containers</li>
+                <li><a href="https://nodejs.dev/learn/nodejs-with-docker" target="_blank">Node.js with Docker</a> - Guide to Docker for Node.js developers</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

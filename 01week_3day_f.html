@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Running Your First Container</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Running Your First Container</h1>
+        <h2>Week 1, Wednesday - Afternoon Session</h2>
+    </header>
+
+    <main>
+        <section class="lecture-intro">
+            <h3>Lecture Overview</h3>
+            <p>Now that we understand Docker's architecture and have Docker Desktop installed, it's time to run our first container! This session will guide you through the process of running containers, exploring their inner workings, and understanding the fundamental concepts in action. By the end of this session, you'll be comfortable with the basic container lifecycle and ready to start building your own containerized applications.</p>
+        </section>
+
+        <section>
+            <h3>What Happens When You Run a Container?</h3>
+            
+            <p>Before diving into commands, let's understand what actually happens when you run a container. This background will help you make sense of what Docker is doing behind the scenes.</p>
+            
+            <h4>The Container Lifecycle</h4>
+            
+            <p>When you run a Docker container, several steps happen in sequence:</p>
+            
+            <ol>
+                <li><strong>Image Lookup:</strong> Docker checks if the requested image exists locally</li>
+                <li><strong>Image Pull:</strong> If not found locally, Docker downloads the image from a registry (usually Docker Hub)</li>
+                <li><strong>Container Creation:</strong> Docker creates a new container instance from the image</li>
+                <li><strong>Filesystem Setup:</strong> A writable layer is added on top of the image's read-only layers</li>
+                <li><strong>Network Setup:</strong> Docker configures networking for the container</li>
+                <li><strong>Process Start:</strong> The container's main process (defined in the image) is started</li>
+                <li><strong>Output Stream:</strong> The container's output is connected to your terminal (unless detached mode is used)</li>
+            </ol>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> Running a container is like constructing a modular building. The image is the blueprint and pre-fabricated components. When you decide to create a building (container), Docker first checks if it has the blueprint and materials (image) locally. If not, it orders them from the warehouse (registry). It then assembles the structure according to the blueprint, adds utilities like plumbing and electricity (networking), creates a space for new furnishings (writable layer), and finally turns on the power (starts the main process).</p>
+            </div>
+            
+            <p>Understanding this process helps demystify what Docker is doing and makes troubleshooting easier when things don't work as expected.</p>
+        </section>
+
+        <section>
+            <h3>Your First Container: Hello World</h3>
+            
+            <p>Let's start with the simplest possible container - the Docker "Hello World" image. This tiny container does just one thing: prints a message to the console and exits.</p>
+            
+            <h4>Running Hello World</h4>
+            <p>Open your terminal or command prompt and type:</p>
+            
+            <pre><code>docker run hello-world</code></pre>
+            
+            <p>You should see output similar to this:</p>
+            
+            <pre><code>Unable to find image 'hello-world:latest' locally
+latest: Pulling from library/hello-world
+719385e32844: Pull complete 
+Digest: sha256:fc6cf906cbfa013e80938cdf0bb199fbdbb86d6e3e013783e5a766f50f5dbce0
+Status: Downloaded newer image for hello-world:latest
+
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+
+To generate this message, Docker took the following steps:
+ 1. The Docker client contacted the Docker daemon.
+ 2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
+ 3. The Docker daemon created a new container from that image which runs the
+    executable that produces the output you are currently reading.
+ 4. The Docker daemon streamed that output to the Docker client, which sent it
+    to your terminal.
+...
+</code></pre>
+            
+            <p>Let's break down what just happened:</p>
+            
+            <ol>
+                <li>You told Docker to run a container based on the "hello-world" image</li>
+                <li>Docker couldn't find the image locally, so it pulled it from Docker Hub</li>
+                <li>Docker created a container from this image</li>
+                <li>The container ran its programmed task (printing a message)</li>
+                <li>The container exited after completing its task</li>
+            </ol>
+            
+            <p>This simple example demonstrates the basic workflow of running a container - from image retrieval to execution.</p>
+            
+            <div class="note">
+                <p><strong>Note:</strong> The hello-world container exits immediately after printing its message. This is because containers run only as long as their main process is running. When that process completes, the container stops - but it still exists on your system in a stopped state.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Running an Interactive Container</h3>
+            
+            <p>The hello-world container is useful for testing, but it doesn't demonstrate the interactive nature of containers. Let's run a more useful container that gives us a shell to interact with.</p>
+            
+            <h4>Running Ubuntu</h4>
+            <p>Type the following command:</p>
+            
+            <pre><code>docker run -it ubuntu bash</code></pre>
+            
+            <p>You should see a prompt change, indicating you're now inside the container:</p>
+            
+            <pre><code>root@f8d76af99df3:/#</code></pre>
+            
+            <p>Let's break down the command:</p>
+            <ul>
+                <li><code>docker run</code>: The command to create and start a container</li>
+                <li><code>-it</code>: Two flags combined:
+                    <ul>
+                        <li><code>-i</code> or <code>--interactive</code>: Keep STDIN open (allows input)</li>
+                        <li><code>-t</code> or <code>--tty</code>: Allocate a pseudo-TTY (provides a terminal)</li>
+                    </ul>
+                </li>
+                <li><code>ubuntu</code>: The image to use (an Ubuntu Linux distribution)</li>
+                <li><code>bash</code>: The command to run inside the container (the Bash shell)</li>
+            </ul>
+            
+            <h4>Exploring Inside the Container</h4>
+            <p>Now that you have a shell inside the container, try running some commands:</p>
+            
+            <pre><code>ls
+cat /etc/os-release
+apt update
+apt install -y python3
+python3 --version
+exit</code></pre>
+            
+            <p>Notice a few important things:</p>
+            <ul>
+                <li>The container has its own filesystem, separate from your host computer</li>
+                <li>You can install software inside the container without affecting your host</li>
+                <li>When you exit the shell, the container stops because its main process (bash) has terminated</li>
+            </ul>
+            
+            <div class="practical-example">
+                <p><strong>Real-world application:</strong> This ability to quickly spawn a clean Linux environment is incredibly useful for testing, troubleshooting, or isolating work. Need to test something on Ubuntu but you're running Windows or macOS? No problem - just spin up an Ubuntu container!</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Running a Background Service Container</h3>
+            
+            <p>Many times, you'll want to run containers as background services rather than interactive processes. Let's run a web server container as a detached service.</p>
+            
+            <h4>Running NGINX Web Server</h4>
+            <p>Type the following command:</p>
+            
+            <pre><code>docker run -d -p 8080:80 --name my-nginx nginx</code></pre>
+            
+            <p>Let's break down this command:</p>
+            <ul>
+                <li><code>docker run</code>: Create and start a container</li>
+                <li><code>-d</code> or <code>--detach</code>: Run the container in the background</li>
+                <li><code>-p 8080:80</code> or <code>--publish 8080:80</code>: Map port 8080 on your host to port 80 in the container</li>
+                <li><code>--name my-nginx</code>: Assign a name to the container</li>
+                <li><code>nginx</code>: The image to use (the NGINX web server)</li>
+            </ul>
+            
+            <p>After running this command, Docker will return a long string of characters. This is the container ID:</p>
+            
+            <pre><code>7f16d9e28b2a920a48eeb3e9f676949ee6b9be5d23a2e8ca84c6f93c50be62e3</code></pre>
+            
+            <h4>Verifying the Container is Running</h4>
+            <p>To check if your container is running, use:</p>
+            
+            <pre><code>docker ps</code></pre>
+            
+            <p>You should see output like this:</p>
+            
+            <pre><code>CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS          PORTS                  NAMES
+7f16d9e28b2a   nginx     "/docker-entrypoint.…"   10 seconds ago   Up 9 seconds   0.0.0.0:8080->80/tcp   my-nginx</code></pre>
+            
+            <h4>Accessing the Web Server</h4>
+            <p>Now open your web browser and navigate to:</p>
+            
+            <pre><code>http://localhost:8080</code></pre>
+            
+            <p>You should see the NGINX welcome page. Congratulations! You're running a web server in a container.</p>
+            
+            <div class="explanation">
+                <p><strong>What's happening:</strong> The NGINX container is running the NGINX web server, which listens for HTTP requests on port 80 inside the container. We mapped port 8080 on our host machine to port 80 in the container with the <code>-p 8080:80</code> flag. This means requests to localhost:8080 on our computer are forwarded to port 80 in the container.</p>
+            </div>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> Port mapping is like setting up mail forwarding. When someone sends mail to your temporary address (host port 8080), the postal service (Docker) automatically forwards it to your actual residence (container port 80). The sender doesn't need to know about this forwarding - they just know the mail got delivered.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Managing Running Containers</h3>
+            
+            <p>Now that we have a container running, let's learn how to manage it.</p>
+            
+            <h4>Listing Running Containers</h4>
+            <p>To see all running containers:</p>
+            
+            <pre><code>docker ps</code></pre>
+            
+            <p>To see all containers (including stopped ones):</p>
+            
+            <pre><code>docker ps -a</code></pre>
+            
+            <h4>Viewing Container Logs</h4>
+            <p>To see the logs from your NGINX container:</p>
+            
+            <pre><code>docker logs my-nginx</code></pre>
+            
+            <p>To follow the logs in real-time (like <code>tail -f</code>):</p>
+            
+            <pre><code>docker logs -f my-nginx</code></pre>
+            
+            <p>Press Ctrl+C to stop following the logs.</p>
+            
+            <h4>Stopping a Container</h4>
+            <p>To stop the NGINX container:</p>
+            
+            <pre><code>docker stop my-nginx</code></pre>
+            
+            <p>This sends a SIGTERM signal to the main process in the container, allowing it to shut down gracefully. After a timeout, if the container hasn't stopped, Docker sends a SIGKILL signal.</p>
+            
+            <h4>Starting a Stopped Container</h4>
+            <p>To start the container again:</p>
+            
+            <pre><code>docker start my-nginx</code></pre>
+            
+            <p>Your web server should be accessible again at http://localhost:8080.</p>
+            
+            <h4>Restarting a Container</h4>
+            <p>To restart a container (stop and then start):</p>
+            
+            <pre><code>docker restart my-nginx</code></pre>
+            
+            <h4>Removing a Container</h4>
+            <p>First, stop the container if it's running:</p>
+            
+            <pre><code>docker stop my-nginx</code></pre>
+            
+            <p>Then remove it:</p>
+            
+            <pre><code>docker rm my-nginx</code></pre>
+            
+            <p>To force removal of a running container:</p>
+            
+            <pre><code>docker rm -f my-nginx</code></pre>
+            
+            <div class="warning">
+                <p><strong>Warning:</strong> Removing a container permanently deletes its writable layer, including any changes you made inside the container after it was created. If you need to preserve data, use volumes (which we'll cover later).</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Executing Commands in Running Containers</h3>
+            
+            <p>Often, you'll need to run commands inside an already-running container. Let's explore how to do this.</p>
+            
+            <h4>Starting a New NGINX Container</h4>
+            <p>First, let's start a new NGINX container:</p>
+            
+            <pre><code>docker run -d -p 8080:80 --name my-nginx nginx</code></pre>
+            
+            <h4>Running a Command Inside the Container</h4>
+            <p>To execute a command in a running container:</p>
+            
+            <pre><code>docker exec [OPTIONS] CONTAINER COMMAND [ARG...]</code></pre>
+            
+            <p>For example, to see what processes are running inside the NGINX container:</p>
+            
+            <pre><code>docker exec my-nginx ps aux</code></pre>
+            
+            <p>You'll see something like:</p>
+            
+            <pre><code>USER        PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  0.0  10628  5512 ?        Ss   00:42   0:00 nginx: master process nginx -g daemon off;
+nginx       31  0.0  0.0  11276  3240 ?        S    00:42   0:00 nginx: worker process
+...</code></pre>
+            
+            <h4>Getting an Interactive Shell</h4>
+            <p>For more complex interactions, you can get a shell inside the container:</p>
+            
+            <pre><code>docker exec -it my-nginx bash</code></pre>
+            
+            <p>Now you're inside the container with an interactive shell. You can run commands like:</p>
+            
+            <pre><code>ls -la /etc/nginx
+cat /etc/nginx/nginx.conf
+echo "Hello from inside the container" > /usr/share/nginx/html/hello.html
+exit</code></pre>
+            
+            <p>After creating the hello.html file, you can access it in your browser at:</p>
+            
+            <pre><code>http://localhost:8080/hello.html</code></pre>
+            
+            <div class="practical-application">
+                <p><strong>When to use exec:</strong> The <code>exec</code> command is extremely useful for:</p>
+                <ul>
+                    <li>Debugging issues inside a container</li>
+                    <li>Modifying configuration files</li>
+                    <li>Running database migrations or management commands</li>
+                    <li>Inspecting the container environment</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Understanding Container Isolation</h3>
+            
+            <p>One of Docker's key features is isolation. Let's explore what this means in practice.</p>
+            
+            <h4>Process Isolation</h4>
+            <p>Each container has its own isolated process space. Let's demonstrate this by running two NGINX containers on different ports:</p>
+            
+            <pre><code>docker run -d -p 8080:80 --name nginx1 nginx
+docker run -d -p 8081:80 --name nginx2 nginx</code></pre>
+            
+            <p>Now, let's get the process ID of the NGINX process in each container:</p>
+            
+            <pre><code>docker exec nginx1 ps aux | grep master
+docker exec nginx2 ps aux | grep master</code></pre>
+            
+            <p>You'll notice that in both containers, the NGINX master process has PID 1. This is because each container has its own isolated process namespace.</p>
+            
+            <h4>Filesystem Isolation</h4>
+            <p>Each container also has its own filesystem. Let's demonstrate this:</p>
+            
+            <pre><code>docker exec -it nginx1 bash -c "echo 'This is container 1' > /usr/share/nginx/html/index.html"
+docker exec -it nginx2 bash -c "echo 'This is container 2' > /usr/share/nginx/html/index.html"</code></pre>
+            
+            <p>Now, if you visit http://localhost:8080, you'll see "This is container 1", and if you visit http://localhost:8081, you'll see "This is container 2". Each container has its own version of the file, unaffected by changes in the other container.</p>
+            
+            <h4>Network Isolation</h4>
+            <p>Containers have their own network stacks as well. Let's check the IP addresses in each container:</p>
+            
+            <pre><code>docker exec nginx1 hostname -i
+docker exec nginx2 hostname -i</code></pre>
+            
+            <p>You'll see different IP addresses, showing that each container has its own network identity.</p>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> Container isolation is like having several different apartments in the same building. Each apartment has its own furniture, utilities, and address. The residents of one apartment can't see into or affect another apartment. They might live in the same building (host), but they have their own separate living spaces (containers).</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Running a Python Application Container</h3>
+            
+            <p>Let's try something more relevant to web development - running a Python application in a container.</p>
+            
+            <h4>Creating a Simple Python App</h4>
+            <p>First, let's create a simple Python application on your host machine. Create a new directory called <code>python_docker_demo</code> and add a file named <code>app.py</code> with the following content:</p>
+            
+            <pre><code>from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return "Hello from Python inside Docker!"
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=5000)</code></pre>
+            
+            <p>Also, create a <code>requirements.txt</code> file with:</p>
+            
+            <pre><code>flask==2.0.1</code></pre>
+            
+            <h4>Running the Python App in a Container</h4>
+            <p>Now, let's run this application in a Python container using volume mounting to share our code:</p>
+            
+            <pre><code>cd python_docker_demo
+docker run -it --rm -p 5000:5000 -v "$(pwd):/app" -w /app python:3.9-slim bash -c "pip install -r requirements.txt && python app.py"</code></pre>
+            
+            <p>Let's break down this command:</p>
+            <ul>
+                <li><code>-it</code>: Interactive mode with a terminal</li>
+                <li><code>--rm</code>: Remove the container when it exits</li>
+                <li><code>-p 5000:5000</code>: Map port 5000 on the host to port 5000 in the container</li>
+                <li><code>-v "$(pwd):/app"</code>: Mount the current directory on the host to /app in the container</li>
+                <li><code>-w /app</code>: Set the working directory inside the container to /app</li>
+                <li><code>python:3.9-slim</code>: Use the Python 3.9 slim image</li>
+                <li><code>bash -c "pip install -r requirements.txt && python app.py"</code>: The command to run inside the container</li>
+            </ul>
+            
+            <p>After running this command, you should see Flask starting up. Open your browser and navigate to http://localhost:5000 to see the "Hello from Python inside Docker!" message.</p>
+            
+            <div class="note">
+                <p><strong>Volume mounting:</strong> The <code>-v "$(pwd):/app"</code> option creates a bind mount that maps your current directory on the host to the /app directory in the container. This means any changes you make to your code on the host will be immediately visible inside the container, and vice versa.</p>
+            </div>
+            
+            <h4>Making Live Changes</h4>
+            <p>With the container still running, edit the <code>app.py</code> file on your host and change the hello function to:</p>
+            
+            <pre><code>@app.route('/')
+def hello():
+    return "Hello from Python inside Docker! I updated this without restarting the container!"</code></pre>
+            
+            <p>Save the file, refresh your browser, and you'll see the updated message. This is a powerful development workflow - your code runs in a container with a consistent environment, but you can edit it normally with your favorite editor on your host machine.</p>
+            
+            <div class="practical-application">
+                <p><strong>Development workflow:</strong> This pattern of mounting your code directory into a container is a common development workflow. It gives you the benefits of containerization (isolation, consistency) while still allowing for a fast feedback loop during development.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Understanding Container Lifecycle</h3>
+            
+            <p>Now that we've run several containers, let's understand the container lifecycle more fully.</p>
+            
+            <h4>Container States</h4>
+            <p>A container can be in one of these states:</p>
+            <ul>
+                <li><strong>Created:</strong> Container is created but not started</li>
+                <li><strong>Running:</strong> Container is running with its processes active</li>
+                <li><strong>Paused:</strong> Container processes are temporarily suspended</li>
+                <li><strong>Stopped/Exited:</strong> Container processes have terminated</li>
+                <li><strong>Removed:</strong> Container has been deleted</li>
+            </ul>
+            
+            <p>Let's see the container lifecycle in action:</p>
+            
+            <pre><code># Create a container without starting it
+docker create --name lifecycle-demo nginx
+docker ps -a  # See the created container with "Created" status
+
+# Start the container
+docker start lifecycle-demo
+docker ps  # See the container with "Up" status
+
+# Pause the container
+docker pause lifecycle-demo
+docker ps  # See the container with "Paused" status
+
+# Unpause the container
+docker unpause lifecycle-demo
+docker ps  # See the container with "Up" status again
+
+# Stop the container
+docker stop lifecycle-demo
+docker ps -a  # See the container with "Exited" status
+
+# Remove the container
+docker rm lifecycle-demo
+docker ps -a  # Container is gone</code></pre>
+            
+            <h4>Container Exit Codes</h4>
+            <p>When a container stops, it returns an exit code that indicates why it stopped:</p>
+            <ul>
+                <li><strong>0:</strong> Normal exit, process completed successfully</li>
+                <li><strong>1-128:</strong> Error exit codes, indicating various problems</li>
+                <li><strong>137:</strong> Container was killed (received SIGKILL)</li>
+                <li><strong>143:</strong> Container was terminated (received SIGTERM)</li>
+            </ul>
+            
+            <p>You can see a container's exit code with:</p>
+            
+            <pre><code>docker inspect -f '{{.State.ExitCode}}' container_name</code></pre>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> The container lifecycle is like a light bulb. It can be installed (created), turned on (started), dimmed (paused), turned off (stopped), or removed entirely. The exit code is like the reason the light went out - did someone turn it off normally, did it burn out, or was there a power outage?</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Container Resource Constraints</h3>
+            
+            <p>By default, containers can use as much of the host's CPU, memory, and I/O resources as they need. However, you can limit these resources to ensure one container doesn't starve others.</p>
+            
+            <h4>Setting Memory Limits</h4>
+            <p>To limit a container to using a maximum of 512MB of memory:</p>
+            
+            <pre><code>docker run -d --name memory-limited --memory=512m nginx</code></pre>
+            
+            <h4>Setting CPU Limits</h4>
+            <p>To limit a container to using at most 0.5 CPU cores:</p>
+            
+            <pre><code>docker run -d --name cpu-limited --cpus=0.5 nginx</code></pre>
+            
+            <h4>Viewing Resource Usage</h4>
+            <p>To see how much resources your containers are using:</p>
+            
+            <pre><code>docker stats</code></pre>
+            
+            <p>This displays a live stream of resource usage statistics for all running containers.</p>
+            
+            <div class="real-world-example">
+                <p><strong>Why limit resources:</strong> In production environments, resource limits are crucial for several reasons:</p>
+                <ul>
+                    <li>Preventing one container from consuming all host resources</li>
+                    <li>Ensuring predictable performance</li>
+                    <li>Aligning with resource allocation in orchestration systems like Kubernetes</li>
+                    <li>Capacity planning and cost management in cloud environments</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Container Networking Basics</h3>
+            
+            <p>We've already used port publishing with <code>-p</code>, but let's explore container networking a bit more.</p>
+            
+            <h4>Network Types</h4>
+            <p>Docker provides several network types:</p>
+            <ul>
+                <li><strong>bridge:</strong> The default network. Containers can talk to each other if they're on the same bridge.</li>
+                <li><strong>host:</strong> Container shares the host's network stack (no isolation).</li>
+                <li><strong>none:</strong> Container has no external network connectivity.</li>
+                <li><strong>user-defined networks:</strong> Custom networks you create.</li>
+            </ul>
+            
+            <h4>Listing Networks</h4>
+            <pre><code>docker network ls</code></pre>
+            
+            <h4>Inspecting a Network</h4>
+            <pre><code>docker network inspect bridge</code></pre>
+            
+            <h4>Running a Container on the Host Network</h4>
+            <p>To run a container that shares the host's network stack:</p>
+            
+            <pre><code>docker run -d --network=host --name host-nginx nginx</code></pre>
+            
+            <p>With host networking, you don't need to publish ports with <code>-p</code> because the container uses the host's ports directly. You can access NGINX at http://localhost:80 (note the port is 80, not 8080).</p>
+            
+            <h4>Container to Container Communication</h4>
+            <p>Let's demonstrate how containers can communicate with each other. First, create a custom network:</p>
+            
+            <pre><code>docker network create my-network</code></pre>
+            
+            <p>Run two containers on this network:</p>
+            
+            <pre><code>docker run -d --network=my-network --name container1 nginx
+docker run -d --network=my-network --name container2 alpine sleep 1000</code></pre>
+            
+            <p>Now, container2 can reach container1 by its name:</p>
+            
+            <pre><code>docker exec container2 wget -qO- container1</code></pre>
+            
+            <p>This command uses <code>wget</code> inside container2 to make an HTTP request to container1, which is running NGINX. The containers can communicate using their names as hostnames, which Docker resolves to the appropriate IP addresses.</p>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> Docker networks are like different neighborhoods in a city. Containers in the same network (neighborhood) can easily talk to each other. The bridge network is like a gated community with controlled access to the outside world. The host network is like living in the same house as the host - no separation at all. And containers with no network are like isolation cells with no external communication.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Practical Exercises</h3>
+            
+            <p>Now let's put everything together with some practical exercises to reinforce what we've learned.</p>
+            
+            <h4>Exercise 1: Web Server with Custom Content</h4>
+            <ol>
+                <li>Create a directory called <code>nginx_demo</code> on your host machine</li>
+                <li>Inside this directory, create a file named <code>index.html</code> with some custom HTML content</li>
+                <li>Run an NGINX container that serves this custom content by mounting the directory</li>
+                <li>Verify you can access the custom content in your browser</li>
+            </ol>
+            
+            <p>Solution:</p>
+            <pre><code>mkdir nginx_demo
+echo "&lt;h1&gt;My Custom NGINX Content&lt;/h1&gt;&lt;p&gt;This is being served from a Docker container!&lt;/p&gt;" > nginx_demo/index.html
+docker run -d -p 8080:80 -v "$(pwd)/nginx_demo:/usr/share/nginx/html" --name custom-nginx nginx
+# Open browser to http://localhost:8080</code></pre>
+            
+            <h4>Exercise 2: Redis Database Container</h4>
+            <ol>
+                <li>Run a Redis container in the background</li>
+                <li>Connect to the Redis CLI inside the container</li>
+                <li>Set a key-value pair in Redis</li>
+                <li>Retrieve the value to verify it was stored</li>
+            </ol>
+            
+            <p>Solution:</p>
+            <pre><code>docker run -d --name my-redis redis
+docker exec -it my-redis redis-cli
+> set mykey "Hello from Redis"
+OK
+> get mykey
+"Hello from Redis"
+> exit</code></pre>
+            
+            <h4>Exercise 3: Container Resource Monitoring</h4>
+            <ol>
+                <li>Run an NGINX container with 256MB memory limit</li>
+                <li>Run another NGINX container with no memory limit</li>
+                <li>Use <code>docker stats</code> to compare their resource usage</li>
+            </ol>
+            
+            <p>Solution:</p>
+            <pre><code>docker run -d --name limited-nginx --memory=256m nginx
+docker run -d --name unlimited-nginx nginx
+docker stats</code></pre>
+        </section>
+
+        <section>
+            <h3>Troubleshooting Container Issues</h3>
+            
+            <p>Even with simple containers, things can go wrong. Let's explore some common issues and how to troubleshoot them.</p>
+            
+            <h4>Container Exits Immediately</h4>
+            <p>If a container exits immediately after starting, check:</p>
+            <ol>
+                <li>The exit code:
+                    <pre><code>docker ps -a</code></pre>
+                </li>
+                <li>The container logs:
+                    <pre><code>docker logs container_name</code></pre>
+                </li>
+                <li>Try running the container in interactive mode to see the error:
+                    <pre><code>docker run -it image_name command</code></pre>
+                </li>
+            </ol>
+            
+            <h4>Can't Access Container via Published Port</h4>
+            <p>If you can't access a container via a published port, check:</p>
+            <ol>
+                <li>If the container is running:
+                    <pre><code>docker ps</code></pre>
+                </li>
+                <li>If the port is correctly published:
+                    <pre><code>docker port container_name</code></pre>
+                </li>
+                <li>If the application inside the container is actually listening on the expected port:
+                    <pre><code>docker exec container_name netstat -tulpn</code></pre>
+                </li>
+                <li>If there are any firewall issues on your host</li>
+            </ol>
+            
+            <h4>Container Has No Internet Access</h4>
+            <p>If a container can't access the internet, check:</p>
+            <ol>
+                <li>DNS resolution:
+                    <pre><code>docker exec container_name ping 8.8.8.8
+docker exec container_name ping google.com</code></pre>
+                </li>
+                <li>If the first ping works but the second doesn't, it's a DNS issue. Check the container's DNS configuration:
+                    <pre><code>docker exec container_name cat /etc/resolv.conf</code></pre>
+                </li>
+                <li>Your host's networking and firewall settings</li>
+            </ol>
+            
+            <h4>Volume Mount Issues</h4>
+            <p>If volume mounts aren't working as expected, check:</p>
+            <ol>
+                <li>If the paths are correct and absolute:
+                    <pre><code>docker inspect container_name</code></pre>
+                    Look for the "Mounts" section in the output.
+                </li>
+                <li>Permissions on the host directory</li>
+                <li>If you're on Windows, path format issues (use forward slashes)</li>
+            </ol>
+        </section>
+
+        <section>
+            <h3>Best Practices for Running Containers</h3>
+            
+            <p>Let's wrap up with some best practices for running containers:</p>
+            
+            <h4>Naming Containers</h4>
+            <p>Always use meaningful names for containers with the <code>--name</code> flag. This makes it much easier to manage them later.</p>
+            
+            <h4>Using the --rm Flag</h4>
+            <p>For short-lived containers, especially those used for development or testing, use the <code>--rm</code> flag to automatically remove the container when it exits. This prevents accumulating stopped containers.</p>
+            
+            <h4>Setting Resource Limits</h4>
+            <p>Especially in production, always set appropriate resource limits to prevent one container from starving others.</p>
+            
+            <h4>Handling Container Logs</h4>
+            <p>For containers that generate a lot of logs, use log rotation or a logging driver to prevent disk space issues:
+                <pre><code>docker run -d --log-opt max-size=10m --log-opt max-file=3 nginx</code></pre>
+            </p>
+            
+            <h4>Security Considerations</h4>
+            <p>Run containers with the principle of least privilege:</p>
+            <ul>
+                <li>Don't run containers as root if possible:
+                    <pre><code>docker run -d --user 1000:1000 nginx</code></pre>
+                </li>
+                <li>Use read-only file systems where appropriate:
+                    <pre><code>docker run -d --read-only nginx</code></pre>
+                </li>
+                <li>Only publish the ports you need</li>
+            </ul>
+            
+            <h4>Using Environment Variables</h4>
+            <p>Use environment variables for configuration:
+                <pre><code>docker run -d -e DATABASE_URL=postgres://user:pass@db:5432/mydb my-app</code></pre>
+            </p>
+            
+            <h4>Checking Container Health</h4>
+            <p>For important containers, add health checks:
+                <pre><code>docker run -d --health-cmd="curl -f http://localhost/ || exit 1" --health-interval=5s nginx</code></pre>
+            </p>
+        </section>
+
+        <section>
+            <h3>Key Takeaways</h3>
+            
+            <ul>
+                <li>Docker containers are isolated, lightweight environments for running applications</li>
+                <li>Basic container lifecycle: create, start, stop, remove</li>
+                <li>Containers can be run interactively (-it) or in the background (-d)</li>
+                <li>Port publishing (-p) maps container ports to host ports</li>
+                <li>Volume mounts (-v) allow sharing files between host and container</li>
+                <li>The exec command lets you run commands in a running container</li>
+                <li>Containers have isolated process spaces, filesystems, and networks</li>
+                <li>Resource constraints help manage container resource usage</li>
+                <li>Proper container management includes naming, cleanup, and security practices</li>
+            </ul>
+            
+            <p>With these fundamentals, you're well on your way to mastering Docker containers!</p>
+        </section>
+
+        <section>
+            <h3>Looking Ahead</h3>
+            
+            <p>In our next session, we'll explore Docker Hub and public images, which will expand your container toolkit significantly. We'll learn how to find, evaluate, and use pre-built images for a wide variety of applications and services.</p>
+        </section>
+
+        <section>
+            <h3>Discussion Questions</h3>
+            
+            <ol>
+                <li>How might containers improve your development workflow compared to traditional local development?</li>
+                <li>What challenges do you anticipate when working with containers in your projects?</li>
+                <li>How could you use the container isolation properties we explored to improve application security?</li>
+                <li>What types of applications do you think are best suited for containerization? Are there any that might not be good candidates?</li>
+                <li>How would you explain the value of containerization to a non-technical team member?</li>
+            </ol>
+        </section>
+
+        <section>
+            <h3>Additional Resources</h3>
+            
+            <ul>
+                <li><a href="https://docs.docker.com/engine/reference/run/">Docker Run Reference</a> - Comprehensive documentation on the docker run command</li>
+                <li><a href="https://docs.docker.com/engine/reference/commandline/exec/">Docker Exec Reference</a> - Details on executing commands in running containers</li>
+                <li><a href="https://docs.docker.com/storage/">Docker Storage Guide</a> - In-depth information on volumes and bind mounts</li>
+                <li><a href="https://docs.docker.com/config/containers/resource_constraints/">Docker Resource Constraints</a> - How to limit container resources</li>
+                <li><a href="https://labs.play-with-docker.com/">Play with Docker</a> - Interactive environment for experimenting with Docker</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

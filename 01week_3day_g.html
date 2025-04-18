@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Hub and Public Images</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Docker Hub and Public Images</h1>
+        <h2>Week 1, Wednesday - Afternoon Session</h2>
+    </header>
+
+    <main>
+        <section class="lecture-intro">
+            <h3>Lecture Overview</h3>
+            <p>In this session, we'll explore Docker Hub — Docker's official registry for container images — and learn how to find, use, and work with public images. Rather than building every image from scratch, we can leverage the vast ecosystem of pre-built images to accelerate our development. By the end of this session, you'll understand how to find appropriate images, evaluate their quality and security, and incorporate them into your projects effectively.</p>
+        </section>
+
+        <section>
+            <h3>Introduction to Docker Hub</h3>
+            
+            <p>Docker Hub is the world's largest library and community for container images. It serves as the default registry for Docker, meaning that when you run commands like <code>docker pull python</code>, Docker automatically looks for images on Docker Hub.</p>
+            
+            <h4>What is Docker Hub?</h4>
+            <ul>
+                <li>A cloud-based registry service for Docker images</li>
+                <li>A central repository where developers can share and find container images</li>
+                <li>Both a public registry for open-source images and a private registry for teams and organizations</li>
+                <li>A hub for official images maintained by Docker and software vendors</li>
+            </ul>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> Docker Hub is like a massive public library for container images. Just as a library catalogs books by different authors on different subjects, Docker Hub catalogs images from different providers for different applications. Some books are written by renowned authors (official images), some by community members (community images), and some are in special collections with restricted access (private repositories).</p>
+            </div>
+            
+            <h4>Key Concepts</h4>
+            <ul>
+                <li><strong>Image Repository:</strong> A collection of related images, usually representing the same application with different versions</li>
+                <li><strong>Official Images:</strong> Curated, well-documented images maintained by Docker</li>
+                <li><strong>Verified Publisher Images:</strong> Created and maintained by commercial entities that partner with Docker</li>
+                <li><strong>Community Images:</strong> Created and maintained by individual Docker Hub users</li>
+                <li><strong>Tags:</strong> Identifiers for specific versions of an image</li>
+            </ul>
+            
+            <p>Let's head over to Docker Hub and explore its features.</p>
+            
+            <h4>Accessing Docker Hub</h4>
+            <p>You can access Docker Hub through your web browser at <a href="https://hub.docker.com/" target="_blank">https://hub.docker.com/</a>. When you visit, you'll see a search bar, featured content, and various categories of images.</p>
+            
+            <p>While you can browse Docker Hub without an account, creating a free account allows you to:</p>
+            <ul>
+                <li>Push your own images to Docker Hub</li>
+                <li>Create private repositories</li>
+                <li>Star and follow your favorite images</li>
+                <li>Join Docker teams and organizations</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Finding Images on Docker Hub</h3>
+            
+            <p>Docker Hub contains millions of images, so finding the right one is an important skill. Let's explore different methods for finding images.</p>
+            
+            <h4>Using the Docker CLI</h4>
+            <p>You can search for images directly from your terminal using the <code>docker search</code> command:</p>
+            
+            <pre><code>docker search nginx</code></pre>
+            
+            <p>This returns a list of images related to the search term, along with information such as:</p>
+            <ul>
+                <li>The name of the repository</li>
+                <li>A brief description</li>
+                <li>The number of stars (indicating popularity)</li>
+                <li>Whether it's an official image</li>
+                <li>Whether it's automated (built automatically from a GitHub repository)</li>
+            </ul>
+            
+            <p>Example output:</p>
+            <pre><code>NAME                              DESCRIPTION                                     STARS     OFFICIAL   AUTOMATED
+nginx                             Official build of Nginx.                          16831     [OK]       
+jwilder/nginx-proxy               Automated Nginx reverse proxy for docker con...   2122                 [OK]
+richarvey/nginx-php-fpm           Container running Nginx + PHP-FPM capable of...   818                  [OK]
+jc21/nginx-proxy-manager          Docker container for managing Nginx proxy ho...   248                  
+...</code></pre>
+            
+            <p>While convenient, this method provides limited information. For more detailed information, it's better to use the Docker Hub website.</p>
+            
+            <h4>Using the Docker Hub Website</h4>
+            <p>The Docker Hub website provides a more comprehensive search experience with more details about each image:</p>
+            
+            <ol>
+                <li>Go to <a href="https://hub.docker.com/search?q=&type=image" target="_blank">https://hub.docker.com/search</a></li>
+                <li>Enter your search term in the search bar</li>
+                <li>Use filters like "Official Images" or "Verified Publishers" to narrow results</li>
+                <li>Sort results by relevance, stars, or recency</li>
+            </ol>
+            
+            <h4>Understanding Search Results</h4>
+            <p>When you search on Docker Hub, you'll see several pieces of information that help you evaluate an image:</p>
+            <ul>
+                <li><strong>Official/Verified Badge:</strong> Indicates trusted images</li>
+                <li><strong>Pull Count:</strong> How many times the image has been downloaded</li>
+                <li><strong>Star Count:</strong> How many users have starred (favorited) the repository</li>
+                <li><strong>Last Updated:</strong> When the repository was last updated</li>
+                <li><strong>Short Description:</strong> Brief summary of what the image contains</li>
+            </ul>
+            
+            <div class="example">
+                <p><strong>Example search:</strong> If you search for "PostgreSQL" on Docker Hub, you'll see multiple results including:</p>
+                <ul>
+                    <li><strong>postgres</strong> (Official Image): The official PostgreSQL image</li>
+                    <li><strong>bitnami/postgresql</strong> (Verified Publisher): Bitnami's PostgreSQL image</li>
+                    <li>Various community images with specific configurations</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Evaluating Image Quality and Security</h3>
+            
+            <p>Not all images are created equal. When selecting an image, you should consider several factors to ensure quality and security.</p>
+            
+            <h4>Image Trust Hierarchy</h4>
+            <p>Docker Hub has a hierarchy of image trustworthiness:</p>
+            <ol>
+                <li><strong>Official Images:</strong> Most trustworthy, maintained by Docker and upstream vendors</li>
+                <li><strong>Verified Publisher Images:</strong> Created by trusted partners with a verified badge</li>
+                <li><strong>Community Images:</strong> Created by individual users, varying in quality and security</li>
+            </ol>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> Think of this like medication sources. Official images are like FDA-approved medications from established pharmaceutical companies. Verified publisher images are like supplements from reputable brands with quality certifications. Community images range from carefully formulated products by knowledgeable herbalists to unknown substances mixed in someone's garage — they require more scrutiny before use.</p>
+            </div>
+            
+            <h4>Key Evaluation Criteria</h4>
+            <p>When evaluating an image, consider:</p>
+            <ul>
+                <li><strong>Maintainer Reputation:</strong> Is it from an official source or trusted publisher?</li>
+                <li><strong>Documentation Quality:</strong> Are the usage and configuration well documented?</li>
+                <li><strong>Update Frequency:</strong> How recently was the image updated?</li>
+                <li><strong>Community Engagement:</strong> High pull counts and stars suggest wider usage</li>
+                <li><strong>Docker Hub Comments:</strong> Look for feedback from other users</li>
+                <li><strong>Open Source:</strong> Can you see how the image is built? Is there a Dockerfile?</li>
+                <li><strong>Security Scanning:</strong> Does the image have any known vulnerabilities?</li>
+            </ul>
+            
+            <h4>Image Details Page</h4>
+            <p>Clicking on an image in Docker Hub takes you to its details page, which provides:</p>
+            <ul>
+                <li>A detailed description of the image</li>
+                <li>Usage instructions</li>
+                <li>Available tags (versions)</li>
+                <li>Dockerfile source (for some images)</li>
+                <li>Environment variables and other configuration options</li>
+            </ul>
+            
+            <div class="best-practice">
+                <p><strong>Best Practice:</strong> Always prefer official images when available. They're maintained by Docker and the software vendors, follow best practices, are regularly updated for security, and provide clear documentation.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Understanding Image Tags</h3>
+            
+            <p>Tags are how Docker identifies specific versions of an image. They're crucial for reproducibility and stability in your projects.</p>
+            
+            <h4>What are Tags?</h4>
+            <p>A tag is a label applied to an image in a repository, indicating a specific version or variant. When you pull an image without specifying a tag, Docker uses the <code>latest</code> tag by default.</p>
+            
+            <h4>Common Tagging Conventions</h4>
+            <p>Many repositories follow these conventions:</p>
+            <ul>
+                <li><strong>latest:</strong> The most up-to-date version (often the most recent stable release)</li>
+                <li><strong>Version numbers:</strong> Major.Minor.Patch (e.g., <code>13.0.1</code>, <code>3.9</code>)</li>
+                <li><strong>Date-based:</strong> Using dates as tags (e.g., <code>20210701</code>)</li>
+                <li><strong>Variant indicators:</strong> Often appended to version (e.g., <code>3.9-slim</code>, <code>13-alpine</code>)</li>
+            </ul>
+            
+            <h4>Common Image Variants</h4>
+            <p>Many official images offer different variants with varying tradeoffs:</p>
+            <ul>
+                <li><strong>alpine:</strong> Based on Alpine Linux, very small footprint but may have compatibility issues</li>
+                <li><strong>slim:</strong> Smaller than default but larger than alpine, good balance of compatibility and size</li>
+                <li><strong>buster/bullseye/etc.:</strong> Based on specific Debian releases</li>
+                <li><strong>windowsservercore/nanoserver:</strong> Windows-based variants</li>
+            </ul>
+            
+            <div class="example">
+                <p><strong>Example tags for Python:</strong></p>
+                <ul>
+                    <li><code>python:3.9</code> - Python 3.9 on Debian</li>
+                    <li><code>python:3.9-slim</code> - Smaller variant of Python 3.9</li>
+                    <li><code>python:3.9-alpine</code> - Python 3.9 on Alpine Linux (smallest)</li>
+                    <li><code>python:3.9-windowsservercore</code> - Python 3.9 on Windows Server Core</li>
+                </ul>
+            </div>
+            
+            <h4>Viewing Available Tags</h4>
+            <p>You can see all available tags for an image on its Docker Hub page. For example, for Python:</p>
+            <ol>
+                <li>Go to <a href="https://hub.docker.com/_/python" target="_blank">https://hub.docker.com/_/python</a></li>
+                <li>Click on the "Tags" tab</li>
+            </ol>
+            
+            <p>You'll see a list of all available tags along with their size and architecture support.</p>
+            
+            <div class="best-practice">
+                <p><strong>Best Practice:</strong> Always use specific version tags in production environments, never <code>latest</code>. This ensures reproducibility and prevents unexpected changes when images are updated.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Pulling and Using Public Images</h3>
+            
+            <p>Now that we understand how to find and evaluate images, let's look at how to pull and use them effectively.</p>
+            
+            <h4>Pulling Images</h4>
+            <p>To download an image from Docker Hub, use the <code>docker pull</code> command:</p>
+            
+            <pre><code>docker pull [repository]:[tag]</code></pre>
+            
+            <p>Examples:</p>
+            <pre><code># Pull the latest version of nginx
+docker pull nginx
+
+# Pull a specific version of Python
+docker pull python:3.9-slim
+
+# Pull PostgreSQL version 13 with Alpine Linux
+docker pull postgres:13-alpine</code></pre>
+            
+            <p>The image will be downloaded to your local Docker environment, where it can be used to run containers.</p>
+            
+            <h4>Viewing Local Images</h4>
+            <p>To see which images you have downloaded locally:</p>
+            
+            <pre><code>docker images</code></pre>
+            
+            <p>Output example:</p>
+            <pre><code>REPOSITORY   TAG         IMAGE ID       CREATED       SIZE
+nginx        latest      605c77e624dd   3 days ago   142MB
+python       3.9-slim    8c7051081f50   5 days ago   124MB
+postgres     13-alpine   87180a7e49e8   1 week ago   213MB</code></pre>
+            
+            <h4>Running Containers from Images</h4>
+            <p>Once you've pulled an image, you can run a container from it:</p>
+            
+            <pre><code>docker run [options] [repository]:[tag] [command]</code></pre>
+            
+            <p>If you haven't explicitly pulled the image, <code>docker run</code> will automatically pull it for you.</p>
+            
+            <div class="example">
+                <p><strong>Example running containers from public images:</strong></p>
+                <pre><code># Run an nginx web server
+docker run -d -p 8080:80 --name my-nginx nginx
+
+# Run a PostgreSQL database
+docker run -d -p 5432:5432 \
+  -e POSTGRES_PASSWORD=mysecretpassword \
+  --name my-postgres \
+  postgres:13-alpine
+
+# Run a Python container with an interactive shell
+docker run -it --rm python:3.9-slim python</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Exploring Popular Official Images</h3>
+            
+            <p>Let's explore some of the most popular official images on Docker Hub and how they can be used in your projects.</p>
+            
+            <h4>NGINX</h4>
+            <p>NGINX is a high-performance web server and reverse proxy.</p>
+            
+            <p><strong>Basic usage:</strong></p>
+            <pre><code>docker run -d -p 8080:80 --name webserver nginx</code></pre>
+            
+            <p><strong>Serving custom content:</strong></p>
+            <pre><code>docker run -d -p 8080:80 -v $(pwd)/html:/usr/share/nginx/html nginx</code></pre>
+            
+            <p><strong>Custom configuration:</strong></p>
+            <pre><code>docker run -d -p 8080:80 -v $(pwd)/nginx.conf:/etc/nginx/nginx.conf:ro nginx</code></pre>
+            
+            <div class="practical-application">
+                <p><strong>Real-world application:</strong> You can use NGINX as a reverse proxy in front of your Python web applications. It can handle SSL termination, static file serving, and load balancing, allowing your application to focus on business logic.</p>
+            </div>
+            
+            <h4>PostgreSQL</h4>
+            <p>PostgreSQL is a powerful, open-source relational database.</p>
+            
+            <p><strong>Basic usage:</strong></p>
+            <pre><code>docker run -d \
+  -p 5432:5432 \
+  -e POSTGRES_PASSWORD=mysecretpassword \
+  --name my-postgres \
+  postgres</code></pre>
+            
+            <p><strong>Data persistence:</strong></p>
+            <pre><code>docker run -d \
+  -p 5432:5432 \
+  -e POSTGRES_PASSWORD=mysecretpassword \
+  -e POSTGRES_USER=myuser \
+  -e POSTGRES_DB=mydb \
+  -v postgres_data:/var/lib/postgresql/data \
+  --name my-postgres \
+  postgres</code></pre>
+            
+            <p><strong>Initialization scripts:</strong></p>
+            <pre><code>docker run -d \
+  -p 5432:5432 \
+  -e POSTGRES_PASSWORD=mysecretpassword \
+  -v postgres_data:/var/lib/postgresql/data \
+  -v $(pwd)/init.sql:/docker-entrypoint-initdb.d/init.sql \
+  --name my-postgres \
+  postgres</code></pre>
+            
+            <div class="practical-application">
+                <p><strong>Real-world application:</strong> In a typical web application, you might use a PostgreSQL container for your database, connected to your Python application container. The database data can be persisted using a Docker volume.</p>
+            </div>
+            
+            <h4>Python</h4>
+            <p>The official Python image provides Python runtimes.</p>
+            
+            <p><strong>Interactive Python shell:</strong></p>
+            <pre><code>docker run -it --rm python:3.9 python</code></pre>
+            
+            <p><strong>Running a Python script:</strong></p>
+            <pre><code>docker run -it --rm -v $(pwd):/app -w /app python:3.9 python script.py</code></pre>
+            
+            <p><strong>Running a Flask web application:</strong></p>
+            <pre><code>docker run -it --rm \
+  -p 5000:5000 \
+  -v $(pwd):/app \
+  -w /app \
+  -e FLASK_APP=app.py \
+  -e FLASK_ENV=development \
+  python:3.9-slim \
+  sh -c "pip install -r requirements.txt && flask run --host=0.0.0.0"</code></pre>
+            
+            <div class="practical-application">
+                <p><strong>Real-world application:</strong> The Python image is typically used as a base for creating your own application images. You would start with a Python base image, add your application code and dependencies, and build a custom image.</p>
+            </div>
+            
+            <h4>Redis</h4>
+            <p>Redis is an in-memory data structure store, used as a database, cache, and message broker.</p>
+            
+            <p><strong>Basic usage:</strong></p>
+            <pre><code>docker run -d -p 6379:6379 --name my-redis redis</code></pre>
+            
+            <p><strong>With persistence:</strong></p>
+            <pre><code>docker run -d \
+  -p 6379:6379 \
+  -v redis_data:/data \
+  --name my-redis \
+  redis redis-server --appendonly yes</code></pre>
+            
+            <p><strong>With custom configuration:</strong></p>
+            <pre><code>docker run -d \
+  -p 6379:6379 \
+  -v $(pwd)/redis.conf:/usr/local/etc/redis/redis.conf \
+  --name my-redis \
+  redis redis-server /usr/local/etc/redis/redis.conf</code></pre>
+            
+            <div class="practical-application">
+                <p><strong>Real-world application:</strong> Redis is commonly used alongside web applications for caching, session storage, and background job queues. For example, you might use Redis with Celery to handle asynchronous tasks in a Python web application.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Understanding Docker Image Size and Optimization</h3>
+            
+            <p>Image size is an important consideration for performance, network transfer times, and resource usage. Let's explore this aspect of public images.</p>
+            
+            <h4>Why Image Size Matters</h4>
+            <ul>
+                <li><strong>Download time:</strong> Smaller images are faster to pull from registries</li>
+                <li><strong>Startup time:</strong> Smaller images can lead to faster container startup</li>
+                <li><strong>Resource usage:</strong> Smaller images use less disk space</li>
+                <li><strong>Security surface:</strong> Smaller images often have fewer unnecessary packages</li>
+            </ul>
+            
+            <h4>Size Comparison of Different Variants</h4>
+            <p>Let's compare the sizes of different Python image variants:</p>
+            
+            <pre><code>docker pull python:3.9
+docker pull python:3.9-slim
+docker pull python:3.9-alpine
+docker images</code></pre>
+            
+            <p>You might see output like:</p>
+            <pre><code>REPOSITORY   TAG         IMAGE ID       CREATED       SIZE
+python       3.9         f88b2f81f83a   2 weeks ago   915MB
+python       3.9-slim    8c705081f50d   2 weeks ago   124MB
+python       3.9-alpine  d4d9c6317a1a   2 weeks ago   45MB</code></pre>
+            
+            <p>The size differences are substantial! But what are the tradeoffs?</p>
+            
+            <h4>Tradeoffs for Different Variants</h4>
+            <table>
+                <tr>
+                    <th>Variant</th>
+                    <th>Pros</th>
+                    <th>Cons</th>
+                </tr>
+                <tr>
+                    <td>Full (e.g., <code>python:3.9</code>)</td>
+                    <td>
+                        <ul>
+                            <li>Includes all build tools</li>
+                            <li>Includes many system packages</li>
+                            <li>Maximum compatibility</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>Very large size</li>
+                            <li>Larger attack surface</li>
+                            <li>Slower to download and start</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Slim (e.g., <code>python:3.9-slim</code>)</td>
+                    <td>
+                        <ul>
+                            <li>Much smaller than full</li>
+                            <li>Good compatibility</li>
+                            <li>Based on Debian</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>Missing some build tools</li>
+                            <li>May need additional packages</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Alpine (e.g., <code>python:3.9-alpine</code>)</td>
+                    <td>
+                        <ul>
+                            <li>Extremely small</li>
+                            <li>Secure by default</li>
+                            <li>Fast to download and start</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>Uses musl libc instead of glibc</li>
+                            <li>Compatibility issues with some C extensions</li>
+                            <li>Compilation can be challenging</li>
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+            
+            <div class="best-practice">
+                <p><strong>Best Practice:</strong> For Python applications in development, <code>python:3.x-slim</code> is often a good balance of size and compatibility. For production, Alpine-based images are excellent if you've tested thoroughly with your dependencies. The full image is rarely necessary but can be useful for complex build environments.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Working with Image Layers</h3>
+            
+            <p>Understanding how Docker images are constructed from layers helps you optimize image size and reuse.</p>
+            
+            <h4>What are Image Layers?</h4>
+            <p>Docker images are composed of multiple layers, each representing a set of filesystem changes. Layers are:</p>
+            <ul>
+                <li>Created by instructions in a Dockerfile (each instruction creates a layer)</li>
+                <li>Read-only once created</li>
+                <li>Cached and reused when possible</li>
+                <li>Stacked on top of each other to form the complete image</li>
+            </ul>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> Image layers are like transparencies stacked on top of each other. Each transparency adds something to the final image, but you can see through to the layers below. When Docker builds an image, it's as if it's laying down these transparencies one at a time, with each new layer potentially modifying what's visible in the layers below.</p>
+            </div>
+            
+            <h4>Inspecting Image Layers</h4>
+            <p>To see the layers that make up an image, use the <code>docker history</code> command:</p>
+            
+            <pre><code>docker history nginx:latest</code></pre>
+            
+            <p>You'll see output like:</p>
+            <pre><code>IMAGE          CREATED        CREATED BY                                      SIZE      COMMENT
+605c77e624dd   7 days ago     /bin/sh -c #(nop)  CMD ["nginx" "-g" "daemon…   0B        
+&lt;missing&gt;      7 days ago     /bin/sh -c #(nop)  STOPSIGNAL SIGQUIT           0B        
+&lt;missing&gt;      7 days ago     /bin/sh -c #(nop)  EXPOSE 80                    0B        
+&lt;missing&gt;      7 days ago     /bin/sh -c #(nop)  ENTRYPOINT ["/docker-ent…   0B        
+&lt;missing&gt;      7 days ago     /bin/sh -c #(nop) COPY file:09a214a3e07c919a…   4.61kB    
+&lt;missing&gt;      7 days ago     /bin/sh -c #(nop) COPY file:0fd5fca330dcd6a7…   1.04kB    
+&lt;missing&gt;      7 days ago     /bin/sh -c #(nop) COPY file:0b866ff3fc1ef5b0…   1.96kB    
+&lt;missing&gt;      7 days ago     /bin/sh -c #(nop) COPY file:65504f71f5855ca0…   1.2kB     
+&lt;missing&gt;      7 days ago     /bin/sh -c set -x     && addgroup --system -…   61.1MB    
+...</code></pre>
+            
+            <p>Each row represents a layer in the image, showing when it was created, the command that created it, and its size.</p>
+            
+            <h4>Layer Sharing and Caching</h4>
+            <p>One of the powerful features of Docker's layer system is the ability to share and reuse layers between images. For example:</p>
+            <ul>
+                <li>If two images are based on Ubuntu, they share the Ubuntu base layers</li>
+                <li>When you build an image, Docker reuses cached layers if the instructions haven't changed</li>
+                <li>This sharing makes pullls faster and reduces disk usage</li>
+            </ul>
+            
+            <div class="example">
+                <p><strong>Example of layer sharing:</strong> If you have both <code>nginx:latest</code> and <code>nginx:1.21</code> images, they likely share many layers. Docker only stores the unique layers for each tag, saving disk space.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Multi-Architecture Images</h3>
+            
+            <p>Docker Hub supports multi-architecture images, which allows the same image name to work across different CPU architectures.</p>
+            
+            <h4>Understanding Multi-Architecture Images</h4>
+            <p>Multi-architecture images are actually a collection of images for different architectures, tied together with a manifest list. When you pull an image, Docker automatically selects the version that matches your system's architecture.</p>
+            
+            <p>Common architectures include:</p>
+            <ul>
+                <li><strong>amd64:</strong> Standard 64-bit x86 PCs and servers</li>
+                <li><strong>arm64/aarch64:</strong> 64-bit ARM (Apple M1/M2, AWS Graviton, etc.)</li>
+                <li><strong>arm/v7:</strong> 32-bit ARM (older Raspberry Pi, etc.)</li>
+                <li><strong>windows-amd64:</strong> Windows on 64-bit x86</li>
+            </ul>
+            
+            <h4>Checking Architecture Support</h4>
+            <p>To see which architectures an image supports, look at its Docker Hub page under the Tags section. For official images, you'll often see multiple architectures listed for each tag.</p>
+            
+            <div class="practical-application">
+                <p><strong>Practical application:</strong> Multi-architecture support is increasingly important with the growing adoption of ARM-based servers and Apple Silicon Macs. Most official images now support multiple architectures without any special configuration on your part.</p>
+            </div>
+            
+            <h4>Dealing with Architecture Mismatches</h4>
+            <p>Sometimes you might need to run an image that doesn't have a build for your architecture. In these cases:</p>
+            <ul>
+                <li>Docker Desktop for Mac supports transparent emulation of x86_64 images on Apple Silicon</li>
+                <li>You can explicitly request an image for a specific architecture using the <code>--platform</code> flag:</li>
+            </ul>
+            
+            <pre><code>docker run --platform linux/amd64 -d nginx</code></pre>
+            
+            <p>This forces Docker to pull and run the amd64 version, even on an ARM machine (with emulation if available).</p>
+        </section>
+
+        <section>
+            <h3>Advanced Docker Hub Features</h3>
+            
+            <p>Docker Hub offers several advanced features that can enhance your development workflow.</p>
+            
+            <h4>Automated Builds</h4>
+            <p>Docker Hub can automatically build images from source code repositories:</p>
+            <ol>
+                <li>Link your GitHub or Bitbucket account to Docker Hub</li>
+                <li>Set up a repository with a Dockerfile</li>
+                <li>Configure build rules (which branches/tags to build)</li>
+                <li>Docker Hub will automatically build and publish images when you push changes</li>
+            </ol>
+            
+            <h4>Using Docker Hub for Your Own Images</h4>
+            <p>To push your own images to Docker Hub:</p>
+            <ol>
+                <li>Create an account and log in:
+                    <pre><code>docker login</code></pre>
+                </li>
+                <li>Tag your image with your username:
+                    <pre><code>docker tag my-app username/my-app:1.0</code></pre>
+                </li>
+                <li>Push the image to Docker Hub:
+                    <pre><code>docker push username/my-app:1.0</code></pre>
+                </li>
+            </ol>
+            
+            <h4>Organization Accounts</h4>
+            <p>For team projects, Docker Hub offers organization accounts that allow:</p>
+            <ul>
+                <li>Shared access to repositories</li>
+                <li>Team management</li>
+                <li>Role-based access control</li>
+                <li>Private repositories</li>
+            </ul>
+            
+            <div class="practical-application">
+                <p><strong>Real-world usage:</strong> In a professional setting, your organization might have a Docker Hub organization account where all your custom images are stored. CI/CD pipelines can automatically build and push images to this account, and developers can pull these images as needed.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Alternatives to Docker Hub</h3>
+            
+            <p>While Docker Hub is the default and most popular registry, there are several alternatives worth knowing about:</p>
+            
+            <h4>Public Registries</h4>
+            <ul>
+                <li><strong>GitHub Container Registry (ghcr.io):</strong> Integrated with GitHub accounts and actions</li>
+                <li><strong>Quay.io:</strong> Red Hat's container registry with advanced security features</li>
+                <li><strong>Google Container Registry (gcr.io):</strong> Integrated with Google Cloud</li>
+                <li><strong>Amazon Elastic Container Registry (ECR Public):</strong> AWS's public registry</li>
+            </ul>
+            
+            <h4>Private Registry Options</h4>
+            <ul>
+                <li><strong>Azure Container Registry:</strong> Microsoft's private registry service</li>
+                <li><strong>Amazon ECR (Private):</strong> AWS's private registry service</li>
+                <li><strong>Google Container Registry (Private):</strong> Google Cloud's private registry</li>
+                <li><strong>Harbor:</strong> Open-source registry with security scanning</li>
+                <li><strong>Self-hosted Docker Registry:</strong> Run your own registry server</li>
+            </ul>
+            
+            <h4>Using Alternative Registries</h4>
+            <p>To pull from an alternative registry, include the registry hostname in the image name:</p>
+            
+            <pre><code># Pull from GitHub Container Registry
+docker pull ghcr.io/username/image:tag
+
+# Pull from Google Container Registry
+docker pull gcr.io/project-id/image:tag</code></pre>
+            
+            <div class="best-practice">
+                <p><strong>Best Practice:</strong> In enterprise environments, it's common to use a private registry for your custom images. This gives you more control over security, access, and availability.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Practical Examples</h3>
+            
+            <p>Let's put our knowledge of Docker Hub and public images to practical use with some real-world examples.</p>
+            
+            <h4>Example 1: Setting Up a Web Development Environment</h4>
+            <p>Let's create a simple web development environment with NGINX, Python, and PostgreSQL:</p>
+            
+            <pre><code># Create a network for the containers to communicate
+docker network create webdev
+
+# Start a PostgreSQL database
+docker run -d \
+  --name postgres \
+  --network webdev \
+  -e POSTGRES_PASSWORD=devpassword \
+  -e POSTGRES_USER=devuser \
+  -e POSTGRES_DB=devdb \
+  -v pg_data:/var/lib/postgresql/data \
+  postgres:13-alpine
+
+# Start a Python container for development
+docker run -it --rm \
+  --name python \
+  --network webdev \
+  -v "$(pwd)/app:/app" \
+  -w /app \
+  -p 5000:5000 \
+  python:3.9-slim \
+  bash
+
+# In the Python container, you can now install dependencies and run your app
+# pip install -r requirements.txt
+# python app.py
+
+# In a separate terminal, start NGINX as a reverse proxy
+docker run -d \
+  --name nginx \
+  --network webdev \
+  -p 8080:80 \
+  -v "$(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf" \
+  nginx:alpine</code></pre>
+            
+            <p>With this setup, NGINX can proxy requests to your Python application, which can connect to the PostgreSQL database.</p>
+            
+            <h4>Example 2: Data Analysis Environment</h4>
+            <p>Let's set up a data analysis environment using the Jupyter image:</p>
+            
+            <pre><code>docker run -it --rm \
+  -p 8888:8888 \
+  -v "$(pwd)/notebooks:/home/jovyan/work" \
+  jupyter/datascience-notebook</code></pre>
+            
+            <p>This launches a Jupyter notebook with scientific computing libraries. You can access it by opening the URL displayed in the console (typically http://localhost:8888 with a token).</p>
+            
+            <h4>Example 3: WordPress Blog</h4>
+            <p>Let's set up a WordPress blog with MySQL using official images:</p>
+            
+            <pre><code># Create a network
+docker network create wordpress
+
+# Start MySQL
+docker run -d \
+  --name wordpress-db \
+  --network wordpress \
+  -e MYSQL_ROOT_PASSWORD=rootpassword \
+  -e MYSQL_DATABASE=wordpress \
+  -e MYSQL_USER=wordpress \
+  -e MYSQL_PASSWORD=wordpress \
+  -v mysql_data:/var/lib/mysql \
+  mysql:5.7
+
+# Start WordPress
+docker run -d \
+  --name wordpress \
+  --network wordpress \
+  -p 8080:80 \
+  -e WORDPRESS_DB_HOST=wordpress-db \
+  -e WORDPRESS_DB_USER=wordpress \
+  -e WORDPRESS_DB_PASSWORD=wordpress \
+  -e WORDPRESS_DB_NAME=wordpress \
+  -v wordpress_data:/var/www/html \
+  wordpress</code></pre>
+            
+            <p>You can then access your WordPress site at http://localhost:8080.</p>
+        </section>
+
+        <section>
+            <h3>Security Considerations</h3>
+            
+            <p>When using public images, security should be a top consideration:</p>
+            
+            <h4>Image Security Best Practices</h4>
+            <ul>
+                <li><strong>Use official or verified images</strong> whenever possible</li>
+                <li><strong>Prefer specific tags</strong> over <code>latest</code> to ensure you know what you're running</li>
+                <li><strong>Keep images updated</strong> regularly to get security patches</li>
+                <li><strong>Use minimal images</strong> when possible (alpine/slim variants) to reduce attack surface</li>
+                <li><strong>Scan images for vulnerabilities</strong> using tools like Docker Scout, Snyk, or Trivy</li>
+                <li><strong>Don't embed secrets</strong> in images or containers; use environment variables or secrets management tools</li>
+            </ul>
+            
+            <h4>Vulnerability Scanning</h4>
+            <p>Docker Desktop includes Docker Scout, which can scan images for known vulnerabilities:</p>
+            
+            <pre><code>docker scout quickview nginx:latest</code></pre>
+            
+            <p>This shows a summary of known vulnerabilities in the image.</p>
+            
+            <pre><code>docker scout cves nginx:latest</code></pre>
+            
+            <p>This shows more detailed information about the CVEs (Common Vulnerabilities and Exposures) in the image.</p>
+            
+            <div class="best-practice">
+                <p><strong>Best Practice:</strong> Integrate image scanning into your CI/CD pipeline to automatically check for vulnerabilities before deployment.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Key Takeaways</h3>
+            
+            <ul>
+                <li>Docker Hub is the default registry for Docker images, with millions of available images</li>
+                <li>Official images are curated by Docker and are the most trustworthy option</li>
+                <li>Tags specify image versions and variants, with conventions like <code>version</code>, <code>version-slim</code>, and <code>version-alpine</code></li>
+                <li>When evaluating images, consider maintainer reputation, documentation quality, update frequency, and community engagement</li>
+                <li>Different image variants offer tradeoffs between size, features, and compatibility</li>
+                <li>Multi-architecture images allow the same image to work across different CPU architectures</li>
+                <li>Images are composed of layers, which can be shared and reused between images</li>
+                <li>Security is a critical consideration when using public images - prefer official images and scan for vulnerabilities</li>
+            </ul>
+            
+            <p>With this knowledge, you're well-equipped to effectively find, evaluate, and use public Docker images in your projects!</p>
+        </section>
+
+        <section>
+            <h3>Looking Ahead</h3>
+            
+            <p>In our next session, we'll learn how to create our own custom Docker images by writing Dockerfiles. This will allow us to package our applications into containers with precisely the dependencies and configuration we need.</p>
+        </section>
+
+        <section>
+            <h3>Discussion Questions</h3>
+            
+            <ol>
+                <li>What criteria would you use to decide between the full, slim, and alpine variants of an image for your project?</li>
+                <li>How might you approach evaluating a community image that doesn't have an official alternative?</li>
+                <li>What are the security implications of using public images in a production environment? How would you mitigate these risks?</li>
+                <li>How could the layered architecture of Docker images help optimize the build and deployment process in a CI/CD pipeline?</li>
+                <li>In what scenarios might you prefer a specialized image over a more generic base image that you customize yourself?</li>
+            </ol>
+        </section>
+
+        <section>
+            <h3>Additional Resources</h3>
+            
+            <ul>
+                <li><a href="https://docs.docker.com/docker-hub/" target="_blank">Docker Hub Documentation</a> - Official guide to using Docker Hub</li>
+                <li><a href="https://docs.docker.com/engine/reference/commandline/pull/" target="_blank">Docker Pull Reference</a> - Detailed information on the pull command</li>
+                <li><a href="https://docs.docker.com/develop/develop-images/image_management/" target="_blank">Docker Image Management</a> - Best practices for managing images</li>
+                <li><a href="https://docs.docker.com/engine/reference/commandline/search/" target="_blank">Docker Search Reference</a> - How to search for images from the CLI</li>
+                <li><a href="https://github.com/docker-library/official-images" target="_blank">Official Images Repository</a> - GitHub repository for official Docker images</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

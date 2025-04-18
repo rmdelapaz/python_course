@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creating a Basic Dockerfile</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Creating a Basic Dockerfile</h1>
+        <h2>Week 1, Wednesday - Afternoon Session</h2>
+    </header>
+
+    <main>
+        <section class="lecture-intro">
+            <h3>Lecture Overview</h3>
+            <p>In this session, we'll explore how to create your own Docker images by writing Dockerfiles. A Dockerfile is a text document containing instructions that Docker uses to automatically build an image. Understanding Dockerfiles is a crucial skill for containerizing applications effectively. By the end of this session, you'll be able to create custom Docker images tailored to your specific application needs.</p>
+        </section>
+
+        <section>
+            <h3>What is a Dockerfile?</h3>
+            
+            <p>A Dockerfile is a plain text file named <code>Dockerfile</code> (with no file extension) that contains a series of instructions for Docker to build an image.</p>
+            
+            <h4>Key Concepts</h4>
+            <ul>
+                <li><strong>Instructions:</strong> Commands that Docker executes during the build process</li>
+                <li><strong>Base Image:</strong> The starting point for your image, usually a minimal operating system or runtime environment</li>
+                <li><strong>Layers:</strong> Each instruction creates a new layer in the image</li>
+                <li><strong>Build Context:</strong> The set of files and directories available during the build process</li>
+            </ul>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> A Dockerfile is like a recipe for baking a cake. It starts with base ingredients (the base image), follows a sequence of steps (instructions), and each step transforms the ingredients in some way. The final result is a complete, ready-to-use cake (Docker image). Just as a good baker might adapt a recipe for different occasions, you'll customize your Dockerfile for different applications.</p>
+            </div>
+            
+            <h4>Why Create Custom Images?</h4>
+            <p>While public images are convenient, custom images offer several advantages:</p>
+            <ul>
+                <li><strong>Application-specific configuration:</strong> Tailored to your application's exact needs</li>
+                <li><strong>Dependency management:</strong> Include only the libraries and tools your application requires</li>
+                <li><strong>Consistency:</strong> Ensure development, testing, and production environments are identical</li>
+                <li><strong>Automation:</strong> Streamline deployment by automating environment setup</li>
+                <li><strong>Version control:</strong> Track changes to your environment alongside your code</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Dockerfile Syntax and Structure</h3>
+            
+            <p>Dockerfiles use a simple, declarative syntax. Each line contains an instruction followed by arguments.</p>
+            
+            <h4>Basic Structure</h4>
+            <pre><code># Comment
+INSTRUCTION arguments</code></pre>
+            
+            <p>For example:</p>
+            <pre><code># Use Python 3.9 as base image
+FROM python:3.9-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements file
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+
+# Command to run when container starts
+CMD ["python", "app.py"]</code></pre>
+            
+            <h4>Common Instructions</h4>
+            <table>
+                <tr>
+                    <th>Instruction</th>
+                    <th>Purpose</th>
+                </tr>
+                <tr>
+                    <td><code>FROM</code></td>
+                    <td>Sets the base image</td>
+                </tr>
+                <tr>
+                    <td><code>RUN</code></td>
+                    <td>Executes commands in the container during build</td>
+                </tr>
+                <tr>
+                    <td><code>COPY</code></td>
+                    <td>Copies files from the host to the container</td>
+                </tr>
+                <tr>
+                    <td><code>ADD</code></td>
+                    <td>Similar to COPY, but with additional features (URL support, auto-extraction)</td>
+                </tr>
+                <tr>
+                    <td><code>WORKDIR</code></td>
+                    <td>Sets the working directory for subsequent instructions</td>
+                </tr>
+                <tr>
+                    <td><code>ENV</code></td>
+                    <td>Sets environment variables</td>
+                </tr>
+                <tr>
+                    <td><code>EXPOSE</code></td>
+                    <td>Documents which ports the container listens on</td>
+                </tr>
+                <tr>
+                    <td><code>CMD</code></td>
+                    <td>Provides default command to run when container starts</td>
+                </tr>
+                <tr>
+                    <td><code>ENTRYPOINT</code></td>
+                    <td>Configures the container to run as an executable</td>
+                </tr>
+            </table>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> Keep your Dockerfile commands in logical order, typically following this pattern: base image, dependencies, application code, configuration, and finally the command to run.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Dockerfile Instructions in Detail</h3>
+            
+            <p>Let's explore each common instruction in more depth:</p>
+            
+            <h4>FROM</h4>
+            <p>The <code>FROM</code> instruction initializes a new build stage and sets the base image. It's typically the first instruction in a Dockerfile.</p>
+            
+            <pre><code>FROM [--platform=&lt;platform&gt;] &lt;image&gt;[:&lt;tag&gt;] [AS &lt;name&gt;]</code></pre>
+            
+            <p>Examples:</p>
+            <pre><code>FROM python:3.9-slim
+FROM ubuntu:20.04
+FROM node:14-alpine AS build-stage</code></pre>
+            
+            <div class="note">
+                <p><strong>Note:</strong> The <code>FROM</code> instruction must be the first non-comment instruction in the Dockerfile. You can have multiple <code>FROM</code> instructions in a single Dockerfile for multi-stage builds (an advanced technique we'll cover later).</p>
+            </div>
+            
+            <h4>WORKDIR</h4>
+            <p>The <code>WORKDIR</code> instruction sets the working directory for any subsequent <code>RUN</code>, <code>CMD</code>, <code>ENTRYPOINT</code>, <code>COPY</code>, and <code>ADD</code> instructions.</p>
+            
+            <pre><code>WORKDIR /path/to/directory</code></pre>
+            
+            <p>Example:</p>
+            <pre><code>WORKDIR /app</code></pre>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> Always use absolute paths with <code>WORKDIR</code>. If a specified directory doesn't exist, Docker will create it. Use <code>WORKDIR</code> instead of a series of <code>RUN cd /path</code> commands for clarity and reliability.</p>
+            </div>
+            
+            <h4>COPY and ADD</h4>
+            <p>These instructions copy files from the build context to the image.</p>
+            
+            <pre><code>COPY [--chown=&lt;user&gt;:&lt;group&gt;] &lt;src&gt; &lt;dest&gt;
+ADD [--chown=&lt;user&gt;:&lt;group&gt;] &lt;src&gt; &lt;dest&gt;</code></pre>
+            
+            <p>Examples:</p>
+            <pre><code>COPY requirements.txt .
+COPY . /app/
+ADD https://example.com/file.tar.gz /tmp/</code></pre>
+            
+            <div class="note">
+                <p><strong>COPY vs ADD:</strong> <code>COPY</code> simply copies files, while <code>ADD</code> has additional features like URL support and automatic tar extraction. Generally, use <code>COPY</code> unless you specifically need <code>ADD</code>'s features, as <code>COPY</code> is more explicit.</p>
+            </div>
+            
+            <h4>RUN</h4>
+            <p>The <code>RUN</code> instruction executes commands in a new layer and commits the results.</p>
+            
+            <pre><code>RUN &lt;command&gt;
+RUN ["executable", "param1", "param2"]</code></pre>
+            
+            <p>Examples:</p>
+            <pre><code>RUN apt-get update && apt-get install -y curl
+RUN pip install --no-cache-dir -r requirements.txt
+RUN ["bash", "-c", "echo $HOME"]</code></pre>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> Chain related commands in a single <code>RUN</code> instruction using <code>&&</code> to reduce the number of layers. For package installations, include cleanup steps in the same <code>RUN</code> instruction to keep the image size down.</p>
+            </div>
+            
+            <h4>ENV</h4>
+            <p>The <code>ENV</code> instruction sets environment variables that persist when a container is run.</p>
+            
+            <pre><code>ENV &lt;key&gt;=&lt;value&gt; ...</code></pre>
+            
+            <p>Examples:</p>
+            <pre><code>ENV PYTHONUNBUFFERED=1
+ENV NODE_ENV=production PORT=3000</code></pre>
+            
+            <div class="note">
+                <p><strong>Note:</strong> Environment variables set with <code>ENV</code> are available to containers created from the image, not just during the build process. They can be overridden at runtime with <code>docker run -e</code>.</p>
+            </div>
+            
+            <h4>EXPOSE</h4>
+            <p>The <code>EXPOSE</code> instruction informs Docker that the container listens on specific network ports at runtime.</p>
+            
+            <pre><code>EXPOSE &lt;port&gt; [&lt;port&gt;/&lt;protocol&gt;...]</code></pre>
+            
+            <p>Examples:</p>
+            <pre><code>EXPOSE 8080
+EXPOSE 80/tcp 443/tcp</code></pre>
+            
+            <div class="note">
+                <p><strong>Note:</strong> <code>EXPOSE</code> doesn't actually publish the port. It functions as documentation between the person who builds the image and the person who runs the container. To actually publish the port when running the container, use <code>docker run -p</code>.</p>
+            </div>
+            
+            <h4>CMD</h4>
+            <p>The <code>CMD</code> instruction provides default commands for an executing container.</p>
+            
+            <pre><code>CMD ["executable", "param1", "param2"]
+CMD command param1 param2
+CMD ["param1", "param2"] (as default parameters to ENTRYPOINT)</code></pre>
+            
+            <p>Examples:</p>
+            <pre><code>CMD ["python", "app.py"]
+CMD nginx -g "daemon off;"</code></pre>
+            
+            <div class="note">
+                <p><strong>Note:</strong> There can only be one <code>CMD</code> instruction in a Dockerfile. If multiple are specified, only the last one takes effect. The <code>CMD</code> can be overridden by specifying a command when running the container with <code>docker run image command</code>.</p>
+            </div>
+            
+            <h4>ENTRYPOINT</h4>
+            <p>The <code>ENTRYPOINT</code> instruction configures the container to run as an executable.</p>
+            
+            <pre><code>ENTRYPOINT ["executable", "param1", "param2"]
+ENTRYPOINT command param1 param2</code></pre>
+            
+            <p>Examples:</p>
+            <pre><code>ENTRYPOINT ["python", "app.py"]
+ENTRYPOINT ["docker-entrypoint.sh"]</code></pre>
+            
+            <div class="note">
+                <p><strong>ENTRYPOINT vs CMD:</strong> <code>ENTRYPOINT</code> specifies the executable to run, while <code>CMD</code> provides default arguments that can be overridden. They're often used together, with <code>ENTRYPOINT</code> providing the command and <code>CMD</code> providing default arguments.</p>
+            </div>
+            
+            <h4>Other Instructions</h4>
+            <ul>
+                <li><code>USER</code>: Sets the user name or UID for subsequent instructions</li>
+                <li><code>VOLUME</code>: Creates a mount point for external volumes</li>
+                <li><code>ARG</code>: Defines build-time variables that can be passed during build</li>
+                <li><code>LABEL</code>: Adds metadata to the image</li>
+                <li><code>HEALTHCHECK</code>: Tells Docker how to test if the container is still working</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Creating Your First Dockerfile</h3>
+            
+            <p>Let's create a basic Dockerfile for a Python web application using Flask.</p>
+            
+            <h4>Step 1: Create the Application Files</h4>
+            <p>First, create a new directory for your project and set up the application files:</p>
+            
+            <pre><code>mkdir flask_docker_demo
+cd flask_docker_demo</code></pre>
+            
+            <p>Create a file named <code>app.py</code> with the following content:</p>
+            
+            <pre><code>from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return "Hello, Docker!"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)</code></pre>
+            
+            <p>Create a file named <code>requirements.txt</code> with the following content:</p>
+            
+            <pre><code>flask==2.0.1</code></pre>
+            
+            <h4>Step 2: Create the Dockerfile</h4>
+            <p>Now, create a file named <code>Dockerfile</code> (with no extension) in the same directory:</p>
+            
+            <pre><code># Use Python 3.9 slim as the base image
+FROM python:3.9-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the requirements file into the container
+COPY requirements.txt .
+
+# Install the dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code
+COPY . .
+
+# Tell Docker that the container listens on port 5000
+EXPOSE 5000
+
+# Set environment variables
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=production
+ENV PYTHONUNBUFFERED=1
+
+# Command to run when the container starts
+CMD ["python", "app.py"]</code></pre>
+            
+            <div class="explanation">
+                <p><strong>Let's break down what each instruction does:</strong></p>
+                <ul>
+                    <li><code>FROM python:3.9-slim</code>: Start with a slim Python 3.9 image</li>
+                    <li><code>WORKDIR /app</code>: Set the working directory to /app</li>
+                    <li><code>COPY requirements.txt .</code>: Copy only the requirements file first</li>
+                    <li><code>RUN pip install...</code>: Install the Python dependencies</li>
+                    <li><code>COPY . .</code>: Copy the rest of the application code</li>
+                    <li><code>EXPOSE 5000</code>: Document that the container listens on port 5000</li>
+                    <li><code>ENV...</code>: Set environment variables for Flask</li>
+                    <li><code>CMD ["python", "app.py"]</code>: Run the application when the container starts</li>
+                </ul>
+            </div>
+            
+            <h4>Step 3: Build the Docker Image</h4>
+            <p>Now, let's build the Docker image from our Dockerfile:</p>
+            
+            <pre><code>docker build -t flask-demo .</code></pre>
+            
+            <p>The <code>-t</code> flag tags the image with a name, and the <code>.</code> specifies the build context (the current directory).</p>
+            
+            <p>You should see output showing the build progress, with each step corresponding to an instruction in the Dockerfile:</p>
+            
+            <pre><code>Sending build context to Docker daemon  4.096kB
+Step 1/8 : FROM python:3.9-slim
+ ---> 8c705081f50d
+Step 2/8 : WORKDIR /app
+ ---> Running in 6ce8e46488fd
+Removing intermediate container 6ce8e46488fd
+ ---> 9d53d0d5b1fd
+Step 3/8 : COPY requirements.txt .
+ ---> 7b90bead6fed
+...
+Successfully built f8b2f81f83a
+Successfully tagged flask-demo:latest</code></pre>
+            
+            <h4>Step 4: Run the Container</h4>
+            <p>Now we can run a container from our newly built image:</p>
+            
+            <pre><code>docker run -p 5000:5000 --name my-flask-app flask-demo</code></pre>
+            
+            <p>This command starts a container named <code>my-flask-app</code> from the <code>flask-demo</code> image and maps port 5000 from the container to port 5000 on the host.</p>
+            
+            <p>You should be able to access your Flask application by opening <code>http://localhost:5000</code> in your web browser, which should display "Hello, Docker!"</p>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> The process we just went through is like creating a specialized kitchen (the Docker image) designed specifically for making a particular dish (our Flask application). We started with a basic kitchen (the base image), added the tools and ingredients we need (dependencies), and provided the recipe (application code). Now, whenever we want to make that dish, we can simply "turn on" our specialized kitchen (run a container) and it's ready to go - no setup required!</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Dockerfile Best Practices</h3>
+            
+            <h4>Layer Optimization</h4>
+            <p>Each instruction in a Dockerfile creates a new layer. To optimize your images:</p>
+            <ul>
+                <li><strong>Combine related commands</strong> in a single <code>RUN</code> instruction to reduce layers</li>
+                <li><strong>Clean up</strong> in the same layer where you create files (e.g., remove package manager caches)</li>
+                <li><strong>Use multi-stage builds</strong> for complex applications (more on this later)</li>
+            </ul>
+            
+            <div class="example">
+                <p><strong>Before optimization:</strong></p>
+                <pre><code>RUN apt-get update
+RUN apt-get install -y curl
+RUN apt-get install -y nginx
+RUN apt-get clean</code></pre>
+                
+                <p><strong>After optimization:</strong></p>
+                <pre><code>RUN apt-get update && \
+    apt-get install -y curl nginx && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*</code></pre>
+            </div>
+            
+            <h4>Leveraging Build Cache</h4>
+            <p>Docker caches the results of each instruction to speed up subsequent builds. To make the most of caching:</p>
+            <ul>
+                <li><strong>Order instructions from least to most likely to change</strong></li>
+                <li><strong>Copy dependency files (like requirements.txt) separately</strong> before copying the rest of the code</li>
+                <li><strong>Be aware that cache invalidation</strong> causes all subsequent instructions to be re-executed</li>
+            </ul>
+            
+            <div class="example">
+                <p><strong>Poor caching strategy:</strong></p>
+                <pre><code>COPY . /app
+RUN pip install -r requirements.txt</code></pre>
+                
+                <p><strong>Better caching strategy:</strong></p>
+                <pre><code>COPY requirements.txt /app/
+RUN pip install -r requirements.txt
+COPY . /app</code></pre>
+                <p>This way, changing your application code doesn't trigger a reinstallation of all dependencies.</p>
+            </div>
+            
+            <h4>Security Best Practices</h4>
+            <ul>
+                <li><strong>Use specific version tags</strong> for base images, not <code>latest</code></li>
+                <li><strong>Run containers as non-root</strong> users when possible</li>
+                <li><strong>Minimize the number of installed packages</strong> to reduce the attack surface</li>
+                <li><strong>Don't store secrets</strong> in your Dockerfile (use environment variables or secret management tools)</li>
+                <li><strong>Scan your images</strong> for vulnerabilities before deployment</li>
+            </ul>
+            
+            <div class="example">
+                <p><strong>Running as a non-root user:</strong></p>
+                <pre><code># Create a non-root user
+RUN adduser --disabled-password --gecos "" appuser
+
+# Switch to non-root user
+USER appuser
+
+# Make sure the user owns the application directory
+COPY --chown=appuser:appuser . /app</code></pre>
+            </div>
+            
+            <h4>General Best Practices</h4>
+            <ul>
+                <li><strong>Use .dockerignore files</strong> to exclude unnecessary files from the build context</li>
+                <li><strong>Keep images small</strong> by removing unnecessary files and using smaller base images</li>
+                <li><strong>Document your image</strong> with comments and <code>LABEL</code> instructions</li>
+                <li><strong>Test your Dockerfile</strong> in different environments before production use</li>
+                <li><strong>Prefer <code>COPY</code> over <code>ADD</code></strong> unless you need the additional features</li>
+            </ul>
+            
+            <div class="example">
+                <p><strong>Example .dockerignore file:</strong></p>
+                <pre><code>.git
+.gitignore
+.env
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+node_modules/
+npm-debug.log</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Advanced Dockerfile Techniques</h3>
+            
+            <h4>Multi-stage Builds</h4>
+            <p>Multi-stage builds allow you to use multiple <code>FROM</code> statements in your Dockerfile. Each <code>FROM</code> instruction starts a new build stage, and you can selectively copy artifacts from one stage to another, leaving behind everything you don't need in the final image.</p>
+            
+            <div class="example">
+                <p><strong>Example: Building a React frontend with Node.js, then serving it with NGINX:</strong></p>
+                <pre><code># Build stage
+FROM node:14 AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# Production stage
+FROM nginx:alpine
+COPY --from=build /app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]</code></pre>
+                <p>This Dockerfile uses two stages: first, it builds the React application using Node.js, then it copies only the built files to an NGINX image for serving. The final image contains only NGINX and the built frontend files, not Node.js or the development dependencies.</p>
+            </div>
+            
+            <h4>ARG and Build-time Variables</h4>
+            <p>The <code>ARG</code> instruction defines variables that can be passed at build time with the <code>--build-arg</code> flag.</p>
+            
+            <div class="example">
+                <p><strong>Example: Configurable Python version:</strong></p>
+                <pre><code># Define build arguments
+ARG PYTHON_VERSION=3.9
+
+# Use the argument in the FROM instruction
+FROM python:${PYTHON_VERSION}-slim
+
+# Later, you could build with a different version:
+# docker build --build-arg PYTHON_VERSION=3.10 -t myapp .</code></pre>
+            </div>
+            
+            <h4>Using HEALTHCHECK</h4>
+            <p>The <code>HEALTHCHECK</code> instruction tells Docker how to test that the container is still working properly.</p>
+            
+            <div class="example">
+                <p><strong>Example: Healthcheck for a web server:</strong></p>
+                <pre><code>FROM nginx:alpine
+COPY index.html /usr/share/nginx/html/
+EXPOSE 80
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
+CMD ["nginx", "-g", "daemon off;"]</code></pre>
+                <p>This Dockerfile includes a health check that tries to fetch the root page every 30 seconds. If the command fails, the container is considered unhealthy.</p>
+            </div>
+            
+            <h4>Environment-specific Dockerfiles</h4>
+            <p>For applications that need different configurations in development and production, you can create multiple Dockerfiles or use build arguments to switch configurations.</p>
+            
+            <div class="example">
+                <p><strong>Example: Development vs. Production:</strong></p>
+                <pre><code># Dockerfile.dev
+FROM python:3.9-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+ENV FLASK_ENV=development
+CMD ["flask", "run", "--host=0.0.0.0"]</code></pre>
+                
+                <pre><code># Dockerfile.prod
+FROM python:3.9-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+ENV FLASK_ENV=production
+RUN python -m compileall .
+CMD ["gunicorn", "app:app", "-b", "0.0.0.0:5000"]</code></pre>
+                
+                <p>You would build these with:</p>
+                <pre><code>docker build -f Dockerfile.dev -t myapp:dev .
+docker build -f Dockerfile.prod -t myapp:prod .</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Practical Examples for Different Use Cases</h3>
+            
+            <h4>Python Web Application (Django)</h4>
+            <pre><code># Use Python 3.9 as base image
+FROM python:3.9-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Set work directory
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy project
+COPY . .
+
+# Run migrations and start server
+CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]</code></pre>
+            
+            <h4>Node.js Application</h4>
+            <pre><code># Use Node.js 16 as base image
+FROM node:16-alpine
+
+# Create app directory
+WORKDIR /usr/src/app
+
+# Install app dependencies
+COPY package*.json ./
+RUN npm install
+
+# Bundle app source
+COPY . .
+
+# Expose port
+EXPOSE 3000
+
+# Start application
+CMD ["node", "server.js"]</code></pre>
+            
+            <h4>Go Application</h4>
+            <pre><code># Build stage
+FROM golang:1.17 AS build
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
+
+# Final stage
+FROM alpine:3.14
+
+WORKDIR /root/
+
+COPY --from=build /app/app .
+
+EXPOSE 8080
+
+CMD ["./app"]</code></pre>
+            
+            <h4>Java Spring Boot Application</h4>
+            <pre><code># Build stage
+FROM maven:3.8.3-openjdk-17 AS build
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline
+COPY src/ /app/src/
+RUN mvn package -DskipTests
+
+# Final stage
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]</code></pre>
+        </section>
+
+        <section>
+            <h3>Common Issues and Troubleshooting</h3>
+            
+            <h4>Build Context Errors</h4>
+            <p>If Docker complains about files not being found during <code>COPY</code> or <code>ADD</code> operations, check:</p>
+            <ul>
+                <li>The path is correct relative to the build context</li>
+                <li>The file exists and has the right permissions</li>
+                <li>The file isn't excluded by a <code>.dockerignore</code> rule</li>
+            </ul>
+            
+            <h4>Layer Caching Issues</h4>
+            <p>If changes to your code aren't being reflected in builds:</p>
+            <ul>
+                <li>Use <code>docker build --no-cache</code> to force a complete rebuild</li>
+                <li>Check that you're copying files in the right order for optimal caching</li>
+                <li>Ensure you're not copying generated files that might be out of date</li>
+            </ul>
+            
+            <h4>Permission Problems</h4>
+            <p>If your container has permission issues:</p>
+            <ul>
+                <li>Check that you're running as the right user (<code>USER</code> instruction)</li>
+                <li>Ensure file permissions are set correctly when copying files</li>
+                <li>Use <code>--chown</code> with <code>COPY</code> to set ownership</li>
+            </ul>
+            
+            <h4>Container Won't Start</h4>
+            <p>If your container exits immediately after starting:</p>
+            <ul>
+                <li>Check that your <code>CMD</code> or <code>ENTRYPOINT</code> is correct</li>
+                <li>Try running with <code>docker run -it --rm image bash</code> to get a shell inside</li>
+                <li>Check logs with <code>docker logs container_id</code></li>
+                <li>Ensure your application handles signals properly (especially SIGTERM)</li>
+            </ul>
+            
+            <h4>Debugging Dockerfiles</h4>
+            <p>To troubleshoot Dockerfile issues:</p>
+            <ul>
+                <li>Use intermediate containers to debug:
+                    <pre><code># Find the last successful layer
+docker build -t debug-image . || true
+# Start a container from that layer
+docker run -it debug-image bash</code></pre>
+                </li>
+                <li>Add <code>RUN ls -la</code> commands to check the state at various points</li>
+                <li>Use <code>docker history image_name</code> to see layer sizes and commands</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Building and Publishing Your Image</h3>
+            
+            <h4>Building with Tags</h4>
+            <p>To build an image with a specific tag:</p>
+            <pre><code>docker build -t username/repository:tag .</code></pre>
+            
+            <p>For example:</p>
+            <pre><code>docker build -t johndoe/flask-app:1.0 .</code></pre>
+            
+            <h4>Publishing to Docker Hub</h4>
+            <p>To share your image on Docker Hub:</p>
+            <ol>
+                <li>Log in to Docker Hub: <pre><code>docker login</code></pre></li>
+                <li>Push your image: <pre><code>docker push username/repository:tag</code></pre></li>
+            </ol>
+            
+            <h4>Building for Multiple Architectures</h4>
+            <p>To build for multiple CPU architectures (like amd64 and arm64):</p>
+            <pre><code>docker buildx create --name mybuilder --use
+docker buildx build --platform linux/amd64,linux/arm64 -t username/repository:tag --push .</code></pre>
+            
+            <div class="note">
+                <p><strong>Note:</strong> <code>buildx</code> is Docker's experimental builder with multi-architecture support. You may need to enable experimental features in Docker Desktop settings.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Dockerfile Exercises</h3>
+            
+            <h4>Exercise 1: Basic Static Website</h4>
+            <p>Create a Dockerfile for a simple static website served by NGINX:</p>
+            <ol>
+                <li>Create an <code>index.html</code> file with some content</li>
+                <li>Write a Dockerfile that:
+                    <ul>
+                        <li>Uses NGINX as the base image</li>
+                        <li>Copies your HTML file to the right location</li>
+                        <li>Exposes port 80</li>
+                    </ul>
+                </li>
+                <li>Build and run the image</li>
+                <li>Access the website at <code>http://localhost:80</code></li>
+            </ol>
+            
+            <div class="solution">
+                <p><strong>Solution:</strong></p>
+                <pre><code># Dockerfile
+FROM nginx:alpine
+COPY index.html /usr/share/nginx/html/
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]</code></pre>
+                
+                <pre><code># Build and run
+docker build -t static-site .
+docker run -p 80:80 static-site</code></pre>
+            </div>
+            
+            <h4>Exercise 2: Python Data Science Environment</h4>
+            <p>Create a Dockerfile for a Python data science environment:</p>
+            <ol>
+                <li>Write a Dockerfile that:
+                    <ul>
+                        <li>Uses Python 3.9 as the base image</li>
+                        <li>Installs common data science packages (numpy, pandas, matplotlib)</li>
+                        <li>Sets up a working directory</li>
+                        <li>Starts a Python shell by default</li>
+                    </ul>
+                </li>
+                <li>Build and run the image with a volume mount for your data</li>
+            </ol>
+            
+            <div class="solution">
+                <p><strong>Solution:</strong></p>
+                <pre><code># Dockerfile
+FROM python:3.9-slim
+
+RUN pip install --no-cache-dir numpy pandas matplotlib jupyter
+
+WORKDIR /data
+
+CMD ["python"]</code></pre>
+                
+                <pre><code># Build and run
+docker build -t datascience .
+docker run -it -v $(pwd):/data datascience</code></pre>
+            </div>
+            
+            <h4>Exercise 3: Multi-stage Frontend Build</h4>
+            <p>Create a multi-stage Dockerfile for a React application:</p>
+            <ol>
+                <li>Write a Dockerfile that:
+                    <ul>
+                        <li>Uses Node.js to build the React application in the first stage</li>
+                        <li>Uses NGINX to serve the built files in the second stage</li>
+                        <li>Results in a small final image</li>
+                    </ul>
+                </li>
+            </ol>
+            
+            <div class="solution">
+                <p><strong>Solution:</strong></p>
+                <pre><code># Dockerfile
+# Build stage
+FROM node:14 AS build
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy and build app
+COPY . .
+RUN npm run build
+
+# Production stage
+FROM nginx:alpine
+
+# Copy built files from build stage
+COPY --from=build /app/build /usr/share/nginx/html
+
+# Expose port
+EXPOSE 80
+
+# Start NGINX
+CMD ["nginx", "-g", "daemon off;"]</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Key Takeaways</h3>
+            
+            <ul>
+                <li>A Dockerfile is a text file containing instructions for building a Docker image</li>
+                <li>Common instructions include <code>FROM</code>, <code>RUN</code>, <code>COPY</code>, <code>WORKDIR</code>, <code>ENV</code>, <code>EXPOSE</code>, and <code>CMD</code></li>
+                <li>Each instruction creates a layer in the image, which affects caching and image size</li>
+                <li>Optimizing Dockerfiles involves minimizing layers, leveraging caching, and reducing image size</li>
+                <li>Multi-stage builds allow you to create smaller, more efficient images</li>
+                <li>Best practices include running as non-root, using specific tags, and not storing secrets in images</li>
+                <li>Different applications may require different Dockerfile strategies</li>
+                <li>Dockerfiles can be customized for different environments and use cases</li>
+            </ul>
+            
+            <p>With these concepts and techniques, you're now equipped to create custom Docker images tailored to your specific application needs!</p>
+        </section>
+
+        <section>
+            <h3>Looking Ahead</h3>
+            
+            <p>In our next session, we'll dive deeper into building and running your own custom images. We'll apply what we've learned about Dockerfiles to create more complex applications and explore advanced techniques for optimizing and deploying them.</p>
+        </section>
+
+        <section>
+            <h3>Discussion Questions</h3>
+            
+            <ol>
+                <li>How might you adapt the Flask Dockerfile we created to better suit a development environment? What about a production environment?</li>
+                <li>What are the security implications of running containers as the root user? How would you modify a Dockerfile to run as a non-root user?</li>
+                <li>How could multi-stage builds improve your application deployment workflow?</li>
+                <li>What strategies would you use to minimize the size of your Docker images without sacrificing functionality?</li>
+                <li>How would you adapt Dockerfile strategies for different types of applications (e.g., frontend vs. backend, static vs. dynamic)?</li>
+            </ol>
+        </section>
+
+        <section>
+            <h3>Additional Resources</h3>
+            
+            <ul>
+                <li><a href="https://docs.docker.com/engine/reference/builder/" target="_blank">Dockerfile Reference</a> - Official documentation for Dockerfile instructions</li>
+                <li><a href="https://docs.docker.com/develop/develop-images/dockerfile_best-practices/" target="_blank">Dockerfile Best Practices</a> - Docker's official best practice guide</li>
+                <li><a href="https://github.com/docker/labs/tree/master/developer-tools/java/" target="_blank">Docker Java Labs</a> - Examples for Java applications</li>
+                <li><a href="https://pythonspeed.com/docker/" target="_blank">Python Speed Docker Guide</a> - Specialized guide for Python in Docker</li>
+                <li><a href="https://docs.docker.com/engine/reference/commandline/build/" target="_blank">Docker Build Command Reference</a> - Detailed information on build options</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

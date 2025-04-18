@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Troubleshooting Common Docker Issues - Full Stack Python Developer Course</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Troubleshooting Common Docker Issues</h1>
+        <h2>Week 1 - Thursday</h2>
+    </header>
+
+    <main>
+        <section class="course-intro">
+            <h3>Lecture Overview</h3>
+            <p>In this session, we'll explore common issues that arise when working with Docker and Docker Compose, and learn systematic approaches to diagnose and resolve them. Understanding how to troubleshoot Docker problems is an essential skill that will save you countless hours of development time. By the end of this lecture, you'll have a toolkit of debugging strategies and solutions for the most frequent Docker challenges.</p>
+        </section>
+
+        <section>
+            <h3>Troubleshooting Methodology</h3>
+            <p>Before diving into specific issues, let's establish a systematic approach to troubleshooting Docker problems:</p>
+            
+            <h4>The Docker Troubleshooting Framework</h4>
+            <ol>
+                <li><strong>Identify the problem</strong> - Determine what's not working as expected</li>
+                <li><strong>Gather information</strong> - Collect logs, error messages, and container status</li>
+                <li><strong>Isolate the issue</strong> - Determine if it's a Docker, application, or system problem</li>
+                <li><strong>Research and analyze</strong> - Look for similar issues and potential solutions</li>
+                <li><strong>Test a solution</strong> - Apply a fix and verify it resolves the issue</li>
+                <li><strong>Document the solution</strong> - Record what you learned for future reference</li>
+            </ol>
+            
+            <h4>Essential Docker Diagnostic Commands</h4>
+            <p>These commands form the foundation of your troubleshooting toolkit:</p>
+            <pre><code># View container status
+docker ps -a
+
+# Check container logs
+docker logs [container_id]
+
+# Follow container logs in real-time
+docker logs -f [container_id]
+
+# Inspect container details
+docker inspect [container_id]
+
+# View real-time container resource usage
+docker stats
+
+# List all Docker networks
+docker network ls
+
+# List all Docker volumes
+docker volume ls
+
+# Check Docker system information
+docker info
+
+# Clean up Docker resources
+docker system prune</code></pre>
+            
+            <h4>For Docker Compose:</h4>
+            <pre><code># Check the status of all services
+docker-compose ps
+
+# View logs for all services
+docker-compose logs
+
+# View logs for a specific service
+docker-compose logs [service_name]
+
+# Validate docker-compose.yml syntax
+docker-compose config
+
+# Check Docker Compose version
+docker-compose version</code></pre>
+            
+            <div class="analogy">
+                <h4>Analogy: Medical Diagnosis</h4>
+                <p>Troubleshooting Docker is much like medical diagnosis:</p>
+                <ul>
+                    <li><strong>Symptoms</strong> (error messages, unexpected behavior) are what you observe</li>
+                    <li><strong>Diagnostic tools</strong> (logs, inspect, stats) help you gather information</li>
+                    <li><strong>Differential diagnosis</strong> (isolating the issue) narrows down possible causes</li>
+                    <li><strong>Treatment</strong> (applying a fix) addresses the root cause</li>
+                    <li><strong>Documentation</strong> (medical records) helps with future issues</li>
+                </ul>
+                <p>Just as a doctor doesn't immediately jump to treatment without proper diagnosis, you shouldn't apply random fixes without understanding the problem. A systematic approach leads to more effective troubleshooting.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Container Startup Issues</h3>
+            <p>One of the most common categories of Docker problems involves containers that won't start or exit immediately after starting.</p>
+            
+            <h4>Issue 1: Container Exits Immediately</h4>
+            <p><strong>Symptoms:</strong> Container appears in <code>docker ps -a</code> but not in <code>docker ps</code> (without -a).</p>
+            
+            <p><strong>Causes:</strong></p>
+            <ul>
+                <li>The main process in the container exited</li>
+                <li>Missing command or entrypoint</li>
+                <li>Application crash on startup</li>
+                <li>Container was designed to run and exit (e.g., batch job)</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Check container status
+docker ps -a
+
+# Look at container logs
+docker logs [container_id]
+
+# Inspect container configuration
+docker inspect [container_id] | grep -A 10 "Config"</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Fix the command/entrypoint</strong>:
+                <pre><code># Run with a different command
+docker run --rm -it [image] bash
+
+# Or in docker-compose.yml
+services:
+  myapp:
+    image: myimage
+    command: ["python", "app.py"]  # Specify the correct command</code></pre>
+                </li>
+                <li><strong>Add a sleep command for debugging</strong>:
+                <pre><code># Keep the container running for investigation
+docker run -d [image] sleep infinity</code></pre>
+                </li>
+                <li><strong>Run in interactive mode to debug</strong>:
+                <pre><code>docker run -it --entrypoint bash [image]</code></pre>
+                </li>
+            </ul>
+            
+            <h4>Issue 2: Container Starts but Application Doesn't Work</h4>
+            <p><strong>Symptoms:</strong> Container is running but the application inside isn't responding.</p>
+            
+            <p><strong>Causes:</strong></p>
+            <ul>
+                <li>Application listening on wrong interface (localhost vs 0.0.0.0)</li>
+                <li>Incorrect port mapping</li>
+                <li>Application crashing after startup</li>
+                <li>Environment variables or configuration issues</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Check if application is listening on the right port
+docker exec [container_id] netstat -tulpn
+
+# Check application logs
+docker exec [container_id] cat /path/to/app.log
+
+# Check environment variables
+docker exec [container_id] env</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Fix application binding</strong>: Make sure app listens on 0.0.0.0, not just localhost</li>
+                <li><strong>Correct port mapping</strong>:
+                <pre><code># Map host port 8080 to container port 80
+docker run -p 8080:80 [image]</code></pre>
+                </li>
+                <li><strong>Add or correct environment variables</strong>:
+                <pre><code>docker run -e ENV_VAR=value [image]
+
+# In docker-compose.yml
+services:
+  myapp:
+    environment:
+      - ENV_VAR=value</code></pre>
+                </li>
+            </ul>
+            
+            <div class="example">
+                <h4>Real Example: Debugging a Flask Application</h4>
+                <p>Imagine a Flask application container that doesn't respond to requests:</p>
+                <pre><code># Initial check shows container is running
+$ docker ps
+CONTAINER ID   IMAGE          COMMAND                CREATED        STATUS        PORTS                    NAMES
+abc123def456   flask-app      "python app.py"        2 minutes ago  Up 2 minutes  0.0.0.0:5000->5000/tcp   myflask
+
+# But accessing http://localhost:5000 gives connection refused error</code></pre>
+                
+                <p>Investigation steps:</p>
+                <pre><code># 1. Check container logs
+$ docker logs myflask
+ * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+
+# 2. Found the issue - Flask is binding to localhost (127.0.0.1) instead of 0.0.0.0</code></pre>
+                
+                <p>Solution: Modify the Flask application to bind to all interfaces:</p>
+                <pre><code># In app.py
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)</code></pre>
+                
+                <p>Then rebuild and restart the container.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Image Building Issues</h3>
+            <p>Problems often occur during the image building process with <code>docker build</code> or <code>docker-compose build</code>.</p>
+            
+            <h4>Issue 1: Build Fails with Error</h4>
+            <p><strong>Symptoms:</strong> <code>docker build</code> command fails with error messages.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li>Syntax errors in Dockerfile</li>
+                <li>Missing source files</li>
+                <li>Network issues when fetching dependencies</li>
+                <li>Permission problems</li>
+                <li>Insufficient disk space</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Check Dockerfile syntax
+cat Dockerfile
+
+# Check available disk space
+df -h
+
+# Check Docker disk usage
+docker system df</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Fix Dockerfile syntax</strong>: Ensure proper formatting and valid instructions</li>
+                <li><strong>Use .dockerignore</strong>: Exclude unnecessary files from build context</li>
+                <li><strong>Free up disk space</strong>:
+                <pre><code>docker system prune -a</code></pre>
+                </li>
+                <li><strong>Use build cache efficiently</strong>: Order Dockerfile instructions properly</li>
+            </ul>
+            
+            <h4>Issue 2: Image Build is Very Slow</h4>
+            <p><strong>Symptoms:</strong> Building images takes an excessively long time.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li>Large build context</li>
+                <li>Inefficient Dockerfile</li>
+                <li>Not utilizing build cache</li>
+                <li>Slow network connections for downloads</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># See the size of your build context
+du -sh .
+
+# Watch which steps are slow during build
+docker build -t myimage . --progress=plain</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Optimize Dockerfile</strong>: Order instructions from least to most frequently changed</li>
+                <li><strong>Use .dockerignore file</strong>:
+                <pre><code># Example .dockerignore
+node_modules
+*.log
+.git
+*.md</code></pre>
+                </li>
+                <li><strong>Use multi-stage builds</strong>:
+                <pre><code># Multi-stage build example
+FROM python:3.9 AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip wheel --no-cache-dir --wheel-dir /app/wheels -r requirements.txt
+
+FROM python:3.9-slim
+WORKDIR /app
+COPY --from=builder /app/wheels /app/wheels
+COPY . .
+RUN pip install --no-cache /app/wheels/*</code></pre>
+                </li>
+                <li><strong>Use BuildKit</strong>: Enable Docker BuildKit for more efficient builds</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Before and After: Optimized Dockerfile</h4>
+                <p><strong>Before (Inefficient):</strong></p>
+                <pre><code>FROM python:3.9
+WORKDIR /app
+COPY . .                  # Copies all files first, breaking cache on any change
+RUN pip install -r requirements.txt
+CMD ["python", "app.py"]</code></pre>
+                
+                <p><strong>After (Optimized):</strong></p>
+                <pre><code>FROM python:3.9
+WORKDIR /app
+COPY requirements.txt .   # Copy only requirements.txt first
+RUN pip install -r requirements.txt   # Cache this layer if requirements don't change
+COPY . .                  # Copy the rest of the code after
+CMD ["python", "app.py"]</code></pre>
+                
+                <p>The optimized Dockerfile separates dependency installation from code copying, allowing the build to use cached layers for dependencies when only code changes.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Networking Issues</h3>
+            <p>Network-related problems are among the most common and sometimes challenging to diagnose.</p>
+            
+            <h4>Issue 1: Containers Can't Communicate with Each Other</h4>
+            <p><strong>Symptoms:</strong> One container can't connect to services running in another container.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li>Containers on different networks</li>
+                <li>Service not listening on the right interface</li>
+                <li>Incorrect service name resolution</li>
+                <li>Firewall or security settings</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Check which networks a container is connected to
+docker inspect [container_id] --format='{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}'
+
+# List all networks
+docker network ls
+
+# Inspect a network
+docker network inspect [network_name]
+
+# Test connectivity from inside container
+docker exec [container_id] ping [other_container_name]</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Connect containers to the same network</strong>:
+                <pre><code>docker network create my_network
+docker network connect my_network [container1]
+docker network connect my_network [container2]</code></pre>
+                </li>
+                <li><strong>Use Docker Compose networking</strong>:
+                <pre><code># docker-compose.yml
+services:
+  web:
+    # ...
+    networks:
+      - app_network
+  db:
+    # ...
+    networks:
+      - app_network
+
+networks:
+  app_network:</code></pre>
+                </li>
+                <li><strong>Make sure services bind to 0.0.0.0</strong>: Configure services to listen on all interfaces</li>
+            </ul>
+            
+            <h4>Issue 2: Container Can't Access the Internet</h4>
+            <p><strong>Symptoms:</strong> Container can't download packages or access external services.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li>DNS resolution issues</li>
+                <li>Proxy configuration</li>
+                <li>Network driver problems</li>
+                <li>Host firewall blocking outbound connections</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Check DNS configuration
+docker exec [container_id] cat /etc/resolv.conf
+
+# Test DNS resolution
+docker exec [container_id] nslookup google.com
+
+# Test connectivity
+docker exec [container_id] ping 8.8.8.8
+
+# Test proxy configuration
+docker exec [container_id] env | grep -i proxy</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Customize DNS settings</strong>:
+                <pre><code>docker run --dns 8.8.8.8 [image]
+
+# In docker-compose.yml
+services:
+  myapp:
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4</code></pre>
+                </li>
+                <li><strong>Configure proxy settings</strong>:
+                <pre><code>docker run -e HTTP_PROXY=http://proxy:port -e HTTPS_PROXY=http://proxy:port [image]</code></pre>
+                </li>
+                <li><strong>Try a different network driver</strong>: Use host networking temporarily to test</li>
+            </ul>
+            
+            <h4>Issue 3: Port Conflicts</h4>
+            <p><strong>Symptoms:</strong> Docker can't bind to a port, showing "port is already allocated" errors.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li>Another process is using the port on the host</li>
+                <li>Another container is already mapped to the port</li>
+                <li>Previous container didn't release the port properly</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Check what process is using a port (Linux/Mac)
+sudo lsof -i :PORT_NUMBER
+
+# Windows equivalent
+netstat -ano | findstr PORT_NUMBER
+
+# Check mapped ports in Docker
+docker ps --format "{{.Names}}: {{.Ports}}"</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Use a different host port</strong>:
+                <pre><code>docker run -p 8081:80 [image]  # Use 8081 instead of 80 on host</code></pre>
+                </li>
+                <li><strong>Stop the conflicting process or container</strong></li>
+                <li><strong>Let Docker choose a random port</strong>:
+                <pre><code>docker run -p 127.0.0.1::80 [image]  # Assigns random port</code></pre>
+                </li>
+            </ul>
+            
+            <div class="example">
+                <h4>Real Example: Fixing Container Communication</h4>
+                <p>A web application can't connect to its database:</p>
+                <pre><code># Web container logs show:
+$ docker logs web
+Error: Could not connect to database at 'db:5432'
+
+# First, check which networks each container is on
+$ docker inspect web --format='{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}'
+bridge
+
+$ docker inspect db --format='{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}'
+custom_network
+
+# Problem identified: containers are on different networks!</code></pre>
+                
+                <p>Solution: Connect both to the same network:</p>
+                <pre><code># Connect web container to the database network
+$ docker network connect custom_network web
+
+# Alternatively, use Docker Compose to ensure they're on the same network
+# docker-compose.yml
+services:
+  web:
+    # ... web configuration ...
+    networks:
+      - app_network
+  db:
+    # ... db configuration ...
+    networks:
+      - app_network
+
+networks:
+  app_network:</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Volume and Storage Issues</h3>
+            <p>Data persistence and sharing issues often stem from volume configuration problems.</p>
+            
+            <h4>Issue 1: Data Lost When Container Restarts</h4>
+            <p><strong>Symptoms:</strong> Application data disappears after container restarts.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li>No volume mounted for persistent data</li>
+                <li>Writing to container filesystem instead of volume</li>
+                <li>Incorrect volume mounting</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Check if container has volumes configured
+docker inspect [container_id] --format='{{json .Mounts}}'
+
+# Check where application is writing data
+docker exec [container_id] df -h</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Add a named volume</strong>:
+                <pre><code>docker run -v my_data:/app/data [image]
+
+# In docker-compose.yml
+services:
+  myapp:
+    volumes:
+      - my_data:/app/data
+      
+volumes:
+  my_data:</code></pre>
+                </li>
+                <li><strong>Configure the application</strong> to write to the correct path</li>
+                <li><strong>Use bind mounts for development</strong>:
+                <pre><code>docker run -v $(pwd)/data:/app/data [image]</code></pre>
+                </li>
+            </ul>
+            
+            <h4>Issue 2: Permission Problems with Volumes</h4>
+            <p><strong>Symptoms:</strong> "Permission denied" errors when container tries to write to mounted volumes.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li>Mismatched user/group IDs between host and container</li>
+                <li>Read-only filesystem or volume</li>
+                <li>SELinux or AppArmor restrictions (on Linux)</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Check file permissions
+docker exec [container_id] ls -la /path/to/volume
+
+# Check user the container is running as
+docker exec [container_id] id
+
+# Check if SELinux is affecting volumes (Linux)
+ls -Z /path/to/host/volume</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Match user permissions</strong>:
+                <pre><code># Run container as host user
+docker run -u $(id -u):$(id -g) [image]</code></pre>
+                </li>
+                <li><strong>Change volume permissions</strong>:
+                <pre><code>docker run --rm -v my_volume:/data alpine chmod -R 777 /data</code></pre>
+                </li>
+                <li><strong>For SELinux, add :z or :Z suffix</strong>:
+                <pre><code>docker run -v $(pwd)/data:/app/data:z [image]</code></pre>
+                </li>
+            </ul>
+            
+            <h4>Issue 3: Volume Mount Doesn't Show Updated Files</h4>
+            <p><strong>Symptoms:</strong> Changes made on host don't appear in container or vice versa.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li>Cache inconsistency</li>
+                <li>Incorrect mount path</li>
+                <li>Volume mount syntax errors</li>
+                <li>Nested volume mounts</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Verify the exact mount path
+docker inspect [container_id] --format='{{json .Mounts}}'
+
+# Check if files exist in container
+docker exec [container_id] ls -la /path/in/container</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Use absolute paths</strong> for bind mounts</li>
+                <li><strong>Check for nested volumes</strong> that might hide files</li>
+                <li><strong>For Docker Desktop on macOS/Windows</strong>, check file sharing settings</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Real Example: Fixing Database Volume Persistence</h4>
+                <p>A PostgreSQL container loses data after restart:</p>
+                <pre><code># Initial check shows no volumes
+$ docker inspect postgres_container --format='{{json .Mounts}}'
+[]
+
+# Solution: Add a named volume for PostgreSQL data</code></pre>
+                
+                <p>Docker Compose configuration fix:</p>
+                <pre><code># docker-compose.yml
+services:
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Add named volume
+    environment:
+      POSTGRES_PASSWORD: example
+      
+volumes:
+  postgres_data:  # Define the volume</code></pre>
+                
+                <p>Restart with the new configuration:</p>
+                <pre><code>$ docker-compose down
+$ docker-compose up -d</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Resource and Performance Issues</h3>
+            <p>Containers may experience performance problems due to resource constraints or configuration.</p>
+            
+            <h4>Issue 1: Container Using Excessive Resources</h4>
+            <p><strong>Symptoms:</strong> High CPU usage, memory consumption, or disk I/O.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li>Application memory leaks or inefficient code</li>
+                <li>No resource limits configured</li>
+                <li>Too many containers on the host</li>
+                <li>Noisy neighbor problems (other containers using resources)</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Check container resource usage
+docker stats
+
+# Get more detailed metrics
+docker stats --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}\t{{.NetIO}}\t{{.BlockIO}}"
+
+# Check specific container metrics
+docker stats [container_id]</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Set resource limits</strong>:
+                <pre><code>docker run --memory=512m --cpus=0.5 [image]
+
+# In docker-compose.yml
+services:
+  myapp:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M</code></pre>
+                </li>
+                <li><strong>Optimize application code</strong> to reduce resource usage</li>
+                <li><strong>Use a more appropriate base image</strong> (e.g., alpine variants)</li>
+            </ul>
+            
+            <h4>Issue 2: Container Performance Degrades Over Time</h4>
+            <p><strong>Symptoms:</strong> Application slows down the longer it runs.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li>Memory leaks</li>
+                <li>Log files growing too large</li>
+                <li>Temporary files accumulation</li>
+                <li>Database growth without optimization</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Check disk usage in container
+docker exec [container_id] df -h
+
+# Check large files
+docker exec [container_id] find / -type f -size +10M 2>/dev/null
+
+# Check log sizes
+docker exec [container_id] du -sh /var/log</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Implement log rotation</strong>:
+                <pre><code># Use Docker's logging options
+docker run --log-opt max-size=10m --log-opt max-file=3 [image]
+
+# In docker-compose.yml
+services:
+  myapp:
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"</code></pre>
+                </li>
+                <li><strong>Use volumes for write-heavy directories</strong> to avoid container growth</li>
+                <li><strong>Consider container lifecycle management</strong> - recreate containers periodically</li>
+            </ul>
+            
+            <h4>Issue 3: Slow Build or Container Startup</h4>
+            <p><strong>Symptoms:</strong> Docker builds or container startup takes much longer than expected.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li>Large images with unnecessary files</li>
+                <li>Inefficient Dockerfile</li>
+                <li>Network slowness when pulling images</li>
+                <li>Application initialization issues</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Check image size
+docker images
+
+# Time container startup
+time docker run --rm [image] echo "Container started"
+
+# Analyze image layers
+docker history [image]</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Optimize Dockerfile</strong> as mentioned in the Image Building section</li>
+                <li><strong>Use multi-stage builds</strong> to reduce final image size</li>
+                <li><strong>Implement proper health checks</strong> instead of sleep commands in startup scripts</li>
+                <li><strong>Use local registry mirrors</strong> for faster pulls</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Real Example: Optimizing a Memory-Hungry Container</h4>
+                <p>A Node.js application is consuming excessive memory:</p>
+                <pre><code># Check current memory usage
+$ docker stats app_container
+CONTAINER ID   NAME           CPU %   MEM USAGE / LIMIT     MEM %
+abc123def456   app_container  0.25%   1.5GiB / 1.952GiB     76.84%
+
+# Fix: Set memory limits and optimize Node.js memory usage</code></pre>
+                
+                <p>Docker Compose configuration fix:</p>
+                <pre><code># docker-compose.yml
+services:
+  app:
+    image: node-app
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    environment:
+      NODE_OPTIONS: --max-old-space-size=384  # Limit Node.js heap size</code></pre>
+                
+                <p>After implementation:</p>
+                <pre><code>$ docker stats app_container
+CONTAINER ID   NAME           CPU %   MEM USAGE / LIMIT     MEM %
+abc123def456   app_container  0.30%   384MiB / 512MiB       75.00%</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Docker Compose Specific Issues</h3>
+            <p>Docker Compose adds another layer of complexity with its own set of potential issues.</p>
+            
+            <h4>Issue 1: Service Dependency Problems</h4>
+            <p><strong>Symptoms:</strong> Services fail because they start before dependencies are ready.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li><code>depends_on</code> only waits for container to start, not for service to be ready</li>
+                <li>Missing health checks</li>
+                <li>Race conditions in startup</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Check service startup order
+docker-compose logs | grep "Starting"
+
+# Check dependency configuration
+docker-compose config</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Add health checks</strong>:
+                <pre><code>services:
+  db:
+    image: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      
+  web:
+    depends_on:
+      db:
+        condition: service_healthy  # Wait for db to be healthy</code></pre>
+                </li>
+                <li><strong>Implement wait scripts</strong> in your application startup</li>
+                <li><strong>Add retry logic</strong> in application for connections to dependencies</li>
+            </ul>
+            
+            <h4>Issue 2: Environment Variable Problems</h4>
+            <p><strong>Symptoms:</strong> Services don't pick up expected environment variables.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li>Missing or incorrect .env file</li>
+                <li>Variable substitution syntax errors</li>
+                <li>Environment variables not passed to containers</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Check environment variables in a running container
+docker-compose exec [service_name] env
+
+# Validate docker-compose configuration with variable substitution
+docker-compose config
+
+# Check .env file exists and is readable
+cat .env</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Ensure .env file is in the same directory</strong> as docker-compose.yml</li>
+                <li><strong>Use explicit env_file directive</strong>:
+                <pre><code>services:
+  myapp:
+    env_file:
+      - ./.env</code></pre>
+                </li>
+                <li><strong>Set default values</strong> for variables:
+                <pre><code>services:
+  myapp:
+    environment:
+      - VARIABLE=${VARIABLE:-default_value}</code></pre>
+                </li>
+            </ul>
+            
+            <h4>Issue 3: Compose File Syntax Errors</h4>
+            <p><strong>Symptoms:</strong> <code>docker-compose up</code> fails with parsing or syntax errors.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li>YAML syntax errors (indentation, missing colons)</li>
+                <li>Using wrong version of Compose file format</li>
+                <li>Invalid configuration options</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Validate compose file syntax
+docker-compose config
+
+# Check docker-compose version
+docker-compose version</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Fix YAML syntax</strong>: Check indentation (use spaces, not tabs)</li>
+                <li><strong>Validate against Compose file reference</strong> for your Docker Compose version</li>
+                <li><strong>Use a YAML linter</strong> to catch formatting errors</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Real Example: Fixing Service Dependencies</h4>
+                <p>A web application fails to connect to its database on startup:</p>
+                <pre><code># Initial docker-compose.yml
+services:
+  web:
+    build: ./web
+    depends_on:
+      - db  # Only waits for container to start
+    
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_PASSWORD: example</code></pre>
+                
+                <p>Improved version with health checks:</p>
+                <pre><code># Updated docker-compose.yml
+services:
+  web:
+    build: ./web
+    depends_on:
+      db:
+        condition: service_healthy  # Wait for db to be healthy
+    
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_PASSWORD: example
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5</code></pre>
+                
+                <p>With this configuration, the web service will not start until the database is actually ready to accept connections.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>System-Level Docker Issues</h3>
+            <p>Sometimes problems stem from the Docker installation itself or host system configuration.</p>
+            
+            <h4>Issue 1: Docker Daemon Not Starting</h4>
+            <p><strong>Symptoms:</strong> Docker commands fail with "Cannot connect to the Docker daemon" errors.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li>Docker service not running</li>
+                <li>Permission issues</li>
+                <li>Corrupt Docker data</li>
+                <li>Resource exhaustion on host</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Check Docker service status (Linux)
+sudo systemctl status docker
+
+# Check Docker Desktop status (Mac/Windows)
+# Look at the application status
+
+# Check Docker daemon logs
+sudo journalctl -u docker</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Start Docker service</strong>:
+                <pre><code>sudo systemctl start docker</code></pre>
+                </li>
+                <li><strong>Add user to docker group</strong> (Linux):
+                <pre><code>sudo usermod -aG docker $USER</code></pre>
+                </li>
+                <li><strong>Reset Docker Desktop</strong> to factory defaults (Mac/Windows)</li>
+                <li><strong>Check disk space</strong> and free up if necessary</li>
+            </ul>
+            
+            <h4>Issue 2: Disk Space Problems</h4>
+            <p><strong>Symptoms:</strong> "No space left on device" errors or Docker operations fail.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li>Unused images, containers, volumes consuming space</li>
+                <li>Large build cache</li>
+                <li>Docker data directory on a partition with limited space</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <pre><code># Check disk space usage
+df -h
+
+# Check Docker's disk usage
+docker system df
+
+# Get detailed report on space usage
+docker system df -v</code></pre>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Remove unused resources</strong>:
+                <pre><code>docker system prune  # Remove unused data
+docker system prune -a  # Remove unused data including unused images
+docker system prune -a --volumes  # Also remove unused volumes</code></pre>
+                </li>
+                <li><strong>Move Docker data directory</strong> to a larger partition:
+                <pre><code># Edit /etc/docker/daemon.json (Linux)
+{
+  "data-root": "/path/to/new/docker/data"
+}</code></pre>
+                </li>
+                <li><strong>Set up image/container cleanup automation</strong></li>
+            </ul>
+            
+            <h4>Issue 3: Docker Desktop Problems</h4>
+            <p><strong>Symptoms:</strong> Docker Desktop crashes, hangs, or experiences performance issues on Mac/Windows.</p>
+            
+            <p><strong>Common Causes:</strong></p>
+            <ul>
+                <li>Insufficient resources allocated to Docker VM</li>
+                <li>Filesystem performance issues (especially on macOS)</li>
+                <li>Outdated Docker Desktop version</li>
+                <li>Integration with WSL2 issues (Windows)</li>
+            </ul>
+            
+            <p><strong>Diagnosis:</strong></p>
+            <p>Check Docker Desktop settings and logs:</p>
+            <ul>
+                <li>Mac: ~/Library/Containers/com.docker.docker/Data/log/</li>
+                <li>Windows: C:\Users\[username]\AppData\Local\Docker</li>
+            </ul>
+            
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Increase resources</strong> in Docker Desktop settings</li>
+                <li><strong>Enable disk space reclamation</strong> in settings</li>
+                <li><strong>Update Docker Desktop</strong> to the latest version</li>
+                <li><strong>Reset to factory defaults</strong> as a last resort</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Real Example: Resolving Disk Space Issues</h4>
+                <p>Docker operations fail with "no space left on device" errors:</p>
+                <pre><code># Check current disk usage
+$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1       50G   48G   2G   96%  /
+
+# Check Docker's space usage
+$ docker system df
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          25        10        10.96GB   8.31GB (75%)
+Containers      15        11        1.937GB   625.3MB (32%)
+Local Volumes   10        5         9.921GB   4.52GB (45%)
+Build Cache     0         0         0B        0B</code></pre>
+                
+                <p>Solution: Clean up unused Docker resources:</p>
+                <pre><code># Remove unused containers, networks, images and build cache
+$ docker system prune -a
+WARNING! This will remove all unused images, networks, and build cache.
+Are you sure you want to continue? [y/N] y
+
+# Additionally clean up volumes if needed
+$ docker volume prune
+WARNING! This will remove all volumes not used by at least one container.
+Are you sure you want to continue? [y/N] y</code></pre>
+                
+                <p>After cleanup:</p>
+                <pre><code>$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1       50G   29G   21G   58%  /</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Practical Troubleshooting Exercise</h3>
+            <p>Let's apply what we've learned with a hands-on exercise diagnosing and fixing a real-world Docker issue.</p>
+            
+            <h4>Scenario: Broken Multi-Container Application</h4>
+            <p>You've been given a multi-container application with the following components:</p>
+            <ul>
+                <li>A Python Flask web application</li>
+                <li>A PostgreSQL database</li>
+                <li>A Redis cache</li>
+            </ul>
+            <p>The application doesn't work correctly. Your task is to identify and fix the issues.</p>
+            
+            <h4>Step 1: Clone the Exercise Repository</h4>
+            <pre><code>git clone https://github.com/your-instructor/docker-troubleshooting-exercise.git
+cd docker-troubleshooting-exercise</code></pre>
+            
+            <h4>Step 2: Attempt to Start the Application</h4>
+            <pre><code>docker-compose up</code></pre>
+            
+            <h4>Step 3: Identify Issues</h4>
+            <p>The application has several deliberate issues:</p>
+            <ol>
+                <li>The web container exits immediately after starting</li>
+                <li>The database container starts but the application can't connect to it</li>
+                <li>Static files aren't being served correctly</li>
+                <li>The Redis connection is failing intermittently</li>
+            </ol>
+            
+            <h4>Step 4: Apply Troubleshooting Techniques</h4>
+            <p>Use the techniques from this lecture to diagnose each issue:</p>
+            <ul>
+                <li>Check container logs: <code>docker-compose logs [service]</code></li>
+                <li>Inspect container configurations: <code>docker-compose config</code></li>
+                <li>Check network connectivity between containers</li>
+                <li>Verify volume mounts</li>
+                <li>Examine resource usage</li>
+            </ul>
+            
+            <h4>Step 5: Fix the Issues</h4>
+            <p>For each identified issue, apply the appropriate fix:</p>
+            <ol>
+                <li><strong>Web container issue</strong>: Fix the command or entrypoint in docker-compose.yml</li>
+                <li><strong>Database connection issue</strong>: Correct network configuration and environment variables</li>
+                <li><strong>Static files issue</strong>: Fix volume mounting configuration</li>
+                <li><strong>Redis connection issue</strong>: Add connection retry logic or health checks</li>
+            </ol>
+            
+            <h4>Step 6: Verify Fixes</h4>
+            <pre><code>docker-compose down
+docker-compose up -d</code></pre>
+            <p>Access the application at http://localhost:5000 and verify it works correctly.</p>
+            
+            <div class="example">
+                <h4>Common Issues You Might Find</h4>
+                <p>Here are example issues that might be in the exercise:</p>
+                <pre><code># Issue 1: Incorrect command in docker-compose.yml
+services:
+  web:
+    build: ./web
+    command: python app.py  # Wrong! Flask app isn't in container's PATH
+
+# Fix 1: Correct the command
+services:
+  web:
+    build: ./web
+    command: python /app/app.py  # Use absolute path
+
+# Issue 2: Missing environment variables
+services:
+  web:
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/postgres
+      # Missing REDIS_URL
+
+# Fix 2: Add the missing variable
+services:
+  web:
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/postgres
+      - REDIS_URL=redis://redis:6379/0
+
+# Issue 3: Incorrect volume mount
+services:
+  web:
+    volumes:
+      - ./web/static:/static  # Wrong path! Should be /app/static
+
+# Fix 3: Correct the volume mount
+services:
+  web:
+    volumes:
+      - ./web/static:/app/static  # Correct path</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Advanced Debugging Techniques</h3>
+            <p>For more complex issues, these advanced techniques can help:</p>
+            
+            <h4>Using Docker's Experimental Diagnostics Tools</h4>
+            <pre><code># Run Docker's diagnostic command
+docker checkpoint
+
+# Get detailed daemon information
+docker system info
+
+# Get daemon debug information (Linux)
+sudo dockerd --debug</code></pre>
+            
+            <h4>Network Troubleshooting with Specialized Containers</h4>
+            <pre><code># Run a networking toolkit container on the same network
+docker run --rm -it --network container:[container_id] nicolaka/netshoot
+
+# Inside the container, you can use tools like:
+# - tcpdump to capture network traffic
+# - netstat to check open ports
+# - curl to test HTTP connections
+# - ping, traceroute, nslookup for basic network diagnostics</code></pre>
+            
+            <h4>Analyzing Container File Systems</h4>
+            <pre><code># Create a container from an image without starting it
+docker create --name debug_container [image]
+
+# Export the filesystem for analysis
+docker export debug_container > filesystem.tar
+
+# Extract and examine the filesystem
+mkdir extract
+tar -xf filesystem.tar -C extract
+ls -la extract
+
+# Clean up
+rm -rf extract filesystem.tar
+docker rm debug_container</code></pre>
+            
+            <h4>Using Docker's BuildKit Debug Shell</h4>
+            <p>For debugging build issues with BuildKit:</p>
+            <pre><code># Enable BuildKit
+export DOCKER_BUILDKIT=1
+
+# Use debug shell during build
+docker build --progress=plain --build-arg BUILDKIT_INLINE_CACHE=1 .</code></pre>
+            
+            <h4>Debugging with Docker Events</h4>
+            <pre><code># Watch Docker events in real-time
+docker events
+
+# Filter events by type
+docker events --filter 'type=container'
+
+# Watch events for a specific container
+docker events --filter 'container=container_name'</code></pre>
+        </section>
+
+        <section>
+            <h3>Prevention and Best Practices</h3>
+            <p>Preventing issues is always better than having to troubleshoot them. Here are some best practices:</p>
+            
+            <h4>Container Design Principles</h4>
+            <ul>
+                <li><strong>One concern per container</strong> - Each container should do one thing well</li>
+                <li><strong>Design for failure</strong> - Assume containers will crash and restart</li>
+                <li><strong>Make containers stateless</strong> - Store persistent data in volumes or external services</li>
+                <li><strong>Use health checks</strong> - Help Docker determine if containers are truly healthy</li>
+                <li><strong>Implement graceful shutdowns</strong> - Handle SIGTERM signals properly</li>
+            </ul>
+            
+            <h4>Docker Compose Best Practices</h4>
+            <ul>
+                <li><strong>Version control your docker-compose.yml</strong></li>
+                <li><strong>Use multiple compose files</strong> for different environments</li>
+                <li><strong>Set appropriate restart policies</strong>:
+                <pre><code>services:
+  web:
+    restart: unless-stopped  # Restart container unless explicitly stopped
+  
+  worker:
+    restart: on-failure:5  # Restart up to 5 times on failure</code></pre>
+                </li>
+                <li><strong>Use service dependencies</strong> with health checks</li>
+                <li><strong>Define networks explicitly</strong> for better control</li>
+            </ul>
+            
+            <h4>Log Management Best Practices</h4>
+            <ul>
+                <li><strong>Configure logging drivers</strong> appropriately:
+                <pre><code>services:
+  web:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"</code></pre>
+                </li>
+                <li><strong>Consider centralized logging</strong> for production environments</li>
+                <li><strong>Include request IDs</strong> in application logs for traceability</li>
+                <li><strong>Structure logs</strong> in machine-parseable format (JSON)</li>
+            </ul>
+            
+            <h4>Regular Maintenance Tasks</h4>
+            <ul>
+                <li><strong>Clean up unused resources</strong> regularly:
+                <pre><code># Add to cron or scheduled tasks
+docker system prune -f --filter "until=24h"</code></pre>
+                </li>
+                <li><strong>Update base images</strong> to get security fixes</li>
+                <li><strong>Monitor Docker daemon health</strong></li>
+                <li><strong>Back up important volumes</strong></li>
+            </ul>
+            
+            <div class="example">
+                <h4>Example: Docker Monitoring Setup</h4>
+                <p>A simple monitoring setup using cAdvisor, Prometheus, and Grafana:</p>
+                <pre><code># docker-compose.yml for monitoring
+version: '3.8'
+
+services:
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    
+volumes:
+  prometheus_data:
+  grafana_data:</code></pre>
+                
+                <p>With this setup, you can:</p>
+                <ul>
+                    <li>Monitor container metrics in real-time with cAdvisor (port 8080)</li>
+                    <li>Collect and query metrics with Prometheus (port 9090)</li>
+                    <li>Create dashboards with Grafana (port 3000)</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li><strong>Systematic approach</strong> is crucial for efficient troubleshooting</li>
+                <li><strong>Docker logs</strong> are your first and most important diagnostic tool</li>
+                <li><strong>Container lifecycle</strong> issues often relate to startup configuration</li>
+                <li><strong>Networking problems</strong> are common in multi-container setups</li>
+                <li><strong>Volume configuration</strong> is critical for data persistence</li>
+                <li><strong>Resource constraints</strong> should be set appropriately</li>
+                <li><strong>Docker Compose</strong> adds complexity but helps with service orchestration</li>
+                <li><strong>Prevention</strong> through best practices is better than troubleshooting</li>
+            </ul>
+            
+            <p>Remember that troubleshooting Docker is a skill that improves with practice. Don't be afraid to experiment, break things, and fix them - that's the best way to learn!</p>
+        </section>
+
+        <section>
+            <h3>Further Resources</h3>
+            <ul>
+                <li><a href="https://docs.docker.com/engine/reference/commandline/logs/" target="_blank">Docker Logs Documentation</a></li>
+                <li><a href="https://docs.docker.com/compose/reference/" target="_blank">Docker Compose CLI Reference</a></li>
+                <li><a href="https://docs.docker.com/config/daemon/systemd/" target="_blank">Docker Daemon Configuration</a></li>
+                <li><a href="https://github.com/nicolaka/netshoot" target="_blank">Netshoot - Network Debugging Container</a></li>
+                <li><a href="https://docs.docker.com/engine/reference/commandline/stats/" target="_blank">Docker Stats Documentation</a></li>
+                <li><a href="https://success.docker.com/article/troubleshooting-container-networking" target="_blank">Docker Networking Troubleshooting Guide</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

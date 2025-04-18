@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setting up a Development Environment with Docker Compose - Full Stack Python Developer Course</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Setting up a Development Environment with Docker Compose</h1>
+        <h2>Week 1 - Thursday</h2>
+    </header>
+
+    <main>
+        <section class="course-intro">
+            <h3>Lecture Overview</h3>
+            <p>In this session, we'll learn how to create consistent, isolated, and reproducible development environments using Docker Compose. By the end of this lecture, you'll understand how to configure and use Docker Compose to streamline your development workflow, making it easier to onboard new team members and ensure consistency across different development machines.</p>
+        </section>
+
+        <section>
+            <h3>Why Use Docker Compose for Development?</h3>
+            <p>Traditional development setups often suffer from the "it works on my machine" problem, where code runs differently across developer laptops, CI systems, and production environments. Docker Compose solves this by allowing you to define and share your entire development environment as code.</p>
+            
+            <h4>Benefits of Docker Compose for Development</h4>
+            <ul>
+                <li><strong>Consistency</strong> - Everyone on the team works with identical environments</li>
+                <li><strong>Isolation</strong> - Projects don't interfere with each other's dependencies</li>
+                <li><strong>Portability</strong> - Works the same on any machine with Docker installed</li>
+                <li><strong>Configuration as code</strong> - Environment setup is versioned alongside source code</li>
+                <li><strong>Microservices simulation</strong> - Easily run multi-container applications locally</li>
+                <li><strong>Quick onboarding</strong> - New team members can start developing with a single command</li>
+                <li><strong>Dependency management</strong> - All dependencies, including databases and services, are defined in one place</li>
+            </ul>
+            
+            <div class="analogy">
+                <h4>Analogy: Instant Kitchen vs. Building Ingredients from Scratch</h4>
+                <p>Setting up a development environment without Docker Compose is like cooking a complex meal where you have to grow your own ingredients, make your own utensils, and build your own stove before you can even start cooking. If your friend wants to make the same meal, they have to go through the whole process again, possibly with slightly different results.</p>
+                <p>Using Docker Compose is like having an "instant kitchen" that includes the exact ingredients, utensils, and appliances needed for a specific recipe. When you share this kitchen with a colleague, they get the exact same setup with a single command. Everyone cooks in identical kitchens, producing consistent results every time.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Components of a Development Environment</h3>
+            <p>Before diving into Docker Compose, let's understand what makes up a typical development environment:</p>
+            
+            <h4>Core Components</h4>
+            <ul>
+                <li><strong>Application code</strong> - Your source code that's actively being developed</li>
+                <li><strong>Runtime environment</strong> - Language runtime, interpreter, or compiler</li>
+                <li><strong>Dependencies</strong> - Libraries, packages, and frameworks</li>
+                <li><strong>Data stores</strong> - Databases, caches, and message queues</li>
+                <li><strong>Configuration</strong> - Environment variables, config files, and secrets</li>
+                <li><strong>Development tools</strong> - Debuggers, hot-reloaders, and linters</li>
+            </ul>
+            
+            <h4>Development Environment Requirements</h4>
+            <ul>
+                <li><strong>Live code reloading</strong> - Changes to source code should be reflected immediately</li>
+                <li><strong>Debugging capabilities</strong> - Ability to set breakpoints and inspect variables</li>
+                <li><strong>Fast feedback cycles</strong> - Quick testing of code changes</li>
+                <li><strong>Persistence</strong> - Development data should persist between restarts</li>
+                <li><strong>Similarity to production</strong> - Should mimic production environment closely</li>
+                <li><strong>Easy startup/shutdown</strong> - Simple commands to start, stop, and reset the environment</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Example: Python Web Application Environment</h4>
+                <p>A typical Python web application development environment might include:</p>
+                <ul>
+                    <li>Python runtime (specific version)</li>
+                    <li>Web framework (Flask, Django, etc.)</li>
+                    <li>Database (PostgreSQL, MySQL, MongoDB)</li>
+                    <li>Cache (Redis, Memcached)</li>
+                    <li>Task queue (Celery, RQ)</li>
+                    <li>Message broker (RabbitMQ, Redis)</li>
+                    <li>Static file server (Nginx)</li>
+                    <li>Development tools (debugger, hot-reloader)</li>
+                </ul>
+                <p>All these components need to be set up and configured correctly to work together.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Docker Compose Development Workflow</h3>
+            <p>Docker Compose streamlines the development workflow by providing a consistent and reproducible environment. Here's how a typical workflow looks:</p>
+            
+            <h4>Development Workflow Steps</h4>
+            <ol>
+                <li><strong>Define environment</strong> - Create a docker-compose.yml file with all required services</li>
+                <li><strong>Start environment</strong> - Run <code>docker-compose up</code> to start all services</li>
+                <li><strong>Develop</strong> - Edit code on your host machine with your favorite tools</li>
+                <li><strong>See changes</strong> - Code changes are reflected in the running containers</li>
+                <li><strong>Test</strong> - Run tests in the containerized environment</li>
+                <li><strong>Stop environment</strong> - Run <code>docker-compose down</code> when done</li>
+            </ol>
+            
+            <h4>Key Docker Compose Commands</h4>
+            <pre><code># Start all services in the foreground
+docker-compose up
+
+# Start all services in the background
+docker-compose up -d
+
+# View logs of running services
+docker-compose logs
+
+# Follow logs of a specific service
+docker-compose logs -f service_name
+
+# Stop all services but keep volumes and networks
+docker-compose stop
+
+# Stop and remove containers, networks, but keep volumes
+docker-compose down
+
+# Stop and remove everything including volumes
+docker-compose down -v
+
+# Start a specific service and its dependencies
+docker-compose up service_name
+
+# Rebuild images and start services
+docker-compose up --build
+
+# Run a command in a service container
+docker-compose exec service_name command
+
+# View running containers
+docker-compose ps</code></pre>
+            
+            <div class="analogy">
+                <h4>Analogy: Orchestra Conductor</h4>
+                <p>Docker Compose acts like an orchestra conductor, coordinating all the different services (musicians) that make up your application:</p>
+                <ul>
+                    <li>The <code>docker-compose.yml</code> file is the musical score, telling each musician what to play</li>
+                    <li><code>docker-compose up</code> is the conductor raising the baton to start the performance</li>
+                    <li>Each service (database, web server, cache) plays its part in harmony with the others</li>
+                    <li>The conductor ensures everyone starts and stops together and maintains the right timing</li>
+                    <li>If one musician (service) plays a wrong note (has an error), the conductor can help identify and fix the issue</li>
+                </ul>
+                <p>Just as a conductor allows musicians to focus on playing their instruments, Docker Compose allows developers to focus on writing code without worrying about the infrastructure.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Creating a Basic Development Environment</h3>
+            <p>Let's start with a simple example: a Python Flask application with a PostgreSQL database.</p>
+            
+            <h4>Project Structure</h4>
+            <pre><code>my_project/
+├── docker-compose.yml
+├── app/
+│   ├── Dockerfile
+│   ├── app.py
+│   └── requirements.txt
+└── .env</code></pre>
+            
+            <h4>Step 1: Define Your Application</h4>
+            <p>Create a simple Flask application in <code>app/app.py</code>:</p>
+            <pre><code>from flask import Flask
+import os
+import time
+import psycopg2
+
+app = Flask(__name__)
+
+def get_db_connection():
+    db_name = os.environ.get('POSTGRES_DB', 'postgres')
+    db_user = os.environ.get('POSTGRES_USER', 'postgres')
+    db_password = os.environ.get('POSTGRES_PASSWORD', 'postgres')
+    db_host = os.environ.get('POSTGRES_HOST', 'db')
+    
+    # Retry logic for database connection
+    retry_count = 0
+    max_retries = 5
+    
+    while retry_count < max_retries:
+        try:
+            conn = psycopg2.connect(
+                dbname=db_name,
+                user=db_user,
+                password=db_password,
+                host=db_host
+            )
+            return conn
+        except psycopg2.OperationalError:
+            retry_count += 1
+            print(f"Database connection attempt {retry_count} failed. Retrying in 2 seconds...")
+            time.sleep(2)
+    
+    raise Exception("Could not connect to database after multiple attempts")
+
+@app.route('/')
+def hello():
+    return "Hello from Flask! This is a development environment using Docker Compose."
+
+@app.route('/db-test')
+def db_test():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT version();')
+    db_version = cursor.fetchone()[0]
+    cursor.close()
+    conn.close()
+    
+    return f"Database connection successful! PostgreSQL version: {db_version}"
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', debug=True)</code></pre>
+            
+            <h4>Step 2: Create Requirements File</h4>
+            <p>Define your dependencies in <code>app/requirements.txt</code>:</p>
+            <pre><code>flask==2.0.1
+psycopg2-binary==2.9.1</code></pre>
+            
+            <h4>Step 3: Create Dockerfile</h4>
+            <p>Create a Dockerfile for your application in <code>app/Dockerfile</code>:</p>
+            <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=development
+
+EXPOSE 5000
+
+CMD ["flask", "run", "--host=0.0.0.0"]</code></pre>
+            
+            <h4>Step 4: Create docker-compose.yml</h4>
+            <p>Define your development environment in <code>docker-compose.yml</code>:</p>
+            <pre><code>version: '3.8'
+
+services:
+  web:
+    build: ./app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app:/app
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    depends_on:
+      - db
+  
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:</code></pre>
+            
+            <h4>Step 5: Start Your Development Environment</h4>
+            <pre><code>cd my_project
+docker-compose up</code></pre>
+            
+            <h4>Step 6: Test the Application</h4>
+            <p>Open your browser and visit:</p>
+            <ul>
+                <li><a href="http://localhost:5000">http://localhost:5000</a> - Should show "Hello from Flask!"</li>
+                <li><a href="http://localhost:5000/db-test">http://localhost:5000/db-test</a> - Should show a successful database connection</li>
+            </ul>
+            
+            <h4>Step 7: Make Changes and See Live Updates</h4>
+            <p>Edit <code>app/app.py</code> on your host machine, for example change the hello message. Refresh your browser to see the changes immediately, without restarting the container.</p>
+            
+            <div class="example">
+                <h4>Key Development Features in This Setup</h4>
+                <ul>
+                    <li><strong>Code Volumes</strong> - The <code>./app:/app</code> volume mount allows changes on your host to be immediately reflected in the container</li>
+                    <li><strong>Development Mode</strong> - Setting <code>FLASK_ENV=development</code> enables Flask's debug mode with auto-reloading</li>
+                    <li><strong>Persistent Database</strong> - The <code>postgres_data</code> volume ensures database data persists between restarts</li>
+                    <li><strong>Port Mapping</strong> - Ports are mapped to the host so you can access services through localhost</li>
+                    <li><strong>Service Dependencies</strong> - The <code>depends_on</code> ensures the database starts before the web service</li>
+                    <li><strong>Connection Retry Logic</strong> - The app includes retry logic for database connection to handle startup ordering</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Advanced Development Environment Features</h3>
+            <p>Now let's expand our development environment with more advanced features:</p>
+            
+            <h4>Adding Hot Reloading</h4>
+            <p>Hot reloading allows code changes to be immediately reflected in the running application without a full restart.</p>
+            <pre><code># For Python Flask, set environment variables in docker-compose.yml
+environment:
+  - FLASK_ENV=development  # Enables debug mode with auto-reload
+  - FLASK_DEBUG=1</code></pre>
+            
+            <h4>Setting Up a Database Initialization Script</h4>
+            <p>Create an initialization script to set up your database schema on first run:</p>
+            <pre><code># Create a directory for initialization scripts
+mkdir -p init-scripts
+
+# Create an init script in init-scripts/init.sql
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+# Update docker-compose.yml to use this script
+services:
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d  # This directory is executed on init
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres</code></pre>
+            
+            <h4>Adding Redis for Caching</h4>
+            <p>Many web applications use Redis for caching, sessions, or as a message broker:</p>
+            <pre><code># Add Redis to docker-compose.yml
+services:
+  # ... existing services
+  
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:</code></pre>
+            
+            <p>Then update app.py to use Redis:</p>
+            <pre><code># Add to requirements.txt
+redis==3.5.3
+
+# Update app.py to use Redis
+import redis
+
+redis_client = redis.Redis(host='redis', port=6379, db=0)</code></pre>
+            
+            <h4>Adding a Worker Queue (Celery)</h4>
+            <p>For background tasks, you can add Celery to your development environment:</p>
+            <pre><code># Add to requirements.txt
+celery==5.1.2
+
+# Create a new file app/tasks.py
+from celery import Celery
+
+app = Celery('tasks', broker='redis://redis:6379/0')
+
+@app.task
+def add(x, y):
+    return x + y
+
+# Update docker-compose.yml to add a worker
+services:
+  # ... existing services
+  
+  worker:
+    build: ./app
+    command: celery -A tasks worker --loglevel=info
+    volumes:
+      - ./app:/app
+    depends_on:
+      - redis</code></pre>
+            
+            <div class="example">
+                <h4>Complete Multi-service Development Environment</h4>
+                <p>Here's a complete <code>docker-compose.yml</code> for a development environment with multiple services:</p>
+                <pre><code>version: '3.8'
+
+services:
+  web:
+    build: ./app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app:/app
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+  
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+  
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+  
+  worker:
+    build: ./app
+    command: celery -A tasks worker --loglevel=info
+    volumes:
+      - ./app:/app
+    depends_on:
+      - redis
+  
+  # Optional: Add pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
+  redis_data:</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Development Environment Best Practices</h3>
+            <p>Here are some best practices to make your Docker Compose development environment more effective:</p>
+            
+            <h4>Optimizing for Development</h4>
+            <ul>
+                <li><strong>Mount code as volumes</strong> - Don't copy code into images for development</li>
+                <li><strong>Enable debug modes</strong> - Turn on verbose logging and debugging features</li>
+                <li><strong>Use hot reloading</strong> - Configure applications to automatically reload on code changes</li>
+                <li><strong>Expose service ports</strong> - Map container ports to host for easy access</li>
+                <li><strong>Use named volumes for persistence</strong> - Ensure data survives container restarts</li>
+                <li><strong>Include development tools</strong> - Add debugging, linting, and testing tools</li>
+            </ul>
+            
+            <h4>Configuration Management</h4>
+            <ul>
+                <li><strong>Use environment variables</strong> - Keep configuration in environment variables</li>
+                <li><strong>Create a .env file</strong> - Store default environment variables in a .env file</li>
+                <li><strong>Add .env to .gitignore</strong> - Don't commit environment variables with secrets</li>
+                <li><strong>Provide a .env.example</strong> - Share an example configuration without secrets</li>
+                <li><strong>Use variable substitution</strong> - Reference environment variables with ${VAR_NAME}</li>
+            </ul>
+            
+            <pre><code># Example .env file
+POSTGRES_DB=devdb
+POSTGRES_USER=devuser
+POSTGRES_PASSWORD=devpassword
+REDIS_URL=redis://redis:6379/0</code></pre>
+            
+            <h4>Performance Considerations</h4>
+            <ul>
+                <li><strong>Be selective about volume mounts</strong> - Only mount directories that need live updates</li>
+                <li><strong>Use bind mounts for code</strong> - But named volumes for dependencies and data</li>
+                <li><strong>Consider OS-specific optimizations</strong> - Docker for Mac/Windows has different volume performance</li>
+                <li><strong>Use multi-stage builds</strong> - For efficient image building but with separate dev configuration</li>
+            </ul>
+            
+            <h4>Team Collaboration</h4>
+            <ul>
+                <li><strong>Document environment setup</strong> - Create a README with setup instructions</li>
+                <li><strong>Use docker-compose.override.yml</strong> - For developer-specific configurations</li>
+                <li><strong>Script common operations</strong> - Create helper scripts for common tasks</li>
+                <li><strong>Use consistent commands</strong> - Standardize Docker Compose commands across the team</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Example: docker-compose.override.yml</h4>
+                <p>Use <code>docker-compose.override.yml</code> for developer-specific customizations:</p>
+                <pre><code># docker-compose.yml (shared by all developers)
+version: '3.8'
+
+services:
+  web:
+    build: ./app
+    volumes:
+      - ./app:/app
+    
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:</code></pre>
+                
+                <pre><code># docker-compose.override.yml (not committed to git, developer-specific)
+version: '3.8'
+
+services:
+  web:
+    ports:
+      - "5000:5000"  # Developer-specific port mapping
+    environment:
+      - DEBUG=True
+      - LOG_LEVEL=DEBUG
+    
+  db:
+    ports:
+      - "5432:5432"  # Developer-specific port mapping
+    
+  # Additional services for individual development
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "5050:80"</code></pre>
+                
+                <p>Docker Compose automatically merges docker-compose.yml with docker-compose.override.yml if present, allowing team-wide configuration to be committed while individual preferences remain local.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Debugging in Containerized Development Environments</h3>
+            <p>Debugging applications running in containers requires some special considerations:</p>
+            
+            <h4>Accessing Logs</h4>
+            <pre><code># View logs from all services
+docker-compose logs
+
+# Follow logs from a specific service
+docker-compose logs -f web
+
+# Get last 100 lines of logs
+docker-compose logs --tail=100 web</code></pre>
+            
+            <h4>Interactive Debugging</h4>
+            <pre><code># Start an interactive shell in a running container
+docker-compose exec web bash
+
+# Run a command in a service container
+docker-compose exec web python -c "import sys; print(sys.version)"
+
+# View running processes in a container
+docker-compose exec web ps aux</code></pre>
+            
+            <h4>Remote Debugging with Python</h4>
+            <p>For Python applications, you can use remote debugging tools like debugpy (formerly ptvsd):</p>
+            <pre><code># Add to requirements.txt
+debugpy==1.5.1
+
+# Modify your app.py to include debugger
+import debugpy
+
+# Enable the debugger to accept remote connections
+debugpy.listen(("0.0.0.0", 5678))
+print("Waiting for debugger to attach...")
+debugpy.wait_for_client()  # This line pauses execution until the debugger attaches</code></pre>
+            
+            <p>Then update your docker-compose.yml to expose the debug port:</p>
+            <pre><code>services:
+  web:
+    # ... other configuration
+    ports:
+      - "5000:5000"  # Application port
+      - "5678:5678"  # Debug port</code></pre>
+            
+            <p>Now you can connect to the debugger using VS Code or PyCharm.</p>
+            
+            <h4>Database Debugging</h4>
+            <pre><code># Connect to PostgreSQL container
+docker-compose exec db psql -U postgres
+
+# Run a SQL query directly
+docker-compose exec db psql -U postgres -c "SELECT * FROM users LIMIT 5;"</code></pre>
+            
+            <div class="analogy">
+                <h4>Analogy: Working Inside a Spaceship</h4>
+                <p>Debugging in containers is like debugging equipment on a spaceship from mission control:</p>
+                <ul>
+                    <li>You can't directly touch the equipment, but you have monitors (logs) showing what's happening</li>
+                    <li>You can send commands to the spacecraft (exec commands) to perform specific checks</li>
+                    <li>If needed, you can establish a direct video link (interactive shell) to see more details</li>
+                    <li>For critical issues, you might need to set up special equipment (remote debugger) to analyze the problem in real-time</li>
+                    <li>You have specialized tools for different systems (database clients, monitoring tools)</li>
+                </ul>
+                <p>Just as astronauts need training and special tools to work in space, developers need to learn container-specific debugging approaches.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Common Issues and Solutions</h3>
+            <p>Here are some common challenges you might face when setting up development environments with Docker Compose:</p>
+            
+            <h4>Container Startup Ordering</h4>
+            <p><strong>Issue:</strong> Services fail because they start before their dependencies are ready</p>
+            <p><strong>Solution:</strong> Add retry logic in your application or use a wait-for script:</p>
+            <pre><code># Create a wait-for.sh script
+#!/bin/sh
+# wait-for.sh host:port [-t timeout] [-- command args]
+
+set -e
+
+host="$1"
+shift
+cmd="$@"
+
+until PGPASSWORD=$POSTGRES_PASSWORD psql -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c '\q'; do
+  >&2 echo "Postgres is unavailable - sleeping"
+  sleep 1
+done
+
+>&2 echo "Postgres is up - executing command"
+exec $cmd</code></pre>
+            
+            <p>Then update your Dockerfile:</p>
+            <pre><code>COPY wait-for.sh /wait-for.sh
+RUN chmod +x /wait-for.sh
+
+CMD ["/wait-for.sh", "db:5432", "--", "flask", "run", "--host=0.0.0.0"]</code></pre>
+            
+            <h4>Volume Mount Issues</h4>
+            <p><strong>Issue:</strong> Code changes aren't reflected or volume mounts don't work</p>
+            <p><strong>Solution:</strong> Check paths and Docker Desktop settings:</p>
+            <ul>
+                <li>Ensure the path in your volume mount is correct</li>
+                <li>For Windows/Mac, make sure the directory is shared with Docker Desktop</li>
+                <li>Try using absolute paths if relative paths aren't working</li>
+                <li>Check file permissions on the host and in the container</li>
+            </ul>
+            
+            <h4>Environment Variable Problems</h4>
+            <p><strong>Issue:</strong> Environment variables aren't being properly set or accessed</p>
+            <p><strong>Solution:</strong> Check your configuration and access methods:</p>
+            <ul>
+                <li>Verify environment variables in docker-compose.yml</li>
+                <li>Make sure .env file is in the same directory as docker-compose.yml</li>
+                <li>Check that your application is accessing environment variables correctly</li>
+                <li>Use docker-compose config to see resolved environment variables</li>
+            </ul>
+            
+            <h4>Port Conflicts</h4>
+            <p><strong>Issue:</strong> "Port is already allocated" errors</p>
+            <p><strong>Solution:</strong> Change port mappings or stop conflicting services:</p>
+            <pre><code># Check what's using a specific port
+# Windows
+netstat -ano | findstr :5432
+
+# Linux/Mac
+sudo lsof -i :5432
+
+# Change port mapping in docker-compose.yml
+ports:
+  - "5433:5432"  # Map container port 5432 to host port 5433 instead</code></pre>
+            
+            <div class="example">
+                <h4>Debugging Workflow for Common Issues</h4>
+                <ol>
+                    <li>Check container status:
+                        <pre><code>docker-compose ps</code></pre>
+                    </li>
+                    <li>View container logs:
+                        <pre><code>docker-compose logs service_name</code></pre>
+                    </li>
+                    <li>Check if services are running as expected:
+                        <pre><code>docker-compose exec service_name ps aux</code></pre>
+                    </li>
+                    <li>Test network connectivity between services:
+                        <pre><code>docker-compose exec service_name ping another_service</code></pre>
+                    </li>
+                    <li>Verify environment variables:
+                        <pre><code>docker-compose exec service_name env | sort</code></pre>
+                    </li>
+                    <li>Check mounted volumes:
+                        <pre><code>docker-compose exec service_name ls -la /mounted/path</code></pre>
+                    </li>
+                    <li>Restart a specific service:
+                        <pre><code>docker-compose restart service_name</code></pre>
+                    </li>
+                    <li>Rebuild and restart everything:
+                        <pre><code>docker-compose down && docker-compose up --build</code></pre>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <section>
+            <h3>Development vs. Production Environments</h3>
+            <p>Your development environment should be optimized for developer experience, while your production environment focuses on security, performance, and reliability. Here's how they differ:</p>
+            
+            <h4>Key Differences</h4>
+            <table>
+                <tr>
+                    <th>Aspect</th>
+                    <th>Development</th>
+                    <th>Production</th>
+                </tr>
+                <tr>
+                    <td>Code mounting</td>
+                    <td>Bind mounts from host for live editing</td>
+                    <td>Code copied into container during build</td>
+                </tr>
+                <tr>
+                    <td>Debug mode</td>
+                    <td>Enabled for better error messages</td>
+                    <td>Disabled for security and performance</td>
+                </tr>
+                <tr>
+                    <td>Exposed ports</td>
+                    <td>Many ports exposed for direct access</td>
+                    <td>Minimal port exposure, behind proxies</td>
+                </tr>
+                <tr>
+                    <td>Environment</td>
+                    <td>Development-specific settings</td>
+                    <td>Production-specific settings</td>
+                </tr>
+                <tr>
+                    <td>Resource limits</td>
+                    <td>Often not set for simplicity</td>
+                    <td>Carefully configured for optimal use</td>
+                </tr>
+                <tr>
+                    <td>Dependencies</td>
+                    <td>Might include development tools</td>
+                    <td>Only runtime dependencies</td>
+                </tr>
+                <tr>
+                    <td>Secrets handling</td>
+                    <td>Often in environment variables</td>
+                    <td>Secure secret management solutions</td>
+                </tr>
+            </table>
+            
+            <h4>Using Different Compose Files</h4>
+            <p>A common approach is to use different Docker Compose files for different environments:</p>
+            <ul>
+                <li><code>docker-compose.yml</code> - Base configuration shared across environments</li>
+                <li><code>docker-compose.override.yml</code> - Development overrides (loaded automatically)</li>
+                <li><code>docker-compose.prod.yml</code> - Production overrides</li>
+            </ul>
+            
+            <pre><code># Run with development configuration (default)
+docker-compose up
+
+# Run with production configuration
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d</code></pre>
+            
+            <div class="example">
+                <h4>Example: Multi-environment Configuration</h4>
+                <p>Here's how you might structure your Docker Compose files for different environments:</p>
+                
+                <p><strong>docker-compose.yml (base configuration):</strong></p>
+                <pre><code>version: '3.8'
+
+services:
+  web:
+    build: ./app
+    image: myapp:${TAG:-latest}
+    depends_on:
+      - db
+    
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+
+volumes:
+  postgres_data:</code></pre>
+                
+                <p><strong>docker-compose.override.yml (development):</strong></p>
+                <pre><code>version: '3.8'
+
+services:
+  web:
+    volumes:
+      - ./app:/app  # Mount code for development
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - DEBUG=True
+    
+  db:
+    ports:
+      - "5432:5432"  # Expose database port for local access
+      
+  # Additional development services
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin</code></pre>
+                
+                <p><strong>docker-compose.prod.yml (production):</strong></p>
+                <pre><code>version: '3.8'
+
+services:
+  web:
+    restart: always
+    environment:
+      - FLASK_ENV=production
+      - DEBUG=False
+    # Use gunicorn instead of Flask dev server
+    command: gunicorn --bind 0.0.0.0:5000 app:app
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    
+  db:
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=${PROD_DB_PASSWORD}
+    volumes:
+      - ./backups:/backups  # Mount backup directory
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+          
+  # Production-only services
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - web
+    restart: always</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Multi-platform Development Considerations</h3>
+            <p>Development teams often use a mix of operating systems. Here's how to ensure your Docker Compose setup works across platforms:</p>
+            
+            <h4>Cross-platform Challenges</h4>
+            <ul>
+                <li><strong>Path differences</strong> - Windows uses backslashes, Unix uses forward slashes</li>
+                <li><strong>Line endings</strong> - Windows (CRLF) vs. Unix (LF) line endings</li>
+                <li><strong>File permissions</strong> - Different handling across operating systems</li>
+                <li><strong>Volume performance</strong> - Volume mounts have different performance characteristics</li>
+                <li><strong>Resource availability</strong> - Different CPU/memory defaults</li>
+            </ul>
+            
+            <h4>Best Practices for Cross-platform Development</h4>
+            <ul>
+                <li><strong>Use forward slashes</strong> in all paths, even on Windows</li>
+                <li><strong>Use relative paths</strong> whenever possible</li>
+                <li><strong>Set up .gitattributes</strong> to normalize line endings</li>
+                <li><strong>Use Docker Compose variables</strong> for platform-specific settings</li>
+                <li><strong>Document platform-specific setups</strong> in your README</li>
+                <li><strong>Test on all target platforms</strong> before sharing configurations</li>
+            </ul>
+            
+            <h4>Example .gitattributes File</h4>
+            <pre><code># Set default behavior to automatically normalize line endings
+* text=auto
+
+# Explicitly declare text files you want to always be normalized
+*.py text
+*.js text
+*.html text
+*.css text
+*.md text
+*.yml text
+*.yaml text
+*.json text
+
+# Declare files that will always have CRLF line endings on checkout
+*.bat text eol=crlf
+
+# Declare files that will always have LF line endings on checkout
+*.sh text eol=lf
+
+# Denote all files that are truly binary and should not be modified
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary</code></pre>
+            
+            <div class="example">
+                <h4>Windows-specific Considerations</h4>
+                <p>When developing on Windows with Docker Desktop, keep these points in mind:</p>
+                <ul>
+                    <li><strong>WSL 2 backend</strong> offers better performance than Hyper-V</li>
+                    <li><strong>Path mapping</strong> works differently depending on backend (WSL 2 vs. Hyper-V)</li>
+                    <li><strong>Volume mounts</strong> from Windows filesystem can be slow; use WSL 2 filesystem when possible</li>
+                    <li><strong>Resource limits</strong> need to be configured in Docker Desktop settings</li>
+                    <li><strong>Line endings</strong> can cause issues with shell scripts; use .gitattributes and configure your editor</li>
+                </ul>
+                <p>For best performance on Windows, store your project files in the WSL 2 filesystem and use VS Code's Remote - WSL extension to edit them.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Additional Development Tools</h3>
+            <p>You can enhance your Docker Compose development environment with these additional tools:</p>
+            
+            <h4>Database Management</h4>
+            <pre><code># Add pgAdmin for PostgreSQL management
+services:
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    depends_on:
+      - db</code></pre>
+            
+            <h4>Frontend Development Tools</h4>
+            <pre><code># Add a Node.js service for frontend development
+services:
+  frontend:
+    image: node:14
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - node_modules:/app/node_modules
+    ports:
+      - "3000:3000"
+    command: npm start
+
+volumes:
+  node_modules:</code></pre>
+            
+            <h4>Monitoring and Debugging</h4>
+            <pre><code># Add container monitoring with Portainer
+services:
+  portainer:
+    image: portainer/portainer-ce
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+volumes:
+  portainer_data:</code></pre>
+            
+            <h4>Documentation Tools</h4>
+            <pre><code># Add Swagger UI for API documentation
+services:
+  swagger:
+    image: swaggerapi/swagger-ui
+    ports:
+      - "8080:8080"
+    environment:
+      - API_URL=http://localhost:5000/api/swagger.json</code></pre>
+            
+            <div class="example">
+                <h4>Complete Development Environment Example</h4>
+                <p>Here's an example of a comprehensive development environment for a full-stack application:</p>
+                <pre><code>version: '3.8'
+
+services:
+  # Backend API
+  api:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/app
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+  
+  # Frontend React application
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - node_modules:/app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000
+      - CHOKIDAR_USEPOLLING=true
+  
+  # PostgreSQL database
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=app
+    ports:
+      - "5432:5432"
+  
+  # Redis for caching/messaging
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+  
+  # Celery worker for background tasks
+  worker:
+    build: ./backend
+    command: celery -A tasks worker --loglevel=info
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/app
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+      - db
+  
+  # PgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    depends_on:
+      - db
+  
+  # Mailhog for email testing
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI
+  
+  # Portainer for container management
+  portainer:
+    image: portainer/portainer-ce
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+  node_modules:
+  portainer_data:</code></pre>
+                
+                <p>This setup provides a complete development environment with:</p>
+                <ul>
+                    <li>Backend API with hot reloading</li>
+                    <li>Frontend React application with hot reloading</li>
+                    <li>PostgreSQL database with pgAdmin for management</li>
+                    <li>Redis for caching and as a message broker</li>
+                    <li>Celery worker for background tasks</li>
+                    <li>Mailhog for email testing</li>
+                    <li>Portainer for container management</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Practical Exercise: Setting Up a Development Environment</h3>
+            <p>Now let's put everything together with a hands-on exercise to create a complete development environment for a Python Flask application with a database and Redis cache.</p>
+            
+            <h4>Exercise Requirements</h4>
+            <ol>
+                <li>Create a Flask application with routes to test database and Redis connections</li>
+                <li>Set up PostgreSQL database with initialization scripts</li>
+                <li>Add Redis for caching</li>
+                <li>Configure hot reloading for development</li>
+                <li>Set up volume mounts for code and data persistence</li>
+                <li>Create a README with setup instructions</li>
+            </ol>
+            
+            <h4>Project Structure</h4>
+            <pre><code>flask_dev_env/
+├── docker-compose.yml
+├── .env.example
+├── README.md
+├── app/
+│   ├── Dockerfile
+│   ├── app.py
+│   └── requirements.txt
+└── init-scripts/
+    └── init.sql</code></pre>
+            
+            <h4>Step 1: Create Flask Application</h4>
+            <p>Create <code>app/app.py</code>:</p>
+            <pre><code>from flask import Flask, jsonify
+import os
+import time
+import psycopg2
+import redis
+
+app = Flask(__name__)
+
+# Get database connection
+def get_db_connection():
+    db_params = {
+        'dbname': os.environ.get('POSTGRES_DB', 'postgres'),
+        'user': os.environ.get('POSTGRES_USER', 'postgres'),
+        'password': os.environ.get('POSTGRES_PASSWORD', 'postgres'),
+        'host': os.environ.get('POSTGRES_HOST', 'db')
+    }
+    
+    # Retry logic for database connection
+    retry_count = 0
+    max_retries = 5
+    
+    while retry_count < max_retries:
+        try:
+            conn = psycopg2.connect(**db_params)
+            conn.autocommit = True
+            return conn
+        except psycopg2.OperationalError:
+            retry_count += 1
+            print(f"Database connection attempt {retry_count} failed. Retrying in 2 seconds...")
+            time.sleep(2)
+    
+    raise Exception("Could not connect to database after multiple attempts")
+
+# Get Redis connection
+def get_redis_connection():
+    redis_host = os.environ.get('REDIS_HOST', 'redis')
+    redis_port = int(os.environ.get('REDIS_PORT', 6379))
+    
+    return redis.Redis(host=redis_host, port=redis_port, db=0)
+
+@app.route('/')
+def hello():
+    return jsonify({
+        'message': 'Hello from Flask!',
+        'environment': os.environ.get('FLASK_ENV', 'development')
+    })
+
+@app.route('/db-test')
+def db_test():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT version();')
+        db_version = cursor.fetchone()[0]
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Database connection successful',
+            'version': db_version
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/redis-test')
+def redis_test():
+    try:
+        r = get_redis_connection()
+        r.incr('hits')
+        count = r.get('hits').decode('utf-8')
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Redis connection successful',
+            'hits': count
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/users')
+def get_users():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, username, email FROM users;')
+        users = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        user_list = [
+            {'id': user[0], 'username': user[1], 'email': user[2]} 
+            for user in users
+        ]
+        
+        return jsonify({
+            'status': 'success',
+            'users': user_list
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', debug=True)</code></pre>
+            
+            <h4>Step 2: Create Requirements File</h4>
+            <p>Create <code>app/requirements.txt</code>:</p>
+            <pre><code>flask==2.0.1
+psycopg2-binary==2.9.1
+redis==3.5.3</code></pre>
+            
+            <h4>Step 3: Create Dockerfile</h4>
+            <p>Create <code>app/Dockerfile</code>:</p>
+            <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# We don't COPY the application code in development
+# We'll use a volume mount instead
+
+ENV PYTHONUNBUFFERED=1
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=development
+
+EXPOSE 5000
+
+CMD ["flask", "run", "--host=0.0.0.0"]</code></pre>
+            
+            <h4>Step 4: Create Database Initialization Script</h4>
+            <p>Create <code>init-scripts/init.sql</code>:</p>
+            <pre><code>-- Create users table
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert sample data
+INSERT INTO users (username, email) VALUES
+    ('alice', 'alice@example.com'),
+    ('bob', 'bob@example.com'),
+    ('charlie', 'charlie@example.com')
+ON CONFLICT (username) DO NOTHING;</code></pre>
+            
+            <h4>Step 5: Create Docker Compose File</h4>
+            <p>Create <code>docker-compose.yml</code>:</p>
+            <pre><code>version: '3.8'
+
+services:
+  web:
+    build: ./app
+    ports:
+      - "${WEB_PORT:-5000}:5000"
+    volumes:
+      - ./app:/app
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - REDIS_HOST=redis
+    depends_on:
+      - db
+      - redis
+  
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+  
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+  
+  # Optional: Add pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@example.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-admin}
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
+  redis_data:</code></pre>
+            
+            <h4>Step 6: Create Environment Variables Example</h4>
+            <p>Create <code>.env.example</code>:</p>
+            <pre><code># Web application settings
+WEB_PORT=5000
+
+# Database settings
+POSTGRES_DB=flask_dev
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+DB_PORT=5432
+
+# Redis settings
+REDIS_PORT=6379
+
+# pgAdmin settings
+PGADMIN_PORT=5050
+PGADMIN_EMAIL=admin@example.com
+PGADMIN_PASSWORD=admin</code></pre>
+            
+            <h4>Step 7: Create README</h4>
+            <p>Create <code>README.md</code>:</p>
+            <pre><code># Flask Development Environment
+
+A complete development environment for a Flask application with PostgreSQL and Redis using Docker Compose.
+
+## Setup Instructions
+
+1. Clone this repository
+2. Copy `.env.example` to `.env`: `cp .env.example .env`
+3. Customize environment variables in `.env` if needed
+4. Start the development environment: `docker-compose up`
+
+## Available Services
+
+- **Web Application**: http://localhost:5000
+- **pgAdmin**: http://localhost:5050 (login with email/password from `.env`)
+- **PostgreSQL**: Available at localhost:5432
+- **Redis**: Available at localhost:6379
+
+## API Endpoints
+
+- `/`: Hello message
+- `/db-test`: Test database connection
+- `/redis-test`: Test Redis connection
+- `/users`: List users from the database
+
+## Development Workflow
+
+1. Edit code in the `app` directory
+2. Changes will be automatically reflected due to Flask's debug mode
+3. Database changes can be made by editing `init-scripts/init.sql` and restarting the containers
+
+## Stopping the Environment
+
+To stop all services while preserving data:
+```
+docker-compose down
+```
+
+To stop and remove all data (volumes):
+```
+docker-compose down -v
+```</code></pre>
+            
+            <h4>Step 8: Start the Development Environment</h4>
+            <pre><code>cd flask_dev_env
+cp .env.example .env
+docker-compose up</code></pre>
+            
+            <h4>Step 9: Test the Application</h4>
+            <p>Open your browser and test the following endpoints:</p>
+            <ul>
+                <li><a href="http://localhost:5000">http://localhost:5000</a> - Should show a welcome message</li>
+                <li><a href="http://localhost:5000/db-test">http://localhost:5000/db-test</a> - Should show database connection info</li>
+                <li><a href="http://localhost:5000/redis-test">http://localhost:5000/redis-test</a> - Should show Redis connection info</li>
+                <li><a href="http://localhost:5000/users">http://localhost:5000/users</a> - Should list users from the database</li>
+            </ul>
+            
+            <h4>Step 10: Make Changes and Test Hot Reloading</h4>
+            <p>Edit <code>app/app.py</code> on your host machine, for example add a new endpoint:</p>
+            <pre><code>@app.route('/health')
+def health_check():
+    return jsonify({
+        'status': 'healthy',
+        'services': {
+            'web': 'up',
+            'db': 'up',
+            'redis': 'up'
+        }
+    })</code></pre>
+            
+            <p>Save the file and without restarting anything, navigate to <a href="http://localhost:5000/health">http://localhost:5000/health</a>.</p>
+        </section>
+
+        <section>
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li><strong>Docker Compose simplifies development</strong> by providing consistent environments</li>
+                <li><strong>Use volume mounts</strong> to enable live code editing during development</li>
+                <li><strong>Environment variables</strong> provide flexible configuration between environments</li>
+                <li><strong>Database persistence</strong> is achieved with named volumes</li>
+                <li><strong>Hot reloading</strong> enables fast feedback cycles during development</li>
+                <li><strong>Development and production</strong> environments should have different configurations</li>
+                <li><strong>Multi-service applications</strong> can be easily composed together</li>
+            </ul>
+            
+            <p>By following these practices, you'll create development environments that are consistent, portable, and efficient, allowing your team to focus on writing code rather than configuring environments.</p>
+        </section>
+
+        <section>
+            <h3>Further Resources</h3>
+            <ul>
+                <li><a href="https://docs.docker.com/compose/" target="_blank">Docker Compose Documentation</a></li>
+                <li><a href="https://docs.docker.com/develop/develop-images/dockerfile_best-practices/" target="_blank">Dockerfile Best Practices</a></li>
+                <li><a href="https://docs.docker.com/compose/compose-file/compose-file-v3/" target="_blank">Compose File Version 3 Reference</a></li>
+                <li><a href="https://docs.docker.com/compose/environment-variables/" target="_blank">Environment Variables in Compose</a></li>
+                <li><a href="https://docs.docker.com/compose/extends/" target="_blank">Share Compose Configurations Between Files</a></li>
+                <li><a href="https://docs.docker.com/compose/production/" target="_blank">Using Compose in Production</a></li>
+                <li><a href="https://docs.docker.com/compose/profiles/" target="_blank">Using Profiles with Compose</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

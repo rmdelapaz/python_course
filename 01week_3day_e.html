@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Docker Commands: Images, Containers, Volumes</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Basic Docker Commands: Images, Containers, Volumes</h1>
+        <h2>Week 1, Wednesday - Morning Session</h2>
+    </header>
+
+    <main>
+        <section class="lecture-intro">
+            <h3>Lecture Overview</h3>
+            <p>In this session, we'll explore the fundamental Docker commands that allow you to work with the three core components of Docker: images, containers, and volumes. By the end of this session, you'll have a practical understanding of how to create, manage, and interact with these components using the Docker command-line interface (CLI). These skills form the foundation of working with Docker in your development workflow.</p>
+        </section>
+
+        <section>
+            <h3>Docker Command Structure</h3>
+            
+            <p>Before diving into specific commands, let's understand the general structure of Docker commands:</p>
+            
+            <pre><code>docker [command] [subcommand] [options] [arguments]</code></pre>
+            
+            <ul>
+                <li><strong>command:</strong> The main Docker command (e.g., <code>container</code>, <code>image</code>, <code>volume</code>)</li>
+                <li><strong>subcommand:</strong> The specific action to perform (e.g., <code>create</code>, <code>start</code>, <code>remove</code>)</li>
+                <li><strong>options:</strong> Flags that modify the command behavior (e.g., <code>-d</code> for detached mode, <code>-v</code> for volume mounts)</li>
+                <li><strong>arguments:</strong> Parameters for the command (e.g., container name, image name)</li>
+            </ul>
+            
+            <p>Docker also supports a more traditional command style for many operations:</p>
+            
+            <pre><code>docker run nginx  # Instead of docker container run nginx</code></pre>
+            
+            <p>Both forms work, but we'll focus primarily on the newer command structure as it's more consistent and clearer about which Docker object you're working with.</p>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> Docker commands are like giving instructions to a warehouse manager. You first specify which department you want to talk to (images, containers, volumes), then what action you want them to take (create, list, remove), followed by any special conditions (options) and finally what items you're referring to (arguments).</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Working with Docker Images</h3>
+            
+            <p>Docker images are the blueprints for containers. They contain all the code, runtime, libraries, and dependencies your application needs. Let's explore the essential commands for working with images:</p>
+            
+            <h4>Listing Images</h4>
+            <p>To see what images are available on your system:</p>
+            <pre><code>docker image ls
+# or the shorter form
+docker images</code></pre>
+            
+            <p>Example output:</p>
+            <pre><code>REPOSITORY    TAG       IMAGE ID       CREATED         SIZE
+nginx         latest    605c77e624dd   3 weeks ago    142MB
+python        3.10      a7830c32cb83   4 weeks ago    917MB
+ubuntu        latest    27941809078c   5 weeks ago    77.8MB</code></pre>
+            
+            <h4>Pulling Images</h4>
+            <p>To download an image from a registry (default is Docker Hub):</p>
+            <pre><code>docker image pull [OPTIONS] NAME[:TAG]
+
+# Examples:
+docker image pull nginx
+docker image pull python:3.9
+docker image pull redis:alpine</code></pre>
+            
+            <p>If you don't specify a tag, Docker uses <code>latest</code> by default.</p>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> Always specify a version tag in production to ensure consistency. The <code>latest</code> tag can change over time as new versions are released.</p>
+            </div>
+            
+            <h4>Searching for Images</h4>
+            <p>To search for images available on Docker Hub:</p>
+            <pre><code>docker search [OPTIONS] TERM
+
+# Example:
+docker search python</code></pre>
+            
+            <h4>Image Details</h4>
+            <p>To see detailed information about an image:</p>
+            <pre><code>docker image inspect [OPTIONS] IMAGE
+
+# Example:
+docker image inspect nginx</code></pre>
+            
+            <p>This provides a JSON output with comprehensive details about the image, including its layers, configuration, and creation metadata.</p>
+            
+            <h4>Building Images</h4>
+            <p>To build an image from a Dockerfile:</p>
+            <pre><code>docker image build [OPTIONS] PATH
+
+# Example:
+docker image build -t myapp:1.0 .</code></pre>
+            
+            <p>The <code>-t</code> flag tags the image with a name (and optionally a tag), and the path <code>.</code> tells Docker to look for a Dockerfile in the current directory.</p>
+            
+            <div class="example">
+                <p><strong>Example Dockerfile:</strong></p>
+                <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["python", "app.py"]</code></pre>
+            </div>
+            
+            <h4>Removing Images</h4>
+            <p>To delete an image from your local system:</p>
+            <pre><code>docker image rm [OPTIONS] IMAGE [IMAGE...]
+# or the shorter form
+docker rmi [OPTIONS] IMAGE [IMAGE...]
+
+# Examples:
+docker image rm nginx
+docker image rm python:3.8
+docker image rm a7830c32cb83  # Remove by image ID</code></pre>
+            
+            <p>You can remove multiple images by listing them with spaces between.</p>
+            
+            <div class="note">
+                <p><strong>Note:</strong> You cannot remove an image if it's being used by a container. You'll need to stop and remove the container first.</p>
+            </div>
+            
+            <h4>Saving and Loading Images</h4>
+            <p>To save an image to a tar archive (useful for transferring without a registry):</p>
+            <pre><code>docker image save -o filename.tar IMAGE
+
+# Example:
+docker image save -o myapp.tar myapp:1.0</code></pre>
+            
+            <p>To load an image from a tar archive:</p>
+            <pre><code>docker image load -i filename.tar
+
+# Example:
+docker image load -i myapp.tar</code></pre>
+            
+            <h4>Tagging Images</h4>
+            <p>To create a new tag for an existing image:</p>
+            <pre><code>docker image tag SOURCE_IMAGE[:TAG] TARGET_IMAGE[:TAG]
+
+# Example:
+docker image tag myapp:1.0 myapp:latest
+docker image tag myapp:1.0 registry.example.com/myapp:1.0</code></pre>
+            
+            <div class="real-world-application">
+                <p><strong>Real-world application:</strong> When developing a web application, you might pull a base image like <code>python:3.9-slim</code>, build your application on top of it with a Dockerfile, tag it with your application name and version, and then push it to a registry for deployment. Each image version represents a specific state of your application, enabling easy rollbacks if needed.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Working with Docker Containers</h3>
+            
+            <p>Containers are running instances of Docker images. They are isolated environments where your applications run. Here are the essential commands for managing containers:</p>
+            
+            <h4>Creating and Running Containers</h4>
+            <p>To create and start a container in one command:</p>
+            <pre><code>docker container run [OPTIONS] IMAGE [COMMAND] [ARG...]
+# or the shorter form
+docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
+
+# Examples:
+docker container run nginx
+docker container run -d --name my-nginx -p 8080:80 nginx
+docker container run -it --rm ubuntu bash</code></pre>
+            
+            <p>Common options:</p>
+            <ul>
+                <li><code>-d, --detach</code>: Run container in background</li>
+                <li><code>--name</code>: Assign a name to the container</li>
+                <li><code>-p, --publish</code>: Publish container's port to the host</li>
+                <li><code>-v, --volume</code>: Bind mount a volume</li>
+                <li><code>-e, --env</code>: Set environment variables</li>
+                <li><code>-it</code>: Interactive mode with a terminal</li>
+                <li><code>--rm</code>: Automatically remove the container when it exits</li>
+            </ul>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> If an image is like a blueprint for a house, then a container is like an actual house built from that blueprint. Running a container is like moving into the house - you're making the static blueprint into a living, functional space. The options are like specifying features of the house: whether it's connected to the city water supply (-p), what furniture goes in it (-v), and whether it should be demolished when you move out (--rm).</p>
+            </div>
+            
+            <h4>Listing Containers</h4>
+            <p>To list running containers:</p>
+            <pre><code>docker container ls
+# or the shorter form
+docker ps</code></pre>
+            
+            <p>To list all containers (including stopped ones):</p>
+            <pre><code>docker container ls -a
+# or
+docker ps -a</code></pre>
+            
+            <h4>Starting and Stopping Containers</h4>
+            <p>To stop a running container:</p>
+            <pre><code>docker container stop [OPTIONS] CONTAINER [CONTAINER...]
+# or
+docker stop [OPTIONS] CONTAINER [CONTAINER...]
+
+# Example:
+docker container stop my-nginx</code></pre>
+            
+            <p>To start a stopped container:</p>
+            <pre><code>docker container start [OPTIONS] CONTAINER [CONTAINER...]
+# or
+docker start [OPTIONS] CONTAINER [CONTAINER...]
+
+# Example:
+docker container start my-nginx</code></pre>
+            
+            <p>To restart a container:</p>
+            <pre><code>docker container restart [OPTIONS] CONTAINER [CONTAINER...]
+# or
+docker restart [OPTIONS] CONTAINER [CONTAINER...]
+
+# Example:
+docker container restart my-nginx</code></pre>
+            
+            <h4>Removing Containers</h4>
+            <p>To remove a container:</p>
+            <pre><code>docker container rm [OPTIONS] CONTAINER [CONTAINER...]
+# or
+docker rm [OPTIONS] CONTAINER [CONTAINER...]
+
+# Example:
+docker container rm my-nginx</code></pre>
+            
+            <p>To force removal of a running container:</p>
+            <pre><code>docker container rm -f my-nginx</code></pre>
+            
+            <p>To remove all stopped containers:</p>
+            <pre><code>docker container prune</code></pre>
+            
+            <h4>Viewing Container Logs</h4>
+            <p>To view the logs of a container:</p>
+            <pre><code>docker container logs [OPTIONS] CONTAINER
+# or
+docker logs [OPTIONS] CONTAINER
+
+# Examples:
+docker container logs my-nginx
+docker container logs --follow my-nginx  # Stream the logs
+docker container logs --tail 100 my-nginx  # Show only the last 100 lines</code></pre>
+            
+            <h4>Executing Commands in Running Containers</h4>
+            <p>To run a command inside a running container:</p>
+            <pre><code>docker container exec [OPTIONS] CONTAINER COMMAND [ARG...]
+# or
+docker exec [OPTIONS] CONTAINER COMMAND [ARG...]
+
+# Examples:
+docker container exec my-nginx ls -la
+docker container exec -it my-nginx bash  # Interactive shell</code></pre>
+            
+            <div class="example">
+                <p><strong>Common use case:</strong> Using <code>exec</code> to get a shell in a running container for debugging:</p>
+                <pre><code>docker exec -it my-python-app /bin/bash
+# Now you're inside the container and can run commands
+ls -la
+cat /etc/hosts
+python -m pip list
+exit  # Exit the container shell</code></pre>
+            </div>
+            
+            <h4>Copying Files To/From Containers</h4>
+            <p>To copy files between your host and a container:</p>
+            <pre><code>docker container cp [OPTIONS] CONTAINER:SRC_PATH DEST_PATH
+docker container cp [OPTIONS] SRC_PATH CONTAINER:DEST_PATH
+# or
+docker cp [OPTIONS] CONTAINER:SRC_PATH DEST_PATH
+docker cp [OPTIONS] SRC_PATH CONTAINER:DEST_PATH
+
+# Examples:
+docker container cp my-nginx:/etc/nginx/nginx.conf ./nginx.conf  # From container to host
+docker container cp ./index.html my-nginx:/usr/share/nginx/html/  # From host to container</code></pre>
+            
+            <h4>Inspecting Containers</h4>
+            <p>To view detailed information about a container:</p>
+            <pre><code>docker container inspect [OPTIONS] CONTAINER [CONTAINER...]
+# or
+docker inspect [OPTIONS] CONTAINER [CONTAINER...]
+
+# Example:
+docker container inspect my-nginx</code></pre>
+            
+            <p>To view container resource usage statistics:</p>
+            <pre><code>docker container stats [OPTIONS] [CONTAINER...]
+# or
+docker stats [OPTIONS] [CONTAINER...]
+
+# Examples:
+docker container stats  # All containers
+docker container stats my-nginx  # Specific container</code></pre>
+        </section>
+
+        <section>
+            <h3>Working with Docker Volumes</h3>
+            
+            <p>Volumes are the preferred way to persist data generated and used by Docker containers. Let's explore the essential commands for working with volumes:</p>
+            
+            <h4>Creating Volumes</h4>
+            <p>To create a named volume:</p>
+            <pre><code>docker volume create [OPTIONS] [VOLUME]
+
+# Example:
+docker volume create my-data</code></pre>
+            
+            <div class="note">
+                <p><strong>Note:</strong> You don't always need to explicitly create volumes. When you use a volume mount in a <code>docker run</code> command with a volume that doesn't exist, Docker will create it automatically.</p>
+            </div>
+            
+            <h4>Listing Volumes</h4>
+            <p>To list all volumes:</p>
+            <pre><code>docker volume ls [OPTIONS]
+
+# Example:
+docker volume ls</code></pre>
+            
+            <h4>Inspecting Volumes</h4>
+            <p>To view detailed information about a volume:</p>
+            <pre><code>docker volume inspect [OPTIONS] VOLUME [VOLUME...]
+
+# Example:
+docker volume inspect my-data</code></pre>
+            
+            <p>This will show you where the volume is stored on your host machine, along with other metadata.</p>
+            
+            <h4>Using Volumes with Containers</h4>
+            <p>To use a volume when running a container:</p>
+            <pre><code>docker container run -v volume_name:/container/path [OTHER_OPTIONS] IMAGE
+
+# Examples:
+docker container run -v my-data:/app/data nginx
+docker container run -v postgres_data:/var/lib/postgresql/data postgres:13</code></pre>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> If containers are like temporary rental apartments, volumes are like storage units that remain even after you move out. When you rent a new apartment (start a new container), you can connect it to your existing storage unit (volume) to access your persistent belongings (data).</p>
+            </div>
+            
+            <h4>Bind Mounts</h4>
+            <p>Bind mounts are similar to volumes but mount a specific directory from your host into the container:</p>
+            <pre><code>docker container run -v /host/path:/container/path [OTHER_OPTIONS] IMAGE
+
+# Example:
+docker container run -v $(pwd):/app nginx</code></pre>
+            
+            <p>This is particularly useful during development to reflect code changes immediately in the container.</p>
+            
+            <div class="example">
+                <p><strong>Practical development example:</strong></p>
+                <pre><code>docker container run -v $(pwd):/app -p 5000:5000 -w /app python:3.9 python app.py</code></pre>
+                <p>This command:</p>
+                <ul>
+                    <li>Mounts the current directory into /app in the container</li>
+                    <li>Publishes port 5000</li>
+                    <li>Sets the working directory to /app</li>
+                    <li>Uses the python:3.9 image</li>
+                    <li>Runs the command <code>python app.py</code></li>
+                </ul>
+                <p>Any changes you make to your code on the host will be immediately available in the container.</p>
+            </div>
+            
+            <h4>Removing Volumes</h4>
+            <p>To remove a volume:</p>
+            <pre><code>docker volume rm [OPTIONS] VOLUME [VOLUME...]
+
+# Example:
+docker volume rm my-data</code></pre>
+            
+            <p>To remove all unused volumes:</p>
+            <pre><code>docker volume prune</code></pre>
+            
+            <div class="warning">
+                <p><strong>Warning:</strong> Removing a volume permanently deletes all data stored in it. Make sure to back up any important data before removing volumes.</p>
+            </div>
+            
+            <h4>Volume Drivers</h4>
+            <p>Docker supports various volume drivers for different storage backends:</p>
+            <pre><code>docker volume create --driver=local my-local-volume
+docker volume create --driver=nfs my-nfs-volume</code></pre>
+            
+            <p>The default is the <code>local</code> driver, but plugins exist for many storage systems like NFS, Amazon EBS, and more.</p>
+            
+            <div class="real-world-application">
+                <p><strong>Real-world application:</strong> In a production environment, you might use a cloud provider's volume driver to ensure data persistence even if containers move between hosts. For example, using Amazon EBS volumes with Docker containers running on AWS ensures that your data survives even if the underlying instance fails.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Combining Commands: Common Workflows</h3>
+            
+            <p>Let's explore some common workflows that combine various Docker commands:</p>
+            
+            <h4>Development Workflow with Python</h4>
+            <pre><code># Pull a Python image
+docker pull python:3.9-slim
+
+# Run a container with the current directory mounted, in interactive mode
+docker run -it --rm -v $(pwd):/app -w /app python:3.9-slim bash
+
+# Inside the container:
+pip install -r requirements.txt
+python app.py
+# The application is now running, and you can access it from your host
+
+# Press Ctrl+C to stop the application
+# Exit the container
+exit
+# The container is automatically removed due to the --rm flag</code></pre>
+            
+            <h4>Running a Database with Persistent Storage</h4>
+            <pre><code># Create a volume for database data
+docker volume create postgres_data
+
+# Run a PostgreSQL container with the volume
+docker run -d --name my-postgres \
+  -e POSTGRES_PASSWORD=mysecretpassword \
+  -v postgres_data:/var/lib/postgresql/data \
+  -p 5432:5432 \
+  postgres:13
+
+# Check container status
+docker ps
+
+# View logs to ensure the database started properly
+docker logs my-postgres
+
+# When done, stop the container
+docker stop my-postgres
+
+# Later, restart the container - data persists
+docker start my-postgres</code></pre>
+            
+            <h4>Building and Testing a Web Application</h4>
+            <pre><code># Build a Docker image from the current directory
+docker build -t mywebapp:1.0 .
+
+# Run the application
+docker run -d --name webapp -p 8080:80 mywebapp:1.0
+
+# Check if it's running
+docker ps
+
+# Test it
+curl http://localhost:8080
+
+# View the logs
+docker logs webapp
+
+# Make changes and rebuild
+docker stop webapp
+docker rm webapp
+docker build -t mywebapp:1.1 .
+docker run -d --name webapp -p 8080:80 mywebapp:1.1</code></pre>
+            
+            <h4>Cleanup Workflow</h4>
+            <pre><code># Stop all running containers
+docker stop $(docker ps -q)
+
+# Remove all containers
+docker rm $(docker ps -a -q)
+
+# Remove unused images
+docker image prune -a
+
+# Remove unused volumes
+docker volume prune</code></pre>
+            
+            <div class="warning">
+                <p><strong>Warning:</strong> The cleanup workflow removes all containers, unused images, and volumes. Use with caution in shared or production environments.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Command Cheat Sheet</h3>
+            
+            <div class="cheat-sheet">
+                <h4>Image Commands</h4>
+                <table>
+                    <tr>
+                        <th>Command</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>docker image ls</code></td>
+                        <td>List images</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker image pull NAME[:TAG]</code></td>
+                        <td>Download an image</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker image build -t NAME:TAG PATH</code></td>
+                        <td>Build an image from a Dockerfile</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker image rm IMAGE</code></td>
+                        <td>Remove an image</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker image prune</code></td>
+                        <td>Remove unused images</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker image inspect IMAGE</code></td>
+                        <td>View image details</td>
+                    </tr>
+                </table>
+                
+                <h4>Container Commands</h4>
+                <table>
+                    <tr>
+                        <th>Command</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>docker container run IMAGE</code></td>
+                        <td>Create and start a container</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker container ls</code></td>
+                        <td>List running containers</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker container ls -a</code></td>
+                        <td>List all containers</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker container stop CONTAINER</code></td>
+                        <td>Stop a container</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker container start CONTAINER</code></td>
+                        <td>Start a stopped container</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker container rm CONTAINER</code></td>
+                        <td>Remove a container</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker container exec -it CONTAINER COMMAND</code></td>
+                        <td>Run a command in a running container</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker container logs CONTAINER</code></td>
+                        <td>View container logs</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker container inspect CONTAINER</code></td>
+                        <td>View container details</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker container prune</code></td>
+                        <td>Remove all stopped containers</td>
+                    </tr>
+                </table>
+                
+                <h4>Volume Commands</h4>
+                <table>
+                    <tr>
+                        <th>Command</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>docker volume create VOLUME</code></td>
+                        <td>Create a volume</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker volume ls</code></td>
+                        <td>List volumes</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker volume inspect VOLUME</code></td>
+                        <td>View volume details</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker volume rm VOLUME</code></td>
+                        <td>Remove a volume</td>
+                    </tr>
+                    <tr>
+                        <td><code>docker volume prune</code></td>
+                        <td>Remove all unused volumes</td>
+                    </tr>
+                </table>
+                
+                <h4>Common Options</h4>
+                <table>
+                    <tr>
+                        <th>Option</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>-d, --detach</code></td>
+                        <td>Run container in background</td>
+                    </tr>
+                    <tr>
+                        <td><code>--name NAME</code></td>
+                        <td>Assign a name to the container</td>
+                    </tr>
+                    <tr>
+                        <td><code>-p, --publish HOST:CONTAINER</code></td>
+                        <td>Publish container ports to the host</td>
+                    </tr>
+                    <tr>
+                        <td><code>-v, --volume SOURCE:TARGET</code></td>
+                        <td>Mount a volume or bind mount</td>
+                    </tr>
+                    <tr>
+                        <td><code>-e, --env KEY=VALUE</code></td>
+                        <td>Set environment variables</td>
+                    </tr>
+                    <tr>
+                        <td><code>-it</code></td>
+                        <td>Interactive mode with terminal</td>
+                    </tr>
+                    <tr>
+                        <td><code>--rm</code></td>
+                        <td>Remove container when it exits</td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <section>
+            <h3>Common Patterns and Best Practices</h3>
+            
+            <h4>Naming Conventions</h4>
+            <ul>
+                <li>Use descriptive names for containers and volumes</li>
+                <li>Consider using project names as prefixes</li>
+                <li>Version your image tags (e.g., <code>myapp:1.0</code>, <code>myapp:1.1</code>)</li>
+            </ul>
+            
+            <h4>Working with Containers</h4>
+            <ul>
+                <li>Use <code>--rm</code> for temporary containers to avoid accumulating stopped containers</li>
+                <li>Use <code>-d</code> for services that need to run in the background</li>
+                <li>Always check logs when something isn't working as expected</li>
+                <li>Use <code>exec</code> for debugging instead of starting new containers</li>
+            </ul>
+            
+            <h4>Data Management</h4>
+            <ul>
+                <li>Use named volumes for persistent data</li>
+                <li>Use bind mounts for development</li>
+                <li>Regularly back up important volumes</li>
+                <li>Be cautious with <code>prune</code> commands as they can delete important data</li>
+            </ul>
+            
+            <h4>Resource Management</h4>
+            <ul>
+                <li>Set resource limits for containers in production (memory, CPU)</li>
+                <li>Monitor container resource usage with <code>docker stats</code></li>
+                <li>Clean up unused resources regularly to free up disk space</li>
+            </ul>
+            
+            <div class="real-world-application">
+                <p><strong>Real-world strategy:</strong> In a development workflow, create a script or alias for common Docker commands to simplify repetitive tasks. For example, a script that starts your development environment with the right volumes, port mappings, and environment variables can save time and reduce errors.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Docker Command Scripting Examples</h3>
+            
+            <p>Here are a few examples of useful scripts that combine Docker commands for common tasks:</p>
+            
+            <h4>Python Development Environment</h4>
+            <p>Create a bash script called <code>dev_env.sh</code>:</p>
+            <pre><code>#!/bin/bash
+# Start a Python development environment
+
+docker run --rm -it \
+  --name python-dev \
+  -v "$(pwd):/app" \
+  -w /app \
+  -p 5000:5000 \
+  -e FLASK_ENV=development \
+  -e FLASK_APP=app.py \
+  python:3.9 \
+  bash -c "pip install -r requirements.txt && flask run --host=0.0.0.0"</code></pre>
+            
+            <h4>Database Backup Script</h4>
+            <p>Create a script to backup a PostgreSQL database container:</p>
+            <pre><code>#!/bin/bash
+# Backup a PostgreSQL database
+
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR="./backups"
+
+mkdir -p "$BACKUP_DIR"
+
+# Execute pg_dump inside the container
+docker exec -i postgres_container pg_dump -U postgres my_database > "$BACKUP_DIR/backup_$TIMESTAMP.sql"
+
+echo "Backup created: $BACKUP_DIR/backup_$TIMESTAMP.sql"</code></pre>
+            
+            <h4>Cleanup Script</h4>
+            <p>A script to clean up Docker resources safely:</p>
+            <pre><code>#!/bin/bash
+# Clean up Docker resources
+
+echo "Stopping all running containers..."
+docker stop $(docker ps -q)
+
+echo "Removing stopped containers..."
+docker container prune -f
+
+echo "Removing unused images..."
+docker image prune -f
+
+echo "Removing unused volumes (except named ones)..."
+docker volume prune -f
+
+echo "Cleanup complete."</code></pre>
+            
+            <div class="note">
+                <p><strong>Note:</strong> Make scripts executable with <code>chmod +x script_name.sh</code> before running them.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Troubleshooting Common Issues</h3>
+            
+            <h4>Container Won't Start</h4>
+            <ul>
+                <li><strong>Check logs:</strong> <code>docker logs container_name</code></li>
+                <li><strong>Inspect configuration:</strong> <code>docker inspect container_name</code></li>
+                <li><strong>Port conflicts:</strong> Ensure the published ports aren't already in use</li>
+                <li><strong>Resource limits:</strong> The container might need more resources than available</li>
+            </ul>
+            
+            <h4>Volume Issues</h4>
+            <ul>
+                <li><strong>Permission problems:</strong> Check file permissions in bound directories</li>
+                <li><strong>Volume not found:</strong> Verify the volume exists with <code>docker volume ls</code></li>
+                <li><strong>Data not persisting:</strong> Ensure you're mounting volumes correctly</li>
+            </ul>
+            
+            <h4>Image Build Failures</h4>
+            <ul>
+                <li><strong>Dockerfile syntax:</strong> Check for syntax errors</li>
+                <li><strong>Build context:</strong> Ensure you're building from the right directory</li>
+                <li><strong>Network issues:</strong> Verify internet connectivity for package installations</li>
+            </ul>
+            
+            <h4>General Debugging Steps</h4>
+            <ol>
+                <li>Check container logs: <code>docker logs container_name</code></li>
+                <li>Inspect configuration: <code>docker inspect container_name</code></li>
+                <li>Run an interactive session: <code>docker exec -it container_name bash</code></li>
+                <li>Check docker daemon logs: <code>sudo journalctl -u docker</code> (on Linux)</li>
+                <li>Verify system resources: <code>docker system df</code></li>
+            </ol>
+            
+            <div class="troubleshooting-example">
+                <p><strong>Example debugging process:</strong> If a container exits immediately after starting, follow these steps:</p>
+                <ol>
+                    <li>Check the exit code: <code>docker ps -a</code> (look at the STATUS column)</li>
+                    <li>View logs: <code>docker logs container_name</code></li>
+                    <li>If the logs don't show anything useful, try running the container in interactive mode:
+                        <pre><code>docker run -it --rm image_name sh</code></pre>
+                        Then execute the command that would normally start your application to see errors directly.
+                    </li>
+                    <li>Check if the issue is related to volume mounts or environment variables by simplifying the run command.</li>
+                </ol>
+            </div>
+        </section>
+
+        <section>
+            <h3>Command Exploration Tools</h3>
+            
+            <p>Docker provides several ways to learn more about available commands:</p>
+            
+            <h4>Getting Help</h4>
+            <p>To see all available Docker commands:</p>
+            <pre><code>docker --help</code></pre>
+            
+            <p>To get help on a specific command:</p>
+            <pre><code>docker COMMAND --help
+
+# Examples:
+docker container --help
+docker container run --help
+docker volume create --help</code></pre>
+            
+            <h4>Exploring Docker Info</h4>
+            <p>To see information about your Docker installation:</p>
+            <pre><code>docker info</code></pre>
+            
+            <p>This provides details about:</p>
+            <ul>
+                <li>The Docker version</li>
+                <li>Storage driver</li>
+                <li>Logging driver</li>
+                <li>Number of containers and images</li>
+                <li>System-wide configuration</li>
+            </ul>
+            
+            <h4>Docker System Commands</h4>
+            <p>To view disk usage:</p>
+            <pre><code>docker system df</code></pre>
+            
+            <p>To clean up all resources (containers, networks, images, volumes):</p>
+            <pre><code>docker system prune -a --volumes</code></pre>
+            
+            <div class="warning">
+                <p><strong>Warning:</strong> The <code>prune</code> command with <code>--volumes</code> will remove all unused volumes and their data. Use with extreme caution.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Key Takeaways</h3>
+            
+            <ul>
+                <li>Docker has a consistent command structure: <code>docker [command] [subcommand] [options] [arguments]</code></li>
+                <li>Images are read-only templates for containers, built from Dockerfiles</li>
+                <li>Containers are running instances of images, providing isolated environments for applications</li>
+                <li>Volumes are the preferred way to persist data beyond a container's lifecycle</li>
+                <li>Common workflows involve pulling images, creating containers with volumes, and managing their lifecycle</li>
+                <li>Proper naming and tagging help maintain organization in Docker environments</li>
+                <li>Docker provides extensive help documentation through <code>--help</code> flags</li>
+                <li>Regular cleanup of unused resources helps maintain system performance</li>
+            </ul>
+            
+            <p>With these basic commands, you have the foundation to work effectively with Docker in your development workflow.</p>
+        </section>
+
+        <section>
+            <h3>Looking Ahead</h3>
+            
+            <p>In our afternoon session, we'll apply these commands by running your first container, exploring Docker Hub for public images, creating a Dockerfile, and building your own image. The commands you've learned today will be the tools you use throughout the rest of the course and your Docker journey.</p>
+        </section>
+
+        <section>
+            <h3>Discussion Questions</h3>
+            
+            <ol>
+                <li>What Docker commands do you think you'll use most frequently in your development workflow? Why?</li>
+                <li>How might persistent volumes in Docker change the way you think about application data?</li>
+                <li>What challenges do you anticipate when working with Docker images and containers?</li>
+                <li>How could you use Docker commands in an automated CI/CD pipeline?</li>
+                <li>Compare Docker's approach to running applications with your current development workflow. What advantages do you see?</li>
+            </ol>
+        </section>
+
+        <section>
+            <h3>Additional Resources</h3>
+            
+            <ul>
+                <li><a href="https://docs.docker.com/engine/reference/commandline/docker/">Docker CLI Reference</a> - Comprehensive documentation of all Docker commands</li>
+                <li><a href="https://docs.docker.com/storage/volumes/">Docker Volumes Documentation</a> - In-depth information on Docker storage</li>
+                <li><a href="https://docs.docker.com/get-started/">Docker Get Started Guide</a> - Official tutorial with practical examples</li>
+                <li><a href="https://github.com/wsargent/docker-cheat-sheet">Docker Cheat Sheet</a> - Community-maintained reference guide</li>
+                <li><a href="https://labs.play-with-docker.com/">Play with Docker</a> - Browser-based environment to practice Docker commands</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

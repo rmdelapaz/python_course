@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-container Applications - Full Stack Python Developer Course</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Multi-container Applications</h1>
+        <h2>Week 1 - Thursday</h2>
+    </header>
+
+    <main>
+        <section class="course-intro">
+            <h3>Lecture Overview</h3>
+            <p>Today we'll explore multi-container applications, a fundamental concept in modern application development. Understanding how to architect, connect, and orchestrate multiple containers is essential for building scalable, maintainable, and deployable applications in today's cloud-native world.</p>
+        </section>
+
+        <section>
+            <h3>Understanding Multi-container Applications</h3>
+            <p>Most real-world applications aren't monoliths running in a single container. Instead, they're composed of multiple specialized services, each running in its own container. This architectural approach brings numerous benefits but also introduces complexity in management and coordination.</p>
+            
+            <div class="key-points">
+                <h4>Why Use Multiple Containers?</h4>
+                <ul>
+                    <li><strong>Separation of concerns:</strong> Each container handles a specific function</li>
+                    <li><strong>Independent scaling:</strong> Scale services based on their individual needs</li>
+                    <li><strong>Isolation:</strong> Failures in one container don't directly affect others</li>
+                    <li><strong>Technology diversity:</strong> Use the best tool/language for each component</li>
+                    <li><strong>Simplified development:</strong> Teams can work on components independently</li>
+                    <li><strong>Targeted updates:</strong> Update components individually without affecting the entire system</li>
+                </ul>
+            </div>
+            
+            <div class="analogy">
+                <h4>Analogy: Restaurant Operations</h4>
+                <p>Think of a multi-container application like a restaurant:</p>
+                <ul>
+                    <li><strong>Front-of-house (Frontend container):</strong> Takes orders, presents dishes, interacts with customers</li>
+                    <li><strong>Kitchen (Backend container):</strong> Processes orders, prepares food, manages inventory</li>
+                    <li><strong>Refrigerator (Database container):</strong> Stores ingredients and supplies</li>
+                    <li><strong>Dishwashing station (Cache container):</strong> Provides clean plates quickly for reuse</li>
+                    <li><strong>Delivery service (Message queue container):</strong> Handles takeout orders and delivery</li>
+                </ul>
+                <p>Each "department" operates independently but communicates seamlessly to deliver the complete dining experience. If the restaurant gets busier, you might add more kitchen staff (scale the backend) without needing more hosts (frontend).</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Common Components in Multi-container Applications</h3>
+            <p>Modern applications typically include several types of containers working together:</p>
+            
+            <h4>Frontend Services</h4>
+            <ul>
+                <li><strong>Web servers:</strong> Nginx, Apache</li>
+                <li><strong>Static content:</strong> HTML, CSS, JavaScript</li>
+                <li><strong>Frontend frameworks:</strong> React, Vue, Angular</li>
+            </ul>
+            
+            <h4>Backend Services</h4>
+            <ul>
+                <li><strong>Application servers:</strong> Flask, Django, Express</li>
+                <li><strong>API gateways:</strong> Managing API requests</li>
+                <li><strong>Authentication services:</strong> Handling user identity</li>
+            </ul>
+            
+            <h4>Data Services</h4>
+            <ul>
+                <li><strong>Databases:</strong> PostgreSQL, MySQL, MongoDB</li>
+                <li><strong>Caching layers:</strong> Redis, Memcached</li>
+                <li><strong>Search engines:</strong> Elasticsearch</li>
+            </ul>
+            
+            <h4>Supporting Services</h4>
+            <ul>
+                <li><strong>Message queues:</strong> RabbitMQ, Kafka</li>
+                <li><strong>Worker processes:</strong> Background job handlers</li>
+                <li><strong>Monitoring tools:</strong> Prometheus, Grafana</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Real-world Example: E-commerce Application</h4>
+                <p>Consider a typical e-commerce application with these containers:</p>
+                <ol>
+                    <li><strong>Nginx container:</strong> Web server, handles HTTPS, static content, load balancing</li>
+                    <li><strong>Frontend container:</strong> React application serving the user interface</li>
+                    <li><strong>API container:</strong> Python Flask service providing API endpoints</li>
+                    <li><strong>Auth container:</strong> Service handling user authentication and sessions</li>
+                    <li><strong>Database container:</strong> PostgreSQL storing product and user data</li>
+                    <li><strong>Redis container:</strong> Caching frequently accessed data</li>
+                    <li><strong>Worker container:</strong> Processing background tasks like email notifications</li>
+                    <li><strong>Search container:</strong> Elasticsearch for product search functionality</li>
+                </ol>
+                <p>Each container has a specific role, and together they create a complete application.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Challenges in Multi-container Applications</h3>
+            <p>While powerful, multi-container architectures introduce several challenges:</p>
+            
+            <h4>Communication Between Containers</h4>
+            <p>Containers need to discover and communicate with each other. This raises questions like:</p>
+            <ul>
+                <li>How does container A find container B?</li>
+                <li>How do they securely exchange data?</li>
+                <li>What happens if a container is restarted with a new IP address?</li>
+            </ul>
+            
+            <h4>Data Persistence and Sharing</h4>
+            <p>Data often needs to persist beyond the container lifecycle or be shared between containers:</p>
+            <ul>
+                <li>Database data must survive container restarts</li>
+                <li>Uploaded files may need to be accessible to multiple services</li>
+                <li>Configuration may need to be shared across containers</li>
+            </ul>
+            
+            <h4>Startup Order and Dependencies</h4>
+            <p>Some containers depend on others being ready:</p>
+            <ul>
+                <li>Application server needs database to be ready</li>
+                <li>Frontend might need API services available</li>
+                <li>Workers may need message queues operational</li>
+            </ul>
+            
+            <h4>Configuration Management</h4>
+            <p>Different containers need different environment variables and configurations:</p>
+            <ul>
+                <li>Database credentials</li>
+                <li>API endpoints and authentication tokens</li>
+                <li>Feature flags and environment-specific settings</li>
+            </ul>
+            
+            <div class="analogy">
+                <h4>Analogy: Symphony Orchestra</h4>
+                <p>Managing multiple containers is like conducting an orchestra:</p>
+                <ul>
+                    <li>Each instrument (container) plays its specialized part</li>
+                    <li>Musicians (services) must stay in sync with each other</li>
+                    <li>Some instruments start playing before others (dependency order)</li>
+                    <li>Sheet music (configuration) must be distributed correctly</li>
+                    <li>The conductor (container orchestration) coordinates everything</li>
+                </ul>
+                <p>Without proper orchestration, you get noise instead of music.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Container Communication Patterns</h3>
+            <p>In multi-container applications, services communicate through various patterns:</p>
+            
+            <h4>HTTP/REST Communication</h4>
+            <p>The most common pattern for synchronous service-to-service communication:</p>
+            <pre><code># Python Example: Flask service calling another service
+import requests
+
+def get_user_data(user_id):
+    # Service discovery through container name
+    response = requests.get(f"http://user-service:8080/users/{user_id}")
+    return response.json()</code></pre>
+            
+            <h4>Message Queues</h4>
+            <p>For asynchronous communication between services:</p>
+            <pre><code># Python Example: Sending message to queue
+import pika
+
+def send_email_notification(user_id, message):
+    connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+    channel = connection.channel()
+    
+    # Declare a queue
+    channel.queue_declare(queue='email_notifications')
+    
+    # Send message to queue
+    channel.basic_publish(
+        exchange='',
+        routing_key='email_notifications',
+        body=f'{{"user_id": "{user_id}", "message": "{message}"}}'
+    )
+    
+    connection.close()</code></pre>
+            
+            <h4>Shared Volumes</h4>
+            <p>For sharing files between containers:</p>
+            <pre><code># Docker Compose example
+services:
+  web:
+    image: nginx
+    volumes:
+      - uploaded_files:/usr/share/nginx/html/uploads
+      
+  processor:
+    image: image-processor
+    volumes:
+      - uploaded_files:/app/files
+
+volumes:
+  uploaded_files:</code></pre>
+            
+            <h4>Database as Integration Point</h4>
+            <p>Using a database for communication between services:</p>
+            <pre><code># Python Example: Service A writes to DB
+def create_order(order_data):
+    db = get_database_connection()
+    cursor = db.cursor()
+    cursor.execute(
+        "INSERT INTO orders (user_id, product_id, quantity) VALUES (%s, %s, %s)",
+        (order_data['user_id'], order_data['product_id'], order_data['quantity'])
+    )
+    db.commit()
+
+# Python Example: Service B reads from DB
+def process_new_orders():
+    db = get_database_connection()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM orders WHERE processed = FALSE")
+    orders = cursor.fetchall()
+    
+    for order in orders:
+        # Process the order
+        process_order(order)
+        
+        # Mark as processed
+        cursor.execute("UPDATE orders SET processed = TRUE WHERE id = %s", (order['id'],))
+        db.commit()</code></pre>
+            
+            <div class="example">
+                <h4>Communication Architecture Example</h4>
+                <p>Consider a social media application with these communication patterns:</p>
+                <ul>
+                    <li><strong>Frontend → API:</strong> HTTP/REST requests for data</li>
+                    <li><strong>API → Database:</strong> SQL queries for persistent storage</li>
+                    <li><strong>User posts → Queue:</strong> New posts sent to processing queue</li>
+                    <li><strong>Worker ← Queue:</strong> Processes images, generates notifications</li>
+                    <li><strong>API → Cache:</strong> Stores frequently accessed data</li>
+                    <li><strong>Upload Service → Shared Volume → Image Processor:</strong> For image processing</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Service Discovery in Multi-container Applications</h3>
+            <p>For containers to communicate, they need to find each other. This is called service discovery.</p>
+            
+            <h4>Basic Service Discovery with Docker</h4>
+            <p>Docker provides basic service discovery through its built-in DNS server:</p>
+            <ul>
+                <li>Containers on the same network can reach each other by service name</li>
+                <li>Docker automatically updates DNS entries when containers start/stop</li>
+                <li>No external service discovery system needed for simple applications</li>
+            </ul>
+            
+            <pre><code># Example: Connecting to a database in another container
+import psycopg2
+
+# Use the service name as hostname
+conn = psycopg2.connect(
+    host="db",  # Container name as hostname
+    database="myapp",
+    user="postgres",
+    password="secretpassword"
+)</code></pre>
+            
+            <h4>More Advanced Service Discovery</h4>
+            <p>For complex applications, more sophisticated service discovery might be needed:</p>
+            <ul>
+                <li><strong>Consul:</strong> Service discovery and configuration</li>
+                <li><strong>etcd:</strong> Distributed key-value store</li>
+                <li><strong>Kubernetes Service:</strong> More advanced orchestration</li>
+            </ul>
+            
+            <div class="analogy">
+                <h4>Analogy: Phone Directory</h4>
+                <p>Service discovery is like a phone directory:</p>
+                <ul>
+                    <li>Each service (person) registers its address and capabilities</li>
+                    <li>Other services can look up who they need to call</li>
+                    <li>If someone moves (container restarts), the directory is updated</li>
+                    <li>You don't need to know someone's exact address, just their name</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Managing Container Dependencies</h3>
+            <p>In multi-container applications, services often depend on other services being available first.</p>
+            
+            <h4>Dependency Ordering with Docker Compose</h4>
+            <p>Docker Compose provides the <code>depends_on</code> feature to express startup order:</p>
+            <pre><code>services:
+  web:
+    build: ./web
+    depends_on:
+      - db
+      - redis
+      
+  db:
+    image: postgres:13
+    
+  redis:
+    image: redis:alpine</code></pre>
+            
+            <p>However, <code>depends_on</code> only waits for containers to start, not for the services inside to be ready.</p>
+            
+            <h4>Wait Scripts and Health Checks</h4>
+            <p>For more sophisticated dependency management, use wait scripts or health checks:</p>
+            <pre><code># Example wait-for script in a Dockerfile
+FROM python:3.9
+
+# Install wait-for-it script
+COPY wait-for-it.sh /usr/local/bin/wait-for-it
+RUN chmod +x /usr/local/bin/wait-for-it
+
+COPY . /app
+WORKDIR /app
+
+CMD ["wait-for-it", "db:5432", "--", "python", "app.py"]</code></pre>
+            
+            <h4>Application-Level Retry Logic</h4>
+            <p>Another approach is to build retry logic into your application:</p>
+            <pre><code>import time
+import psycopg2
+
+def get_database_connection(max_retries=30, retry_interval=2):
+    retries = 0
+    while retries < max_retries:
+        try:
+            conn = psycopg2.connect(
+                host="db",
+                database="myapp",
+                user="postgres",
+                password="secretpassword"
+            )
+            print("Database connection established")
+            return conn
+        except psycopg2.OperationalError as e:
+            retries += 1
+            print(f"Database connection attempt {retries} failed. Retrying in {retry_interval} seconds...")
+            time.sleep(retry_interval)
+    
+    raise Exception("Could not connect to database after maximum retries")</code></pre>
+            
+            <div class="example">
+                <h4>Real-world Example: Handling Dependencies</h4>
+                <p>In a typical web application stack:</p>
+                <ol>
+                    <li>Database container starts first</li>
+                    <li>Redis cache starts (can be parallel with database)</li>
+                    <li>Backend API waits for database and cache to be ready</li>
+                    <li>Worker processes wait for backend API readiness</li>
+                    <li>Frontend web server starts last</li>
+                </ol>
+            </div>
+        </section>
+
+        <section>
+            <h3>Data Persistence in Multi-container Applications</h3>
+            <p>Containers are ephemeral by design, but data often needs to persist. In multi-container applications, this becomes even more important as data may be shared between services.</p>
+            
+            <h4>Types of Docker Volumes</h4>
+            <ul>
+                <li><strong>Named volumes:</strong> Persistent storage managed by Docker</li>
+                <li><strong>Bind mounts:</strong> Map host directories to container paths</li>
+                <li><strong>tmpfs mounts:</strong> Temporary file storage in memory</li>
+            </ul>
+            
+            <h4>Using Volumes in Multi-container Applications</h4>
+            <pre><code>services:
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      
+  backup:
+    image: backup-service
+    volumes:
+      - postgres_data:/backup/data:ro  # Read-only access
+      
+volumes:
+  postgres_data:  # Named volume defined at the bottom</code></pre>
+            
+            <h4>Data Sharing Patterns</h4>
+            <p>Common patterns for data sharing between containers:</p>
+            <ul>
+                <li><strong>Database container with persistent volume:</strong> Primary data storage</li>
+                <li><strong>Shared volume for file-based data:</strong> For uploads, exports, etc.</li>
+                <li><strong>Cache container:</strong> For ephemeral shared data</li>
+            </ul>
+            
+            <div class="analogy">
+                <h4>Analogy: Office Filing System</h4>
+                <p>Container data management is like an office filing system:</p>
+                <ul>
+                    <li><strong>Named volumes:</strong> Official filing cabinets that remain even when staff change</li>
+                    <li><strong>Bind mounts:</strong> Documents brought from home but used at work</li>
+                    <li><strong>tmpfs:</strong> Sticky notes that get thrown away at the end of the day</li>
+                    <li><strong>Shared volumes:</strong> Department files that multiple teams need access to</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Practical Example: Building a Multi-container Application</h3>
+            <p>Let's walk through creating a simple multi-container application: a web app with a Python backend, PostgreSQL database, and Redis cache.</p>
+            
+            <h4>Step 1: Define the Application Architecture</h4>
+            <ul>
+                <li><strong>Web:</strong> Flask application serving API endpoints</li>
+                <li><strong>Database:</strong> PostgreSQL for persistent storage</li>
+                <li><strong>Cache:</strong> Redis for temporary data and session storage</li>
+            </ul>
+            
+            <h4>Step 2: Create the Directory Structure</h4>
+            <pre><code>multi_container_app/
+├── docker-compose.yml
+├── web/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── app.py
+│   └── wait-for-it.sh
+├── database/
+│   └── init.sql
+└── .env</code></pre>
+            
+            <h4>Step 3: Create the Flask Application</h4>
+            <p>In <code>web/app.py</code>:</p>
+            <pre><code>from flask import Flask, jsonify
+import psycopg2
+import redis
+import os
+import time
+
+app = Flask(__name__)
+
+# Connect to Redis
+def get_redis_connection():
+    redis_host = os.environ.get('REDIS_HOST', 'redis')
+    redis_port = int(os.environ.get('REDIS_PORT', 6379))
+    
+    retry_count = 0
+    max_retries = 30
+    
+    while retry_count < max_retries:
+        try:
+            r = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)
+            r.ping()  # Test connection
+            return r
+        except (redis.exceptions.ConnectionError, redis.exceptions.BusyLoadingError):
+            retry_count += 1
+            print(f"Redis connection attempt {retry_count} failed. Retrying...")
+            time.sleep(1)
+    
+    raise Exception("Could not connect to Redis")
+
+# Connect to PostgreSQL
+def get_db_connection():
+    db_host = os.environ.get('DB_HOST', 'db')
+    db_name = os.environ.get('DB_NAME', 'myapp')
+    db_user = os.environ.get('DB_USER', 'postgres')
+    db_password = os.environ.get('DB_PASSWORD', 'password')
+    
+    retry_count = 0
+    max_retries = 30
+    
+    while retry_count < max_retries:
+        try:
+            conn = psycopg2.connect(
+                host=db_host,
+                database=db_name,
+                user=db_user,
+                password=db_password
+            )
+            conn.autocommit = True
+            return conn
+        except psycopg2.OperationalError:
+            retry_count += 1
+            print(f"Database connection attempt {retry_count} failed. Retrying...")
+            time.sleep(1)
+    
+    raise Exception("Could not connect to database")
+
+@app.route('/')
+def hello():
+    return jsonify({"message": "Hello from Flask!"})
+
+@app.route('/items')
+def get_items():
+    # Try to get from cache first
+    r = get_redis_connection()
+    cached_items = r.get('items')
+    
+    if cached_items:
+        print("Returning cached data")
+        return jsonify({"source": "cache", "items": eval(cached_items)})
+    
+    # If not in cache, get from database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id, name FROM items')
+    db_items = [{"id": row[0], "name": row[1]} for row in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    
+    # Store in cache for next time
+    r.setex('items', 30, str(db_items))  # Cache for 30 seconds
+    
+    return jsonify({"source": "database", "items": db_items})
+
+@app.route('/add/<name>')
+def add_item(name):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO items (name) VALUES (%s) RETURNING id', (name,))
+    item_id = cursor.fetchone()[0]
+    conn.commit()
+    cursor.close()
+    conn.close()
+    
+    # Invalidate cache
+    r = get_redis_connection()
+    r.delete('items')
+    
+    return jsonify({"id": item_id, "name": name})
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)</code></pre>
+            
+            <h4>Step 4: Create the Dockerfile</h4>
+            <p>In <code>web/Dockerfile</code>:</p>
+            <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+RUN chmod +x wait-for-it.sh
+
+EXPOSE 5000
+
+CMD ["./wait-for-it.sh", "db:5432", "--", "python", "app.py"]</code></pre>
+            
+            <h4>Step 5: Create Requirements File</h4>
+            <p>In <code>web/requirements.txt</code>:</p>
+            <pre><code>flask==2.0.1
+psycopg2-binary==2.9.1
+redis==3.5.3</code></pre>
+            
+            <h4>Step 6: Database Initialization Script</h4>
+            <p>In <code>database/init.sql</code>:</p>
+            <pre><code>CREATE TABLE IF NOT EXISTS items (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add some sample data
+INSERT INTO items (name) VALUES ('Item 1'), ('Item 2'), ('Item 3');</code></pre>
+            
+            <h4>Step 7: Create wait-for-it Script</h4>
+            <p>In <code>web/wait-for-it.sh</code> (you can download this script from GitHub):</p>
+            <p>This is a utility script that waits for a host:port to be available before executing a command.</p>
+            
+            <h4>Step 8: Create Docker Compose File</h4>
+            <p>In <code>docker-compose.yml</code>:</p>
+            <pre><code>version: '3'
+
+services:
+  web:
+    build: ./web
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./web:/app
+    environment:
+      - DB_HOST=db
+      - DB_NAME=myapp
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - REDIS_HOST=redis
+      - FLASK_ENV=development
+    depends_on:
+      - db
+      - redis
+      
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=myapp
+    ports:
+      - "5432:5432"  # Exposed for local development tools
+      
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"  # Exposed for local development tools
+      
+volumes:
+  postgres_data:</code></pre>
+            
+            <h4>Step 9: Environment Variables</h4>
+            <p>In <code>.env</code>:</p>
+            <pre><code># Development environment variables
+COMPOSE_PROJECT_NAME=multi_container_app
+
+# These can override the values in docker-compose.yml if needed
+# DB_PASSWORD=different_password
+# REDIS_HOST=custom_redis_host</code></pre>
+            
+            <h4>Step 10: Running the Application</h4>
+            <pre><code># Start all services
+docker-compose up
+
+# Access the application
+curl http://localhost:5000/items
+
+# Add a new item
+curl http://localhost:5000/add/NewItem
+
+# Verify it's added
+curl http://localhost:5000/items</code></pre>
+            
+            <p>This example demonstrates:</p>
+            <ul>
+                <li>Communication between containers (Flask → PostgreSQL, Flask → Redis)</li>
+                <li>Data persistence with volumes (PostgreSQL data)</li>
+                <li>Dependency handling (waiting for database before starting web app)</li>
+                <li>Configuration through environment variables</li>
+                <li>Service discovery using container names as hostnames</li>
+                <li>Caching strategy between services</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Scaling Multi-container Applications</h3>
+            <p>One of the key benefits of multi-container applications is the ability to scale components independently.</p>
+            
+            <h4>Horizontal Scaling</h4>
+            <p>Running multiple instances of the same service:</p>
+            <pre><code># Scale the web service to 3 instances
+docker-compose up -d --scale web=3</code></pre>
+            
+            <p>Note: When scaling, you need to handle:</p>
+            <ul>
+                <li>Port conflicts (don't directly map container ports)</li>
+                <li>Load balancing between instances</li>
+                <li>Session persistence or shared state</li>
+            </ul>
+            
+            <h4>Load Balancing Options</h4>
+            <ul>
+                <li><strong>Nginx as reverse proxy:</strong> Configure upstream servers</li>
+                <li><strong>Traefik:</strong> Automatic service discovery and routing</li>
+                <li><strong>HAProxy:</strong> Advanced load balancing features</li>
+            </ul>
+            
+            <h4>Scaling Different Components</h4>
+            <p>Multi-container apps allow targeted scaling:</p>
+            <ul>
+                <li>Scale web containers during high traffic</li>
+                <li>Scale workers when processing backlogs</li>
+                <li>Keep single database instance for consistency</li>
+                <li>Scale read replicas for database read operations</li>
+            </ul>
+            
+            <div class="analogy">
+                <h4>Analogy: Department Store Staffing</h4>
+                <p>Scaling components is like managing department store staff:</p>
+                <ul>
+                    <li>During sales, you add more checkout staff (frontend)</li>
+                    <li>For inventory day, you add more stockroom workers (backend)</li>
+                    <li>You maintain the same number of managers (database)</li>
+                    <li>You bring in seasonal workers for specific tasks (worker processes)</li>
+                </ul>
+                <p>Each department scales based on its specific demands.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Monitoring Multi-container Applications</h3>
+            <p>With multiple containers, monitoring becomes more complex but even more important.</p>
+            
+            <h4>Key Metrics to Monitor</h4>
+            <ul>
+                <li><strong>Container health:</strong> Is each container running?</li>
+                <li><strong>Resource usage:</strong> CPU, memory, disk, network per container</li>
+                <li><strong>Application metrics:</strong> Response times, error rates, requests per second</li>
+                <li><strong>Database metrics:</strong> Query performance, connection count</li>
+                <li><strong>Cache metrics:</strong> Hit rates, memory usage</li>
+            </ul>
+            
+            <h4>Monitoring Tools</h4>
+            <ul>
+                <li><strong>Docker stats:</strong> Basic built-in monitoring</li>
+                <li><strong>Prometheus:</strong> Metrics collection and storage</li>
+                <li><strong>Grafana:</strong> Metrics visualization</li>
+                <li><strong>cAdvisor:</strong> Container resource usage</li>
+                <li><strong>ELK Stack:</strong> Log aggregation and analysis</li>
+            </ul>
+            
+            <h4>Basic Docker Monitoring Command</h4>
+            <pre><code># View resource usage of all containers
+docker stats</code></pre>
+            
+            <h4>Logging in Multi-container Applications</h4>
+            <p>Centralized logging is crucial:</p>
+            <pre><code># View logs from all containers
+docker-compose logs
+
+# Follow logs from specific service
+docker-compose logs -f web</code></pre>
+            
+            <p>For production, consider centralized logging solutions like:</p>
+            <ul>
+                <li>ELK Stack (Elasticsearch, Logstash, Kibana)</li>
+                <li>Fluentd with cloud storage</li>
+                <li>Graylog</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Debugging Multi-container Applications</h3>
+            <p>Debugging across multiple containers requires a systematic approach.</p>
+            
+            <h4>Common Issues and Debugging Techniques</h4>
+            
+            <h5>1. Container Communication Issues</h5>
+            <ul>
+                <li><strong>Symptom:</strong> "Connection refused" errors</li>
+                <li><strong>Debugging:</strong></li>
+                <ul>
+                    <li>Check if containers are on the same network</li>
+                    <li>Verify service names are used correctly</li>
+                    <li>Test with simple ping or curl commands from inside containers</li>
+                </ul>
+                <li><strong>Example:</strong></li>
+                <pre><code># Enter a container
+docker-compose exec web bash
+
+# Test connection to database
+ping db
+
+# Test connection to specific port
+nc -zv db 5432</code></pre>
+            </ul>
+            
+            <h5>2. Dependency Startup Issues</h5>
+            <ul>
+                <li><strong>Symptom:</strong> Services fail due to dependencies not being ready</li>
+                <li><strong>Debugging:</strong></li>
+                <ul>
+                    <li>Implement proper wait scripts</li>
+                    <li>Add retry logic in applications</li>
+                    <li>Check logs for timing-related errors</li>
+                </ul>
+            </ul>
+            
+            <h5>3. Volume Mount Issues</h5>
+            <ul>
+                <li><strong>Symptom:</strong> Missing data or permission errors</li>
+                <li><strong>Debugging:</strong></li>
+                <ul>
+                    <li>Verify volumes are correctly defined</li>
+                    <li>Check path mappings</li>
+                    <li>Inspect filesystem inside containers</li>
+                </ul>
+                <li><strong>Example:</strong></li>
+                <pre><code># List volumes
+docker volume ls
+
+# Inspect a specific volume
+docker volume inspect multi_container_app_postgres_data
+
+# Check permissions inside container
+docker-compose exec db ls -la /var/lib/postgresql/data</code></pre>
+            </ul>
+            
+            <h5>4. Environment Variable Issues</h5>
+            <ul>
+                <li><strong>Symptom:</strong> Application configuration problems</li>
+                <li><strong>Debugging:</strong></li>
+                <ul>
+                    <li>Print environment variables for verification</li>
+                    <li>Check for typos in variable names</li>
+                    <li>Verify .env file is being loaded</li>
+                </ul>
+                <li><strong>Example:</strong></li>
+                <pre><code># Check environment variables in a container
+docker-compose exec web env
+
+# Check specific variable
+docker-compose exec web bash -c 'echo $DB_HOST'</code></pre>
+            </ul>
+            
+            <div class="example">
+                <h4>Debugging Workflow for Multi-container Applications</h4>
+                <ol>
+                    <li><strong>Start with logs:</strong> <code>docker-compose logs</code></li>
+                    <li><strong>Check container status:</strong> <code>docker-compose ps</code></li>
+                    <li><strong>Inspect network:</strong> <code>docker network inspect multi_container_app_default</code></li>
+                    <li><strong>Enter problematic container:</strong> <code>docker-compose exec [service] bash</code></li>
+                    <li><strong>Test connectivity:</strong> Using ping, curl, nc from inside containers</li>
+                    <li><strong>Verify environment:</strong> Check environment variables, filesystem</li>
+                    <li><strong>Restart services:</strong> <code>docker-compose restart [service]</code></li>
+                    <li><strong>Rebuild if needed:</strong> <code>docker-compose up -d --build</code></li>
+                </ol>
+            </div>
+        </section>
+
+        <section>
+            <h3>Assignment: Create a Multi-container Application</h3>
+            <p>Now it's time to apply what you've learned by creating your own multi-container application:</p>
+            
+            <h4>Requirements:</h4>
+            <ul>
+                <li>Create a Docker Compose setup with at least three containers:
+                    <ul>
+                        <li>A Python service (Flask or Django)</li>
+                        <li>A database (PostgreSQL, MySQL, or MongoDB)</li>
+                        <li>A third service of your choice (Redis, Nginx, etc.)</li>
+                    </ul>
+                </li>
+                <li>Implement communication between services</li>
+                <li>Configure proper volume mounts for data persistence</li>
+                <li>Handle service dependencies and startup order</li>
+                <li>Document your application architecture and usage instructions</li>
+            </ul>
+            
+            <h4>Project Structure:</h4>
+            <pre><code>assignment/
+├── docker-compose.yml
+├── README.md
+├── service1/
+│   └── [service1 files]
+├── service2/
+│   └── [service2 files]
+├── service3/
+│   └── [service3 files]
+└── .env</code></pre>
+            
+            <h4>Bonus Challenges:</h4>
+            <ul>
+                <li>Implement a health check endpoint in your Python service</li>
+                <li>Add proper error handling and retry logic for dependencies</li>
+                <li>Create a frontend container with a simple UI</li>
+                <li>Implement a worker queue for background processing</li>
+                <li>Add basic monitoring using Prometheus and Grafana</li>
+            </ul>
+            
+            <h4>Hints:</h4>
+            <ul>
+                <li>Start simple and incrementally add complexity</li>
+                <li>Test each container individually before connecting them</li>
+                <li>Use the debugging techniques we discussed</li>
+                <li>Document all environment variables and configuration options</li>
+                <li>Consider security aspects (e.g., don't hardcode passwords)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li>Multi-container applications provide separation of concerns, scalability, and technology diversity</li>
+                <li>Services communicate through HTTP/REST, message queues, shared volumes, or databases</li>
+                <li>Docker provides basic service discovery through container names</li>
+                <li>Dependencies can be managed through Docker Compose, wait scripts, or application-level retry logic</li>
+                <li>Data persistence requires careful volume configuration</li>
+                <li>Debugging multi-container applications requires a systematic approach</li>
+                <li>Monitoring becomes even more important with multiple containers</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Further Resources</h3>
+            <ul>
+                <li><a href="https://docs.docker.com/compose/" target="_blank">Docker Compose Documentation</a></li>
+                <li><a href="https://docs.docker.com/storage/volumes/" target="_blank">Docker Volumes Documentation</a></li>
+                <li><a href="https://docs.docker.com/network/" target="_blank">Docker Network Documentation</a></li>
+                <li><a href="https://github.com/docker/awesome-compose" target="_blank">Awesome Docker Compose Examples</a></li>
+                <li><a href="https://microservices.io/patterns/microservices.html" target="_blank">Microservices Patterns</a></li>
+                <li><a href="https://testdriven.io/blog/dockerizing-flask-with-postgres-gunicorn-and-nginx/" target="_blank">Dockerizing Flask with PostgreSQL, Gunicorn, and Nginx</a></li>
+                <li><a href="https://docs.docker.com/config/containers/start-containers-automatically/" target="_blank">Docker Restart Policies</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

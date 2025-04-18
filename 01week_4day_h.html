@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Networking Basics - Full Stack Python Developer Course</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Docker Networking Basics</h1>
+        <h2>Week 1 - Thursday</h2>
+    </header>
+
+    <main>
+        <section class="course-intro">
+            <h3>Lecture Overview</h3>
+            <p>In this session, we'll dive into Docker networking fundamentals, explaining how containers communicate with each other and the outside world. Understanding Docker networking is essential for building multi-container applications and microservices architectures. By the end of this lecture, you'll understand the different network types, how to create and manage Docker networks, and best practices for container communication.</p>
+        </section>
+
+        <section>
+            <h3>Why Docker Networking Matters</h3>
+            <p>Docker containers are isolated environments by design. While isolation provides security and reproducibility benefits, applications often need to communicate with other services, databases, or the outside world. Docker networking provides the bridge that allows containers to communicate while maintaining their isolation benefits.</p>
+            
+            <h4>Key Networking Challenges Solved by Docker</h4>
+            <ul>
+                <li><strong>Service Discovery</strong> - How containers find and communicate with each other</li>
+                <li><strong>Network Isolation</strong> - Keeping container networks separate when needed</li>
+                <li><strong>Port Management</strong> - Exposing services to other containers or external users</li>
+                <li><strong>Multi-host Networking</strong> - Communication across multiple Docker hosts</li>
+                <li><strong>Network Security</strong> - Controlling which containers can communicate</li>
+            </ul>
+            
+            <div class="analogy">
+                <h4>Analogy: Postal System</h4>
+                <p>Think of Docker networking like a postal system:</p>
+                <ul>
+                    <li>Containers are like buildings with unique addresses</li>
+                    <li>Networks are like neighborhoods or postal zones</li>
+                    <li>DNS resolution is like the postal directory that maps names to addresses</li>
+                    <li>Port mapping is like specifying an apartment number within a building</li>
+                    <li>Network drivers are like different mail carriers (USPS, FedEx, UPS) with different delivery rules</li>
+                </ul>
+                <p>Just as the postal system enables communication between physically isolated places, Docker networking enables communication between logically isolated containers.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Docker Network Fundamentals</h3>
+            <p>At its core, Docker networking relies on standard Linux networking features, but adds an abstraction layer to make them easier to use. Let's explore the key concepts:</p>
+            
+            <h4>Container Network Model (CNM)</h4>
+            <p>Docker uses the Container Network Model as its networking architecture, which consists of three main components:</p>
+            <ul>
+                <li><strong>Sandbox</strong> - Isolated network stack (interfaces, routing tables, DNS)</li>
+                <li><strong>Endpoint</strong> - Virtual network interface connecting a container to a network</li>
+                <li><strong>Network</strong> - Collection of endpoints that can communicate directly</li>
+            </ul>
+            
+            <h4>Network Namespaces</h4>
+            <p>Docker leverages Linux network namespaces to provide network isolation. Each container gets its own network namespace with:</p>
+            <ul>
+                <li>Its own interfaces</li>
+                <li>Its own IP addresses</li>
+                <li>Its own routing table</li>
+                <li>Its own firewall rules</li>
+            </ul>
+            
+            <h4>Basic Network Commands</h4>
+            <pre><code># List all networks
+docker network ls
+
+# Inspect a network
+docker network inspect bridge
+
+# Create a new network
+docker network create my_network
+
+# Connect a container to a network
+docker network connect my_network container_name
+
+# Disconnect a container from a network
+docker network disconnect my_network container_name
+
+# Remove a network
+docker network rm my_network</code></pre>
+            
+            <div class="example">
+                <h4>Example: Basic Network Inspection</h4>
+                <p>When you run <code>docker network ls</code>, you'll see output similar to:</p>
+                <pre><code>NETWORK ID     NAME      DRIVER    SCOPE
+7852b54ac28d   bridge    bridge    local
+5520d01e8f99   host      host      local
+242668df065e   none      null      local</code></pre>
+                <p>These are the default networks that Docker creates. Each has a specific purpose that we'll explore in the next section.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Docker Network Types</h3>
+            <p>Docker provides several built-in network drivers, each designed for different use cases:</p>
+            
+            <h4>Bridge Network (Default)</h4>
+            <p>When you start Docker, a default bridge network (named "bridge") is automatically created. This is the network that containers connect to by default if you don't specify a network.</p>
+            
+            <ul>
+                <li><strong>Characteristics:</strong></li>
+                <ul>
+                    <li>Containers on the same bridge network can communicate</li>
+                    <li>Containers are isolated from containers on other networks</li>
+                    <li>Uses internal IP addresses (typically in the 172.17.0.0/16 range)</li>
+                    <li>Requires port mapping to be accessible from outside</li>
+                </ul>
+                <li><strong>Best for:</strong></li>
+                <ul>
+                    <li>Standalone containers that need to communicate</li>
+                    <li>Development environments</li>
+                    <li>Simple applications with few containers</li>
+                </ul>
+                <li><strong>Example:</strong></li>
+                <pre><code># Run a container on the default bridge network
+docker run -d --name web_server nginx</code></pre>
+            </ul>
+            
+            <h4>User-defined Bridge Networks</h4>
+            <p>You can create your own bridge networks, which provide better isolation and more features than the default bridge network.</p>
+            
+            <ul>
+                <li><strong>Advantages over default bridge:</strong></li>
+                <ul>
+                    <li>Automatic DNS resolution between containers</li>
+                    <li>Better isolation - only containers on the same user-defined network can communicate</li>
+                    <li>Containers can be connected/disconnected from networks on the fly</li>
+                    <li>More configuration options</li>
+                </ul>
+                <li><strong>Best for:</strong></li>
+                <ul>
+                    <li>Multi-container applications</li>
+                    <li>Isolating groups of related containers</li>
+                </ul>
+                <li><strong>Example:</strong></li>
+                <pre><code># Create a user-defined bridge network
+docker network create my_app_network
+
+# Run containers on this network
+docker run -d --name web --network my_app_network nginx
+docker run -d --name db --network my_app_network postgres</code></pre>
+            </ul>
+            
+            <h4>Host Network</h4>
+            <p>Containers on the host network share the network namespace with the Docker host. There's no network isolation between the container and the host.</p>
+            
+            <ul>
+                <li><strong>Characteristics:</strong></li>
+                <ul>
+                    <li>Container uses the host's networking directly - no separate IP address</li>
+                    <li>No port mapping needed - ports are bound directly on the host</li>
+                    <li>Highest networking performance (no network isolation overhead)</li>
+                    <li>Less isolation and potentially less security</li>
+                </ul>
+                <li><strong>Best for:</strong></li>
+                <ul>
+                    <li>Performance-critical applications</li>
+                    <li>Applications that need to bind to many ports</li>
+                    <li>Simple network configurations</li>
+                </ul>
+                <li><strong>Example:</strong></li>
+                <pre><code># Run a container using host networking
+docker run -d --network host nginx</code></pre>
+            </ul>
+            
+            <h4>None Network</h4>
+            <p>Containers on the "none" network have no external network connectivity.</p>
+            
+            <ul>
+                <li><strong>Characteristics:</strong></li>
+                <ul>
+                    <li>No external network connectivity</li>
+                    <li>Container only has a loopback interface</li>
+                    <li>Maximum network isolation</li>
+                </ul>
+                <li><strong>Best for:</strong></li>
+                <ul>
+                    <li>Batch processing jobs that don't need network access</li>
+                    <li>High-security applications that shouldn't have network access</li>
+                </ul>
+                <li><strong>Example:</strong></li>
+                <pre><code># Run a container with no networking
+docker run -d --network none alpine sleep 1000</code></pre>
+            </ul>
+            
+            <h4>Overlay Network</h4>
+            <p>Overlay networks enable communication between containers running on different Docker hosts in a Docker Swarm.</p>
+            
+            <ul>
+                <li><strong>Characteristics:</strong></li>
+                <ul>
+                    <li>Spans multiple Docker hosts</li>
+                    <li>Uses VXLAN encapsulation for cross-host communication</li>
+                    <li>Enables multi-host container networking</li>
+                </ul>
+                <li><strong>Best for:</strong></li>
+                <ul>
+                    <li>Docker Swarm deployments</li>
+                    <li>Distributed applications across multiple hosts</li>
+                </ul>
+                <li><strong>Example:</strong></li>
+                <pre><code># Create an overlay network (in swarm mode)
+docker network create --driver overlay my_overlay_network</code></pre>
+            </ul>
+            
+            <h4>Macvlan Network</h4>
+            <p>Macvlan networks allow you to assign a MAC address to a container, making it appear as a physical device on your network.</p>
+            
+            <ul>
+                <li><strong>Characteristics:</strong></li>
+                <ul>
+                    <li>Assigns a MAC address to containers</li>
+                    <li>Container appears as a physical device on the network</li>
+                    <li>Container gets an IP directly from the existing network infrastructure</li>
+                </ul>
+                <li><strong>Best for:</strong></li>
+                <ul>
+                    <li>Legacy applications that expect a direct connection to the physical network</li>
+                    <li>When you need containers to appear as physical devices on the network</li>
+                </ul>
+                <li><strong>Example:</strong></li>
+                <pre><code># Create a macvlan network
+docker network create -d macvlan \
+  --subnet=192.168.1.0/24 \
+  --gateway=192.168.1.1 \
+  -o parent=eth0 \
+  my_macvlan_network</code></pre>
+            </ul>
+            
+            <div class="analogy">
+                <h4>Analogy: Different Types of Roads</h4>
+                <p>Docker network types are like different types of roads:</p>
+                <ul>
+                    <li><strong>Bridge network</strong> is like a local street where nearby houses (containers) can communicate but need special access to reach the highway.</li>
+                    <li><strong>User-defined bridge</strong> is like a gated community with its own street names and internal navigation.</li>
+                    <li><strong>Host network</strong> is like removing all property boundaries and letting a house sit directly on the main road - efficient but less private.</li>
+                    <li><strong>None network</strong> is like a house with no driveway or road access - completely isolated.</li>
+                    <li><strong>Overlay network</strong> is like a system of tunnels connecting gated communities in different cities.</li>
+                    <li><strong>Macvlan network</strong> is like giving each house its own direct driveway to the main road, with its own mailbox and address.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Container Communication Patterns</h3>
+            <p>Let's explore how containers communicate in different scenarios:</p>
+            
+            <h4>Container-to-Container Communication</h4>
+            <p>Containers on the same network can communicate directly using container names or IP addresses. For user-defined networks, Docker provides built-in DNS resolution.</p>
+            
+            <pre><code># Example of two containers on the same network
+docker network create my_app_net
+docker run -d --name web --network my_app_net nginx
+docker run -d --name backend --network my_app_net python-app
+
+# From inside the 'web' container, you can connect to 'backend' using:
+# - Either the container name: backend
+# - Or the container's IP address</code></pre>
+            
+            <p>To test this communication, you can use <code>docker exec</code> to run commands inside a container:</p>
+            
+            <pre><code># Test communication from web to backend
+docker exec web ping backend  # DNS resolution in action!</code></pre>
+            
+            <h4>Container-to-External Communication</h4>
+            <p>Containers can access external networks (like the internet) through Network Address Translation (NAT) provided by the Docker host.</p>
+            
+            <pre><code># Container making outbound connections
+docker run --rm alpine ping -c 4 google.com</code></pre>
+            
+            <h4>External-to-Container Communication</h4>
+            <p>For external systems to communicate with containers, you need to map container ports to host ports.</p>
+            
+            <pre><code># Map container port 80 to host port 8080
+docker run -d -p 8080:80 nginx
+
+# Now you can access nginx via http://localhost:8080</code></pre>
+            
+            <p>Port mapping syntax: <code>-p [HOST_PORT]:[CONTAINER_PORT]</code></p>
+            
+            <h4>Multi-container Communication with Docker Compose</h4>
+            <p>Docker Compose simplifies networking for multi-container applications by automatically creating a default network for all services defined in the compose file.</p>
+            
+            <pre><code># docker-compose.yml example
+version: '3'
+services:
+  web:
+    image: nginx
+    ports:
+      - "8080:80"
+      
+  api:
+    build: ./api
+    
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_PASSWORD: example</code></pre>
+            
+            <p>With this configuration:</p>
+            <ul>
+                <li>All services (web, api, db) are on the same network</li>
+                <li>They can communicate using service names (e.g., the api service can connect to db using the hostname "db")</li>
+                <li>Only the web service is accessible from the host via port 8080</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Real-world Example: Web Application Stack</h4>
+                <p>Consider a typical web application with frontend, backend, and database components:</p>
+                <pre><code># docker-compose.yml for a web application
+version: '3'
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - frontend_network
+      
+  backend:
+    build: ./backend
+    environment:
+      - DATABASE_URL=postgres://postgres:password@db:5432/app
+      - REDIS_URL=redis://redis:6379
+    networks:
+      - frontend_network  # To communicate with frontend
+      - backend_network   # To communicate with db and redis
+      
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=app
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend_network
+      
+  redis:
+    image: redis:alpine
+    networks:
+      - backend_network
+
+networks:
+  frontend_network:
+  backend_network:
+
+volumes:
+  postgres_data:</code></pre>
+                
+                <p>This setup creates:</p>
+                <ul>
+                    <li>Two separate networks for better isolation</li>
+                    <li>The frontend can only communicate with the backend (not the database directly)</li>
+                    <li>The backend can communicate with both the frontend and the database</li>
+                    <li>Only the frontend is accessible from the host (on port 3000)</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Network Security and Isolation</h3>
+            <p>Docker networking provides several features to enhance security and isolation:</p>
+            
+            <h4>Network Segmentation</h4>
+            <p>By creating multiple networks, you can implement network segmentation to isolate different parts of your application.</p>
+            
+            <pre><code># Create separate networks for different concerns
+docker network create frontend_net
+docker network create backend_net
+docker network create data_net
+
+# Connect containers to appropriate networks
+docker run -d --name web --network frontend_net nginx
+docker run -d --name api --network frontend_net,backend_net api_image
+docker run -d --name db --network backend_net,data_net postgres</code></pre>
+            
+            <p>This configuration ensures that the web container can't directly access the database - it must go through the API.</p>
+            
+            <h4>Internal Networks</h4>
+            <p>For Docker Compose, you can create internal networks that are not accessible outside the Docker host:</p>
+            
+            <pre><code># docker-compose.yml with internal networks
+version: '3'
+
+networks:
+  frontend:
+    internal: false  # Accessible from outside (default)
+  backend:
+    internal: true   # NOT accessible from outside
+
+services:
+  web:
+    image: nginx
+    networks:
+      - frontend
+  
+  api:
+    image: my-api
+    networks:
+      - frontend
+      - backend
+  
+  db:
+    image: postgres
+    networks:
+      - backend</code></pre>
+            
+            <h4>Network Policies</h4>
+            <p>While Docker itself doesn't provide fine-grained network policies, you can use features of your host firewall or implement network policies at the application level.</p>
+            
+            <h4>Best Practices for Network Security</h4>
+            <ul>
+                <li><strong>Use multiple networks</strong> to isolate components</li>
+                <li><strong>Follow the principle of least privilege</strong> - only give containers access to networks they need</li>
+                <li><strong>Use internal networks</strong> for sensitive services</li>
+                <li><strong>Don't expose ports unnecessarily</strong> - only map ports that need external access</li>
+                <li><strong>Consider using network aliases</strong> to prevent direct addressing</li>
+                <li><strong>Implement application-level authentication</strong> between services</li>
+            </ul>
+            
+            <div class="analogy">
+                <h4>Analogy: Building Security Zones</h4>
+                <p>Network security in Docker is like security zones in a building:</p>
+                <ul>
+                    <li><strong>Multiple networks</strong> are like different security zones (public lobby, employee-only areas, secure vault)</li>
+                    <li><strong>Internal networks</strong> are like rooms with no external doors</li>
+                    <li><strong>Container placement</strong> determines which zones a service can access</li>
+                    <li><strong>Published ports</strong> are like doors to the outside world - only create them when necessary</li>
+                    <li><strong>Network aliases</strong> are like using code names instead of real names</li>
+                </ul>
+                <p>Just as a good building security design limits who can go where, good Docker network design limits which containers can communicate with each other.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Practical Examples and Use Cases</h3>
+            <p>Let's explore practical examples of Docker networking for different use cases:</p>
+            
+            <h4>Single-container Web Server</h4>
+            <p>For a simple web server with external access:</p>
+            <pre><code># Running a web server with port mapping
+docker run -d -p 8080:80 --name web nginx
+
+# Test access
+curl http://localhost:8080</code></pre>
+            
+            <h4>Web Application with Database</h4>
+            <p>For a web application with a separate database:</p>
+            <pre><code># Create a network
+docker network create web_app_network
+
+# Run a database (no external port needed)
+docker run -d --name db \
+  --network web_app_network \
+  -e POSTGRES_PASSWORD=example \
+  postgres
+
+# Run a web application with external access
+docker run -d --name web \
+  --network web_app_network \
+  -p 8080:8080 \
+  -e DATABASE_URL=postgresql://postgres:example@db:5432/postgres \
+  my_web_app</code></pre>
+            
+            <h4>Microservices Architecture</h4>
+            <p>For a microservices application with multiple isolated components:</p>
+            <pre><code># Create networks for different concerns
+docker network create public_net
+docker network create service_net
+docker network create data_net
+
+# Frontend (accessible from outside)
+docker run -d --name frontend \
+  --network public_net \
+  -p 80:80 \
+  frontend_image
+
+# API Gateway (connects public and service networks)
+docker run -d --name api_gateway \
+  --network public_net,service_net \
+  api_gateway_image
+
+# Service A
+docker run -d --name service_a \
+  --network service_net,data_net \
+  service_a_image
+
+# Service B
+docker run -d --name service_b \
+  --network service_net,data_net \
+  service_b_image
+
+# Database (only on data network)
+docker run -d --name db \
+  --network data_net \
+  -e POSTGRES_PASSWORD=secure_password \
+  postgres</code></pre>
+            
+            <h4>Load Balancing with Nginx</h4>
+            <p>Using Nginx as a load balancer for multiple backend containers:</p>
+            <pre><code># Create a network
+docker network create app_net
+
+# Run multiple backend instances
+docker run -d --name backend1 --network app_net backend_image
+docker run -d --name backend2 --network app_net backend_image
+docker run -d --name backend3 --network app_net backend_image
+
+# Run Nginx load balancer
+docker run -d --name nginx \
+  --network app_net \
+  -p 80:80 \
+  -v $(pwd)/nginx.conf:/etc/nginx/nginx.conf \
+  nginx</code></pre>
+            
+            <p>With an nginx.conf like this:</p>
+            <pre><code>http {
+    upstream backend {
+        server backend1:8080;
+        server backend2:8080;
+        server backend3:8080;
+    }
+    
+    server {
+        listen 80;
+        
+        location / {
+            proxy_pass http://backend;
+        }
+    }
+}</code></pre>
+            
+            <div class="example">
+                <h4>Complete Docker Compose Example: Blog Platform</h4>
+                <p>Here's a comprehensive example of a blog platform with multiple services:</p>
+                <pre><code># docker-compose.yml for a blog platform
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - static_files:/var/www/html/static
+    networks:
+      - frontend
+    depends_on:
+      - web
+      - api
+  
+  web:
+    build: ./frontend
+    volumes:
+      - static_files:/app/static
+    networks:
+      - frontend
+    environment:
+      - API_URL=http://api:3000
+    depends_on:
+      - api
+  
+  api:
+    build: ./backend
+    networks:
+      - frontend
+      - backend
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/blog
+      - REDIS_URL=redis://redis:6379/0
+      - AUTH_SERVICE_URL=http://auth:4000
+    depends_on:
+      - db
+      - redis
+      - auth
+  
+  auth:
+    build: ./auth-service
+    networks:
+      - backend
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/blog
+      - REDIS_URL=redis://redis:6379/1
+      - JWT_SECRET=your_jwt_secret
+    depends_on:
+      - db
+      - redis
+  
+  worker:
+    build: ./worker
+    networks:
+      - backend
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/blog
+      - REDIS_URL=redis://redis:6379/2
+    depends_on:
+      - db
+      - redis
+  
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=blog
+  
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+
+networks:
+  frontend:
+  backend:
+    internal: true  # Only accessible within Docker, not from outside
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_files:</code></pre>
+                
+                <p>This configuration provides:</p>
+                <ul>
+                    <li>Network segmentation with frontend and backend networks</li>
+                    <li>Service isolation with appropriate network placement</li>
+                    <li>Internal-only backend network for security</li>
+                    <li>External access only through the nginx service</li>
+                    <li>Proper volume configuration for data persistence</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Troubleshooting Network Issues</h3>
+            <p>Network issues are common in Docker environments. Here's how to diagnose and fix them:</p>
+            
+            <h4>Common Issues</h4>
+            <ul>
+                <li><strong>Container can't connect to another container</strong></li>
+                <li><strong>Service in container isn't accessible from host</strong></li>
+                <li><strong>Container can't access the internet</strong></li>
+                <li><strong>DNS resolution not working between containers</strong></li>
+                <li><strong>Port conflicts</strong></li>
+            </ul>
+            
+            <h4>Debugging Tools and Commands</h4>
+            <pre><code># Check container networks
+docker inspect container_name | grep -A 20 "Networks"
+
+# List all networks
+docker network ls
+
+# Inspect a specific network
+docker network inspect network_name
+
+# Check host port mappings
+docker port container_name
+
+# Execute network utilities in a container
+docker exec container_name ping other_container
+docker exec container_name curl http://other_container:port
+docker exec container_name nslookup other_container
+
+# Debug DNS in a container
+docker exec container_name cat /etc/resolv.conf
+
+# Run a network debugging container
+docker run --rm --network network_name nicolaka/netshoot</code></pre>
+            
+            <h4>Step-by-Step Troubleshooting</h4>
+            <ol>
+                <li><strong>Verify container status</strong>
+                    <pre><code>docker ps -a</code></pre>
+                    <p>Make sure containers are running</p>
+                </li>
+                <li><strong>Check network configuration</strong>
+                    <pre><code>docker network ls
+docker network inspect network_name</code></pre>
+                    <p>Verify containers are on the expected networks</p>
+                </li>
+                <li><strong>Test basic connectivity</strong>
+                    <pre><code>docker exec container_name ping other_container</code></pre>
+                    <p>Check if containers can reach each other</p>
+                </li>
+                <li><strong>Check service status</strong>
+                    <pre><code>docker exec container_name ps aux</code></pre>
+                    <p>Verify the service inside the container is running</p>
+                </li>
+                <li><strong>Test port accessibility</strong>
+                    <pre><code>docker exec container_name curl localhost:port</code></pre>
+                    <p>Check if the service is listening on the expected port</p>
+                </li>
+                <li><strong>Verify port mappings</strong>
+                    <pre><code>docker port container_name</code></pre>
+                    <p>Ensure ports are mapped correctly</p>
+                </li>
+                <li><strong>Check DNS resolution</strong>
+                    <pre><code>docker exec container_name nslookup other_container</code></pre>
+                    <p>Verify DNS resolution is working</p>
+                </li>
+                <li><strong>Check for port conflicts</strong>
+                    <pre><code># On Linux
+sudo netstat -tulpn | grep LISTEN
+
+# On macOS
+sudo lsof -i -P | grep LISTEN
+
+# On Windows
+netstat -ano | findstr LISTENING</code></pre>
+                    <p>Look for processes already using needed ports</p>
+                </li>
+            </ol>
+            
+            <div class="example">
+                <h4>Case Study: Diagnosing Connection Issues</h4>
+                <p>Let's walk through diagnosing a common issue where a web app can't connect to its database:</p>
+                
+                <ol>
+                    <li><strong>Symptom:</strong> Web container logs show "could not connect to database"</li>
+                    <li><strong>Check both containers are running:</strong>
+                        <pre><code>docker ps | grep -E 'web|db'</code></pre>
+                    </li>
+                    <li><strong>Verify they're on the same network:</strong>
+                        <pre><code>docker inspect web | grep -A 5 Networks
+docker inspect db | grep -A 5 Networks</code></pre>
+                    </li>
+                    <li><strong>Test basic connectivity:</strong>
+                        <pre><code>docker exec web ping db</code></pre>
+                    </li>
+                    <li><strong>Check database is accepting connections:</strong>
+                        <pre><code>docker exec db ps aux | grep postgres
+docker exec db netstat -tulpn | grep 5432</code></pre>
+                    </li>
+                    <li><strong>Verify database credentials:</strong>
+                        <pre><code>docker exec web env | grep DATABASE</code></pre>
+                    </li>
+                    <li><strong>Test direct database connection:</strong>
+                        <pre><code>docker exec web apt-get update && apt-get install -y postgresql-client
+docker exec web psql -h db -U postgres -c "SELECT 1"</code></pre>
+                    </li>
+                </ol>
+                
+                <p>In this case, the issue might be that the database isn't properly initialized yet or the credentials are incorrect.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Advanced Networking Topics</h3>
+            <p>For those who want to go deeper, here are some advanced Docker networking topics:</p>
+            
+            <h4>Custom Network Drivers</h4>
+            <p>Docker supports third-party network drivers through plugins, allowing for specialized networking solutions:</p>
+            <pre><code># Install a network plugin
+docker plugin install plugin_name
+
+# Create a network with a custom driver
+docker network create -d plugin_name my_custom_network</code></pre>
+            
+            <h4>Encrypting Network Traffic</h4>
+            <p>For sensitive communications, you can encrypt overlay network traffic in Docker Swarm:</p>
+            <pre><code># Create an encrypted overlay network
+docker network create --driver overlay --opt encrypted my_secure_network</code></pre>
+            
+            <h4>Network Performance Tuning</h4>
+            <p>For high-performance applications, you can tune network parameters:</p>
+            <pre><code># Create a network with specific MTU
+docker network create --driver bridge --opt com.docker.network.driver.mtu=1400 my_network</code></pre>
+            
+            <h4>Customizing the Docker DNS Server</h4>
+            <p>For complex DNS requirements, you can customize Docker's DNS settings:</p>
+            <pre><code># Run Docker daemon with custom DNS
+# In /etc/docker/daemon.json:
+{
+  "dns": ["8.8.8.8", "8.8.4.4"]
+}
+
+# Or for a specific container:
+docker run --dns 8.8.8.8 --dns 8.8.4.4 my_image</code></pre>
+            
+            <h4>Implementing Service Discovery</h4>
+            <p>For more sophisticated service discovery than Docker's built-in DNS:</p>
+            <ul>
+                <li>Consul</li>
+                <li>etcd</li>
+                <li>ZooKeeper</li>
+            </ul>
+            <pre><code># Example with Consul
+docker run -d -p 8500:8500 --name=consul consul
+
+# Register services with Consul
+# This is typically done programmatically from inside containers</code></pre>
+            
+            <div class="example">
+                <h4>Advanced Example: Multi-host Networking with Docker Swarm</h4>
+                <p>Docker Swarm provides built-in support for multi-host networking:</p>
+                <pre><code># Initialize a swarm on the first node
+docker swarm init --advertise-addr 192.168.1.10
+
+# Join a worker node to the swarm
+docker swarm join --token SWMTKN-1-... 192.168.1.10:2377
+
+# Create an overlay network
+docker network create --driver overlay my_swarm_network
+
+# Deploy a service that uses the network
+docker service create \
+  --name my_service \
+  --network my_swarm_network \
+  --replicas 3 \
+  my_image</code></pre>
+                
+                <p>This creates three container instances across your swarm nodes, all connected to the same overlay network.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Practical Exercise: Multi-Container Networking</h3>
+            <p>Let's consolidate our knowledge with a practical exercise creating a multi-container application with proper network configuration.</p>
+            
+            <h4>Exercise: Web Application with Database and Cache</h4>
+            <p>We'll create a simple web application with three components:</p>
+            <ul>
+                <li>A web frontend in Flask</li>
+                <li>A PostgreSQL database for persistence</li>
+                <li>A Redis cache for performance</li>
+            </ul>
+            
+            <h4>Step 1: Create the Project Structure</h4>
+            <pre><code>mkdir docker-network-exercise
+cd docker-network-exercise
+
+# Create directories
+mkdir -p web db redis</code></pre>
+            
+            <h4>Step 2: Create the Flask Application</h4>
+            <p>Create <code>web/app.py</code>:</p>
+            <pre><code>from flask import Flask, jsonify
+import os
+import psycopg2
+import redis
+import socket
+
+app = Flask(__name__)
+
+# Get database connection
+def get_db_connection():
+    conn = psycopg2.connect(
+        host=os.environ.get('DB_HOST', 'db'),
+        database=os.environ.get('DB_NAME', 'postgres'),
+        user=os.environ.get('DB_USER', 'postgres'),
+        password=os.environ.get('DB_PASSWORD', 'postgres')
+    )
+    conn.autocommit = True
+    return conn
+
+# Get Redis connection
+def get_redis_connection():
+    return redis.Redis(
+        host=os.environ.get('REDIS_HOST', 'redis'),
+        port=int(os.environ.get('REDIS_PORT', 6379)),
+        db=int(os.environ.get('REDIS_DB', 0))
+    )
+
+@app.route('/')
+def hello():
+    return jsonify({
+        'message': 'Hello from Flask!',
+        'container': socket.gethostname()
+    })
+
+@app.route('/db-test')
+def db_test():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT version();')
+        db_version = cursor.fetchone()[0]
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Database connection successful',
+            'version': db_version
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/redis-test')
+def redis_test():
+    try:
+        r = get_redis_connection()
+        r.incr('hits')
+        count = r.get('hits').decode('utf-8')
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Redis connection successful',
+            'hits': count
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/network-info')
+def network_info():
+    # Get network information
+    hostname = socket.gethostname()
+    ip = socket.gethostbyname(hostname)
+    
+    # Try to resolve other services
+    db_ip = None
+    redis_ip = None
+    
+    try:
+        db_ip = socket.gethostbyname('db')
+    except:
+        pass
+        
+    try:
+        redis_ip = socket.gethostbyname('redis')
+    except:
+        pass
+    
+    return jsonify({
+        'hostname': hostname,
+        'ip': ip,
+        'db_host': os.environ.get('DB_HOST', 'db'),
+        'db_ip': db_ip,
+        'redis_host': os.environ.get('REDIS_HOST', 'redis'),
+        'redis_ip': redis_ip,
+        'network_interfaces': dict([(i[1], i[0]) for i in socket.if_nameindex()]),
+    })
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)</code></pre>
+            
+            <h4>Step 3: Create Dockerfile for Flask App</h4>
+            <p>Create <code>web/Dockerfile</code>:</p>
+            <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install dependencies
+RUN pip install flask psycopg2-binary redis
+
+COPY app.py .
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]</code></pre>
+            
+            <h4>Step 4: Create Database Initialization Script</h4>
+            <p>Create <code>db/init.sql</code>:</p>
+            <pre><code>CREATE TABLE IF NOT EXISTS hits (
+    id SERIAL PRIMARY KEY,
+    endpoint VARCHAR(255) NOT NULL,
+    count INTEGER NOT NULL DEFAULT 1,
+    last_hit TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO hits (endpoint, count) VALUES
+    ('/', 0),
+    ('/db-test', 0),
+    ('/redis-test', 0)
+ON CONFLICT DO NOTHING;</code></pre>
+            
+            <h4>Step 5: Create Docker Compose File</h4>
+            <p>Create <code>docker-compose.yml</code> in the project root:</p>
+            <pre><code>version: '3.8'
+
+services:
+  web:
+    build: ./web
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - DB_HOST=db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=postgres
+      - REDIS_HOST=redis
+    networks:
+      - frontend
+      - backend
+    depends_on:
+      - db
+      - redis
+  
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - backend
+  
+  redis:
+    image: redis:6-alpine
+    networks:
+      - backend
+
+networks:
+  frontend:
+    # External-facing network
+  backend:
+    # Internal network for services
+    internal: false  # For testing purposes; set to true for production
+
+volumes:
+  postgres_data:</code></pre>
+            
+            <h4>Step 6: Run the Application</h4>
+            <pre><code>docker-compose up -d</code></pre>
+            
+            <h4>Step 7: Test Network Connectivity</h4>
+            <ol>
+                <li><strong>Access the web interface:</strong> Open <a href="http://localhost:5000">http://localhost:5000</a></li>
+                <li><strong>Test database connection:</strong> <a href="http://localhost:5000/db-test">http://localhost:5000/db-test</a></li>
+                <li><strong>Test Redis connection:</strong> <a href="http://localhost:5000/redis-test">http://localhost:5000/redis-test</a></li>
+                <li><strong>View network information:</strong> <a href="http://localhost:5000/network-info">http://localhost:5000/network-info</a></li>
+            </ol>
+            
+            <h4>Step 8: Explore Network Configuration</h4>
+            <pre><code># List networks
+docker network ls
+
+# Inspect the frontend network
+docker network inspect docker-network-exercise_frontend
+
+# Inspect the backend network
+docker network inspect docker-network-exercise_backend
+
+# Check container network settings
+docker inspect docker-network-exercise_web_1 | grep -A 20 "Networks"</code></pre>
+            
+            <h4>Step 9: Test Inter-container Communication</h4>
+            <pre><code># Connect to the web container
+docker exec -it docker-network-exercise_web_1 bash
+
+# Inside the container, test communication with db
+ping db
+curl http://db:5432  # Should fail with a connection refused (port is open but not HTTP)
+
+# Test communication with Redis
+ping redis
+nc -zv redis 6379  # Check if Redis port is open
+
+# Exit the container
+exit</code></pre>
+            
+            <h4>Step 10: Modify Network Configuration</h4>
+            <p>Edit your <code>docker-compose.yml</code> to make the backend network truly internal:</p>
+            <pre><code>networks:
+  frontend:
+  backend:
+    internal: true  # Change to true</code></pre>
+            
+            <p>Then update your configuration:</p>
+            <pre><code>docker-compose down
+docker-compose up -d</code></pre>
+            
+            <p>Test again to see the differences in network behavior.</p>
+            
+            <div class="example">
+                <h4>Exercise Extension: Add a Second Web Container</h4>
+                <p>To explore load balancing and scaling:</p>
+                <pre><code># Scale the web service to 3 instances
+docker-compose up -d --scale web=3
+
+# Check running containers
+docker-compose ps
+
+# Test the load balancing by refreshing the web page multiple times
+# The hostname in the response should change</code></pre>
+                
+                <p>Note: This simple setup doesn't include a real load balancer. In a production environment, you'd add an Nginx or HAProxy container to properly distribute traffic.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li><strong>Network Types:</strong> Docker provides different network drivers for different use cases</li>
+                <li><strong>User-defined Networks:</strong> Create custom networks for better isolation and automatic DNS resolution</li>
+                <li><strong>Service Discovery:</strong> Containers on the same network can communicate using service names</li>
+                <li><strong>Port Mapping:</strong> Use port mapping to make services accessible from outside</li>
+                <li><strong>Network Segmentation:</strong> Use multiple networks to improve security</li>
+                <li><strong>Docker Compose:</strong> Simplifies networking configuration for multi-container applications</li>
+                <li><strong>Troubleshooting:</strong> Use Docker's built-in tools to diagnose network issues</li>
+            </ul>
+            
+            <p>Understanding Docker networking is crucial for building robust, secure, and scalable containerized applications. With the knowledge from this session, you can design effective network architectures for your Docker projects.</p>
+        </section>
+
+        <section>
+            <h3>Further Resources</h3>
+            <ul>
+                <li><a href="https://docs.docker.com/network/" target="_blank">Docker Networking Documentation</a></li>
+                <li><a href="https://docs.docker.com/compose/networking/" target="_blank">Docker Compose Networking</a></li>
+                <li><a href="https://docs.docker.com/network/network-tutorial-standalone/" target="_blank">Docker Network Tutorial</a></li>
+                <li><a href="https://success.docker.com/article/networking" target="_blank">Docker Networking Design Philosophy</a></li>
+                <li><a href="https://github.com/nicolaka/netshoot" target="_blank">Netshoot - Network Debugging Container</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

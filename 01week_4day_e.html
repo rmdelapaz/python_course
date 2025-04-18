@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volume Mounts for Development - Full Stack Python Developer Course</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Volume Mounts for Development</h1>
+        <h2>Week 1 - Thursday</h2>
+    </header>
+
+    <main>
+        <section class="course-intro">
+            <h3>Lecture Overview</h3>
+            <p>In this session, we'll explore one of the most powerful features of Docker for development workflows: volume mounts. By the end of this lecture, you'll understand how to use Docker volumes to create efficient development environments that enable rapid code-test cycles while maintaining the benefits of containerization.</p>
+        </section>
+
+        <section>
+            <h3>Understanding Volume Mounts</h3>
+            <p>When working with Docker containers, one of the challenges for developers is the disconnect between code on your local machine and code running inside containers. By default, containers are isolated from the host system, which means any changes to your code require rebuilding the container to see those changes.</p>
+            
+            <p>Volume mounts solve this problem by creating a direct link between a directory on your host machine and a directory inside the container. This enables:</p>
+            
+            <ul>
+                <li><strong>Real-time code updates:</strong> Edit code on your host machine and see changes instantly in the container</li>
+                <li><strong>Persistent data:</strong> Data persists even when containers are stopped or removed</li>
+                <li><strong>Faster development cycles:</strong> No need to rebuild containers for code changes</li>
+                <li><strong>Direct access to container data:</strong> Access logs, databases, and other data directly from your host</li>
+            </ul>
+            
+            <div class="analogy">
+                <h4>Analogy: The Two-Way Mirror</h4>
+                <p>Think of a volume mount like a two-way mirror between your host machine and a container:</p>
+                <ul>
+                    <li>You can see and modify what's on either side</li>
+                    <li>Changes on one side instantly appear on the other</li>
+                    <li>The same "room" can be viewed from two different perspectives</li>
+                    <li>Both sides always see the exact same content</li>
+                </ul>
+                <p>Just as a two-way mirror allows two separate rooms to share a view of the same space, a volume mount allows your host and container to share access to the same files.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Types of Docker Volumes</h3>
+            <p>Docker provides several types of volumes, each with its own use cases:</p>
+            
+            <h4>1. Bind Mounts</h4>
+            <p>Bind mounts map a specific path on the host to a path in the container. These are most commonly used for development.</p>
+            <pre><code>docker run -v /path/on/host:/path/in/container my-image</code></pre>
+            
+            <h4>2. Named Volumes</h4>
+            <p>Named volumes are managed by Docker and provide better portability. The host location is managed by Docker.</p>
+            <pre><code>docker run -v my_volume:/path/in/container my-image</code></pre>
+            
+            <h4>3. Tmpfs Mounts (temporary file system)</h4>
+            <p>Stored in the host's memory only, these are useful for temporary files and security-sensitive files like access tokens.</p>
+            <pre><code>docker run --tmpfs /path/in/container my-image</code></pre>
+            
+            <p>For development workflows, we primarily use bind mounts, as they provide direct access to our codebase from both the host machine and container.</p>
+            
+            <div class="example">
+                <h4>Volume Mount Comparison</h4>
+                <table>
+                    <tr>
+                        <th>Type</th>
+                        <th>Use Case</th>
+                        <th>Persistence</th>
+                        <th>Host Access</th>
+                    </tr>
+                    <tr>
+                        <td>Bind Mount</td>
+                        <td>Development, direct file sharing</td>
+                        <td>Persists until deleted from host</td>
+                        <td>Direct access at known location</td>
+                    </tr>
+                    <tr>
+                        <td>Named Volume</td>
+                        <td>Production data, shared data between containers</td>
+                        <td>Persists until explicitly deleted</td>
+                        <td>Managed by Docker, not easily accessible</td>
+                    </tr>
+                    <tr>
+                        <td>Tmpfs Mount</td>
+                        <td>Sensitive or temporary data</td>
+                        <td>Lost when container stops</td>
+                        <td>Not accessible (memory only)</td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <section>
+            <h3>Volume Mounts in Docker Compose</h3>
+            <p>Docker Compose makes it easy to define volume mounts for development environments. Let's look at how to configure volumes in a docker-compose.yml file:</p>
+            
+            <h4>Basic Volume Mount Syntax</h4>
+            <pre><code>version: '3'
+
+services:
+  web:
+    build: ./web
+    volumes:
+      - ./web:/app  # Host path : Container path
+    ports:
+      - "8000:8000"
+</code></pre>
+            
+            <p>In this example, the <code>./web</code> directory from your host machine is mounted to the <code>/app</code> directory inside the container.</p>
+            
+            <h4>Multiple Volume Mounts</h4>
+            <p>You can specify multiple volume mounts for a service:</p>
+            <pre><code>services:
+  web:
+    build: ./web
+    volumes:
+      - ./web:/app              # Source code
+      - ./logs:/app/logs        # Log files
+      - ./config:/app/config    # Configuration files
+</code></pre>
+            
+            <h4>Read-Only Volume Mounts</h4>
+            <p>You can make a volume read-only by adding <code>:ro</code> after the container path:</p>
+            <pre><code>services:
+  web:
+    build: ./web
+    volumes:
+      - ./web:/app              # Read-write mount
+      - ./config:/app/config:ro # Read-only mount
+</code></pre>
+            
+            <h4>Named Volumes in Docker Compose</h4>
+            <p>You can also use named volumes by defining them in the top-level <code>volumes</code> section:</p>
+            <pre><code>services:
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:  # This defines a named volume
+</code></pre>
+            
+            <div class="example">
+                <h4>Volume Mount Paths</h4>
+                <p>Pay attention to the paths you use in volume mounts:</p>
+                <ul>
+                    <li><strong>Relative paths</strong> (like <code>./web</code>) are relative to the location of your docker-compose.yml file</li>
+                    <li><strong>Absolute paths</strong> (like <code>/home/user/project/web</code>) specify an exact location on your host</li>
+                    <li><strong>Named volumes</strong> (like <code>postgres_data</code>) don't specify a host path; Docker manages the location</li>
+                </ul>
+                <p>For development, relative paths are usually preferred for portability across different developer machines.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Development Workflows with Volume Mounts</h3>
+            <p>Let's see how volume mounts enable efficient development workflows with Docker Compose.</p>
+            
+            <h4>Typical Development Workflow</h4>
+            <ol>
+                <li>Start containers with Docker Compose</li>
+                <li>Edit code on your host machine using your preferred IDE/editor</li>
+                <li>Changes are immediately available in the container</li>
+                <li>See results in your browser or through container logs</li>
+                <li>Repeat without container rebuilds</li>
+            </ol>
+            
+            <h4>Example: Python Flask Development Setup</h4>
+            <pre><code>version: '3'
+
+services:
+  web:
+    build: ./web
+    command: flask run --host=0.0.0.0 --port=5000
+    volumes:
+      - ./web:/app
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development  # Enables debug mode with auto-reload
+</code></pre>
+            
+            <p>With this setup:</p>
+            <ul>
+                <li>Flask runs in debug mode, which automatically reloads on code changes</li>
+                <li>Code changes in <code>./web</code> are immediately available to the Flask application</li>
+                <li>You can view the application at <code>http://localhost:5000</code></li>
+                <li>There's no need to rebuild the container or restart Docker Compose for code changes</li>
+            </ul>
+            
+            <div class="analogy">
+                <h4>Analogy: Live Musical Performance</h4>
+                <p>Developing with volume mounts is like a live musical performance:</p>
+                <ul>
+                    <li>The musician (you) can change the notes (code) in real-time</li>
+                    <li>The audience (application) hears the changes immediately</li>
+                    <li>There's no need to stop the performance to change the sheet music</li>
+                    <li>Feedback is immediate, allowing for quick adjustments</li>
+                </ul>
+                <p>In contrast, developing without volume mounts is like a recording studio where you need to record, stop, edit, and then listen again — a much slower process.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Hot Reloading with Different Frameworks</h3>
+            <p>Different frameworks and languages have different approaches to detecting file changes and reloading code. Let's explore some common setups:</p>
+            
+            <h4>Python Flask</h4>
+            <pre><code>services:
+  flask-app:
+    build: ./flask-app
+    command: flask run --host=0.0.0.0 --port=5000
+    volumes:
+      - ./flask-app:/app
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development  # Enables debug mode with auto-reload
+</code></pre>
+            
+            <h4>Python Django</h4>
+            <pre><code>services:
+  django-app:
+    build: ./django-app
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./django-app:/app
+    ports:
+      - "8000:8000"
+</code></pre>
+            
+            <h4>Node.js with Nodemon</h4>
+            <pre><code>services:
+  node-app:
+    build: ./node-app
+    command: npx nodemon app.js
+    volumes:
+      - ./node-app:/app
+    ports:
+      - "3000:3000"
+</code></pre>
+            
+            <h4>React with Create React App</h4>
+            <pre><code>services:
+  react-app:
+    build: ./react-app
+    command: npm start
+    volumes:
+      - ./react-app:/app
+      # Don't mount node_modules
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - CHOKIDAR_USEPOLLING=true  # Helps with file watching in some systems
+</code></pre>
+            
+            <div class="example">
+                <h4>Node.js Specific Considerations</h4>
+                <p>For Node.js projects, be careful with node_modules. You have two options:</p>
+                <ol>
+                    <li><strong>Exclude node_modules from the mount:</strong>
+                    <pre><code>volumes:
+  - ./node-app:/app
+  - /app/node_modules  # Creates an anonymous volume for node_modules</code></pre>
+                    This keeps the container's node_modules separate from the host.</li>
+                    <li><strong>Run npm install on both host and container:</strong> This approach ensures both environments have the same dependencies, but can cause issues with platform-specific modules.</li>
+                </ol>
+                <p>The first approach is generally recommended for Docker development with Node.js.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Advanced Volume Mount Patterns</h3>
+            <p>Let's explore some advanced patterns for using volume mounts in development environments.</p>
+            
+            <h4>Selective File Mounting</h4>
+            <p>Sometimes you might want to mount only specific files or directories instead of the entire project:</p>
+            <pre><code>services:
+  web:
+    build: ./web
+    volumes:
+      - ./web/src:/app/src           # Only mount source code
+      - ./web/templates:/app/templates
+      - ./web/static:/app/static
+</code></pre>
+            
+            <h4>Excluding Files and Directories</h4>
+            <p>Docker doesn't directly support exclusion in volume mounts, but you can achieve this with multiple specific mounts:</p>
+            <pre><code>services:
+  web:
+    build: ./web
+    volumes:
+      - ./web:/app                  # Mount everything
+      - /app/node_modules           # But create a separate volume for node_modules
+      - /app/.git                   # And for .git directory
+</code></pre>
+            
+            <h4>Platform-specific Considerations</h4>
+            <p>Volume mounts behave differently across operating systems:</p>
+            <ul>
+                <li><strong>Linux:</strong> Generally the fastest performance</li>
+                <li><strong>macOS:</strong> Can be slower, especially with many small files</li>
+                <li><strong>Windows:</strong> Performance varies based on WSL version and filesystem location</li>
+            </ul>
+            
+            <p>For macOS and Windows, you might need to configure file sharing in Docker Desktop settings, and performance might benefit from being selective about what you mount.</p>
+            
+            <h4>Cache Volumes for Build Performance</h4>
+            <p>You can use volume mounts to cache dependencies and build artifacts:</p>
+            <pre><code>services:
+  web:
+    build: ./web
+    volumes:
+      - ./web:/app
+      - node_modules:/app/node_modules  # Named volume for node_modules
+      
+volumes:
+  node_modules:  # This persists across container restarts
+</code></pre>
+            
+            <div class="example">
+                <h4>Real-world Example: Full-stack Development Environment</h4>
+                <pre><code>version: '3'
+
+services:
+  frontend:
+    build: ./frontend
+    command: npm start
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000/api
+      
+  backend:
+    build: ./backend
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=myapp
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
+</code></pre>
+                <p>This setup provides a complete development environment where:</p>
+                <ul>
+                    <li>Frontend and backend code can be edited with hot reloading</li>
+                    <li>Database data persists across container restarts</li>
+                    <li>Initialization scripts can be edited on the host</li>
+                    <li>All services are properly connected</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Performance Considerations</h3>
+            <p>Volume mounts can sometimes impact performance, especially in certain environments. Let's explore some considerations and optimizations:</p>
+            
+            <h4>Performance Issues</h4>
+            <ul>
+                <li><strong>Many small files:</strong> Applications with thousands of small files (like node_modules) can be slow with volume mounts</li>
+                <li><strong>Operating system differences:</strong> macOS and Windows typically have slower performance than Linux</li>
+                <li><strong>File watching:</strong> Some file watchers may not detect changes properly in mounted volumes</li>
+            </ul>
+            
+            <h4>Optimization Strategies</h4>
+            <ul>
+                <li><strong>Mount selectively:</strong> Only mount directories that you'll actively change</li>
+                <li><strong>Use named volumes for dependencies:</strong> Keep node_modules, vendor directories in named volumes</li>
+                <li><strong>Consider caching solutions:</strong> For build artifacts and dependencies</li>
+                <li><strong>Enable polling for file watchers:</strong> Some file watchers need polling mode for reliable change detection</li>
+                <li><strong>Use docker-sync or mutagen:</strong> These tools can improve volume performance on macOS</li>
+            </ul>
+            
+            <h4>Example: Optimized Node.js Setup</h4>
+            <pre><code>services:
+  node-app:
+    build: ./node-app
+    command: npm run dev
+    volumes:
+      - ./node-app/src:/app/src             # Only mount source code
+      - ./node-app/public:/app/public       # And public assets
+      - ./node-app/package.json:/app/package.json
+      - ./node-app/package-lock.json:/app/package-lock.json
+      - node_modules:/app/node_modules      # Named volume for dependencies
+    environment:
+      - CHOKIDAR_USEPOLLING=true            # Enable polling for file watcher
+
+volumes:
+  node_modules:                             # Persist node_modules
+</code></pre>
+            
+            <div class="analogy">
+                <h4>Analogy: Library System</h4>
+                <p>Think of performance optimization for volume mounts like organizing a library system:</p>
+                <ul>
+                    <li><strong>Frequently accessed books (source code)</strong> are kept on open shelves for quick access</li>
+                    <li><strong>Reference materials (dependencies)</strong> are stored in a separate section that doesn't change often</li>
+                    <li><strong>Catalog system (file watching)</strong> needs to be efficient to track which books are being used</li>
+                    <li><strong>Library layout (mount strategy)</strong> is designed for the most common access patterns</li>
+                </ul>
+                <p>Just as a well-organized library makes finding and using books efficient, well-designed volume mounts optimize development performance.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Debugging Volume Mount Issues</h3>
+            <p>Volume mounts can sometimes be tricky to get right. Here are common issues and their solutions:</p>
+            
+            <h4>Common Issue 1: Files Not Updating in Container</h4>
+            <p><strong>Symptoms:</strong> Changes to files on the host aren't visible in the container</p>
+            <p><strong>Possible Solutions:</strong></p>
+            <ul>
+                <li>Verify the correct paths in your volume mount definition</li>
+                <li>Check if you're editing the right files (relative vs. absolute paths)</li>
+                <li>Ensure the application in the container is looking at the mounted files</li>
+                <li>Check file permissions (especially on Linux)</li>
+                <li>For Windows, ensure Docker has access to the drive containing your project</li>
+            </ul>
+            <p><strong>Debugging Commands:</strong></p>
+            <pre><code># List volumes
+docker volume ls
+
+# Inspect a container's mounts
+docker inspect -f '{{ .Mounts }}' container_name
+
+# Enter container to check files
+docker-compose exec service_name ls -la /mount/path
+
+# Check where a volume is stored on the host
+docker volume inspect volume_name</code></pre>
+            
+            <h4>Common Issue 2: Permission Problems</h4>
+            <p><strong>Symptoms:</strong> "Permission denied" errors when the container tries to access mounted files</p>
+            <p><strong>Possible Solutions:</strong></p>
+            <ul>
+                <li>Adjust file permissions on the host (chmod)</li>
+                <li>Run the container process as the same user ID as your host user</li>
+                <li>For named volumes, check the volume ownership</li>
+            </ul>
+            <p><strong>Example: Setting User in Dockerfile:</strong></p>
+            <pre><code># Dockerfile
+FROM node:14
+
+# Create app directory
+WORKDIR /app
+
+# Set the user to match your host user ID (e.g., 1000)
+USER 1000
+
+# Rest of Dockerfile...</code></pre>
+            
+            <p><strong>Example: Setting User in Docker Compose:</strong></p>
+            <pre><code>services:
+  web:
+    build: ./web
+    user: "1000:1000"  # user:group IDs
+    volumes:
+      - ./web:/app</code></pre>
+            
+            <h4>Common Issue 3: Volume Mount Not Working on Specific Platforms</h4>
+            <p><strong>Symptoms:</strong> Volume mounts work on one OS but not another</p>
+            <p><strong>Possible Solutions:</strong></p>
+            <ul>
+                <li>Use relative paths for better cross-platform compatibility</li>
+                <li>For Windows, use forward slashes (/) in paths, not backslashes</li>
+                <li>Check Docker Desktop file sharing settings</li>
+                <li>For Windows with WSL2, ensure files are in the Linux filesystem, not Windows</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Debugging Workflow</h4>
+                <p>When troubleshooting volume mount issues, follow this workflow:</p>
+                <ol>
+                    <li>Verify your volume syntax in docker-compose.yml:
+                        <pre><code>docker-compose config</code></pre>
+                    </li>
+                    <li>Check if volumes are created:
+                        <pre><code>docker volume ls</code></pre>
+                    </li>
+                    <li>Inspect container mounts:
+                        <pre><code>docker inspect container_name | grep -A 10 Mounts</code></pre>
+                    </li>
+                    <li>Enter the container to check files:
+                        <pre><code>docker-compose exec service_name bash
+ls -la /mounted/path</code></pre>
+                    </li>
+                    <li>Create a test file on host and check if it appears in container:
+                        <pre><code># On host
+touch test-file.txt
+
+# In container
+docker-compose exec service_name ls -la /mounted/path/test-file.txt</code></pre>
+                    </li>
+                    <li>Check logs for permission errors:
+                        <pre><code>docker-compose logs service_name</code></pre>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <section>
+            <h3>Best Practices for Development Volume Mounts</h3>
+            <p>Based on real-world experience, here are best practices for using volume mounts in development:</p>
+            
+            <h4>Do's</h4>
+            <ul>
+                <li><strong>Mount only what you need:</strong> Be selective about what directories you mount</li>
+                <li><strong>Use relative paths:</strong> For better portability across team members</li>
+                <li><strong>Document volume requirements:</strong> Especially if specific setups are needed for performance</li>
+                <li><strong>Use named volumes for dependencies:</strong> Keep build artifacts and dependencies in Docker-managed volumes</li>
+                <li><strong>Consider different development platforms:</strong> Test on all platforms your team uses</li>
+                <li><strong>Add .dockerignore:</strong> Prevent unnecessary files from being copied during build</li>
+            </ul>
+            
+            <h4>Don'ts</h4>
+            <ul>
+                <li><strong>Don't mount the entire project root:</strong> Be more specific about what you mount</li>
+                <li><strong>Don't mount volumes you don't need to edit:</strong> It's often unnecessary and hurts performance</li>
+                <li><strong>Don't hardcode absolute paths:</strong> They won't work across different machines</li>
+                <li><strong>Don't ignore permission issues:</strong> Address them properly instead of using workarounds</li>
+                <li><strong>Don't mount sensitive files:</strong> Be cautious about mounting credential files or certificates</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Well-structured Docker Compose Example</h4>
+                <pre><code>version: '3.8'
+
+services:
+  django-app:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      # Source code - frequently changed
+      - ./backend:/app
+      # Cache directory - improve performance
+      - django_cache:/app/.cache
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+    depends_on:
+      - db
+      
+  react-app:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    command: npm start
+    volumes:
+      # Source code - frequently changed
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      # Dependencies - improve performance
+      - node_modules:/app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000/api
+      - CHOKIDAR_USEPOLLING=true
+      
+  db:
+    image: postgres:13
+    volumes:
+      # Persistent data
+      - postgres_data:/var/lib/postgresql/data
+      # Initialization scripts
+      - ./db/init:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
+  django_cache:
+  node_modules:
+</code></pre>
+                <p>This example follows best practices by:</p>
+                <ul>
+                    <li>Mounting only what's necessary for development</li>
+                    <li>Using named volumes for dependencies and caches</li>
+                    <li>Using relative paths for portability</li>
+                    <li>Providing specific Docker files for development</li>
+                    <li>Setting appropriate environment variables for development</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Production vs. Development Volume Considerations</h3>
+            <p>Volume mounts in development and production serve different purposes and should be configured differently:</p>
+            
+            <h4>Development Volume Mounts</h4>
+            <ul>
+                <li><strong>Primary goal:</strong> Enable fast feedback cycles</li>
+                <li><strong>Common pattern:</strong> Bind mounts from host to container</li>
+                <li><strong>Performance:</strong> May sacrifice some performance for convenience</li>
+                <li><strong>Security:</strong> Less strict since it's a local environment</li>
+            </ul>
+            
+            <h4>Production Volume Mounts</h4>
+            <ul>
+                <li><strong>Primary goal:</strong> Data persistence and performance</li>
+                <li><strong>Common pattern:</strong> Named volumes managed by Docker</li>
+                <li><strong>Performance:</strong> Optimized for read/write operations</li>
+                <li><strong>Security:</strong> Strict permissions and access controls</li>
+            </ul>
+            
+            <h4>Using Different Compose Files</h4>
+            <p>A common pattern is to have separate compose files for development and production:</p>
+            <pre><code># docker-compose.yml (common/base configuration)
+version: '3.8'
+
+services:
+  app:
+    image: myapp:latest
+    # Common configuration...
+      
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Common configuration...
+      
+volumes:
+  postgres_data:
+</code></pre>
+
+            <pre><code># docker-compose.override.yml (development overrides, loaded automatically)
+version: '3.8'
+
+services:
+  app:
+    build: ./app
+    volumes:
+      - ./app:/app  # Development bind mount
+    command: npm run dev
+      
+  db:
+    ports:
+      - "5432:5432"  # Expose port for development
+</code></pre>
+
+            <pre><code># docker-compose.prod.yml (production overrides)
+version: '3.8'
+
+services:
+  app:
+    restart: always
+    # No source code mount in production
+    command: npm start
+      
+  db:
+    restart: always
+    # No exposed ports in production
+    
+  # Additional production services
+  nginx:
+    image: nginx:alpine
+    # Production configuration...
+</code></pre>
+            
+            <p><strong>Running with different configurations:</strong></p>
+            <pre><code># Development (uses docker-compose.yml + docker-compose.override.yml)
+docker-compose up
+
+# Production (uses docker-compose.yml + docker-compose.prod.yml)
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d</code></pre>
+            
+            <div class="analogy">
+                <h4>Analogy: Workshop vs. Factory</h4>
+                <p>The difference between development and production volume mounts is like the difference between a workshop and a factory:</p>
+                <ul>
+                    <li><strong>Workshop (Development):</strong>
+                        <ul>
+                            <li>Tools are laid out for easy access and modification</li>
+                            <li>Workspace is optimized for frequent changes and experimentation</li>
+                            <li>Safety protocols exist but may be less strict</li>
+                            <li>Focus is on iteration and improvement</li>
+                        </ul>
+                    </li>
+                    <li><strong>Factory (Production):</strong>
+                        <ul>
+                            <li>Tools and materials are secured in their optimal positions</li>
+                            <li>Workspace is optimized for consistency and performance</li>
+                            <li>Strict safety protocols are enforced</li>
+                            <li>Focus is on reliability and efficiency</li>
+                        </ul>
+                    </li>
+                </ul>
+                <p>Just as you wouldn't run a factory like a workshop, you shouldn't use development volume configurations in production.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Practical Exercise: Setting Up a Development Environment</h3>
+            <p>Let's put everything together with a practical exercise. You'll set up a development environment for a Python Flask application with volume mounts.</p>
+            
+            <h4>Project Structure</h4>
+            <pre><code>flask_dev_project/
+├── docker-compose.yml
+├── app/
+│   ├── Dockerfile
+│   ├── app.py
+│   ├── requirements.txt
+│   └── static/
+│       └── style.css
+└── README.md</code></pre>
+            
+            <h4>Step 1: Create the Flask Application</h4>
+            <p>First, create a simple Flask application in <code>app/app.py</code>:</p>
+            <pre><code>from flask import Flask, render_template
+import os
+
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return '''
+    &lt;!DOCTYPE html&gt;
+    &lt;html&gt;
+    &lt;head&gt;
+        &lt;title&gt;Flask App&lt;/title&gt;
+        &lt;link rel="stylesheet" href="/static/style.css"&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;h1&gt;Hello from Flask!&lt;/h1&gt;
+        &lt;p&gt;This application is running in a Docker container with volume mounts.&lt;/p&gt;
+        &lt;p&gt;Edit the files on your host to see changes reflected immediately.&lt;/p&gt;
+    &lt;/body&gt;
+    &lt;/html&gt;
+    '''
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)</code></pre>
+            
+            <h4>Step 2: Create a Style Sheet</h4>
+            <p>Add a simple CSS file in <code>app/static/style.css</code>:</p>
+            <pre><code>body {
+    font-family: Arial, sans-serif;
+    margin: 40px;
+    line-height: 1.6;
+    color: #333;
+}
+
+h1 {
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+}
+
+p {
+    margin: 20px 0;
+}</code></pre>
+            
+            <h4>Step 3: Create Requirements File</h4>
+            <p>Create <code>app/requirements.txt</code> with Flask dependencies:</p>
+            <pre><code>flask==2.0.1
+werkzeug==2.0.1</code></pre>
+            
+            <h4>Step 4: Create Dockerfile</h4>
+            <p>Create <code>app/Dockerfile</code> for the Flask application:</p>
+            <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# No need to COPY application code - we'll use a volume mount
+
+ENV PYTHONUNBUFFERED=1
+ENV FLASK_ENV=development
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]</code></pre>
+            
+            <h4>Step 5: Create Docker Compose File</h4>
+            <p>Create <code>docker-compose.yml</code> in the project root:</p>
+            <pre><code>version: '3.8'
+
+services:
+  web:
+    build: ./app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app:/app
+    environment:
+      - FLASK_ENV=development
+      - PORT=5000</code></pre>
+            
+            <h4>Step 6: Run the Application</h4>
+            <pre><code>cd flask_dev_project
+docker-compose up</code></pre>
+            
+            <h4>Step 7: Test Volume Mounts</h4>
+            <ol>
+                <li>Open <code>http://localhost:5000</code> in your browser</li>
+                <li>Edit <code>app/app.py</code> on your host (e.g., change the heading text)</li>
+                <li>Refresh the browser to see the changes</li>
+                <li>Edit <code>app/static/style.css</code> on your host (e.g., change colors)</li>
+                <li>Refresh the browser to see the styling changes</li>
+            </ol>
+            
+            <div class="example">
+                <h4>Exercise Extension: Add a Database</h4>
+                <p>Extend the project by adding a PostgreSQL database with volume mounts:</p>
+                <pre><code>version: '3.8'
+
+services:
+  web:
+    build: ./app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app:/app
+    environment:
+      - FLASK_ENV=development
+      - PORT=5000
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/flask_db
+    depends_on:
+      - db
+      
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=flask_db
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:</code></pre>
+                
+                <p>Then update your Flask application to connect to the database and create database initialization scripts.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li><strong>Volume mounts enable efficient development</strong> by connecting host files to container file systems</li>
+                <li><strong>Bind mounts are ideal for development</strong> as they provide direct access to your code</li>
+                <li><strong>Named volumes should be used for data persistence</strong> and are preferred for production</li>
+                <li><strong>Be selective in what you mount</strong> to optimize performance</li>
+                <li><strong>Troubleshooting requires understanding</strong> the relationship between host and container file systems</li>
+                <li><strong>Different frameworks have different requirements</strong> for effective hot reloading</li>
+                <li><strong>Development and production configurations should differ</strong> significantly in their volume strategy</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Further Resources</h3>
+            <ul>
+                <li><a href="https://docs.docker.com/storage/" target="_blank">Docker Storage Documentation</a></li>
+                <li><a href="https://docs.docker.com/compose/compose-file/compose-file-v3/#volumes" target="_blank">Docker Compose Volumes Documentation</a></li>
+                <li><a href="https://docs.docker.com/storage/bind-mounts/" target="_blank">Bind Mounts Documentation</a></li>
+                <li><a href="https://docs.docker.com/storage/volumes/" target="_blank">Volumes Documentation</a></li>
+                <li><a href="https://docs.docker.com/docker-for-mac/osxfs-caching/" target="_blank">Performance Tuning for Volume Mounts on macOS</a></li>
+                <li><a href="https://docs.docker.com/docker-for-windows/wsl/" target="_blank">Docker Desktop WSL 2 Backend</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

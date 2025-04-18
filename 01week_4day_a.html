@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Compose Introduction - Full Stack Python Developer Course</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Docker Compose Introduction</h1>
+        <h2>Week 1 - Thursday</h2>
+    </header>
+
+    <main>
+        <section class="course-intro">
+            <h3>Lesson Overview</h3>
+            <p>Today we'll dive into Docker Compose, a powerful tool that simplifies working with multi-container applications. By the end of this session, you'll understand how to orchestrate multiple Docker containers and configure them to work together seamlessly.</p>
+        </section>
+
+        <section>
+            <h3>What is Docker Compose?</h3>
+            <p>Docker Compose is a tool for defining and running multi-container Docker applications. With Compose, you use a YAML file to configure your application's services, networks, and volumes. Then, with a single command, you create and start all the services from your configuration.</p>
+            
+            <p>Think of Docker Compose as a conductor of an orchestra. While Docker manages individual containers (musicians), Docker Compose coordinates multiple containers (the entire orchestra) to work together harmoniously.</p>
+            
+            <div class="key-points">
+                <h4>Key Benefits of Docker Compose:</h4>
+                <ul>
+                    <li><strong>Single configuration file:</strong> Your entire application stack defined in one place</li>
+                    <li><strong>Version control:</strong> Configuration can be version-controlled alongside your code</li>
+                    <li><strong>Simple commands:</strong> Start, stop, and rebuild services with simple commands</li>
+                    <li><strong>Environment consistency:</strong> Ensures development environment matches production</li>
+                    <li><strong>Simplified development workflow:</strong> No need to maintain complex shell scripts</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>When to Use Docker Compose</h3>
+            <p>Docker Compose is ideal for:</p>
+            <ul>
+                <li><strong>Development environments:</strong> Set up a complete development environment with databases, message queues, etc.</li>
+                <li><strong>Automated testing:</strong> Create and teardown isolated testing environments</li>
+                <li><strong>Small deployments:</strong> Single-server deployments in production (for larger deployments, Kubernetes is preferred)</li>
+                <li><strong>CI/CD environments:</strong> Consistent testing and build environments</li>
+            </ul>
+            
+            <p><strong>Real-world Example:</strong> Consider a web application with a Python Flask backend, a PostgreSQL database, and a Redis cache. Instead of manually starting and configuring each service, Docker Compose allows you to define all components, their relationships, and configuration in a single file, then bring everything up with one command.</p>
+        </section>
+
+        <section>
+            <h3>Multi-container Applications</h3>
+            <p>Modern web applications typically consist of multiple services:</p>
+            <ul>
+                <li>Web servers</li>
+                <li>Application servers</li>
+                <li>Databases</li>
+                <li>Caching layers</li>
+                <li>Message queues</li>
+                <li>Worker processes</li>
+            </ul>
+            
+            <p>Before Docker Compose, developers might need to:</p>
+            <ol>
+                <li>Remember specific Docker run commands with all parameters</li>
+                <li>Create shell scripts to start containers in the right order</li>
+                <li>Manually set up networks between containers</li>
+                <li>Track and manage volumes for persistence</li>
+            </ol>
+            
+            <p>Docker Compose solves these problems with a declarative approach. It's like the difference between giving step-by-step directions (imperative) versus providing a map with the destination marked (declarative).</p>
+            
+            <div class="example">
+                <h4>Analogy: Building a House</h4>
+                <p>Think of building a web application like building a house:</p>
+                <ul>
+                    <li>Plain Docker: You have tools and blueprints for each room, but you must build and connect each room manually.</li>
+                    <li>Docker Compose: You have a comprehensive blueprint for the entire house, and you can build the whole structure at once with all components correctly connected.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Creating a docker-compose.yml File</h3>
+            <p>The <code>docker-compose.yml</code> file is the heart of Docker Compose. This YAML file defines your application's services, networks, and volumes.</p>
+            
+            <p>A simple example for a Python web application with a database:</p>
+            
+            <pre><code>version: '3'  # Docker Compose version
+
+services:
+  # Web application service
+  web:
+    build: ./web  # Path to Dockerfile
+    ports:
+      - "8000:8000"  # Host:Container port mapping
+    volumes:
+      - ./web:/app  # Mount code for development
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/mydatabase
+    depends_on:
+      - db  # Ensures database starts before web service
+      
+  # Database service
+  db:
+    image: postgres:13  # Using official PostgreSQL image
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Named volume for persistence
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=mydatabase
+      
+volumes:
+  postgres_data:  # Defines the named volume
+</code></pre>
+
+            <p>Let's break down the key components:</p>
+            
+            <h4>Services</h4>
+            <p>Services define the containers that make up your application. Each service can have:</p>
+            <ul>
+                <li><strong>build:</strong> Path to a Dockerfile or build context</li>
+                <li><strong>image:</strong> Docker image to pull</li>
+                <li><strong>ports:</strong> Port mappings</li>
+                <li><strong>volumes:</strong> Volume mappings for persistent data or development</li>
+                <li><strong>environment:</strong> Environment variables</li>
+                <li><strong>depends_on:</strong> Service dependencies</li>
+                <li><strong>networks:</strong> Network connections</li>
+                <li><strong>command:</strong> Override the default command</li>
+                <li><strong>restart:</strong> Restart policy</li>
+            </ul>
+            
+            <p>Think of services as defining the "rooms" in your application house, each with its own purpose and connections to other rooms.</p>
+            
+            <h4>Volumes</h4>
+            <p>Volumes provide persistent storage for your containers. They can be:</p>
+            <ul>
+                <li><strong>Named volumes:</strong> Managed by Docker, persistent across container restarts</li>
+                <li><strong>Host paths:</strong> Directories on your host machine</li>
+                <li><strong>Anonymous volumes:</strong> Temporary volumes without a name</li>
+            </ul>
+            
+            <p>Volumes are like the storage spaces of your house - closets, cabinets, and storage rooms that keep things even when you renovate.</p>
+            
+            <h4>Networks</h4>
+            <p>Networks allow containers to communicate with each other. By default, Docker Compose creates a network for your application, but you can define custom networks.</p>
+            
+            <p>Networks are like the wiring and plumbing systems in a house, connecting different rooms and allowing them to share resources.</p>
+        </section>
+
+        <section>
+            <h3>Environment Variables and Configuration</h3>
+            <p>Proper configuration is critical for containerized applications. Docker Compose offers several ways to manage environment variables:</p>
+            
+            <h4>Inline Environment Variables</h4>
+            <pre><code>services:
+  web:
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=dev_key</code></pre>
+            
+            <h4>Using .env Files</h4>
+            <p>For better security and organization, you can extract environment variables to a separate <code>.env</code> file:</p>
+            
+            <pre><code># .env file
+DEBUG=True
+SECRET_KEY=dev_key</code></pre>
+            
+            <p>Then reference it in your compose file:</p>
+            
+            <pre><code>services:
+  web:
+    env_file:
+      - .env</code></pre>
+            
+            <h4>Variable Substitution</h4>
+            <p>Docker Compose supports variable substitution using the ${VARIABLE} syntax:</p>
+            
+            <pre><code>services:
+  web:
+    image: myapp:${APP_VERSION:-latest}  # Uses APP_VERSION if defined, otherwise "latest"</code></pre>
+            
+            <p><strong>Real-world application:</strong> This is particularly useful when you need different configurations for development, testing, and production environments. For example, you might have:</p>
+            <ul>
+                <li><code>.env.development</code> with development settings</li>
+                <li><code>.env.test</code> with testing settings</li>
+                <li><code>.env.production</code> with production settings</li>
+            </ul>
+            
+            <p>And then run with: <code>docker-compose --env-file .env.development up</code></p>
+            
+            <div class="analogy">
+                <h4>Analogy: Recipe Instructions</h4>
+                <p>Environment variables are like recipe instructions that can change based on who's cooking:</p>
+                <ul>
+                    <li>A professional chef might use high-heat and specialized ingredients</li>
+                    <li>A home cook might use medium-heat and more accessible substitutes</li>
+                    <li>A beginner might use low-heat and pre-measured components</li>
+                </ul>
+                <p>Just as the core recipe remains the same but adapts to different cooking environments, your application can run in different environments with the right configuration.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Volume Mounts for Development</h3>
+            <p>One of the most powerful features of Docker Compose for development is the ability to mount code directories from your host machine into containers. This enables:</p>
+            
+            <ul>
+                <li><strong>Live code editing:</strong> Edit code on your host machine, and see changes immediately</li>
+                <li><strong>No rebuild needed:</strong> Save time by avoiding container rebuilds for code changes</li>
+                <li><strong>Faster feedback loop:</strong> Rapid development iterations</li>
+            </ul>
+            
+            <pre><code>services:
+  web:
+    build: ./web
+    volumes:
+      - ./web:/app  # Maps ./web on host to /app in container</code></pre>
+            
+            <p><strong>Real-world example:</strong> When developing a Flask application, you can mount your source code directory into the container and enable Flask's debug mode. Then, whenever you save a Python file, Flask will automatically reload, instantly reflecting your changes without restarting the container.</p>
+            
+            <div class="example">
+                <h4>Practical Development Setup</h4>
+                <p>A more complete development setup might look like:</p>
+                <pre><code>version: '3'
+
+services:
+  web:
+    build: ./web
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./web:/app
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    command: flask run --host=0.0.0.0
+    depends_on:
+      - db
+      
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Mount database initialization scripts
+      - ./database/init:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_PASSWORD=devpassword
+      - POSTGRES_DB=myapp_dev
+      
+volumes:
+  postgres_data:</code></pre>
+            </div>
+            
+            <p>Think of volume mounts like having a workshop with all your tools and materials (your code editor, linter, git) outside the container, but the assembly line (runtime environment) inside the container. You can use familiar tools while building in a consistent environment.</p>
+        </section>
+
+        <section>
+            <h3>Setting up a Development Environment with Docker Compose</h3>
+            <p>Let's walk through creating a development environment for a Python web application with Docker Compose:</p>
+            
+            <h4>Step 1: Project Structure</h4>
+            <p>Create a directory structure like this:</p>
+            <pre><code>my_project/
+├── docker-compose.yml
+├── .env
+├── web/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── app.py
+│   └── ...
+└── database/
+    └── init/
+        └── init.sql</code></pre>
+            
+            <h4>Step 2: Dockerfile for Python Application</h4>
+            <p>In <code>web/Dockerfile</code>:</p>
+            <pre><code>FROM python:3.10-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Don't copy code - we'll use a volume mount instead
+# COPY . .
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]</code></pre>
+            
+            <h4>Step 3: Sample Flask Application</h4>
+            <p>In <code>web/app.py</code>:</p>
+            <pre><code>from flask import Flask
+import os
+import psycopg2
+
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    # Example of connecting to database
+    conn = psycopg2.connect(
+        host=os.environ.get('DB_HOST', 'db'),
+        database=os.environ.get('DB_NAME', 'myapp_dev'),
+        user=os.environ.get('DB_USER', 'postgres'),
+        password=os.environ.get('DB_PASSWORD', 'devpassword')
+    )
+    cur = conn.cursor()
+    cur.execute('SELECT 1')
+    result = cur.fetchone()
+    cur.close()
+    conn.close()
+    
+    return f"Hello from Flask! Database connection test: {result[0]}"
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=5000, debug=True)</code></pre>
+            
+            <h4>Step 4: Database Initialization</h4>
+            <p>In <code>database/init/init.sql</code>:</p>
+            <pre><code>-- This script will be executed when the database container is created
+CREATE TABLE IF NOT EXISTS example (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add some sample data
+INSERT INTO example (name) VALUES ('Sample Item 1'), ('Sample Item 2');</code></pre>
+            
+            <h4>Step 5: docker-compose.yml</h4>
+            <pre><code>version: '3'
+
+services:
+  web:
+    build: ./web
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./web:/app
+    environment:
+      - DB_HOST=db
+      - DB_NAME=myapp_dev
+      - DB_USER=postgres
+      - DB_PASSWORD=devpassword
+    depends_on:
+      - db
+      
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_PASSWORD=devpassword
+      - POSTGRES_DB=myapp_dev
+    ports:
+      - "5432:5432"  # Expose for local DB tools
+      
+volumes:
+  postgres_data:</code></pre>
+            
+            <h4>Step 6: Environment Variables</h4>
+            <p>In <code>.env</code>:</p>
+            <pre><code># Development environment settings
+FLASK_ENV=development
+COMPOSE_PROJECT_NAME=myapp_dev
+
+# Database credentials - also defined in docker-compose.yml
+DB_HOST=db
+DB_NAME=myapp_dev
+DB_USER=postgres
+DB_PASSWORD=devpassword</code></pre>
+            
+            <h4>Step 7: Running the Development Environment</h4>
+            <pre><code># Start all services
+docker-compose up
+
+# Or in detached mode (background)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+
+# Rebuild and start (after Dockerfile changes)
+docker-compose up --build</code></pre>
+            
+            <p>With this setup, you can:</p>
+            <ul>
+                <li>Edit Python code in the <code>web/</code> directory and see changes immediately</li>
+                <li>Connect to the database using a local database tool (e.g., pgAdmin) via localhost:5432</li>
+                <li>Easily add more services (Redis, Celery workers, etc.) as your application grows</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Hot Reloading with Mounted Volumes</h3>
+            <p>Hot reloading creates a seamless development experience. Here's how it works with Docker Compose:</p>
+            
+            <ol>
+                <li>Code is mounted from host to container via volumes</li>
+                <li>The application inside the container detects file changes</li>
+                <li>Application automatically reloads with new code</li>
+            </ol>
+            
+            <p>For different frameworks, you'll need different approaches:</p>
+            
+            <h4>Flask</h4>
+            <pre><code>environment:
+  - FLASK_DEBUG=1  # Enables debug mode with auto-reload
+command: flask run --host=0.0.0.0</code></pre>
+            
+            <h4>Django</h4>
+            <pre><code>command: python manage.py runserver 0.0.0.0:8000</code></pre>
+            
+            <h4>Node.js (with nodemon)</h4>
+            <pre><code>command: nodemon app.js</code></pre>
+            
+            <div class="analogy">
+                <h4>Analogy: Live Music Editing</h4>
+                <p>Hot reloading is like a composer editing a musical score while the orchestra is playing. The musicians (your application) immediately adapt to the new notes (code changes) without stopping the performance (restarting the container).</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Docker Networking Basics</h3>
+            <p>Docker Compose automatically creates a network for your application's services to communicate. Understanding networking is crucial for multi-container applications.</p>
+            
+            <h4>Key Networking Concepts</h4>
+            <ul>
+                <li><strong>Service discovery:</strong> Containers can reach each other using service names as hostnames</li>
+                <li><strong>Isolated networks:</strong> Each Compose project gets its own network, isolated from other projects</li>
+                <li><strong>Port mapping:</strong> Expose container ports to host with <code>ports</code> directive</li>
+                <li><strong>Custom networks:</strong> Create separate networks for different communication needs</li>
+            </ul>
+            
+            <p><strong>Example:</strong> In our example above, the Flask application can connect to the database using <code>db</code> as the hostname, even though the actual IP address might change with each startup.</p>
+            
+            <h4>Custom Networks Example</h4>
+            <pre><code>version: '3'
+
+networks:
+  frontend:
+    # Network for frontend components
+  backend:
+    # Network for backend services
+  database:
+    # Network specifically for database access
+
+services:
+  web:
+    build: ./web
+    networks:
+      - frontend
+      - backend
+    
+  api:
+    build: ./api
+    networks:
+      - backend
+      - database
+    
+  db:
+    image: postgres:13
+    networks:
+      - database</code></pre>
+            
+            <p>This setup creates three networks and connects services only to the networks they need. The <code>web</code> service cannot directly access the <code>db</code> service, it must go through the <code>api</code> service.</p>
+            
+            <div class="analogy">
+                <h4>Analogy: Office Building</h4>
+                <p>Think of Docker networks like floors in an office building:</p>
+                <ul>
+                    <li>Each floor (network) has its own security access</li>
+                    <li>Some staff (services) have access to multiple floors</li>
+                    <li>The reception (exposed ports) is where visitors (external users) can enter</li>
+                    <li>Internal elevators (service discovery) let staff find other departments easily</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Troubleshooting Common Docker Issues</h3>
+            <p>When working with Docker Compose, you'll encounter common issues. Here's how to troubleshoot them:</p>
+            
+            <h4>1. Container Not Starting</h4>
+            <p><strong>Symptoms:</strong> Container exits immediately after starting</p>
+            <p><strong>Debugging Steps:</strong></p>
+            <ul>
+                <li>Check container logs: <code>docker-compose logs [service_name]</code></li>
+                <li>Try running with the interactive flag: <code>docker-compose run --rm [service_name] sh</code></li>
+                <li>Verify your CMD or command directive is correct</li>
+            </ul>
+            
+            <h4>2. Services Can't Connect to Each Other</h4>
+            <p><strong>Symptoms:</strong> "Connection refused" or "Host not found" errors</p>
+            <p><strong>Debugging Steps:</strong></p>
+            <ul>
+                <li>Ensure service names are used as hostnames, not "localhost"</li>
+                <li>Check if services are on the same network</li>
+                <li>Verify the service you're trying to connect to has actually started</li>
+                <li>Test connection from inside a container: <code>docker-compose exec [service_name] ping [other_service]</code></li>
+            </ul>
+            
+            <h4>3. Volume Mount Issues</h4>
+            <p><strong>Symptoms:</strong> Files not updating or permission errors</p>
+            <p><strong>Debugging Steps:</strong></p>
+            <ul>
+                <li>Verify path syntax (relative paths are relative to the docker-compose.yml file)</li>
+                <li>Check file permissions on host and in container</li>
+                <li>For Windows users, ensure file sharing is enabled</li>
+            </ul>
+            
+            <h4>4. Port Conflicts</h4>
+            <p><strong>Symptoms:</strong> "Port is already allocated" errors</p>
+            <p><strong>Debugging Steps:</strong></p>
+            <ul>
+                <li>Check if another process is using the port: <code>lsof -i :PORT</code> (Unix) or <code>netstat -ano | findstr PORT</code> (Windows)</li>
+                <li>Choose a different host port in your port mapping</li>
+                <li>Stop other Docker containers that might be using the port</li>
+            </ul>
+            
+            <h4>5. Changes Not Taking Effect</h4>
+            <p><strong>Symptoms:</strong> Configuration changes aren't reflected after restart</p>
+            <p><strong>Debugging Steps:</strong></p>
+            <ul>
+                <li>Force recreation of containers: <code>docker-compose up -d --force-recreate</code></li>
+                <li>Rebuild images: <code>docker-compose build</code> or <code>docker-compose up --build</code></li>
+                <li>Check if you're modifying the correct docker-compose.yml file</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Example Debugging Workflow</h4>
+                <ol>
+                    <li>View container status: <code>docker-compose ps</code></li>
+                    <li>Check logs: <code>docker-compose logs -f [service_name]</code></li>
+                    <li>Inspect running container: <code>docker-compose exec [service_name] sh</code></li>
+                    <li>Check network: <code>docker network ls</code> and <code>docker network inspect [network_name]</code></li>
+                    <li>Restart with clean slate: <code>docker-compose down -v</code> followed by <code>docker-compose up --build</code></li>
+                </ol>
+            </div>
+        </section>
+
+        <section>
+            <h3>Afternoon Assignment: Create a Docker Compose Setup</h3>
+            
+            <p>Your assignment is to create a Docker Compose setup with a Python service and a simple database. The requirements are:</p>
+            
+            <ol>
+                <li>A Python Flask service with a simple endpoint to read/write data</li>
+                <li>A PostgreSQL database to store the data</li>
+                <li>Volume mounts for live code updates</li>
+                <li>Environment variables for configuration</li>
+                <li>A README explaining how to use your setup</li>
+            </ol>
+            
+            <p><strong>File Structure:</strong></p>
+            <pre><code>assignment/
+├── docker-compose.yml
+├── .env
+├── README.md
+├── app/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── app.py
+└── database/
+    └── init/
+        └── init.sql</code></pre>
+            
+            <p><strong>Hints:</strong></p>
+            <ul>
+                <li>Use the examples from today's lesson as a starting point</li>
+                <li>Ensure your Flask app properly handles database connections</li>
+                <li>Create a simple API with endpoints for CRUD operations</li>
+                <li>Test your setup thoroughly</li>
+                <li>Include commands for starting, stopping, and rebuilding in your README</li>
+            </ul>
+            
+            <p><strong>Extra Challenge:</strong> Add a third service, such as Redis for caching, and demonstrate communication between all three services.</p>
+        </section>
+
+        <section>
+            <h3>Further Resources</h3>
+            <ul>
+                <li><a href="https://docs.docker.com/compose/" target="_blank">Docker Compose Documentation</a></li>
+                <li><a href="https://docs.docker.com/compose/compose-file/" target="_blank">Docker Compose File Reference</a></li>
+                <li><a href="https://docs.docker.com/compose/samples-for-compose/" target="_blank">Docker Compose Samples</a></li>
+                <li><a href="https://github.com/docker/awesome-compose" target="_blank">Awesome Docker Compose</a></li>
+                <li><a href="https://testdriven.io/blog/dockerizing-flask-with-postgres-gunicorn-and-nginx/" target="_blank">Dockerizing Flask with Postgres, Gunicorn, and Nginx</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

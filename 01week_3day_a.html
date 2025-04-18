@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introduction to Containerization Concepts</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Introduction to Containerization Concepts</h1>
+        <h2>Week 1, Wednesday - Morning Session</h2>
+    </header>
+
+    <main>
+        <section class="lecture-intro">
+            <h3>Lecture Overview</h3>
+            <p>Today we'll dive into the world of containerization - a revolutionary technology that has transformed how we develop, deploy, and scale applications. By the end of this session, you'll understand what containers are, why they're so valuable, and how they fit into modern development workflows.</p>
+        </section>
+
+        <section>
+            <h3>What is Containerization?</h3>
+            <p>Containerization is a lightweight form of virtualization that packages an application and all its dependencies together into a single, portable unit called a container. Unlike traditional virtual machines, containers share the host system's kernel but run in isolated user spaces.</p>
+
+            <p>Think of containers like shipping containers in the transportation industry. Just as shipping containers standardized global freight transport by providing consistent, isolated units regardless of what's inside them, software containers standardize software deployment by packaging code and dependencies together in a predictable environment.</p>
+
+            <div class="code-example">
+                <pre><code>
+┌───────────────────────────────────────────┐
+│            Host Operating System          │
+├─────────┬──────────┬───────────┬──────────┤
+│Container│Container │ Container │Container │
+│    A    │    B     │     C     │     D    │
+│  Python │  Node.js │ PostgreSQL│  Redis   │
+└─────────┴──────────┴───────────┴──────────┘</code></pre>
+            </div>
+
+            <p>This visual represents how multiple containers can run isolated applications on the same host system, each with its own runtime environment but sharing the underlying OS kernel.</p>
+        </section>
+
+        <section>
+            <h3>The Problems Containerization Solves</h3>
+            
+            <h4>The "Works on My Machine" Problem</h4>
+            <p>Have you ever written code that runs perfectly on your computer but fails when someone else tries to run it? This is one of the most common frustrations in software development. Containers solve this by packaging your application along with its specific environment configuration, ensuring it runs consistently across different systems.</p>
+            
+            <div class="example">
+                <p><strong>Real-world example:</strong> A developer uses Python 3.10 locally while the production server runs Python 3.8. A feature used in the code works in 3.10 but doesn't exist in 3.8, causing the application to crash in production. With containerization, the Python 3.10 environment travels with the application, ensuring consistent behavior.</p>
+            </div>
+            
+            <h4>Environment Consistency</h4>
+            <p>Containers ensure that your development, testing, and production environments remain consistent. This eliminates countless hours of debugging environment-specific issues.</p>
+            
+            <div class="example">
+                <p><strong>Real-world example:</strong> Your team develops an application using a specific version of a library. Later, that library releases an update with breaking changes. Without containerization, different team members might update at different times, leading to inconsistent behavior. With containers, the library version is locked and consistent across all environments.</p>
+            </div>
+            
+            <h4>Dependency Isolation</h4>
+            <p>Applications often have conflicting dependencies. For instance, one might require Python 3.8 while another needs Python 3.10. Containers allow these applications to run side by side without conflict.</p>
+            
+            <p>Think of containers like self-contained apartments in a building. Each apartment has its own facilities (kitchen, bathroom, etc.) so residents don't interfere with each other, but they all share the building's foundation and structure.</p>
+            
+            <h4>Resource Efficiency</h4>
+            <p>Unlike traditional virtual machines that require a full operating system for each instance, containers share the host OS kernel. This makes them significantly more lightweight and efficient.</p>
+            
+            <div class="comparison">
+                <p><strong>Virtual Machines vs. Containers:</strong></p>
+                <p>A typical VM might require several gigabytes of storage and significant memory just for the guest OS, while a container might only need a few megabytes for the application and its dependencies. You could run dozens of containers on the same hardware that would struggle with a handful of VMs.</p>
+            </div>
+            
+            <h4>Rapid Deployment and Scaling</h4>
+            <p>Containers can be started almost instantly, unlike VMs which might take minutes to boot. This enables rapid scaling and deployment of applications.</p>
+            
+            <div class="example">
+                <p><strong>Real-world example:</strong> An e-commerce site experiences a sudden traffic spike during a flash sale. With containerized architecture, the system can automatically spin up additional containers within seconds to handle the increased load, then scale back down once the traffic normalizes.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Docker: The Containerization Standard</h3>
+            <p>While containerization as a concept existed before Docker, it was Docker that made it accessible and standardized the technology, leading to its widespread adoption.</p>
+            
+            <h4>Docker Architecture</h4>
+            <p>Docker uses a client-server architecture with several key components:</p>
+            
+            <ul>
+                <li><strong>Docker Client:</strong> The command-line interface you interact with (when you type <code>docker</code> commands)</li>
+                <li><strong>Docker Daemon (dockerd):</strong> The background service that manages everything on the host</li>
+                <li><strong>Docker Images:</strong> Read-only templates used to create containers</li>
+                <li><strong>Docker Containers:</strong> Running instances of images</li>
+                <li><strong>Docker Registry:</strong> A repository for Docker images (like Docker Hub)</li>
+            </ul>
+            
+            <p>Think of a Docker image like a recipe, and a container as the dish prepared from that recipe. The recipe (image) defines what ingredients and steps are needed, while each dish (container) is a specific instance created from that recipe.</p>
+            
+            <div class="diagram">
+                <pre><code>User → Docker CLI → Docker API → Docker Daemon → Containers
+                                                ↑
+                       Image Registry (Docker Hub) ←</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Key Concepts in Docker</h3>
+            
+            <h4>Images</h4>
+            <p>Docker images are the blueprints for containers. They're built in layers, which makes them efficient to store, transfer, and update. Each image contains:</p>
+            <ul>
+                <li>A base operating system layer (usually minimal)</li>
+                <li>Application code</li>
+                <li>Runtime environment (e.g., Python, Node.js)</li>
+                <li>Libraries and dependencies</li>
+                <li>Configuration</li>
+            </ul>
+            
+            <p>The layered approach means that common components can be shared between images. For example, if you have five different Python applications, they can all share the same base Python layer, saving disk space and improving build times.</p>
+            
+            <div class="example">
+                <p><strong>Image layering example:</strong></p>
+                <pre><code>Layer 1: Alpine Linux (5MB)
+Layer 2: Python 3.10 (50MB)
+Layer 3: Your application code (2MB)
+Layer 4: Application-specific libraries (10MB)</code></pre>
+                <p>Each layer only stores the changes from the previous layer, making images efficient.</p>
+            </div>
+            
+            <h4>Containers</h4>
+            <p>Containers are the running instances of images. They add a writable layer on top of the immutable image, allowing the application to store runtime data while keeping the original image unchanged.</p>
+            
+            <p>You can think of an image as a class in object-oriented programming, and containers as instances of that class. Just as you can create multiple objects from a single class, you can run multiple containers from a single image.</p>
+            
+            <h4>Volumes</h4>
+            <p>Since containers are ephemeral (their data disappears when they're removed), Docker provides volumes as a way to persist data. Volumes are separate storage entities managed by Docker that can be attached to containers.</p>
+            
+            <div class="example">
+                <p><strong>Real-world volume use case:</strong> A database container needs to persist its data even if the container is restarted or replaced. By mounting a Docker volume to the database's data directory, the information remains safe and accessible across container lifecycles.</p>
+            </div>
+            
+            <p>Volumes can also be used to share data between containers, providing a communication mechanism for microservices architectures.</p>
+        </section>
+
+        <section>
+            <h3>Why Docker Matters for Web Development</h3>
+            
+            <h4>Local Development Environments</h4>
+            <p>Docker allows developers to work with the exact same environment as production, eliminating "works on my machine" issues. This is particularly valuable for Python web development, where dependency management can be complex.</p>
+            
+            <div class="example">
+                <p><strong>Consider this scenario:</strong> Your web application uses PostgreSQL, Redis, and an SMTP server. Without Docker, each developer would need to install and configure these services locally. With Docker, a simple <code>docker-compose up</code> command can start all these services with the correct versions and configurations.</p>
+            </div>
+            
+            <h4>Microservices Architecture</h4>
+            <p>Modern web applications often use a microservices approach, where the application is split into multiple small, specialized services. Containers are perfect for this architecture, as each microservice can be containerized and deployed independently.</p>
+            
+            <h4>Continuous Integration/Continuous Deployment (CI/CD)</h4>
+            <p>Docker integrates seamlessly with CI/CD pipelines, allowing automated testing and deployment of applications in consistent environments. This leads to more reliable releases and faster development cycles.</p>
+            
+            <h4>Cloud Deployment</h4>
+            <p>All major cloud providers support Docker containers, making deployment consistent across different cloud environments. Services like Kubernetes, Amazon ECS, and Azure Container Instances all work with Docker containers.</p>
+            
+            <div class="example">
+                <p><strong>Real-world deployment example:</strong> A web application developed by a team might need to be deployed to staging servers for testing, then to production servers across multiple regions. Containerization ensures that the application behaves identically in all these environments.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Containerization in the Python Ecosystem</h3>
+            
+            <h4>Python-Specific Advantages</h4>
+            <p>Containerization is particularly valuable for Python applications due to several factors:</p>
+            
+            <ul>
+                <li><strong>Version management:</strong> Different Python applications may require different Python versions</li>
+                <li><strong>Dependency conflicts:</strong> Python packages can have complex dependency trees with potential conflicts</li>
+                <li><strong>System dependencies:</strong> Many Python packages require system-level libraries that differ across operating systems</li>
+            </ul>
+            
+            <p>Docker solves these issues by packaging everything together in an isolated environment.</p>
+            
+            <h4>Python Web Frameworks and Docker</h4>
+            <p>Frameworks like Django and Flask work exceptionally well with Docker. Later in this course, we'll explore how to containerize applications built with these frameworks.</p>
+            
+            <div class="code-example">
+                <p>A simple Dockerfile for a Python web application might look like this:</p>
+                <pre><code>FROM python:3.10-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 5000
+CMD ["python", "app.py"]</code></pre>
+            </div>
+            
+            <p>This Dockerfile creates an image that:</p>
+            <ol>
+                <li>Starts with the official Python 3.10 image</li>
+                <li>Sets up a working directory inside the container</li>
+                <li>Installs the application's dependencies</li>
+                <li>Copies the application code</li>
+                <li>Exposes port 5000 (common for Flask applications)</li>
+                <li>Runs the application when the container starts</li>
+            </ol>
+        </section>
+
+        <section>
+            <h3>Understanding Container Networking</h3>
+            
+            <p>Containers need to communicate with each other and the outside world. Docker provides several networking options:</p>
+            
+            <ul>
+                <li><strong>Bridge networks:</strong> The default network type, allowing containers on the same host to communicate</li>
+                <li><strong>Host network:</strong> Removes network isolation between the container and the host</li>
+                <li><strong>Overlay networks:</strong> For communication between containers across multiple Docker hosts</li>
+                <li><strong>Macvlan networks:</strong> Assign MAC addresses to containers, making them appear as physical devices on the network</li>
+            </ul>
+            
+            <p>Think of container networks like different types of neighborhoods:</p>
+            <ul>
+                <li>Bridge networks are like gated communities where residents (containers) can talk to each other but have controlled access to the outside world</li>
+                <li>Host networking is like living in an open house with no walls - no separation between the container and host</li>
+                <li>Overlay networks are like a telecom system connecting different communities</li>
+            </ul>
+            
+            <div class="example">
+                <p><strong>Practical networking example:</strong> In a web application, you might have a frontend container, a backend API container, and a database container. The frontend needs to communicate with the backend, and the backend with the database, but the frontend should never directly access the database. With Docker networking, you can create this exact architecture, controlling which containers can communicate with each other.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Container Security Considerations</h3>
+            
+            <p>While containers provide isolation, they're not inherently secure. Important security considerations include:</p>
+            
+            <ul>
+                <li><strong>Image security:</strong> Only use trusted base images, scan for vulnerabilities</li>
+                <li><strong>Principle of least privilege:</strong> Run containers with minimal permissions</li>
+                <li><strong>Resource limits:</strong> Prevent denial-of-service by limiting container resources</li>
+                <li><strong>Secrets management:</strong> Avoid hardcoding sensitive information in images</li>
+            </ul>
+            
+            <div class="example">
+                <p><strong>Security best practice:</strong> For a production application, never run containers as root. Instead, create a dedicated user with only the permissions needed to run the application.</p>
+                <pre><code>FROM python:3.10-slim
+
+# Create a non-root user
+RUN useradd -m appuser
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+# Switch to non-root user
+USER appuser
+
+EXPOSE 5000
+CMD ["python", "app.py"]</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Containerization Beyond Docker</h3>
+            
+            <p>While Docker is the most well-known containerization technology, other options exist:</p>
+            
+            <ul>
+                <li><strong>Podman:</strong> A daemonless container engine compatible with Docker</li>
+                <li><strong>containerd:</strong> A container runtime used by Docker and Kubernetes</li>
+                <li><strong>LXC/LXD:</strong> Linux container technologies that predate Docker</li>
+                <li><strong>rkt (Rocket):</strong> An alternative container runtime</li>
+            </ul>
+            
+            <p>In this course, we'll focus on Docker as it's the industry standard, but it's good to be aware of alternatives.</p>
+        </section>
+
+        <section>
+            <h3>The Container Ecosystem</h3>
+            
+            <p>Containerization has spawned a rich ecosystem of tools and platforms:</p>
+            
+            <ul>
+                <li><strong>Docker Compose:</strong> For defining and running multi-container applications</li>
+                <li><strong>Kubernetes:</strong> For orchestrating containers at scale</li>
+                <li><strong>Docker Swarm:</strong> Docker's native clustering and scheduling tool</li>
+                <li><strong>Helm:</strong> A package manager for Kubernetes</li>
+                <li><strong>Istio:</strong> A service mesh for Kubernetes</li>
+            </ul>
+            
+            <p>As you progress in your development career, you'll likely encounter many of these technologies. We'll cover Docker Compose in our Thursday session.</p>
+        </section>
+
+        <section>
+            <h3>Real-World Container Usage</h3>
+            
+            <h4>Case Study: Netflix</h4>
+            <p>Netflix uses containers to package and deploy the microservices that power its streaming platform. Their containerized architecture allows them to deploy thousands of updates daily across their services while maintaining reliability.</p>
+            
+            <h4>Case Study: PayPal</h4>
+            <p>PayPal transitioned to a containerized infrastructure to improve developer productivity and operational efficiency. They report 8x improvement in developer productivity and significant cost savings in infrastructure.</p>
+            
+            <h4>Small-Scale Example: Personal Portfolio</h4>
+            <p>Even for individual developers, containerization provides benefits. Imagine you're building a portfolio website with a Python backend, PostgreSQL database, and React frontend. Containerizing each component ensures they work together consistently and makes deployment to hosting platforms straightforward.</p>
+        </section>
+
+        <section>
+            <h3>Key Takeaways</h3>
+            
+            <ul>
+                <li>Containers package applications with their dependencies for consistent operation across environments</li>
+                <li>Docker is the leading containerization platform, providing tools to build, run, and share containers</li>
+                <li>Containerization solves the "works on my machine" problem and enables efficient resource utilization</li>
+                <li>Images, containers, and volumes are the fundamental concepts in Docker</li>
+                <li>Containerization is especially valuable for Python web development due to dependency management challenges</li>
+                <li>Container networking enables complex multi-service architectures</li>
+                <li>Security considerations are important when working with containers</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Looking Ahead</h3>
+            
+            <p>In this afternoon's session, we'll dive into practical Docker usage. We'll cover:</p>
+            
+            <ul>
+                <li>Running your first container</li>
+                <li>Docker Hub and public images</li>
+                <li>Creating a basic Dockerfile</li>
+                <li>Building and running your own image</li>
+            </ul>
+            
+            <p>Tomorrow, we'll explore Docker Compose for multi-container applications, which is crucial for web development where you typically need multiple services working together.</p>
+        </section>
+
+        <section>
+            <h3>Additional Resources</h3>
+            
+            <ul>
+                <li><a href="https://docs.docker.com/get-started/">Docker Official Documentation</a></li>
+                <li><a href="https://12factor.net/">The Twelve-Factor App</a> - A methodology for building software-as-a-service apps that works well with containers</li>
+                <li><a href="https://www.youtube.com/watch?v=wxxigbHwDGM">Docker Crash Course for Python Developers</a> (YouTube)</li>
+                <li><a href="https://github.com/docker/awesome-compose">Awesome Docker Compose</a> - Example configurations for various web application stacks</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Exercise Preview</h3>
+            
+            <p>This afternoon, you'll create your first Docker container running a simple Python "Hello World" script. You'll learn how to:</p>
+            
+            <ul>
+                <li>Write a basic Dockerfile</li>
+                <li>Build an image from your Dockerfile</li>
+                <li>Run a container from your image</li>
+                <li>View container logs</li>
+                <li>Stop and remove containers</li>
+            </ul>
+            
+            <p>This hands-on experience will reinforce the concepts we've covered today and prepare you for more complex container scenarios later in the course.</p>
+        </section>
+
+        <section class="questions">
+            <h3>Discussion Questions</h3>
+            
+            <ol>
+                <li>How might containerization improve your current or previous development workflow?</li>
+                <li>What challenges do you anticipate in adopting containerization for your projects?</li>
+                <li>How would you explain the benefits of containerization to a non-technical stakeholder?</li>
+                <li>Can you think of situations where containerization might not be the best approach?</li>
+                <li>How do containers fit into the broader DevOps philosophy?</li>
+            </ol>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

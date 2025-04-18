@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Architecture and Components</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Docker Architecture and Components</h1>
+        <h2>Week 1, Wednesday - Morning Session</h2>
+    </header>
+
+    <main>
+        <section class="lecture-intro">
+            <h3>Lecture Overview</h3>
+            <p>In this session, we'll explore the architecture of Docker and its key components. Understanding how Docker is structured internally will give you a solid foundation for working with containers effectively. You'll learn how the different pieces of Docker fit together to create a coherent system for building, shipping, and running containerized applications.</p>
+        </section>
+
+        <section>
+            <h3>Docker Architecture at a Glance</h3>
+            
+            <p>Docker uses a client-server architecture with several distinct components working together. Before diving into each component, let's get a high-level overview of how Docker is structured:</p>
+            
+            <div class="architecture-diagram">
+                <pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                           Host Machine                           │
+│                                                                  │
+│  ┌──────────────┐       ┌─────────────────────────────────────┐ │
+│  │              │       │        Docker Host (daemon)         │ │
+│  │ Docker Client│&lt;─────&gt;│                                     │ │
+│  │              │       │ ┌─────────┐ ┌─────────┐ ┌─────────┐ │ │
+│  └──────────────┘       │ │Container│ │Container│ │Container│ │ │
+│         ▲               │ └─────────┘ └─────────┘ └─────────┘ │ │
+│         │               └─────────────────────────────────────┘ │
+└─────────┼──────────────────────────────────────────────────────┘
+          │
+          ▼
+┌──────────────────┐
+│  Registry        │
+│  (e.g. Docker Hub)│
+└──────────────────┘</code></pre>
+            </div>
+            
+            <p>Think of Docker as a transportation system. The Docker Client is like dispatching office that sends instructions. The Docker Daemon (Server) is like the transportation hub that manages all the vehicles (containers). The Registry is like a warehouse storing vehicle designs (images) that can be requested when needed.</p>
+            
+            <p>Let's now explore each component in detail to understand what it does and how it interacts with the others.</p>
+        </section>
+
+        <section>
+            <h3>Docker Client</h3>
+            
+            <p>The Docker Client is the primary way users interact with Docker. It's what you're using when you run commands starting with <code>docker</code> in your terminal.</p>
+            
+            <h4>Functions of the Docker Client</h4>
+            <ul>
+                <li>Interprets user commands</li>
+                <li>Communicates with the Docker daemon</li>
+                <li>Presents results back to the user</li>
+                <li>Supports both command line and programmatic interfaces</li>
+            </ul>
+            
+            <p>The client can communicate with a Docker daemon running on the same machine (the default configuration) or connect to a remote daemon running on another system.</p>
+            
+            <div class="example">
+                <p><strong>Docker Client in action:</strong> When you run a command like <code>docker run nginx</code>, the client:</p>
+                <ol>
+                    <li>Parses your command</li>
+                    <li>Connects to the Docker daemon</li>
+                    <li>Sends instructions to pull the nginx image (if needed) and create a container</li>
+                    <li>Returns output from the daemon back to your terminal</li>
+                </ol>
+            </div>
+            
+            <p>The Docker client is somewhat analogous to a remote control for your TV. It doesn't do the actual work of displaying content (that's the TV's job), but it sends instructions that control what happens. Similarly, the Docker client doesn't run containers itself but instructs the daemon to do so.</p>
+            
+            <h4>Common Client Commands</h4>
+            <p>The Docker client provides commands for the entire container lifecycle:</p>
+            <ul>
+                <li><code>docker build</code> - Build an image from a Dockerfile</li>
+                <li><code>docker pull</code> - Download an image from a registry</li>
+                <li><code>docker run</code> - Create and start a container</li>
+                <li><code>docker ps</code> - List running containers</li>
+                <li><code>docker stop</code> - Stop a running container</li>
+                <li><code>docker rm</code> - Remove a container</li>
+                <li><code>docker rmi</code> - Remove an image</li>
+            </ul>
+            
+            <p>Each of these commands gets translated by the client into API calls to the Docker daemon.</p>
+        </section>
+
+        <section>
+            <h3>Docker Daemon (dockerd)</h3>
+            
+            <p>The Docker daemon (often referred to as <code>dockerd</code>) is the heart of Docker. It's a background service that manages everything related to containers on a system.</p>
+            
+            <h4>Responsibilities of the Docker Daemon</h4>
+            <ul>
+                <li>Listening for API requests from the Docker client</li>
+                <li>Managing Docker objects (images, containers, networks, volumes)</li>
+                <li>Communicating with other daemons to manage distributed Docker services</li>
+                <li>Building, running, and distributing containers</li>
+            </ul>
+            
+            <p>Think of the Docker daemon as a factory manager. It receives blueprints (images), creates products (containers), manages resources, and oversees the entire production process.</p>
+            
+            <div class="technical-details">
+                <p><strong>Technical insight:</strong> The Docker daemon exposes a REST API that the client and other programs can use to interact with it. This API-driven design makes Docker highly automatable and integrable with other systems.</p>
+            </div>
+            
+            <h4>Daemon Configuration</h4>
+            <p>The daemon can be configured in various ways to control:</p>
+            <ul>
+                <li>Security settings</li>
+                <li>Default container parameters</li>
+                <li>Storage locations</li>
+                <li>Networking options</li>
+                <li>Logging and debugging information</li>
+            </ul>
+            
+            <p>In production environments, proper daemon configuration is crucial for security and performance.</p>
+            
+            <div class="practical-example">
+                <p><strong>Real-world context:</strong> In a development team, each developer runs their own Docker daemon on their local machine. In a production environment, you might have multiple servers each running a Docker daemon, potentially managed by an orchestration tool like Kubernetes.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Docker Images</h3>
+            
+            <p>Docker images are read-only templates used to create containers. They contain everything needed to run an application: code, runtime, libraries, environment variables, and configuration files.</p>
+            
+            <h4>Key Characteristics of Images</h4>
+            <ul>
+                <li>Immutable - once built, an image doesn't change</li>
+                <li>Layered - composed of multiple filesystem layers</li>
+                <li>Shareable - can be pushed to and pulled from registries</li>
+                <li>Versioned - typically tagged with version information</li>
+            </ul>
+            
+            <p>The layered nature of images is one of Docker's most powerful features. Let's explore it further.</p>
+            
+            <h4>Layered File System</h4>
+            <p>Docker images are built using a layered approach where each layer represents a set of filesystem changes:</p>
+            
+            <div class="diagram">
+                <pre><code>┌───────────────────────┐
+│   Application Code    │  &lt;-- Top layer
+├───────────────────────┤
+│   Application Deps    │
+├───────────────────────┤
+│   Runtime (e.g. Node) │
+├───────────────────────┤
+│   Base OS (e.g. Alpine)│  &lt;-- Bottom layer
+└───────────────────────┘</code></pre>
+            </div>
+            
+            <p>Each layer only stores the differences from the previous layer. This approach has several advantages:</p>
+            <ul>
+                <li>Efficient storage - common layers are shared between images</li>
+                <li>Faster transfers - only new or changed layers need to be transferred</li>
+                <li>Build caching - unchanged layers can be reused in subsequent builds</li>
+            </ul>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> Think of Docker images like a stack of transparent sheets. Each sheet has some content drawn on it, and when stacked together, they form a complete picture. If you want to create a similar image, you can reuse most of the stack and just replace or add sheets as needed, rather than drawing everything from scratch.</p>
+            </div>
+            
+            <h4>Image IDs and Tags</h4>
+            <p>Each Docker image has a unique identifier (a SHA256 hash) and can have multiple human-readable tags:</p>
+            
+            <div class="example">
+                <pre><code>$ docker images
+REPOSITORY    TAG       IMAGE ID       CREATED       SIZE
+nginx         latest    ad4c705f24d3   2 weeks ago   133MB
+python        3.9       a8bd5b274a97   3 weeks ago   915MB
+python        3.10      98f52028b399   3 weeks ago   920MB</code></pre>
+            </div>
+            
+            <p>In this example:</p>
+            <ul>
+                <li><strong>REPOSITORY</strong> - The name of the image</li>
+                <li><strong>TAG</strong> - A version or variant identifier (e.g., "latest", "3.9")</li>
+                <li><strong>IMAGE ID</strong> - A unique identifier for the image</li>
+            </ul>
+            
+            <p>Tags are crucial for version management. For example, <code>python:3.9</code> and <code>python:3.10</code> refer to different versions of Python, while both being part of the "python" repository.</p>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> Never rely on the "latest" tag in production environments. Always specify exact version tags to ensure consistency and prevent unexpected changes when images are updated.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Containers</h3>
+            
+            <p>If images are the blueprints, containers are the running instances created from those blueprints. A container is a runnable instance of an image.</p>
+            
+            <h4>Container Characteristics</h4>
+            <ul>
+                <li>Isolated - runs in its own namespace with limited visibility of the host system</li>
+                <li>Lightweight - shares the host kernel rather than running a full OS</li>
+                <li>Portable - runs the same way regardless of the infrastructure</li>
+                <li>Ephemeral - designed to be disposable and replaceable</li>
+            </ul>
+            
+            <p>When you create a container from an image, Docker adds a writable layer on top of the immutable image layers. This allows the container to modify files while keeping the original image unchanged.</p>
+            
+            <div class="diagram">
+                <pre><code>┌───────────────────────┐
+│    Writable Layer     │  &lt;-- Container-specific layer
+├───────────────────────┤
+│   Application Code    │  
+├───────────────────────┤
+│   Application Deps    │  &lt;-- Image layers (read-only)
+├───────────────────────┤
+│   Runtime (e.g. Node) │
+├───────────────────────┤
+│   Base OS (e.g. Alpine)│
+└───────────────────────┘</code></pre>
+            </div>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> Consider a container like a kitchen. The image provides all the appliances, utensils, and basic ingredients (like flour, sugar, etc.). When you start cooking (run the container), you might create new dishes and temporarily modify the kitchen state, but when you're done (container stops), the kitchen returns to its original state. If you want to save your changes, you need to create a new "blueprint" (image) from your current state.</p>
+            </div>
+            
+            <h4>Container Lifecycle</h4>
+            <p>Containers have a distinct lifecycle with several states:</p>
+            <ol>
+                <li><strong>Created</strong> - Container is defined but not started</li>
+                <li><strong>Running</strong> - Container processes are executing</li>
+                <li><strong>Paused</strong> - Container processes are temporarily suspended</li>
+                <li><strong>Stopped</strong> - Container processes have terminated but the container still exists</li>
+                <li><strong>Removed</strong> - Container is deleted along with its writable layer</li>
+            </ol>
+            
+            <div class="command-example">
+                <p><strong>Container lifecycle commands:</strong></p>
+                <pre><code># Create and run a container
+$ docker run --name my-nginx -d nginx
+
+# Pause a running container
+$ docker pause my-nginx
+
+# Unpause a container
+$ docker unpause my-nginx
+
+# Stop a container
+$ docker stop my-nginx
+
+# Start a stopped container
+$ docker start my-nginx
+
+# Remove a container
+$ docker rm my-nginx</code></pre>
+            </div>
+            
+            <p>Understanding this lifecycle is crucial for managing containers effectively, especially in production environments where automatic restarts and health checks become important.</p>
+        </section>
+
+        <section>
+            <h3>Docker Registries</h3>
+            
+            <p>Docker registries are repositories for storing and distributing Docker images. They play a crucial role in the "build once, run anywhere" philosophy of Docker.</p>
+            
+            <h4>Registry Types</h4>
+            <ul>
+                <li><strong>Public registries</strong> - Like Docker Hub, which hosts a vast collection of community and official images</li>
+                <li><strong>Private registries</strong> - For organizations to store proprietary images securely</li>
+                <li><strong>Local registries</strong> - Run within an organization's network for faster access and better control</li>
+            </ul>
+            
+            <p>Docker Hub is the default registry that Docker uses when you run commands like <code>docker pull</code> without specifying a registry.</p>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> Docker registries are like libraries or bookstores. Docker Hub is like a public library with books (images) anyone can borrow. Private registries are like personal bookshelves where you keep books that are special to you or your organization. When you need a book, you first check if it's on your bookshelf (cache), and if not, you go to the library (registry) to get it.</p>
+            </div>
+            
+            <h4>Working with Registries</h4>
+            <p>Common operations with registries include:</p>
+            
+            <div class="command-example">
+                <pre><code># Pull an image from Docker Hub
+$ docker pull nginx:latest
+
+# Tag an image for a specific registry
+$ docker tag my-app:1.0 my-registry.example.com/my-app:1.0
+
+# Push an image to a registry
+$ docker push my-registry.example.com/my-app:1.0
+
+# Pull from a specific registry
+$ docker pull my-registry.example.com/my-app:1.0</code></pre>
+            </div>
+            
+            <p>In enterprise environments, organizations often maintain their own registries for several reasons:</p>
+            <ul>
+                <li>Security - Control over who can access images</li>
+                <li>Compliance - Ensure all images meet organizational standards</li>
+                <li>Performance - Faster image pulls over the internal network</li>
+                <li>Reliability - No dependency on external services</li>
+            </ul>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> For production applications, always use a private registry with proper access controls. Scan images for vulnerabilities before pushing them to your registry, and implement policies about which external images can be pulled.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Docker Storage</h3>
+            
+            <p>Docker provides several options for managing data in containers. Understanding these is crucial because containers are ephemeral by design - when a container is removed, any data that was written to its writable layer is lost.</p>
+            
+            <h4>Storage Options</h4>
+            <ul>
+                <li><strong>Volumes</strong> - The preferred way to persist data in Docker</li>
+                <li><strong>Bind mounts</strong> - Mount a host directory into a container</li>
+                <li><strong>tmpfs mounts</strong> - Store data in the host's memory only</li>
+            </ul>
+            
+            <h4>Docker Volumes</h4>
+            <p>Volumes are the preferred mechanism for persisting data generated and used by Docker containers. Some key benefits of volumes include:</p>
+            <ul>
+                <li>They are completely managed by Docker</li>
+                <li>They can be more safely shared among multiple containers</li>
+                <li>Volume drivers allow for storing volumes on remote hosts or cloud providers</li>
+                <li>They're easier to back up or migrate than bind mounts</li>
+                <li>They can be pre-populated with data from a container</li>
+            </ul>
+            
+            <div class="diagram">
+                <pre><code>┌─────────────────────────────────────────┐
+│               Host System                │
+│                                          │
+│  ┌──────────────┐    ┌───────────────┐  │
+│  │  Container A │    │  Container B  │  │
+│  │              │    │               │  │
+│  │              │    │               │  │
+│  └──────┬───────┘    └───────┬───────┘  │
+│         │                    │          │
+│         │                    │          │
+│         ▼                    ▼          │
+│  ┌──────────────────────────────────┐   │
+│  │            Volume                │   │
+│  │                                  │   │
+│  └──────────────────────────────────┘   │
+│                                          │
+└─────────────────────────────────────────┘</code></pre>
+            </div>
+            
+            <div class="command-example">
+                <p><strong>Working with volumes:</strong></p>
+                <pre><code># Create a volume
+$ docker volume create my-data
+
+# Run a container with a volume
+$ docker run -v my-data:/app/data nginx
+
+# List volumes
+$ docker volume ls
+
+# Inspect a volume
+$ docker volume inspect my-data
+
+# Remove a volume
+$ docker volume rm my-data
+
+# Clean up unused volumes
+$ docker volume prune</code></pre>
+            </div>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> Think of volumes like external hard drives for your containers. The container itself might be temporary, but the external drive (volume) persists and can be connected to different containers over time. This separation of compute (container) from storage (volume) is a fundamental pattern in cloud-native architecture.</p>
+            </div>
+            
+            <h4>Bind Mounts</h4>
+            <p>Bind mounts have been around since the early days of Docker. They allow you to mount a file or directory on the host machine into a container. The main differences from volumes are:</p>
+            <ul>
+                <li>Bind mounts depend on the host machine's filesystem structure</li>
+                <li>Non-Docker processes on the host can modify them directly</li>
+                <li>They're often used in development for live code reloading</li>
+            </ul>
+            
+            <div class="command-example">
+                <p><strong>Using bind mounts:</strong></p>
+                <pre><code># Mount the current directory into a container
+$ docker run -v $(pwd):/app nginx</code></pre>
+            </div>
+            
+            <h4>tmpfs Mounts</h4>
+            <p>tmpfs mounts are stored in the host system's memory only, never written to the host system's filesystem. This is useful for storing sensitive information that you don't want to persist.</p>
+            
+            <div class="command-example">
+                <p><strong>Using tmpfs mounts:</strong></p>
+                <pre><code># Create a container with a tmpfs mount
+$ docker run --tmpfs /app/temp nginx</code></pre>
+            </div>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> For production applications, always use named volumes for persistent data and clearly document what data needs to persist. In development, bind mounts are often convenient for code changes, but volumes should still be used for databases and other stateful components.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Docker Networking</h3>
+            
+            <p>Docker's networking subsystem is pluggable, using drivers. Several drivers exist by default, and you can install third-party drivers as well. Each driver offers specific features and capabilities.</p>
+            
+            <h4>Network Drivers</h4>
+            <ul>
+                <li><strong>bridge</strong> - The default network driver. Containers can communicate with each other if they're on the same bridge network.</li>
+                <li><strong>host</strong> - Removes network isolation between the container and the host. The container shares the host's networking namespace.</li>
+                <li><strong>overlay</strong> - Connects multiple Docker daemons across different hosts, enabling swarm services to communicate.</li>
+                <li><strong>macvlan</strong> - Assigns a MAC address to a container, making it appear as a physical device on your network.</li>
+                <li><strong>none</strong> - Disables all networking for a container.</li>
+            </ul>
+            
+            <h4>Bridge Networks</h4>
+            <p>The bridge driver creates a private network internal to the host. Containers on this network can communicate with each other, and the host can forward traffic to the external world.</p>
+            
+            <div class="diagram">
+                <pre><code>┌─────────────────────────────────────────────────────┐
+│                  Host System                         │
+│                                                      │
+│  ┌────────────┐    ┌────────────┐    ┌────────────┐ │
+│  │Container A │    │Container B │    │Container C │ │
+│  │  172.17.0.2│    │  172.17.0.3│    │  172.17.0.4│ │
+│  └─────┬──────┘    └─────┬──────┘    └─────┬──────┘ │
+│        │                 │                 │        │
+│        └─────────┬───────┴─────────┬───────┘        │
+│                  │                 │                │
+│           ┌──────┴─────────────────┴──────┐         │
+│           │      Bridge Network           │         │
+│           │         172.17.0.0/16         │         │
+│           └───────────────┬───────────────┘         │
+│                           │                         │
+│                     ┌─────┴─────┐                   │
+│                     │  eth0     │                   │
+└─────────────────────┼───────────┼─────────────────┘
+                      │           │
+                      │  Internet │</code></pre>
+            </div>
+            
+            <div class="command-example">
+                <p><strong>Working with networks:</strong></p>
+                <pre><code># List networks
+$ docker network ls
+
+# Create a bridge network
+$ docker network create my-network
+
+# Run a container on a specific network
+$ docker run --network=my-network --name=container1 nginx
+
+# Connect a running container to a network
+$ docker network connect my-network container2
+
+# Inspect a network
+$ docker network inspect my-network
+
+# Disconnect a container from a network
+$ docker network disconnect my-network container1
+
+# Remove a network
+$ docker network rm my-network</code></pre>
+            </div>
+            
+            <div class="real-world-application">
+                <p><strong>Real-world application:</strong> In a typical web application architecture, you might create a custom bridge network for your application. Your frontend container, backend API container, and database container would all connect to this network, allowing them to communicate with each other using their container names as hostnames, while isolating them from other containers on the system.</p>
+            </div>
+            
+            <h4>Container DNS</h4>
+            <p>One important feature of Docker networking is automatic DNS resolution between containers. Containers on the same user-defined network can resolve each other by name.</p>
+            
+            <div class="example">
+                <p><strong>Example:</strong> If you have two containers named <code>web</code> and <code>db</code> on the same network, the <code>web</code> container can connect to the <code>db</code> container simply by using the hostname <code>db</code> in its configuration.</p>
+            </div>
+            
+            <div class="command-example">
+                <pre><code># Create a network
+$ docker network create app-network
+
+# Start a database container
+$ docker run -d --name db --network app-network postgres
+
+# Start a web container that can connect to the database using hostname "db"
+$ docker run -d --name web --network app-network -e DATABASE_URL=postgres://postgres:postgres@db:5432/postgres my-web-app</code></pre>
+            </div>
+            
+            <div class="best-practice">
+                <p><strong>Best practice:</strong> Always create custom networks for your applications rather than using the default bridge network. This provides better isolation, automatic DNS resolution between containers, and more control over your network configuration.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Docker Compose</h3>
+            
+            <p>While not strictly part of the core Docker architecture, Docker Compose is an essential tool that works with Docker to define and run multi-container applications.</p>
+            
+            <h4>What is Docker Compose?</h4>
+            <p>Docker Compose is a tool for defining and running multi-container Docker applications. With Compose, you use a YAML file to configure your application's services, networks, and volumes. Then, with a single command, you create and start all the services from your configuration.</p>
+            
+            <div class="example">
+                <p><strong>Sample docker-compose.yml file:</strong></p>
+                <pre><code>version: '3'
+
+services:
+  web:
+    build: ./web
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./web:/code
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:12
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=password
+
+  redis:
+    image: redis:6
+
+volumes:
+  postgres_data:</code></pre>
+            </div>
+            
+            <p>This file defines a three-service application:</p>
+            <ol>
+                <li>A <code>web</code> service built from the Dockerfile in the <code>./web</code> directory</li>
+                <li>A <code>db</code> service using the postgres:12 image</li>
+                <li>A <code>redis</code> service using the redis:6 image</li>
+            </ol>
+            
+            <p>It also configures:</p>
+            <ul>
+                <li>Port mapping for the web service</li>
+                <li>Volume mounts for code and database data</li>
+                <li>Service dependencies</li>
+                <li>Environment variables</li>
+            </ul>
+            
+            <div class="command-example">
+                <p><strong>Basic Docker Compose commands:</strong></p>
+                <pre><code># Start services
+$ docker-compose up
+
+# Start services in the background
+$ docker-compose up -d
+
+# Stop services
+$ docker-compose down
+
+# Stop services and remove volumes
+$ docker-compose down -v
+
+# View logs
+$ docker-compose logs
+
+# Run a command in a service
+$ docker-compose exec web python manage.py migrate</code></pre>
+            </div>
+            
+            <div class="analogy">
+                <p><strong>Analogy:</strong> If Docker is like having individual appliances in your kitchen, Docker Compose is like having a single control panel that turns on all the appliances you need for a specific recipe, configured exactly as required. Instead of turning on the stove, then the mixer, then the blender individually, you just press one button labeled "Make Cake" and everything is set up correctly.</p>
+            </div>
+            
+            <p>We'll explore Docker Compose in much more depth in tomorrow's session, but it's important to understand how it fits into the overall Docker architecture as a higher-level tool that works with the core components we've discussed.</p>
+        </section>
+
+        <section>
+            <h3>How Components Work Together</h3>
+            
+            <p>Let's trace through a typical workflow to see how all these Docker components interact:</p>
+            
+            <h4>Example Workflow: Running a Container</h4>
+            
+            <ol>
+                <li><strong>Client Instruction</strong>: You issue <code>docker run nginx</code> in your terminal</li>
+                <li><strong>Client Processing</strong>: The Docker client formats this as an API request to the daemon</li>
+                <li><strong>Daemon Image Check</strong>: The daemon checks if the nginx image exists locally</li>
+                <li><strong>Registry Interaction</strong>: If not found locally, the daemon pulls the image from Docker Hub</li>
+                <li><strong>Image Download</strong>: The registry sends the image layers to the daemon</li>
+                <li><strong>Container Creation</strong>: The daemon creates a new container based on the image</li>
+                <li><strong>Storage Setup</strong>: The daemon sets up any necessary storage (volumes or bind mounts)</li>
+                <li><strong>Network Configuration</strong>: The daemon connects the container to the appropriate network</li>
+                <li><strong>Container Start</strong>: The daemon starts the container processes</li>
+                <li><strong>Output Return</strong>: The daemon streams output back to the client</li>
+            </ol>
+            
+            <div class="diagram">
+                <pre><code>┌──────────┐         ┌──────────┐         ┌──────────┐
+│  Client  │ ──────▶ │  Daemon  │ ◀─────▶ │ Registry │
+└──────────┘         └──────────┘         └──────────┘
+                          │
+                          ▼
+                     ┌──────────┐
+                     │  Images  │
+                     └──────────┘
+                          │
+                          ▼
+                     ┌──────────┐
+                     │Containers│
+                     └──────────┘
+                       ▲      ▲
+                       │      │
+                 ┌─────┘      └─────┐
+                 │                  │
+           ┌──────────┐      ┌──────────┐
+           │ Volumes  │      │ Networks │
+           └──────────┘      └──────────┘</code></pre>
+            </div>
+            
+            <p>This workflow demonstrates how the client, daemon, registry, images, containers, storage, and networking all work together to create a functioning containerized application.</p>
+        </section>
+
+        <section>
+            <h3>Docker Architecture in Production Environments</h3>
+            
+            <p>While the architecture we've discussed applies to all Docker installations, production environments often add additional components and considerations:</p>
+            
+            <h4>Container Orchestration</h4>
+            <p>In production, Docker is often managed by an orchestration platform like:</p>
+            <ul>
+                <li><strong>Kubernetes</strong> - The most widely used container orchestration system</li>
+                <li><strong>Docker Swarm</strong> - Docker's native clustering solution</li>
+                <li><strong>Amazon ECS</strong> - AWS's container orchestration service</li>
+            </ul>
+            
+            <p>These platforms add capabilities for:</p>
+            <ul>
+                <li>Scheduling containers across multiple hosts</li>
+                <li>Automatic scaling</li>
+                <li>Load balancing</li>
+                <li>Self-healing (restarting failed containers)</li>
+                <li>Rolling updates</li>
+            </ul>
+            
+            <h4>Security Considerations</h4>
+            <p>Production Docker deployments typically include:</p>
+            <ul>
+                <li>Image scanning for vulnerabilities</li>
+                <li>Access controls for the Docker daemon</li>
+                <li>Network segmentation</li>
+                <li>Container resource limits</li>
+                <li>Read-only filesystem mounts</li>
+                <li>Non-root users inside containers</li>
+            </ul>
+            
+            <h4>Monitoring and Logging</h4>
+            <p>Comprehensive monitoring solutions are essential for Docker in production:</p>
+            <ul>
+                <li>Container metrics (CPU, memory, network, disk usage)</li>
+                <li>Application metrics</li>
+                <li>Centralized logging</li>
+                <li>Container health checks</li>
+                <li>Alerting systems</li>
+            </ul>
+            
+            <div class="real-world-example">
+                <p><strong>Production architecture example:</strong> A typical production setup might include:</p>
+                <ul>
+                    <li>Multiple host machines running Docker</li>
+                    <li>Kubernetes managing containers across those hosts</li>
+                    <li>A private Docker registry secured with authentication</li>
+                    <li>CI/CD pipelines that build, test, and deploy Docker images</li>
+                    <li>Prometheus and Grafana for monitoring</li>
+                    <li>ELK Stack or Loki for logging</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>Docker Architecture Evolution</h3>
+            
+            <p>Docker's architecture has evolved significantly since its initial release:</p>
+            
+            <h4>Major Architectural Changes</h4>
+            <ul>
+                <li><strong>Separation of containerd</strong> - The core container runtime was extracted as a separate project</li>
+                <li><strong>OCI Standards</strong> - Docker adopted Open Container Initiative standards for image and runtime specifications</li>
+                <li><strong>BuildKit</strong> - A new, more efficient build system replaced the legacy builder</li>
+                <li><strong>Rootless Mode</strong> - Support for running Docker without root privileges</li>
+            </ul>
+            
+            <div class="modern-architecture">
+                <p><strong>Modern Docker architecture:</strong></p>
+                <pre><code>┌───────────────────────────────────────────────────┐
+│                  Docker Engine                      │
+│                                                     │
+│  ┌─────────────┐      ┌──────────────┐             │
+│  │   Docker    │      │   dockerd    │             │
+│  │   Client    │◀────▶│   (daemon)   │             │
+│  └─────────────┘      └──────┬───────┘             │
+│                              │                      │
+│                        ┌─────▼──────┐               │
+│                        │ containerd │               │
+│                        └─────┬──────┘               │
+│                              │                      │
+│                        ┌─────▼──────┐               │
+│                        │ runc/runsc │               │
+│                        └────────────┘               │
+└───────────────────────────────────────────────────┘</code></pre>
+            </div>
+            
+            <p>In this modern architecture:</p>
+            <ul>
+                <li><strong>dockerd</strong> - The Docker daemon that manages the Docker API</li>
+                <li><strong>containerd</strong> - A daemon that manages the complete container lifecycle</li>
+                <li><strong>runc</strong> - A container runtime that implements the OCI runtime specification</li>
+            </ul>
+            
+            <p>This modular approach allows for more flexibility and enables other tools to leverage Docker's components. For example, Kubernetes can use containerd directly without the full Docker daemon.</p>
+        </section>
+
+        <section>
+            <h3>Key Takeaways</h3>
+            
+            <ul>
+                <li>Docker uses a client-server architecture with the client sending commands to the daemon</li>
+                <li>Images are read-only templates used to create containers</li>
+                <li>Containers are runnable instances of images with an additional writable layer</li>
+                <li>Registries store and distribute images</li>
+                <li>Docker provides sophisticated storage options, with volumes being the preferred method for persistent data</li>
+                <li>Docker's networking capabilities allow containers to communicate and be accessible from outside</li>
+                <li>Docker Compose simplifies managing multi-container applications</li>
+                <li>Production environments often add orchestration, security measures, and monitoring to the basic Docker architecture</li>
+            </ul>
+            
+            <p>Understanding these components and how they interact is fundamental to working effectively with Docker and designing containerized applications.</p>
+        </section>
+
+        <section>
+            <h3>Looking Ahead</h3>
+            
+            <p>In our afternoon session, we'll begin hands-on work with Docker, where you'll see these architectural components in action. We'll:</p>
+            
+            <ul>
+                <li>Run your first Docker container</li>
+                <li>Explore Docker Hub and public images</li>
+                <li>Create a basic Dockerfile</li>
+                <li>Build and run your own image</li>
+            </ul>
+            
+            <p>By the end of the day, you'll have practical experience with the core Docker components we've discussed in this theoretical session.</p>
+        </section>
+
+        <section>
+            <h3>Discussion Questions</h3>
+            
+            <ol>
+                <li>How does Docker's architecture compare to traditional virtualization solutions like VMware or VirtualBox?</li>
+                <li>Why is the layered approach to images important for efficiency in Docker?</li>
+                <li>What are the advantages and disadvantages of Docker's approach to container networking?</li>
+                <li>In what scenarios might Docker volumes be preferred over bind mounts, and vice versa?</li>
+                <li>How does understanding Docker's architecture help you design better containerized applications?</li>
+            </ol>
+        </section>
+
+        <section>
+            <h3>Additional Resources</h3>
+            
+            <ul>
+                <li><a href="https://docs.docker.com/get-started/overview/">Docker Architecture Overview</a> - Official documentation</li>
+                <li><a href="https://docs.docker.com/storage/">Docker Storage Overview</a> - Detailed information about storage options</li>
+                <li><a href="https://docs.docker.com/network/">Docker Networking Overview</a> - Comprehensive guide to Docker networks</li>
+                <li><a href="https://github.com/containerd/containerd">containerd GitHub Repository</a> - For those interested in the lower-level container runtime</li>
+                <li><a href="https://www.youtube.com/watch?v=8fi7uSYlOdc">Docker Architecture Explained</a> - Visual explanation of Docker components</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

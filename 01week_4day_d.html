@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environment Variables and Configuration - Full Stack Python Developer Course</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Environment Variables and Configuration</h1>
+        <h2>Week 1 - Thursday</h2>
+    </header>
+
+    <main>
+        <section class="course-intro">
+            <h3>Lecture Overview</h3>
+            <p>Today we'll explore environment variables and configuration management in Docker and Docker Compose. By the end of this session, you'll understand how to properly configure your containerized applications, manage sensitive information securely, and create flexible deployment configurations that work across different environments.</p>
+        </section>
+
+        <section>
+            <h3>Why Environment Variables Matter</h3>
+            <p>Environment variables are a fundamental concept in software development and are especially important in containerized applications. They allow you to:</p>
+            
+            <ul>
+                <li><strong>Separate configuration from code</strong> - Following the principles of the <a href="https://12factor.net/" target="_blank">Twelve-Factor App methodology</a></li>
+                <li><strong>Create environment-specific configurations</strong> - Different settings for development, testing, and production</li>
+                <li><strong>Protect sensitive information</strong> - Keep secrets out of your codebase and version control</li>
+                <li><strong>Change application behavior without code changes</strong> - Enable/disable features or change settings without rebuilding containers</li>
+                <li><strong>Configure services at runtime</strong> - Allowing the same container image to be used in different contexts</li>
+            </ul>
+            
+            <div class="analogy">
+                <h4>Analogy: Recipe Instructions</h4>
+                <p>Think of your application as a recipe and environment variables as cooking instructions:</p>
+                <ul>
+                    <li>The recipe (code) tells you what ingredients (functions) to use and how to combine them</li>
+                    <li>The instructions (environment variables) specify details like oven temperature (configuration settings)</li>
+                    <li>You might adjust the temperature or cooking time based on your specific oven (environment)</li>
+                    <li>A professional chef might use high heat and specialized equipment, while a home cook uses moderate heat and standard tools</li>
+                </ul>
+                <p>By separating the recipe from the specific cooking instructions, the same recipe can be successfully followed in different kitchens with adjusted settings.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Environment Variables in Docker</h3>
+            <p>Before diving into Docker Compose, let's understand how environment variables work in Docker itself:</p>
+            
+            <h4>Setting Environment Variables in Dockerfile</h4>
+            <p>You can define default environment variables directly in your Dockerfile:</p>
+            <pre><code>FROM python:3.9-slim
+
+# Set environment variables
+ENV APP_HOME=/app \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    DEBUG=False
+
+WORKDIR $APP_HOME
+
+COPY . .
+RUN pip install -r requirements.txt
+
+CMD ["python", "app.py"]</code></pre>
+            
+            <p>In this example:</p>
+            <ul>
+                <li><code>APP_HOME</code> defines the application directory</li>
+                <li><code>PYTHONUNBUFFERED</code> ensures Python output is sent straight to terminal</li>
+                <li><code>PYTHONDONTWRITEBYTECODE</code> prevents Python from writing .pyc files</li>
+                <li><code>DEBUG</code> sets a custom application setting</li>
+            </ul>
+            
+            <h4>Setting Environment Variables at Runtime</h4>
+            <p>Dockerfile ENV values can be overridden when running a container:</p>
+            <pre><code># Override environment variables at runtime
+docker run -e DEBUG=True -e SECRET_KEY=mysecret -p 8000:8000 myapp</code></pre>
+            
+            <h4>Using Environment Variable Files</h4>
+            <p>For multiple variables, you can use an environment file:</p>
+            <pre><code># dev.env file
+DEBUG=True
+SECRET_KEY=dev_secret_key
+DATABASE_URL=postgresql://user:pass@localhost/devdb
+
+# Run container with env file
+docker run --env-file dev.env -p 8000:8000 myapp</code></pre>
+            
+            <h4>Accessing Environment Variables in Applications</h4>
+            <p>Here's how to access environment variables in different languages:</p>
+            
+            <h5>Python</h5>
+            <pre><code>import os
+
+# Get environment variable with fallback
+debug = os.environ.get('DEBUG', 'False').lower() == 'true'
+secret_key = os.environ.get('SECRET_KEY', 'default_dev_key')
+database_url = os.environ['DATABASE_URL']  # Will raise KeyError if not set
+
+print(f"Debug mode: {debug}")
+print(f"Secret key: {secret_key}")
+print(f"Database URL: {database_url}")</code></pre>
+            
+            <h5>JavaScript (Node.js)</h5>
+            <pre><code>// Get environment variable with fallback
+const debug = process.env.DEBUG === 'True';
+const secretKey = process.env.SECRET_KEY || 'default_dev_key';
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error('DATABASE_URL environment variable is required');
+}
+
+console.log(`Debug mode: ${debug}`);
+console.log(`Secret key: ${secretKey}`);
+console.log(`Database URL: ${databaseUrl}`);</code></pre>
+            
+            <div class="example">
+                <h4>Real-world Example: Flask Application</h4>
+                <p>Here's how a Flask application might use environment variables for configuration:</p>
+                <pre><code>import os
+from flask import Flask
+
+app = Flask(__name__)
+
+# Configure from environment variables
+app.config['DEBUG'] = os.environ.get('DEBUG', 'False').lower() == 'true'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_key')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    'DATABASE_URL', 'sqlite:///dev.db'
+)
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.example.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+
+@app.route('/')
+def hello():
+    # Use configuration values
+    is_debug = "Development" if app.config['DEBUG'] else "Production"
+    return f"Hello, World! Running in {is_debug} mode."
+
+if __name__ == '__main__':
+    # Print configuration for demonstration
+    print(f"Starting application with:")
+    print(f"DEBUG: {app.config['DEBUG']}")
+    print(f"DATABASE: {app.config['SQLALCHEMY_DATABASE_URI']}")
+    
+    # Run the application
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Environment Variables in Docker Compose</h3>
+            <p>Docker Compose provides several ways to work with environment variables, offering more flexibility than basic Docker commands.</p>
+            
+            <h4>Setting Environment Variables in docker-compose.yml</h4>
+            <p>You can define environment variables directly in your docker-compose.yml file:</p>
+            <pre><code>version: '3'
+
+services:
+  web:
+    build: ./web
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=dev_secret_key
+      - DATABASE_URL=postgresql://postgres:password@db:5432/app
+      
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=app</code></pre>
+            
+            <p>This approach works well for non-sensitive and default values, but it's not ideal for secrets or for values that change between environments.</p>
+            
+            <h4>Using the env_file Option</h4>
+            <p>For better organization, you can extract environment variables to separate files:</p>
+            <pre><code>version: '3'
+
+services:
+  web:
+    build: ./web
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./web/.env
+      - ./common.env
+      
+  db:
+    image: postgres:13
+    env_file:
+      - ./db/.env
+      - ./common.env</code></pre>
+            
+            <p>With corresponding .env files:</p>
+            <pre><code># ./web/.env
+DEBUG=True
+SECRET_KEY=dev_secret_key
+
+# ./db/.env
+POSTGRES_PASSWORD=password
+POSTGRES_DB=app
+
+# ./common.env
+TZ=UTC
+LANG=en_US.UTF-8</code></pre>
+            
+            <p>This approach helps organize environment variables by service and allows sharing common variables across services.</p>
+            
+            <h4>Using Variable Substitution</h4>
+            <p>Docker Compose supports variable substitution using the ${VARIABLE} syntax:</p>
+            <pre><code>version: '3'
+
+services:
+  web:
+    image: myapp:${APP_VERSION:-latest}
+    ports:
+      - "${HOST_PORT:-8000}:8000"
+    environment:
+      - DEBUG=${DEBUG:-False}
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@db:5432/${DB_NAME}</code></pre>
+            
+            <p>This syntax allows you to:</p>
+            <ul>
+                <li>Reference shell environment variables</li>
+                <li>Provide default values with the ${VAR:-default} syntax</li>
+                <li>Combine variables to form connection strings or other complex values</li>
+            </ul>
+            
+            <h4>The .env File for Docker Compose</h4>
+            <p>Docker Compose automatically loads variables from a .env file in the same directory as your docker-compose.yml:</p>
+            <pre><code># .env file in same directory as docker-compose.yml
+APP_VERSION=1.0.0
+HOST_PORT=9000
+DEBUG=True
+SECRET_KEY=supersecretkey
+DB_PASSWORD=securepassword
+DB_NAME=myapp</code></pre>
+            
+            <p>This approach allows you to:</p>
+            <ul>
+                <li>Keep all environment-specific configuration in one place</li>
+                <li>Exclude the .env file from version control for security</li>
+                <li>Provide a template (.env.example) for team members to create their own .env file</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Example: Variable Precedence</h4>
+                <p>When the same variable appears in multiple places, this is the order of precedence (highest to lowest):</p>
+                <ol>
+                    <li>Runtime environment variables (set in the shell before running docker-compose)</li>
+                    <li>Environment variables defined in the docker-compose.yml 'environment' section</li>
+                    <li>Environment variables in env_file files (later files override earlier ones)</li>
+                    <li>Environment variables in the .env file</li>
+                    <li>Default values specified in variable substitution (${VAR:-default})</li>
+                </ol>
+                <p>Understanding this precedence is crucial for debugging configuration issues.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Configuration Strategies for Different Environments</h3>
+            <p>Most applications need different configurations for development, testing, staging, and production environments. Docker Compose offers several strategies to handle this:</p>
+            
+            <h4>Strategy 1: Multiple .env Files</h4>
+            <p>Create different .env files for each environment:</p>
+            <pre><code># .env.development
+DEBUG=True
+LOG_LEVEL=DEBUG
+DATABASE_URL=postgresql://postgres:password@db:5432/app_dev
+
+# .env.production
+DEBUG=False
+LOG_LEVEL=INFO
+DATABASE_URL=postgresql://app_user:${DB_PASSWORD}@db:5432/app_prod</code></pre>
+            
+            <p>Run with the appropriate environment file:</p>
+            <pre><code># Development
+docker-compose --env-file .env.development up
+
+# Production
+docker-compose --env-file .env.production up</code></pre>
+            
+            <h4>Strategy 2: Multiple Compose Files</h4>
+            <p>Create a base docker-compose.yml and environment-specific override files:</p>
+            <pre><code># docker-compose.yml (base configuration)
+version: '3'
+
+services:
+  web:
+    build: ./web
+    image: myapp:latest
+    depends_on:
+      - db
+      
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      
+volumes:
+  postgres_data:</code></pre>
+            
+            <pre><code># docker-compose.override.yml (development defaults, loaded automatically)
+version: '3'
+
+services:
+  web:
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./web:/app
+    environment:
+      - DEBUG=True
+      - DATABASE_URL=postgresql://postgres:password@db:5432/app_dev
+    command: python manage.py runserver 0.0.0.0:8000
+      
+  db:
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=app_dev
+    ports:
+      - "5432:5432"</code></pre>
+            
+            <pre><code># docker-compose.prod.yml (production overrides)
+version: '3'
+
+services:
+  web:
+    ports:
+      - "80:8000"
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgresql://app_user:${DB_PASSWORD}@db:5432/app_prod
+    command: gunicorn app.wsgi:application --bind 0.0.0.0:8000
+    restart: always
+      
+  db:
+    environment:
+      - POSTGRES_USER=app_user
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=app_prod
+    restart: always</code></pre>
+            
+            <p>Run with the appropriate compose files:</p>
+            <pre><code># Development (uses docker-compose.yml + docker-compose.override.yml)
+docker-compose up
+
+# Production (uses docker-compose.yml + docker-compose.prod.yml)
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d</code></pre>
+            
+            <h4>Strategy 3: Environment-specific Profiles</h4>
+            <p>Use Docker Compose profiles to define environment-specific services:</p>
+            <pre><code>version: '3.9'  # Profiles require Compose file format 3.9+
+
+services:
+  web:
+    build: ./web
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/app
+    
+  # Development-only services
+  dev-db:
+    image: postgres:13
+    environment:
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    profiles:
+      - dev
+      
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    profiles:
+      - dev
+      
+  # Production services
+  prod-db:
+    image: postgres:13
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    profiles:
+      - prod
+      
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+    profiles:
+      - prod
+      
+volumes:
+  postgres_data:</code></pre>
+            
+            <p>Run with the appropriate profile:</p>
+            <pre><code># Development
+docker-compose --profile dev up
+
+# Production
+docker-compose --profile prod up</code></pre>
+            
+            <div class="analogy">
+                <h4>Analogy: Wardrobe for Different Seasons</h4>
+                <p>Managing configurations for different environments is like organizing a wardrobe for different seasons:</p>
+                <ul>
+                    <li><strong>Base configuration</strong> (docker-compose.yml) is like essential clothing you wear year-round (jeans, t-shirts)</li>
+                    <li><strong>Environment overrides</strong> (docker-compose.override.yml, docker-compose.prod.yml) are like seasonal additions (shorts for summer, coats for winter)</li>
+                    <li><strong>Environment variables</strong> (.env files) are like accessories that complete your outfit for specific occasions</li>
+                    <li><strong>Profiles</strong> are like having completely separate wardrobes for different purposes (work clothes vs. weekend clothes)</li>
+                </ul>
+                <p>Just as you wouldn't wear a winter coat in summer, you shouldn't use development configurations in production.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Handling Sensitive Information</h3>
+            <p>Environment variables are commonly used to pass sensitive information like passwords and API keys to containers, but this requires careful handling:</p>
+            
+            <h4>Best Practices for Secrets Management</h4>
+            <ul>
+                <li><strong>Never commit secrets to version control</strong>
+                    <ul>
+                        <li>Add .env files to .gitignore</li>
+                        <li>Provide .env.example templates with dummy values</li>
+                    </ul>
+                </li>
+                <li><strong>Use different secrets for each environment</strong>
+                    <ul>
+                        <li>Generate unique values for development, staging, and production</li>
+                        <li>Rotate production secrets regularly</li>
+                    </ul>
+                </li>
+                <li><strong>Limit secret exposure</strong>
+                    <ul>
+                        <li>Only provide secrets to services that need them</li>
+                        <li>Be cautious with logs that might expose secrets</li>
+                    </ul>
+                </li>
+                <li><strong>Consider specialized secrets management tools</strong> for production
+                    <ul>
+                        <li>Docker Swarm secrets</li>
+                        <li>Kubernetes secrets</li>
+                        <li>HashiCorp Vault</li>
+                        <li>Cloud provider secrets managers (AWS Secrets Manager, GCP Secret Manager)</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h4>Example: .gitignore for Secrets</h4>
+            <pre><code># .gitignore file
+# Ignore all .env files
+.env
+.env.*
+
+# Except example templates
+!.env.example</code></pre>
+            
+            <h4>Example: .env.example Template</h4>
+            <pre><code># .env.example - Template for environment variables
+# Copy this file to .env and fill in your values
+
+# Application settings
+DEBUG=False
+SECRET_KEY=replace_with_your_secret_key
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database settings
+DB_NAME=myapp
+DB_USER=dbuser
+DB_PASSWORD=replace_with_your_db_password
+DB_HOST=db
+DB_PORT=5432
+
+# Email settings
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your_smtp_user
+SMTP_PASSWORD=replace_with_your_smtp_password</code></pre>
+            
+            <div class="example">
+                <h4>Example: Separating Regular Config from Secrets</h4>
+                <p>It's often useful to separate non-sensitive configuration from secrets:</p>
+                <pre><code># config.env (can be committed to version control)
+DEBUG=False
+LOG_LEVEL=INFO
+CACHE_TIMEOUT=3600
+PAGINATION_LIMIT=50
+
+# secrets.env (never commit to version control)
+SECRET_KEY=a8492ec3f77c94ed2e36712809a967d6
+DB_PASSWORD=H6X3kLmN9pQ8rS2t
+API_KEY=d96a458bcf4578e25c8b6ef9</code></pre>
+                <p>Then use both in your compose file:</p>
+                <pre><code>services:
+  web:
+    env_file:
+      - config.env
+      - secrets.env</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Configuration Best Practices</h3>
+            <p>Let's explore some best practices for managing configuration in Docker Compose:</p>
+            
+            <h4>Provide Sensible Defaults</h4>
+            <p>Always provide default values for optional configuration:</p>
+            <pre><code># In docker-compose.yml
+environment:
+  - DEBUG=${DEBUG:-False}
+  - LOG_LEVEL=${LOG_LEVEL:-INFO}
+  - CACHE_TTL=${CACHE_TTL:-3600}
+
+# In application code
+import os
+
+debug = os.environ.get('DEBUG', 'False').lower() == 'true'
+log_level = os.environ.get('LOG_LEVEL', 'INFO')
+cache_ttl = int(os.environ.get('CACHE_TTL', 3600))</code></pre>
+            
+            <h4>Validate Configuration at Startup</h4>
+            <p>Validate required configuration early to fail fast:</p>
+            <pre><code>import os
+
+def validate_config():
+    required_vars = [
+        'SECRET_KEY',
+        'DATABASE_URL',
+        'REDIS_URL',
+    ]
+    
+    missing = [var for var in required_vars if not os.environ.get(var)]
+    
+    if missing:
+        raise EnvironmentError(
+            f"Missing required environment variables: {', '.join(missing)}"
+        )
+
+if __name__ == '__main__':
+    validate_config()
+    # Continue with application startup...</code></pre>
+            
+            <h4>Use Strongly Typed Configuration</h4>
+            <p>Convert environment variables to appropriate types:</p>
+            <pre><code>import os
+from typing import Optional
+
+# Helper functions for type conversion
+def get_bool(name: str, default: bool = False) -> bool:
+    value = os.environ.get(name, str(default)).lower()
+    return value in ('true', 'yes', '1', 'on')
+
+def get_int(name: str, default: Optional[int] = None) -> int:
+    try:
+        return int(os.environ.get(name, default))
+    except (TypeError, ValueError):
+        if default is not None:
+            return default
+        raise ValueError(f"Invalid value for {name}, must be an integer")
+
+# Application configuration
+DEBUG = get_bool('DEBUG', False)
+PORT = get_int('PORT', 8000)
+MAX_CONNECTIONS = get_int('MAX_CONNECTIONS', 100)
+TIMEOUT = get_int('TIMEOUT', 30)</code></pre>
+            
+            <h4>Group Related Configuration</h4>
+            <p>Organize related configuration variables:</p>
+            <pre><code># Instead of:
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=myapp
+DB_USER=postgres
+DB_PASSWORD=password
+
+# Consider:
+DATABASE_URL=postgresql://postgres:password@localhost:5432/myapp
+
+# Or use prefixes to group related variables:
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_USER=user
+EMAIL_PASSWORD=password
+EMAIL_USE_TLS=True</code></pre>
+            
+            <h4>Document Your Configuration</h4>
+            <p>Create clear documentation for your configuration variables:</p>
+            <pre><code># Configuration Reference
+# =====================
+#
+# General Settings:
+# DEBUG: Enable debug mode (boolean, default: False)
+# LOG_LEVEL: Logging level (string, default: "INFO")
+# SECRET_KEY: Secret key for security (string, required)
+#
+# Database Settings:
+# DATABASE_URL: Database connection string (string, required)
+#   Format: postgresql://username:password@host:port/database
+#
+# Redis Settings:
+# REDIS_URL: Redis connection string (string, required)
+#   Format: redis://host:port/db
+#
+# Email Settings:
+# SMTP_HOST: SMTP server hostname (string, required for email functionality)
+# SMTP_PORT: SMTP server port (integer, default: 587)
+# SMTP_USER: SMTP username (string, required for email functionality)
+# SMTP_PASSWORD: SMTP password (string, required for email functionality)
+# SMTP_USE_TLS: Whether to use TLS (boolean, default: True)</code></pre>
+            
+            <div class="example">
+                <h4>Real-world Example: Django Settings</h4>
+                <p>Django's settings.py file is a great example of configuration management:</p>
+                <pre><code># settings.py
+import os
+from pathlib import Path
+
+# Build paths inside the project
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Security settings
+SECRET_KEY = os.environ.get('SECRET_KEY')
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+
+# Database settings
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'postgres'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
+        'HOST': os.environ.get('DB_HOST', 'db'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+    }
+}
+
+# Caching settings
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': REDIS_URL,
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.example.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_HOST_USER = os.environ.get('EMAIL_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'webmaster@example.com')</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Advanced Configuration Patterns</h3>
+            <p>Let's explore some advanced patterns for configuration management in containerized applications.</p>
+            
+            <h4>Configuration Files from Environment Variables</h4>
+            <p>Sometimes you need to generate configuration files from environment variables at container startup:</p>
+            <pre><code>#!/bin/bash
+# entrypoint.sh - Generate configuration files from environment variables
+
+# Generate Nginx configuration
+cat > /etc/nginx/conf.d/default.conf << EOF
+server {
+    listen ${NGINX_PORT:-80};
+    server_name ${SERVER_NAME:-localhost};
+    
+    location / {
+        proxy_pass http://${APP_HOST:-web}:${APP_PORT:-8000};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+}
+EOF
+
+# Execute the main command
+exec "$@"</code></pre>
+            
+            <p>Use this in your Dockerfile:</p>
+            <pre><code>FROM nginx:alpine
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]</code></pre>
+            
+            <h4>Using Environment Variable Expansion in Container Entrypoints</h4>
+            <p>For more complex scenarios, use a script to process environment variables:</p>
+            <pre><code>#!/usr/bin/env python
+# config_generator.py - Generate config from environment variables
+import os
+import sys
+import json
+
+# Base configuration with defaults
+config = {
+    "debug": False,
+    "port": 8000,
+    "database": {
+        "host": "localhost",
+        "port": 5432,
+        "name": "app",
+        "user": "postgres",
+        "password": ""
+    },
+    "redis": {
+        "host": "localhost",
+        "port": 6379
+    },
+    "logging": {
+        "level": "info",
+        "file": "/var/log/app.log"
+    }
+}
+
+# Override from environment variables
+if os.environ.get('DEBUG'):
+    config['debug'] = os.environ['DEBUG'].lower() in ('true', '1', 'yes')
+
+if os.environ.get('PORT'):
+    config['port'] = int(os.environ['PORT'])
+
+# Database settings
+if os.environ.get('DB_HOST'):
+    config['database']['host'] = os.environ['DB_HOST']
+    
+if os.environ.get('DB_PORT'):
+    config['database']['port'] = int(os.environ['DB_PORT'])
+    
+if os.environ.get('DB_NAME'):
+    config['database']['name'] = os.environ['DB_NAME']
+    
+if os.environ.get('DB_USER'):
+    config['database']['user'] = os.environ['DB_USER']
+    
+if os.environ.get('DB_PASSWORD'):
+    config['database']['password'] = os.environ['DB_PASSWORD']
+
+# Write configuration to file
+with open('/app/config.json', 'w') as f:
+    json.dump(config, f, indent=2)
+
+print(f"Configuration written to /app/config.json")
+
+# Continue with application startup
+os.execvp(sys.argv[1], sys.argv[1:])</code></pre>
+            
+            <p>Use this in your Dockerfile:</p>
+            <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+COPY config_generator.py /usr/local/bin/
+RUN chmod +x /usr/local/bin/config_generator.py
+
+ENTRYPOINT ["config_generator.py"]
+CMD ["python", "app.py"]</code></pre>
+            
+            <h4>Dynamic Configuration with Environment Variables</h4>
+            <p>Create dynamic configuration that responds to environment changes:</p>
+            <pre><code>import os
+import logging
+from functools import lru_cache
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@lru_cache()
+def get_settings():
+    """Get cached settings from environment variables."""
+    logger.info("Loading configuration from environment")
+    
+    return {
+        "debug": os.environ.get("DEBUG", "False").lower() == "true",
+        "environment": os.environ.get("ENVIRONMENT", "development"),
+        "database_url": os.environ.get("DATABASE_URL", "sqlite:///app.db"),
+        "redis_url": os.environ.get("REDIS_URL", "redis://localhost:6379/0"),
+        "secret_key": os.environ.get("SECRET_KEY", "dev_key"),
+        "log_level": os.environ.get("LOG_LEVEL", "INFO").upper(),
+    }
+
+def reload_settings():
+    """Force reload of cached settings."""
+    get_settings.cache_clear()
+    return get_settings()
+
+# Usage
+settings = get_settings()
+print(f"Debug mode: {settings['debug']}")
+print(f"Environment: {settings['environment']}")
+print(f"Database URL: {settings['database_url']}")
+
+# If environment variables change at runtime
+os.environ["DEBUG"] = "True"
+updated_settings = reload_settings()
+print(f"Updated debug mode: {updated_settings['debug']}")</code></pre>
+            
+            <div class="example">
+                <h4>Advanced Example: Multi-stage Environment Configuration</h4>
+                <p>Here's an example of a complete Docker Compose setup with advanced environment handling:</p>
+                <pre><code># docker-compose.yml
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./app
+      args:
+        - BUILD_ENV=${ENVIRONMENT:-development}
+    image: myapp:${APP_VERSION:-latest}
+    command: ["gunicorn", "app:app", "--bind", "0.0.0.0:8000"]
+    volumes:
+      - ./logs:/app/logs
+    env_file:
+      - .env
+      - .env.${ENVIRONMENT:-development}
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - LOG_DIR=/app/logs
+    ports:
+      - "${HOST_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - db
+      - redis
+      
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env.${ENVIRONMENT:-development}
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=${DB_NAME:-app}
+    
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+
+volumes:
+  postgres_data:
+  redis_data:</code></pre>
+                
+                <p>With environment-specific .env files:</p>
+                <pre><code># .env (Base configuration)
+APP_VERSION=1.0.0
+HOST_PORT=8000
+TZ=UTC
+
+# .env.development (Development overrides)
+ENVIRONMENT=development
+DEBUG=True
+LOG_LEVEL=DEBUG
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=app_dev
+DATABASE_URL=postgresql://postgres:postgres@db:5432/app_dev
+REDIS_URL=redis://redis:6379/0
+
+# .env.production (Production overrides)
+ENVIRONMENT=production
+DEBUG=False
+LOG_LEVEL=INFO
+DB_USER=app_user
+DB_PASSWORD=secure_password
+DB_NAME=app_prod
+DATABASE_URL=postgresql://app_user:secure_password@db:5432/app_prod
+REDIS_URL=redis://redis:6379/0</code></pre>
+                
+                <p>Running the setup:</p>
+                <pre><code># Development (uses .env and .env.development)
+docker-compose up
+
+# Production (uses .env and .env.production)
+ENVIRONMENT=production docker-compose up -d</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Troubleshooting Configuration Issues</h3>
+            <p>Configuration issues can be challenging to diagnose. Here are some common problems and how to solve them:</p>
+            
+            <h4>Problem: Variables Not Being Set</h4>
+            <p>If your environment variables aren't being set correctly:</p>
+            <ol>
+                <li>Check that your .env file is in the correct location (same directory as docker-compose.yml)</li>
+                <li>Verify the syntax of your .env file (no spaces around = signs)</li>
+                <li>Make sure variable names match exactly (they're case-sensitive)</li>
+                <li>Remember that docker-compose up -d won't reload environment variables - you need to restart containers</li>
+            </ol>
+            
+            <p>Debugging tips:</p>
+            <pre><code># Print all environment variables in a container
+docker-compose exec service_name env
+
+# Check a specific variable
+docker-compose exec service_name bash -c 'echo $VARIABLE_NAME'
+
+# Validate your docker-compose configuration
+docker-compose config
+
+# See resolved environment variables in configuration
+docker-compose config | grep -A 10 environment:</code></pre>
+            
+            <h4>Problem: Default Values Not Working</h4>
+            <p>If default values aren't being applied:</p>
+            <ul>
+                <li>Make sure you're using the correct syntax: ${VARIABLE:-default}</li>
+                <li>Check if the variable is defined elsewhere with higher precedence</li>
+                <li>Verify that the variable isn't defined as an empty string</li>
+            </ul>
+            
+            <h4>Problem: Type Conversion Issues</h4>
+            <p>If you have issues with variable types:</p>
+            <ul>
+                <li>Remember that all environment variables are strings</li>
+                <li>Add proper type conversion in your application code</li>
+                <li>Use validation to catch type errors early</li>
+                <li>Be careful with boolean values ("False" as a string is truthy in Python!)</li>
+            </ul>
+            
+            <h4>Problem: Secrets Being Exposed</h4>
+            <p>If sensitive information is being exposed:</p>
+            <ul>
+                <li>Check your version control system for .env files that were accidentally committed</li>
+                <li>Review container logs for sensitive information</li>
+                <li>Inspect container environment variables to ensure they're set correctly</li>
+                <li>Make sure your .gitignore properly excludes all .env files</li>
+            </ul>
+            
+            <div class="example">
+                <h4>Debugging Example</h4>
+                <p>Here's a step-by-step approach to debug configuration issues:</p>
+                <ol>
+                    <li>Check if the compose file is being parsed correctly:
+                        <pre><code>docker-compose config</code></pre>
+                    </li>
+                    <li>Verify environment variables in the container:
+                        <pre><code>docker-compose exec web env | sort</code></pre>
+                    </li>
+                    <li>Check if the application can access the variables:
+                        <pre><code>docker-compose exec web python -c "import os; print(os.environ.get('DEBUG', 'Not set'))"</code></pre>
+                    </li>
+                    <li>Inspect application logs for configuration errors:
+                        <pre><code>docker-compose logs web</code></pre>
+                    </li>
+                    <li>Try setting the variable explicitly:
+                        <pre><code>DEBUG=True docker-compose up -d</code></pre>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <section>
+            <h3>Practical Exercise: Environment Configuration</h3>
+            <p>Let's apply what we've learned with a practical exercise:</p>
+            
+            <h4>Exercise: Create a Multi-environment Configuration</h4>
+            <p>Create a Docker Compose setup for a Python Flask application with these requirements:</p>
+            <ol>
+                <li>The application should connect to a PostgreSQL database</li>
+                <li>The application should use Redis for caching</li>
+                <li>Create separate configurations for development and production environments</li>
+                <li>Implement proper secret management</li>
+                <li>Include appropriate environment variables for all components</li>
+            </ol>
+            
+            <h4>Project Structure</h4>
+            <pre><code>flask_app/
+├── docker-compose.yml
+├── docker-compose.prod.yml
+├── .env.example
+├── .env.development
+├── .env.production
+├── app/
+│   ├── Dockerfile
+│   ├── app.py
+│   ├── config.py
+│   └── requirements.txt
+└── README.md</code></pre>
+            
+            <h4>Implementation Steps</h4>
+            <ol>
+                <li>Create the Flask application with configuration from environment variables</li>
+                <li>Write the Dockerfile for the application</li>
+                <li>Create docker-compose.yml with base configuration</li>
+                <li>Create docker-compose.prod.yml with production overrides</li>
+                <li>Define environment variables in .env.example, .env.development, and .env.production</li>
+                <li>Add proper documentation in README.md</li>
+            </ol>
+            
+            <h4>Example Files</h4>
+            <p>Here's a starting point for the implementation:</p>
+            
+            <h5>app/config.py</h5>
+            <pre><code>import os
+
+class Config:
+    """Base configuration."""
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-key-please-change')
+    DEBUG = False
+    TESTING = False
+    
+    # Database
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Redis
+    REDIS_URL = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
+    
+    # Logging
+    LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+
+class DevelopmentConfig(Config):
+    """Development configuration."""
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        'DATABASE_URL', 'postgresql://postgres:postgres@db:5432/app_dev'
+    )
+
+class ProductionConfig(Config):
+    """Production configuration."""
+    # Production requires secret key to be set
+    if 'SECRET_KEY' not in os.environ:
+        raise ValueError("SECRET_KEY must be set in production")
+    
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        'DATABASE_URL', 'postgresql://app_user:password@db:5432/app_prod'
+    )
+
+class TestingConfig(Config):
+    """Testing configuration."""
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+
+# Export the appropriate configuration based on environment
+config = {
+    'development': DevelopmentConfig,
+    'production': ProductionConfig,
+    'testing': TestingConfig,
+    'default': DevelopmentConfig
+}
+
+active_config = config[os.environ.get('FLASK_ENV', 'default')]</code></pre>
+            
+            <h5>app/app.py</h5>
+            <pre><code>import os
+import time
+from flask import Flask, jsonify
+import redis
+from config import active_config
+
+app = Flask(__name__)
+app.config.from_object(active_config)
+
+# Setup Redis connection
+redis_client = redis.from_url(app.config['REDIS_URL'])
+
+@app.route('/')
+def hello():
+    return jsonify({
+        'message': 'Hello, World!',
+        'environment': os.environ.get('FLASK_ENV', 'development'),
+        'debug': app.config['DEBUG']
+    })
+
+@app.route('/config')
+def config():
+    """Return non-sensitive configuration."""
+    return jsonify({
+        'debug': app.config['DEBUG'],
+        'environment': os.environ.get('FLASK_ENV', 'development'),
+        'database': app.config['SQLALCHEMY_DATABASE_URI'].split('@')[1]
+            if '@' in app.config['SQLALCHEMY_DATABASE_URI'] else 'sqlite',
+        'redis': app.config['REDIS_URL'].split('@')[1]
+            if '@' in app.config['REDIS_URL'] else app.config['REDIS_URL'],
+        'log_level': app.config['LOG_LEVEL']
+    })
+
+@app.route('/health')
+def health():
+    """Health check endpoint."""
+    # Check Redis connection
+    try:
+        redis_client.ping()
+        redis_status = 'ok'
+    except redis.exceptions.ConnectionError:
+        redis_status = 'error'
+    
+    # Return health status
+    return jsonify({
+        'status': 'ok',
+        'redis': redis_status,
+        'timestamp': time.time()
+    })
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))</code></pre>
+            
+            <h5>app/Dockerfile</h5>
+            <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python", "app.py"]</code></pre>
+            
+            <h5>docker-compose.yml</h5>
+            <pre><code>version: '3.8'
+
+services:
+  web:
+    build: ./app
+    ports:
+      - "${PORT:-5000}:5000"
+    environment:
+      - FLASK_ENV=${FLASK_ENV:-development}
+      - SECRET_KEY=${SECRET_KEY:-dev-key-please-change}
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      - db
+      - redis
+    
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-app_dev}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+
+volumes:
+  postgres_data:</code></pre>
+            
+            <h5>docker-compose.prod.yml</h5>
+            <pre><code>version: '3.8'
+
+services:
+  web:
+    restart: always
+    ports:
+      - "80:5000"
+    environment:
+      - FLASK_ENV=production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  
+  db:
+    restart: always
+    ports: []  # Remove port mapping for security
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-app_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # Must be provided
+      - POSTGRES_DB=${POSTGRES_DB:-app_prod}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app_user}"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    
+  redis:
+    restart: always
+    ports: []  # Remove port mapping for security
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3</code></pre>
+            
+            <h5>.env.example</h5>
+            <pre><code># Example environment variables - DO NOT USE THESE VALUES IN PRODUCTION
+# Copy this file to .env.development or .env.production and modify as needed
+
+# Flask settings
+FLASK_ENV=development  # development or production
+SECRET_KEY=example-secret-key-change-me
+PORT=5000
+LOG_LEVEL=INFO  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+# Database settings
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=app_dev
+POSTGRES_PORT=5432
+DATABASE_URL=postgresql://postgres:postgres@db:5432/app_dev
+
+# Redis settings
+REDIS_PORT=6379
+REDIS_URL=redis://redis:6379/0</code></pre>
+            
+            <h5>Running Instructions</h5>
+            <pre><code># Development
+cp .env.example .env.development
+# Edit .env.development with your development settings
+docker-compose --env-file .env.development up
+
+# Production
+cp .env.example .env.production
+# Edit .env.production with your production settings
+docker-compose --env-file .env.production -f docker-compose.yml -f docker-compose.prod.yml up -d</code></pre>
+        </section>
+
+        <section>
+            <h3>Further Resources</h3>
+            <ul>
+                <li><a href="https://docs.docker.com/compose/environment-variables/" target="_blank">Docker Compose Environment Variables Documentation</a></li>
+                <li><a href="https://docs.docker.com/compose/env-file/" target="_blank">Docker Compose .env File Documentation</a></li>
+                <li><a href="https://12factor.net/config" target="_blank">The Twelve-Factor App: Configuration</a></li>
+                <li><a href="https://pythonspeed.com/articles/environment-variables-docker-compose/" target="_blank">Configuring Docker Compose with Environment Variables</a></li>
+                <li><a href="https://www.freecodecamp.org/news/python-configuration-management-using-pydantic/" target="_blank">Python Configuration Management using Pydantic</a></li>
+                <li><a href="https://www.python.org/dev/peps/pep-0565/" target="_blank">PEP 565 -- Environment Variable Configuration</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

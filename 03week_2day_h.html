@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Decorators (Getters and Setters) in Python</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 3: Object-Oriented Programming Advanced Concepts</h2>
+        <h3>Property Decorators (Getters and Setters)</h3>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>Understanding Properties in Python</h3>
+            <p>
+                In object-oriented programming, one of the key principles is encapsulation—the idea of bundling data and the methods that work on that data together, while restricting direct access to some of the object's components. In many OOP languages, this is achieved through private variables and public getters and setters.
+            </p>
+            
+            <p>
+                Python, however, takes a different approach. While Python doesn't have true private variables (all attributes are technically accessible), it provides a powerful mechanism called "properties" that allows you to create getter and setter methods that behave like attributes. This gives you the best of both worlds: the simplicity of attribute access with the control and flexibility of method calls.
+            </p>
+            
+            <p>
+                In today's session, we'll explore how to use property decorators to implement controlled attribute access, data validation, computed properties, and more. By the end, you'll understand how to use properties to write cleaner, more maintainable code while maintaining proper encapsulation.
+            </p>
+        </section>
+
+        <section class="folder_structure">
+            <h3>Today's File Structure</h3>
+            <p>For today's lesson, we'll create a new Python module in our project. Ensure you have the following directory structure:</p>
+            <pre>
+project_root/
+├── properties/
+│   ├── __init__.py  (empty file to make the folder a package)
+│   ├── property_basics.py
+│   ├── property_decorators.py
+│   ├── computed_properties.py
+│   ├── property_validation.py
+│   └── real_world_examples.py
+</pre>
+            <p>All code examples will be saved in these files, allowing you to organize and revisit these concepts easily.</p>
+        </section>
+
+        <section class="property_basics">
+            <h3>The Basics of Properties</h3>
+            <p>Let's start by understanding the traditional approach to getters and setters in Python, and then see how properties improve on that. Create a file named <code>property_basics.py</code> with the following code:</p>
+            
+            <pre>
+# File: properties/property_basics.py
+
+class PersonTraditional:
+    """A class demonstrating the traditional getter/setter approach"""
+    
+    def __init__(self, first_name, last_name, age):
+        self._first_name = first_name
+        self._last_name = last_name
+        self._age = age
+    
+    def get_first_name(self):
+        return self._first_name
+    
+    def set_first_name(self, value):
+        if not isinstance(value, str):
+            raise TypeError("First name must be a string")
+        if len(value) == 0:
+            raise ValueError("First name cannot be empty")
+        self._first_name = value
+    
+    def get_last_name(self):
+        return self._last_name
+    
+    def set_last_name(self, value):
+        if not isinstance(value, str):
+            raise TypeError("Last name must be a string")
+        if len(value) == 0:
+            raise ValueError("Last name cannot be empty")
+        self._last_name = value
+    
+    def get_age(self):
+        return self._age
+    
+    def set_age(self, value):
+        if not isinstance(value, int):
+            raise TypeError("Age must be an integer")
+        if value < 0 or value > 120:
+            raise ValueError("Age must be between 0 and 120")
+        self._age = value
+    
+    def get_full_name(self):
+        return f"{self._first_name} {self._last_name}"
+
+
+class PersonProperty:
+    """A class demonstrating the property() function approach"""
+    
+    def __init__(self, first_name, last_name, age):
+        self._first_name = first_name
+        self._last_name = last_name
+        self._age = age
+    
+    def _get_first_name(self):
+        return self._first_name
+    
+    def _set_first_name(self, value):
+        if not isinstance(value, str):
+            raise TypeError("First name must be a string")
+        if len(value) == 0:
+            raise ValueError("First name cannot be empty")
+        self._first_name = value
+    
+    # Create a property using the property() function
+    first_name = property(_get_first_name, _set_first_name, 
+                         doc="The person's first name")
+    
+    def _get_last_name(self):
+        return self._last_name
+    
+    def _set_last_name(self, value):
+        if not isinstance(value, str):
+            raise TypeError("Last name must be a string")
+        if len(value) == 0:
+            raise ValueError("Last name cannot be empty")
+        self._last_name = value
+    
+    last_name = property(_get_last_name, _set_last_name,
+                        doc="The person's last name")
+    
+    def _get_age(self):
+        return self._age
+    
+    def _set_age(self, value):
+        if not isinstance(value, int):
+            raise TypeError("Age must be an integer")
+        if value < 0 or value > 120:
+            raise ValueError("Age must be between 0 and 120")
+        self._age = value
+    
+    age = property(_get_age, _set_age, doc="The person's age")
+    
+    def _get_full_name(self):
+        return f"{self._first_name} {self._last_name}"
+    
+    # Read-only property (no setter)
+    full_name = property(_get_full_name, doc="The person's full name")
+
+
+# Demo traditional getter/setter approach
+if __name__ == "__main__":
+    print("Traditional getter/setter approach:")
+    person1 = PersonTraditional("John", "Doe", 30)
+    
+    # Get attributes using getter methods
+    print(f"Name: {person1.get_first_name()} {person1.get_last_name()}")
+    print(f"Age: {person1.get_age()}")
+    print(f"Full name: {person1.get_full_name()}")
+    
+    # Set attributes using setter methods
+    person1.set_first_name("Jane")
+    person1.set_age(32)
+    
+    print(f"Updated name: {person1.get_first_name()} {person1.get_last_name()}")
+    print(f"Updated age: {person1.get_age()}")
+    
+    # Demo property() function approach
+    print("\nProperty function approach:")
+    person2 = PersonProperty("John", "Doe", 30)
+    
+    # Get attributes using properties (looks like attribute access)
+    print(f"Name: {person2.first_name} {person2.last_name}")
+    print(f"Age: {person2.age}")
+    print(f"Full name: {person2.full_name}")
+    
+    # Set attributes using properties
+    person2.first_name = "Jane"
+    person2.age = 32
+    
+    print(f"Updated name: {person2.first_name} {person2.last_name}")
+    print(f"Updated age: {person2.age}")
+    
+    # Access property docstrings
+    print(f"\nDocstring for first_name: {PersonProperty.first_name.__doc__}")
+    
+    # Demonstrate validation
+    try:
+        person2.age = -5  # Should raise ValueError
+    except ValueError as e:
+        print(f"Validation error: {e}")
+    
+    try:
+        person2.first_name = 123  # Should raise TypeError
+    except TypeError as e:
+        print(f"Validation error: {e}")
+    
+    # Try to set a read-only property
+    try:
+        person2.full_name = "Jane Smith"  # Should raise AttributeError
+    except AttributeError as e:
+        print(f"Read-only property error: {e}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li><code>PersonTraditional</code> uses the traditional getter/setter method approach:
+                    <ul>
+                        <li>Attributes are prefixed with an underscore to indicate they're intended to be private</li>
+                        <li>Explicit getter methods (<code>get_first_name</code>, etc.) to access attributes</li>
+                        <li>Explicit setter methods (<code>set_first_name</code>, etc.) for modifying attributes with validation</li>
+                        <li>Additional methods for derived data (<code>get_full_name</code>)</li>
+                    </ul>
+                </li>
+                <li><code>PersonProperty</code> uses the <code>property()</code> function to create properties:
+                    <ul>
+                        <li>Same private attributes with underscore prefix</li>
+                        <li>Private getter and setter methods (<code>_get_first_name</code>, <code>_set_first_name</code>, etc.)</li>
+                        <li>Property objects created using <code>property(getter, setter, deleter, doc)</code></li>
+                        <li>This allows attribute-like access that actually calls the getter and setter methods</li>
+                        <li>Read-only properties (like <code>full_name</code>) defined by omitting the setter</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h4>Advantages of Properties:</h4>
+            <ul>
+                <li><strong>Cleaner Syntax:</strong> Object users can use simple attribute access syntax (<code>person.name</code>) instead of method calls (<code>person.get_name()</code>)</li>
+                <li><strong>Encapsulation:</strong> You can still control access, validation, and computation behind the scenes</li>
+                <li><strong>Backward Compatibility:</strong> You can start with a simple attribute and later add a property without changing the interface</li>
+                <li><strong>Documentation:</strong> Properties can have docstrings, making them self-documenting</li>
+                <li><strong>Read-Only Attributes:</strong> You can create read-only attributes by defining only a getter</li>
+            </ul>
+            
+            <p><strong>Real-world analogy:</strong> Think of properties like smart home devices. From the user's perspective, they just flip a light switch as they always have. But behind the scenes, that switch might be connected to a smart system that performs additional actions (validation, logging) or makes intelligent decisions (computed properties). The interface remains simple, but the behavior is enhanced.</p>
+        </section>
+
+        <section class="property_decorators">
+            <h3>Property Decorators: The Pythonic Way</h3>
+            <p>While the <code>property()</code> function approach is functional, Python provides an even cleaner syntax using decorators. Create a file named <code>property_decorators.py</code> with the following code:</p>
+            
+            <pre>
+# File: properties/property_decorators.py
+
+class Person:
+    """A class demonstrating property decorators"""
+    
+    def __init__(self, first_name, last_name, age):
+        # Initialize with private attributes
+        # Note: using private attributes prevents name conflicts with properties
+        self._first_name = first_name
+        self._last_name = last_name
+        self._age = age
+    
+    @property
+    def first_name(self):
+        """The person's first name"""
+        return self._first_name
+    
+    @first_name.setter
+    def first_name(self, value):
+        if not isinstance(value, str):
+            raise TypeError("First name must be a string")
+        if len(value) == 0:
+            raise ValueError("First name cannot be empty")
+        self._first_name = value
+    
+    @property
+    def last_name(self):
+        """The person's last name"""
+        return self._last_name
+    
+    @last_name.setter
+    def last_name(self, value):
+        if not isinstance(value, str):
+            raise TypeError("Last name must be a string")
+        if len(value) == 0:
+            raise ValueError("Last name cannot be empty")
+        self._last_name = value
+    
+    @property
+    def age(self):
+        """The person's age"""
+        return self._age
+    
+    @age.setter
+    def age(self, value):
+        if not isinstance(value, int):
+            raise TypeError("Age must be an integer")
+        if value < 0 or value > 120:
+            raise ValueError("Age must be between 0 and 120")
+        self._age = value
+    
+    @property
+    def full_name(self):
+        """The person's full name (read-only)"""
+        return f"{self._first_name} {self._last_name}"
+    
+    @property
+    def is_adult(self):
+        """Boolean indicating if the person is an adult (18+)"""
+        return self._age >= 18
+
+
+class Rectangle:
+    """A class representing a rectangle with property decorators"""
+    
+    def __init__(self, width, height):
+        self._width = width
+        self._height = height
+    
+    @property
+    def width(self):
+        """The rectangle's width"""
+        return self._width
+    
+    @width.setter
+    def width(self, value):
+        if not isinstance(value, (int, float)):
+            raise TypeError("Width must be a number")
+        if value <= 0:
+            raise ValueError("Width must be positive")
+        self._width = value
+    
+    @property
+    def height(self):
+        """The rectangle's height"""
+        return self._height
+    
+    @height.setter
+    def height(self, value):
+        if not isinstance(value, (int, float)):
+            raise TypeError("Height must be a number")
+        if value <= 0:
+            raise ValueError("Height must be positive")
+        self._height = value
+    
+    @property
+    def area(self):
+        """The rectangle's area (width * height)"""
+        return self._width * self._height
+    
+    @property
+    def perimeter(self):
+        """The rectangle's perimeter (2 * (width + height))"""
+        return 2 * (self._width + self._height)
+    
+    @property
+    def is_square(self):
+        """Boolean indicating if the rectangle is a square"""
+        return self._width == self._height
+    
+    def __str__(self):
+        return f"Rectangle(width={self._width}, height={self._height})"
+    
+    # Deleter example
+    @width.deleter
+    def width(self):
+        print("Cannot delete width attribute!")
+        # Not actually deleting the attribute
+    
+    @height.deleter
+    def height(self):
+        print("Cannot delete height attribute!")
+        # Not actually deleting the attribute
+
+
+# Demo property decorators
+if __name__ == "__main__":
+    print("Property decorators example:")
+    person = Person("John", "Doe", 30)
+    
+    # Get attributes using properties
+    print(f"Name: {person.first_name} {person.last_name}")
+    print(f"Age: {person.age}")
+    print(f"Full name: {person.full_name}")
+    print(f"Is adult: {person.is_adult}")
+    
+    # Set attributes using properties
+    person.first_name = "Jane"
+    person.age = 17
+    
+    print(f"Updated name: {person.first_name} {person.last_name}")
+    print(f"Updated age: {person.age}")
+    print(f"Is adult: {person.is_adult}")
+    
+    # Rectangle example
+    print("\nRectangle example:")
+    rect = Rectangle(10, 5)
+    print(f"Rectangle: {rect}")
+    print(f"Width: {rect.width}")
+    print(f"Height: {rect.height}")
+    print(f"Area: {rect.area}")
+    print(f"Perimeter: {rect.perimeter}")
+    print(f"Is square: {rect.is_square}")
+    
+    # Modify rectangle
+    rect.width = 8
+    rect.height = 8
+    print(f"Updated rectangle: {rect}")
+    print(f"Area: {rect.area}")
+    print(f"Perimeter: {rect.perimeter}")
+    print(f"Is square: {rect.is_square}")
+    
+    # Demonstrate validation
+    try:
+        rect.width = -5  # Should raise ValueError
+    except ValueError as e:
+        print(f"Validation error: {e}")
+    
+    try:
+        rect.height = "invalid"  # Should raise TypeError
+    except TypeError as e:
+        print(f"Validation error: {e}")
+    
+    # Demonstrate deleters
+    try:
+        del rect.width  # Should invoke the deleter
+        print(f"Width after deletion: {rect.width}")
+    except AttributeError as e:
+        print(f"Deletion error: {e}")
+    
+    # Try to set a read-only property
+    try:
+        rect.area = 100  # Should raise AttributeError
+    except AttributeError as e:
+        print(f"Read-only property error: {e}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li><code>Person</code> class uses property decorators:
+                    <ul>
+                        <li><code>@property</code> creates a read-only property (the getter)</li>
+                        <li><code>@name.setter</code> defines the setter method for the property</li>
+                        <li>Properties like <code>full_name</code> and <code>is_adult</code> are read-only (no setter)</li>
+                    </ul>
+                </li>
+                <li><code>Rectangle</code> class shows more examples:
+                    <ul>
+                        <li>Computed properties for <code>area</code>, <code>perimeter</code>, and <code>is_square</code></li>
+                        <li>Validation in property setters</li>
+                        <li>Deleter implementations with <code>@name.deleter</code></li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h4>Decorator Syntax Explained:</h4>
+            <ol>
+                <li><code>@property</code> - This creates a property getter. It's placed above a method that retrieves the property value.</li>
+                <li><code>@name.setter</code> - This creates a property setter. The method name must be the same as the getter, and it takes a value parameter.</li>
+                <li><code>@name.deleter</code> - This creates a property deleter, which runs when <code>del obj.name</code> is called.</li>
+            </ol>
+            
+            <h4>Property Decorator Order:</h4>
+            <p>The order of property decorators is important:</p>
+            <ol>
+                <li>Define the getter first with <code>@property</code></li>
+                <li>Define the setter with <code>@name.setter</code> (if needed)</li>
+                <li>Define the deleter with <code>@name.deleter</code> (if needed)</li>
+            </ol>
+            
+            <p><strong>Real-world analogy:</strong> Property decorators are like installing a smart thermostat in your home. The interface (turning a dial or pressing buttons) remains familiar, but the thermostat now has validation (prevents setting to extreme temperatures), computation (calculating energy usage), and additional behavior (learning your schedule). Users still interact with it in the same simple way, but it's now smarter and safer.</p>
+        </section>
+
+        <section class="computed_properties">
+            <h3>Computed Properties</h3>
+            <p>One of the most powerful uses of properties is creating computed or derived attributes—properties that calculate their values on the fly based on other attributes. Create a file named <code>computed_properties.py</code> with the following code:</p>
+            
+            <pre>
+# File: properties/computed_properties.py
+
+import math
+from datetime import datetime, date
+
+
+class Circle:
+    """A class representing a circle with computed properties"""
+    
+    def __init__(self, radius):
+        self._radius = radius
+    
+    @property
+    def radius(self):
+        """The circle's radius"""
+        return self._radius
+    
+    @radius.setter
+    def radius(self, value):
+        if not isinstance(value, (int, float)):
+            raise TypeError("Radius must be a number")
+        if value <= 0:
+            raise ValueError("Radius must be positive")
+        self._radius = value
+    
+    @property
+    def diameter(self):
+        """The circle's diameter (2 * radius)"""
+        return self._radius * 2
+    
+    @diameter.setter
+    def diameter(self, value):
+        """Setting diameter updates the radius"""
+        if not isinstance(value, (int, float)):
+            raise TypeError("Diameter must be a number")
+        if value <= 0:
+            raise ValueError("Diameter must be positive")
+        self._radius = value / 2
+    
+    @property
+    def area(self):
+        """The circle's area (π * radius²)"""
+        return math.pi * self._radius ** 2
+    
+    @property
+    def circumference(self):
+        """The circle's circumference (2 * π * radius)"""
+        return 2 * math.pi * self._radius
+
+
+class Person:
+    """A class demonstrating computed properties based on multiple attributes"""
+    
+    def __init__(self, first_name, last_name, birth_date=None):
+        self._first_name = first_name
+        self._last_name = last_name
+        self._birth_date = birth_date
+    
+    @property
+    def first_name(self):
+        return self._first_name
+    
+    @first_name.setter
+    def first_name(self, value):
+        self._first_name = value
+    
+    @property
+    def last_name(self):
+        return self._last_name
+    
+    @last_name.setter
+    def last_name(self, value):
+        self._last_name = value
+    
+    @property
+    def birth_date(self):
+        return self._birth_date
+    
+    @birth_date.setter
+    def birth_date(self, value):
+        if value is not None and not isinstance(value, date):
+            raise TypeError("Birth date must be a date object or None")
+        self._birth_date = value
+    
+    @property
+    def full_name(self):
+        """The person's full name (first + last)"""
+        return f"{self._first_name} {self._last_name}"
+    
+    @property
+    def age(self):
+        """Calculate the person's age based on birth date"""
+        if self._birth_date is None:
+            return None
+        
+        today = date.today()
+        
+        # Calculate the age
+        age = today.year - self._birth_date.year
+        
+        # Adjust age if birthday hasn't occurred yet this year
+        if (today.month, today.day) < (self._birth_date.month, self._birth_date.day):
+            age -= 1
+            
+        return age
+    
+    @property
+    def initials(self):
+        """Get the person's initials"""
+        return f"{self._first_name[0]}.{self._last_name[0]}."
+
+
+class Temperature:
+    """A class demonstrating properties that convert between units"""
+    
+    def __init__(self, celsius=0):
+        self._celsius = celsius
+    
+    @property
+    def celsius(self):
+        """Temperature in Celsius"""
+        return self._celsius
+    
+    @celsius.setter
+    def celsius(self, value):
+        if not isinstance(value, (int, float)):
+            raise TypeError("Temperature must be a number")
+        self._celsius = value
+    
+    @property
+    def fahrenheit(self):
+        """Temperature in Fahrenheit"""
+        return (self._celsius * 9/5) + 32
+    
+    @fahrenheit.setter
+    def fahrenheit(self, value):
+        """Setting Fahrenheit updates Celsius"""
+        if not isinstance(value, (int, float)):
+            raise TypeError("Temperature must be a number")
+        self._celsius = (value - 32) * 5/9
+    
+    @property
+    def kelvin(self):
+        """Temperature in Kelvin"""
+        return self._celsius + 273.15
+    
+    @kelvin.setter
+    def kelvin(self, value):
+        """Setting Kelvin updates Celsius"""
+        if not isinstance(value, (int, float)):
+            raise TypeError("Temperature must be a number")
+        if value < 0:
+            raise ValueError("Temperature in Kelvin cannot be negative")
+        self._celsius = value - 273.15
+
+
+# Demo computed properties
+if __name__ == "__main__":
+    print("Circle example:")
+    circle = Circle(5)
+    print(f"Radius: {circle.radius}")
+    print(f"Diameter: {circle.diameter}")
+    print(f"Area: {circle.area:.2f}")
+    print(f"Circumference: {circle.circumference:.2f}")
+    
+    # Change radius and observe computed properties
+    circle.radius = 7
+    print(f"\nAfter changing radius to {circle.radius}:")
+    print(f"Diameter: {circle.diameter}")
+    print(f"Area: {circle.area:.2f}")
+    print(f"Circumference: {circle.circumference:.2f}")
+    
+    # Change diameter and observe radius
+    circle.diameter = 20
+    print(f"\nAfter changing diameter to {circle.diameter}:")
+    print(f"Radius: {circle.radius}")
+    print(f"Area: {circle.area:.2f}")
+    print(f"Circumference: {circle.circumference:.2f}")
+    
+    # Person example
+    print("\nPerson example:")
+    person = Person("John", "Doe", date(1990, 5, 15))
+    print(f"Full name: {person.full_name}")
+    print(f"Initials: {person.initials}")
+    print(f"Birth date: {person.birth_date}")
+    print(f"Age: {person.age}")
+    
+    # Change name and observe computed properties
+    person.first_name = "Jane"
+    print(f"\nAfter changing first name to {person.first_name}:")
+    print(f"Full name: {person.full_name}")
+    print(f"Initials: {person.initials}")
+    
+    # Temperature example
+    print("\nTemperature example:")
+    temp = Temperature(25)  # 25°C
+    print(f"Celsius: {temp.celsius}°C")
+    print(f"Fahrenheit: {temp.fahrenheit}°F")
+    print(f"Kelvin: {temp.kelvin}K")
+    
+    # Change temperature in different units
+    print("\nChanging to 68°F:")
+    temp.fahrenheit = 68
+    print(f"Celsius: {temp.celsius:.2f}°C")
+    print(f"Fahrenheit: {temp.fahrenheit}°F")
+    print(f"Kelvin: {temp.kelvin:.2f}K")
+    
+    print("\nChanging to 300K:")
+    temp.kelvin = 300
+    print(f"Celsius: {temp.celsius:.2f}°C")
+    print(f"Fahrenheit: {temp.fahrenheit:.2f}°F")
+    print(f"Kelvin: {temp.kelvin}K")
+    
+    # Demonstrate validation
+    try:
+        temp.kelvin = -10  # Should raise ValueError
+    except ValueError as e:
+        print(f"\nValidation error: {e}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li><code>Circle</code> class:
+                    <ul>
+                        <li>Computed properties for <code>diameter</code>, <code>area</code>, and <code>circumference</code></li>
+                        <li>A setter for <code>diameter</code> that updates <code>radius</code></li>
+                    </ul>
+                </li>
+                <li><code>Person</code> class:
+                    <ul>
+                        <li>Computed properties for <code>full_name</code>, <code>age</code>, and <code>initials</code></li>
+                        <li>Complex calculation for <code>age</code> based on <code>birth_date</code></li>
+                    </ul>
+                </li>
+                <li><code>Temperature</code> class:
+                    <ul>
+                        <li>Properties for different temperature units (Celsius, Fahrenheit, Kelvin)</li>
+                        <li>Setters that convert between units</li>
+                        <li>Validation to prevent physically impossible values</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h4>Key Concepts for Computed Properties:</h4>
+            <ol>
+                <li><strong>Lazy Evaluation:</strong> Computed properties calculate their values only when accessed, which is more efficient than calculating everything upfront.</li>
+                <li><strong>Derived Data:</strong> Computed properties can derive their values from other attributes, keeping your data model DRY (Don't Repeat Yourself).</li>
+                <li><strong>Bidirectional Relationships:</strong> Properties can have setters that update other related properties, maintaining consistency.</li>
+                <li><strong>Caching:</strong> For expensive calculations, you might cache the result and only recalculate when dependencies change (not shown in examples).</li>
+                <li><strong>Domain Logic:</strong> Properties can encapsulate domain-specific logic, like the age calculation that correctly handles birthdays.</li>
+            </ol>
+            
+            <p><strong>Real-world analogy:</strong> Computed properties are like the dashboard in your car. When you look at the speedometer, it doesn't store your speed—it calculates it on demand based on other factors (wheel rotation). The fuel gauge similarly computes based on the fuel level. The "miles to empty" display combines multiple factors (fuel level, average consumption) to derive a useful value. All of these are "computed properties" that give you insight based on the current state of the system.</p>
+        </section>
+
+        <section class="property_validation">
+            <h3>Property Validation Patterns</h3>
+            <p>Properties provide an excellent place to validate input data before it's stored in your objects. Let's explore some validation patterns in detail. Create a file named <code>property_validation.py</code> with the following code:</p>
+            
+            <pre>
+# File: properties/property_validation.py
+
+import re
+from datetime import datetime
+
+
+class User:
+    """A class demonstrating validation patterns with properties"""
+    
+    def __init__(self, username, email, password, birth_date=None):
+        # Note: we don't validate in __init__ since property setters will do that
+        # Instead, we use the property setters directly
+        self._username = None
+        self._email = None
+        self._password = None
+        self._birth_date = None
+        
+        # Now set the attributes through the properties to trigger validation
+        self.username = username
+        self.email = email
+        self.password = password
+        self.birth_date = birth_date
+    
+    @property
+    def username(self):
+        """
+        The user's username - must be 3-20 characters, alphanumeric with underscores
+        """
+        return self._username
+    
+    @username.setter
+    def username(self, value):
+        # Type checking
+        if not isinstance(value, str):
+            raise TypeError("Username must be a string")
+        
+        # Value validation - length
+        if len(value) < 3 or len(value) > 20:
+            raise ValueError("Username must be 3-20 characters long")
+        
+        # Value validation - pattern (alphanumeric + underscore)
+        if not re.match(r'^[a-zA-Z0-9_]+$', value):
+            raise ValueError("Username must contain only letters, numbers, and underscores")
+        
+        # If we've passed all validations, set the value
+        self._username = value
+    
+    @property
+    def email(self):
+        """The user's email address - must be a valid email format"""
+        return self._email
+    
+    @email.setter
+    def email(self, value):
+        # Type checking
+        if not isinstance(value, str):
+            raise TypeError("Email must be a string")
+        
+        # Value validation - simplified email pattern
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', value):
+            raise ValueError("Email must be a valid email address")
+        
+        self._email = value
+    
+    @property
+    def password(self):
+        """
+        The user's password - must be 8+ characters with letters and numbers
+        Note: In a real system, we would never return the actual password
+        """
+        return "********"  # Hide the actual password
+    
+    @password.setter
+    def password(self, value):
+        # Type checking
+        if not isinstance(value, str):
+            raise TypeError("Password must be a string")
+        
+        # Value validation - length
+        if len(value) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        
+        # Value validation - complexity
+        if not any(c.isalpha() for c in value):
+            raise ValueError("Password must contain at least one letter")
+        
+        if not any(c.isdigit() for c in value):
+            raise ValueError("Password must contain at least one number")
+        
+        # In a real system, we would hash the password before storing
+        self._password = value
+    
+    @property
+    def birth_date(self):
+        """The user's birth date (optional) - must be in the past"""
+        return self._birth_date
+    
+    @birth_date.setter
+    def birth_date(self, value):
+        # Allow None for optional fields
+        if value is None:
+            self._birth_date = None
+            return
+        
+        # Type checking
+        if not isinstance(value, datetime):
+            raise TypeError("Birth date must be a datetime object")
+        
+        # Value validation - must be in the past
+        if value > datetime.now():
+            raise ValueError("Birth date cannot be in the future")
+        
+        self._birth_date = value
+    
+    @property
+    def age(self):
+        """Calculate the user's age based on birth date"""
+        if self._birth_date is None:
+            return None
+        
+        today = datetime.now()
+        age = today.year - self._birth_date.year
+        
+        # Adjust age if birthday hasn't occurred yet this year
+        if (today.month, today.day) < (self._birth_date.month, self._birth_date.day):
+            age -= 1
+            
+        return age
+
+
+class BankAccount:
+    """A class demonstrating validation patterns for financial data"""
+    
+    def __init__(self, account_number, owner_name, balance=0):
+        self._account_number = None
+        self._owner_name = None
+        self._balance = None
+        
+        # Set via properties to trigger validation
+        self.account_number = account_number
+        self.owner_name = owner_name
+        self.balance = balance
+        self._transaction_history = []
+    
+    @property
+    def account_number(self):
+        """
+        The account number - must be exactly 10 digits
+        Note: In a real system, we might mask this for security
+        """
+        return self._account_number
+    
+    @account_number.setter
+    def account_number(self, value):
+        # Type checking
+        if not isinstance(value, str):
+            raise TypeError("Account number must be a string")
+        
+        # Value validation - format
+        if not re.match(r'^\d{10}$', value):
+            raise ValueError("Account number must be exactly 10 digits")
+        
+        self._account_number = value
+    
+    @property
+    def owner_name(self):
+        """The name of the account owner"""
+        return self._owner_name
+    
+    @owner_name.setter
+    def owner_name(self, value):
+        # Type checking
+        if not isinstance(value, str):
+            raise TypeError("Owner name must be a string")
+        
+        # Value validation
+        if len(value.strip()) == 0:
+            raise ValueError("Owner name cannot be empty")
+        
+        self._owner_name = value
+    
+    @property
+    def balance(self):
+        """The account balance - must be non-negative"""
+        return self._balance
+    
+    @balance.setter
+    def balance(self, value):
+        # Type checking
+        if not isinstance(value, (int, float)):
+            raise TypeError("Balance must be a number")
+        
+        # Value validation
+        if value < 0:
+            raise ValueError("Balance cannot be negative")
+        
+        self._balance = value
+    
+    @property
+    def transaction_history(self):
+        """The account's transaction history (read-only)"""
+        # Return a copy to prevent external modification
+        return self._transaction_history.copy()
+    
+    def deposit(self, amount):
+        """Deposit money into the account"""
+        # Validate the amount
+        if not isinstance(amount, (int, float)):
+            raise TypeError("Deposit amount must be a number")
+        
+        if amount <= 0:
+            raise ValueError("Deposit amount must be positive")
+        
+        # Update the balance
+        old_balance = self._balance
+        self._balance += amount
+        
+        # Record the transaction
+        transaction = {
+            'type': 'deposit',
+            'amount': amount,
+            'old_balance': old_balance,
+            'new_balance': self._balance,
+            'timestamp': datetime.now()
+        }
+        self._transaction_history.append(transaction)
+        
+        return self._balance
+    
+    def withdraw(self, amount):
+        """Withdraw money from the account"""
+        # Validate the amount
+        if not isinstance(amount, (int, float)):
+            raise TypeError("Withdrawal amount must be a number")
+        
+        if amount <= 0:
+            raise ValueError("Withdrawal amount must be positive")
+        
+        if amount > self._balance:
+            raise ValueError("Insufficient funds")
+        
+        # Update the balance
+        old_balance = self._balance
+        self._balance -= amount
+        
+        # Record the transaction
+        transaction = {
+            'type': 'withdrawal',
+            'amount': amount,
+            'old_balance': old_balance,
+            'new_balance': self._balance,
+            'timestamp': datetime.now()
+        }
+        self._transaction_history.append(transaction)
+        
+        return self._balance
+
+
+# Demo property validation
+if __name__ == "__main__":
+    print("User validation example:")
+    try:
+        # Valid user creation
+        user = User(
+            username="john_doe",
+            email="john@example.com",
+            password="password123",
+            birth_date=datetime(1990, 5, 15)
+        )
+        print(f"User created: {user.username}, {user.email}")
+        print(f"Password (masked): {user.password}")
+        print(f"Birth date: {user.birth_date}")
+        print(f"Age: {user.age}")
+        
+        # Invalid username
+        user.username = "j"  # Too short
+    except ValueError as e:
+        print(f"Validation error: {e}")
+    
+    try:
+        # Invalid email
+        user.email = "invalid-email"
+    except ValueError as e:
+        print(f"Validation error: {e}")
+    
+    try:
+        # Invalid password
+        user.password = "weak"  # Too short
+    except ValueError as e:
+        print(f"Validation error: {e}")
+    
+    try:
+        # Invalid birth date (future)
+        user.birth_date = datetime(2030, 1, 1)
+    except ValueError as e:
+        print(f"Validation error: {e}")
+    
+    print("\nBankAccount validation example:")
+    try:
+        # Valid account creation
+        account = BankAccount("1234567890", "Jane Smith", 1000)
+        print(f"Account created: {account.account_number}, {account.owner_name}")
+        print(f"Initial balance: ${account.balance}")
+        
+        # Deposit and withdraw
+        print(f"After deposit of $500: ${account.deposit(500)}")
+        print(f"After withdrawal of $200: ${account.withdraw(200)}")
+        
+        # View transaction history
+        print("\nTransaction history:")
+        for i, transaction in enumerate(account.transaction_history, 1):
+            print(f"{i}. {transaction['type'].capitalize()}: ${transaction['amount']} (Balance: ${transaction['new_balance']})")
+        
+        # Invalid deposit
+        account.deposit(-100)  # Negative amount
+    except ValueError as e:
+        print(f"Validation error: {e}")
+    
+    try:
+        # Invalid withdrawal
+        account.withdraw(2000)  # Insufficient funds
+    except ValueError as e:
+        print(f"Validation error: {e}")
+    
+    try:
+        # Invalid account number
+        account.account_number = "12345"  # Not 10 digits
+    except ValueError as e:
+        print(f"Validation error: {e}")
+    
+    try:
+        # Attempt to modify transaction history
+        account.transaction_history.append({'fake': 'transaction'})
+        print("Transaction history modified!")
+    except AttributeError as e:
+        print(f"Modification error: {e}")
+    
+    # Verify transaction history is unchanged
+    print(f"Transaction history length: {len(account.transaction_history)}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li><code>User</code> class:
+                    <ul>
+                        <li>Comprehensive validation for username, email, password, and birth_date</li>
+                        <li>Type checking before value validation</li>
+                        <li>Pattern-based validation using regular expressions</li>
+                        <li>Password security considerations (masking in getter, complexity validation)</li>
+                        <li>Optional field handling (birth_date can be None)</li>
+                    </ul>
+                </li>
+                <li><code>BankAccount</code> class:
+                    <ul>
+                        <li>Financial data validation patterns</li>
+                        <li>Defensive copying for collections (transaction_history)</li>
+                        <li>Business logic validation in methods (deposit, withdraw)</li>
+                        <li>Transaction recording with history</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h4>Validation Patterns:</h4>
+            <ol>
+                <li><strong>Type Checking:</strong> Use <code>isinstance()</code> to ensure values are of the expected type.</li>
+                <li><strong>Value Validation:</strong> Check that values meet domain-specific requirements (length, pattern, range, etc.).</li>
+                <li><strong>Pattern Matching:</strong> Use regular expressions for complex pattern validation (username, email, account numbers).</li>
+                <li><strong>Business Rules:</strong> Enforce domain-specific business rules (birth date must be in the past, balance can't be negative).</li>
+                <li><strong>Defensive Copying:</strong> Return copies of mutable objects to prevent external modification.</li>
+                <li><strong>Data Privacy:</strong> Hide sensitive information in getters (password masking).</li>
+            </ol>
+            
+            <h4>Initialization Pattern:</h4>
+            <p>Note the pattern used in both classes:
+            <ol>
+                <li>Initialize private attributes to None in <code>__init__</code></li>
+                <li>Then set attributes through properties to trigger validation</li>
+                <li>This ensures that even during initialization, all values are validated</li>
+            </ol>
+            
+            <p><strong>Real-world analogy:</strong> Property validation is like a security checkpoint. Before anyone can enter a secure building, they must pass through metal detectors, ID verification, and maybe even biometric scans. Similarly, before data can enter your object's internal state, it must pass through the validation "checkpoint" defined in your property setters. The more sensitive the data, the more thorough the validation should be.</p>
+        </section>
+
+        <section class="real_world_examples">
+            <h3>Real-World Examples</h3>
+            <p>Let's look at some real-world examples of how properties are used in web development and other contexts. Create a file named <code>real_world_examples.py</code> with the following code:</p>
+            
+            <pre>
+# File: properties/real_world_examples.py
+
+import re
+import json
+from datetime import datetime, timedelta
+import os
+
+
+class Config:
+    """A configuration class with lazy loading and type validation"""
+    
+    def __init__(self, config_file=None):
+        self._config_file = config_file
+        self._data = {}
+        self._loaded = False
+    
+    def _load_if_needed(self):
+        """Lazy load the config file"""
+        if not self._loaded and self._config_file and os.path.exists(self._config_file):
+            with open(self._config_file, 'r') as f:
+                self._data = json.load(f)
+            self._loaded = True
+    
+    @property
+    def database_url(self):
+        """Get the database URL"""
+        self._load_if_needed()
+        return self._data.get('database_url', 'sqlite:///default.db')
+    
+    @database_url.setter
+    def database_url(self, value):
+        if not isinstance(value, str):
+            raise TypeError("Database URL must be a string")
+        self._data['database_url'] = value
+    
+    @property
+    def debug_mode(self):
+        """Get the debug mode setting"""
+        self._load_if_needed()
+        return self._data.get('debug_mode', False)
+    
+    @debug_mode.setter
+    def debug_mode(self, value):
+        if not isinstance(value, bool):
+            raise TypeError("Debug mode must be a boolean")
+        self._data['debug_mode'] = value
+    
+    @property
+    def api_keys(self):
+        """Get API keys (dictionary)"""
+        self._load_if_needed()
+        return self._data.get('api_keys', {}).copy()  # Return a copy to prevent modification
+    
+    @api_keys.setter
+    def api_keys(self, value):
+        if not isinstance(value, dict):
+            raise TypeError("API keys must be a dictionary")
+        self._data['api_keys'] = value
+    
+    def save(self):
+        """Save the configuration to the file"""
+        if not self._config_file:
+            raise ValueError("No config file specified")
+        
+        with open(self._config_file, 'w') as f:
+            json.dump(self._data, f, indent=2)
+        
+        self._loaded = True
+
+
+class URLBuilder:
+    """A class for building URLs with proper encoding and validation"""
+    
+    def __init__(self, base_url):
+        # Validate and store the base URL
+        if not isinstance(base_url, str):
+            raise TypeError("Base URL must be a string")
+        
+        # Ensure the base URL is properly formatted
+        if not base_url.startswith(('http://', 'https://')):
+            raise ValueError("Base URL must start with http:// or https://")
+        
+        # Remove trailing slash for consistency
+        self._base_url = base_url.rstrip('/')
+        
+        # Initialize components
+        self._path = ''
+        self._query_params = {}
+        self._fragment = ''
+    
+    @property
+    def base_url(self):
+        """The base URL (scheme + domain)"""
+        return self._base_url
+    
+    @property
+    def path(self):
+        """The URL path"""
+        return self._path
+    
+    @path.setter
+    def path(self, value):
+        if not isinstance(value, str):
+            raise TypeError("Path must be a string")
+        
+        # Ensure the path starts with a slash but doesn't end with one
+        self._path = '/' + value.strip('/') if value else ''
+    
+    @property
+    def query_params(self):
+        """The query parameters as a dictionary"""
+        return self._query_params.copy()  # Return a copy to prevent modification
+    
+    def add_query_param(self, key, value):
+        """Add a query parameter"""
+        self._query_params[key] = value
+    
+    def clear_query_params(self):
+        """Clear all query parameters"""
+        self._query_params.clear()
+    
+    @property
+    def fragment(self):
+        """The URL fragment (the part after #)"""
+        return self._fragment
+    
+    @fragment.setter
+    def fragment(self, value):
+        if not isinstance(value, str):
+            raise TypeError("Fragment must be a string")
+        
+        # Remove the leading # if present
+        self._fragment = value.lstrip('#')
+    
+    @property
+    def url(self):
+        """
+        The complete URL formed by joining all components
+        This is a calculated property based on all the components
+        """
+        url = self._base_url + self._path
+        
+        # Add query parameters if any
+        if self._query_params:
+            # Simple URL encoding for demonstration purposes
+            # In a real implementation, use urllib.parse
+            params = '&'.join(f'{k}={v}' for k, v in self._query_params.items())
+            url += '?' + params
+        
+        # Add fragment if any
+        if self._fragment:
+            url += '#' + self._fragment
+        
+        return url
+
+
+class CachedProperty:
+    """A descriptor that caches the result of a property"""
+    
+    def __init__(self, func):
+        self.func = func
+        self.__doc__ = func.__doc__
+    
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        
+        # Calculate the value
+        value = self.func(instance)
+        
+        # Cache the value on the instance
+        setattr(instance, self.func.__name__, value)
+        
+        return value
+
+
+class WebPageAnalyzer:
+    """A class that analyzes web page content with cached properties"""
+    
+    def __init__(self, html_content):
+        self.html_content = html_content
+    
+    @CachedProperty
+    def word_count(self):
+        """Count the number of words in the HTML content"""
+        # This is a simplified example - in real life we would parse the HTML properly
+        # and extract just the text content
+        print("Calculating word count...")
+        words = re.findall(r'\b\w+\b', self.html_content)
+        return len(words)
+    
+    @CachedProperty
+    def link_count(self):
+        """Count the number of links in the HTML content"""
+        print("Counting links...")
+        links = re.findall(r'<a\s+[^>]*href=[\'"]([^\'"]+)[\'"]', self.html_content)
+        return len(links)
+    
+    @CachedProperty
+    def image_count(self):
+        """Count the number of images in the HTML content"""
+        print("Counting images...")
+        images = re.findall(r'<img\s+[^>]*src=[\'"]([^\'"]+)[\'"]', self.html_content)
+        return len(images)
+    
+    @property
+    def stats(self):
+        """Get a dictionary of all statistics"""
+        return {
+            'word_count': self.word_count,
+            'link_count': self.link_count,
+            'image_count': self.image_count
+        }
+
+
+class JWTToken:
+    """A class for working with JWT tokens"""
+    
+    def __init__(self, token=None):
+        self._token = token
+        self._payload = None
+        self._header = None
+        self._signature = None
+        self._expiry = None
+        
+        # If a token was provided, decode it
+        if token:
+            self._decode_token()
+    
+    def _decode_token(self):
+        """Decode the token into its parts"""
+        # This is a simplified implementation for demonstration
+        # In a real implementation, use a JWT library
+        
+        try:
+            parts = self._token.split('.')
+            if len(parts) != 3:
+                raise ValueError("Invalid JWT token format")
+            
+            # In a real implementation, these would be base64 decoded and parsed
+            self._header = {"alg": "HS256", "typ": "JWT"}
+            self._payload = {"sub": "1234567890", "name": "John Doe", "exp": int((datetime.now() + timedelta(hours=1)).timestamp())}
+            self._signature = "signature"
+            
+            # Extract expiry time if present
+            if "exp" in self._payload:
+                self._expiry = datetime.fromtimestamp(self._payload["exp"])
+        
+        except Exception as e:
+            raise ValueError(f"Failed to decode token: {e}")
+    
+    @property
+    def token(self):
+        """The JWT token string"""
+        return self._token
+    
+    @token.setter
+    def token(self, value):
+        if not isinstance(value, str):
+            raise TypeError("Token must be a string")
+        
+        self._token = value
+        self._decode_token()
+    
+    @property
+    def payload(self):
+        """The token payload (claims)"""
+        return self._payload.copy() if self._payload else None
+    
+    @property
+    def header(self):
+        """The token header"""
+        return self._header.copy() if self._header else None
+    
+    @property
+    def subject(self):
+        """The subject claim from the payload"""
+        return self._payload.get("sub") if self._payload else None
+    
+    @property
+    def expiry(self):
+        """The expiry time of the token"""
+        return self._expiry
+    
+    @property
+    def is_expired(self):
+        """Check if the token is expired"""
+        if not self._expiry:
+            return False
+        return datetime.now() > self._expiry
+    
+    @property
+    def time_to_expiry(self):
+        """Time remaining until the token expires"""
+        if not self._expiry:
+            return None
+        
+        if self.is_expired:
+            return timedelta(0)
+        
+        return self._expiry - datetime.now()
+
+
+# Demo real-world examples
+if __name__ == "__main__":
+    # Config example
+    print("Config example:")
+    # Uncomment to test with a real file
+    # config = Config("config.json")
+    config = Config()  # In-memory only for demo
+    
+    print(f"Default database URL: {config.database_url}")
+    print(f"Default debug mode: {config.debug_mode}")
+    
+    config.database_url = "postgresql://user:pass@localhost/mydb"
+    config.debug_mode = True
+    config.api_keys = {"google": "abc123", "twitter": "xyz789"}
+    
+    print(f"Updated database URL: {config.database_url}")
+    print(f"Updated debug mode: {config.debug_mode}")
+    print(f"API keys: {config.api_keys}")
+    
+    # Uncommment to save to file
+    # config.save()
+    
+    # URLBuilder example
+    print("\nURLBuilder example:")
+    builder = URLBuilder("https://api.example.com")
+    
+    builder.path = "/users/profile"
+    builder.add_query_param("user_id", "12345")
+    builder.add_query_param("format", "json")
+    builder.fragment = "personal-info"
+    
+    print(f"Built URL: {builder.url}")
+    
+    builder.path = "/search"
+    builder.clear_query_params()
+    builder.add_query_param("q", "python properties")
+    builder.fragment = ""
+    
+    print(f"New URL: {builder.url}")
+    
+    # WebPageAnalyzer example
+    print("\nWebPageAnalyzer example:")
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head><title>Test Page</title></head>
+    <body>
+        <h1>Hello, World!</h1>
+        <p>This is a test page with some text.</p>
+        <a href="https://example.com">Link 1</a>
+        <a href="https://example.org">Link 2</a>
+        <img src="image1.jpg" alt="Image 1">
+        <img src="image2.jpg" alt="Image 2">
+        <img src="image3.jpg" alt="Image 3">
+    </body>
+    </html>
+    """
+    
+    analyzer = WebPageAnalyzer(html)
+    
+    # First access calculates the value
+    print(f"Word count: {analyzer.word_count}")
+    
+    # Second access uses the cached value
+    print(f"Word count (cached): {analyzer.word_count}")
+    
+    # Access other properties
+    print(f"Link count: {analyzer.link_count}")
+    print(f"Image count: {analyzer.image_count}")
+    
+    # Get all stats
+    print(f"All stats: {analyzer.stats}")
+    
+    # JWTToken example
+    print("\nJWTToken example:")
+    # In a real implementation, this would be a valid JWT token
+    jwt = JWTToken("header.payload.signature")
+    
+    print(f"Token: {jwt.token}")
+    print(f"Header: {jwt.header}")
+    print(f"Payload: {jwt.payload}")
+    print(f"Subject: {jwt.subject}")
+    print(f"Expiry: {jwt.expiry}")
+    print(f"Is expired: {jwt.is_expired}")
+    print(f"Time to expiry: {jwt.time_to_expiry}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li><code>Config</code> class:
+                    <ul>
+                        <li>Uses properties for lazy loading configuration from a file</li>
+                        <li>Type validation for configuration values</li>
+                        <li>Default values for missing configuration</li>
+                        <li>Defensive copying for mutable values (api_keys)</li>
+                    </ul>
+                </li>
+                <li><code>URLBuilder</code> class:
+                    <ul>
+                        <li>Uses properties to build and validate URL components</li>
+                        <li>Computed <code>url</code> property that combines all components</li>
+                        <li>Type and format validation</li>
+                    </ul>
+                </li>
+                <li><code>CachedProperty</code> class:
+                    <ul>
+                        <li>A property descriptor that caches the result of expensive calculations</li>
+                        <li>Used in <code>WebPageAnalyzer</code> to avoid recalculating values</li>
+                    </ul>
+                </li>
+                <li><code>WebPageAnalyzer</code> class:
+                    <ul>
+                        <li>Uses the <code>CachedProperty</code> descriptor for expensive calculations</li>
+                        <li>Regular property (<code>stats</code>) that combines other properties</li>
+                    </ul>
+                </li>
+                <li><code>JWTToken</code> class:
+                    <ul>
+                        <li>Properties for accessing JWT token components</li>
+                        <li>Computed properties for token state (<code>is_expired</code>, <code>time_to_expiry</code>)</li>
+                        <li>Token parsing and validation</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h4>Key Patterns in Real-World Use:</h4>
+            <ol>
+                <li><strong>Lazy Loading:</strong> Properties can delay expensive operations until data is actually needed.</li>
+                <li><strong>Caching:</strong> Properties can cache results to improve performance for expensive calculations.</li>
+                <li><strong>Computed Aggregates:</strong> Properties can combine multiple values into useful aggregates.</li>
+                <li><strong>Domain-Specific Validation:</strong> Properties can enforce domain rules specific to the application.</li>
+                <li><strong>Immutable Views:</strong> Properties can provide read-only views or defensive copies of internal data.</li>
+                <li><strong>Custom Descriptors:</strong> For advanced cases, custom descriptors like <code>CachedProperty</code> extend the property pattern.</li>
+            </ol>
+            
+            <p><strong>Real-world analogy:</strong> These examples are like various smart home devices working together. The Config class is like a smart home hub that loads settings only when needed. The URLBuilder is like a smart navigation system that ensures all directions are valid. The CachedProperty is like a smart thermostat that remembers the last temperature reading to avoid constantly checking. The JWTToken is like a smart lock that handles all the security details while providing a simple interface.</p>
+        </section>
+
+        <section class="descriptors">
+            <h3>Property Descriptors (Advanced)</h3>
+            <p>The property decorator is actually built on a more general Python feature called descriptors. Understanding descriptors can help you create more advanced property-like objects. Here's a brief look at how descriptors work:</p>
+            
+            <pre>
+# Advanced: Understanding Descriptors
+
+class TypedProperty:
+    """A descriptor that enforces type checking"""
+    
+    def __init__(self, expected_type, doc=None):
+        self.expected_type = expected_type
+        self.__doc__ = doc
+        self.name = None  # Will be set when the descriptor is accessed
+    
+    def __set_name__(self, owner, name):
+        """Set the attribute name (Python 3.6+)"""
+        self.name = name
+    
+    def __get__(self, instance, owner):
+        """Called when the attribute is accessed"""
+        if instance is None:
+            return self
+        
+        # Retrieve the value from the instance's __dict__
+        # Using a private attribute name to avoid conflicts
+        return instance.__dict__.get("_" + self.name)
+    
+    def __set__(self, instance, value):
+        """Called when the attribute is set"""
+        if value is not None and not isinstance(value, self.expected_type):
+            raise TypeError(f"{self.name} must be a {self.expected_type.__name__}")
+        
+        # Store the value in the instance's __dict__
+        instance.__dict__["_" + self.name] = value
+
+
+class Person:
+    """A class using the TypedProperty descriptor"""
+    
+    name = TypedProperty(str, "The person's name")
+    age = TypedProperty(int, "The person's age")
+    
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+
+# Demo the TypedProperty descriptor
+person = Person("John", 30)
+print(f"Name: {person.name}")
+print(f"Age: {person.age}")
+
+try:
+    person.age = "thirty"  # Should raise TypeError
+except TypeError as e:
+    print(f"Error: {e}")
+
+# Access the docstring
+print(f"Docstring for name: {Person.name.__doc__}")
+</pre>
+
+            <p><strong>How Descriptors Work:</strong></p>
+            <ul>
+                <li>A descriptor is any object that implements at least one of the methods <code>__get__</code>, <code>__set__</code>, or <code>__delete__</code>.</li>
+                <li>When you access, set, or delete an attribute that is a descriptor, these methods are called instead of the normal attribute operations.</li>
+                <li>The property decorator creates a descriptor that uses these methods to call your getter, setter, and deleter functions.</li>
+                <li>Descriptors are a powerful feature that enables many of Python's advanced features, including properties, class methods, static methods, and more.</li>
+            </ul>
+            
+            <p>Descriptors are more advanced and typically not needed for everyday programming, but understanding them can help you create more powerful custom behaviors for attributes when needed.</p>
+        </section>
+
+        <section class="key_takeaways">
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li><strong>Property Decorators</strong> in Python provide a clean, Pythonic way to implement getters, setters, and deleters for class attributes.</li>
+                <li><strong>Encapsulation</strong> is achieved by using private attributes (prefixed with <code>_</code>) and providing controlled access through properties.</li>
+                <li><strong>Validation</strong> can be performed in property setters to ensure data integrity and enforce business rules.</li>
+                <li><strong>Computed Properties</strong> calculate their values on-the-fly based on other attributes, avoiding data duplication and ensuring consistency.</li>
+                <li><strong>Backward Compatibility</strong> is preserved when refactoring—you can start with simple attributes and later add properties without changing the interface.</li>
+                <li><strong>Interface Simplicity</strong> is maintained by allowing attribute-like access (<code>obj.attr</code>) instead of method calls (<code>obj.get_attr()</code>).</li>
+                <li><strong>Read-Only Properties</strong> can be created by implementing only a getter method (no setter).</li>
+                <li><strong>Lazy Loading</strong> can be implemented using properties to delay expensive operations until actually needed.</li>
+                <li><strong>Advanced Patterns</strong> like caching, type checking, and custom descriptors extend the property pattern for specialized needs.</li>
+            </ul>
+        </section>
+
+        <section class="best_practices">
+            <h3>Best Practices for Using Properties</h3>
+            
+            <ol>
+                <li><strong>Start Simple:</strong> Begin with simple public attributes, and add properties only when you need validation, computation, or other special behavior.</li>
+                <li><strong>Use Consistent Naming:</strong> Store the actual data in a private attribute with an underscore prefix (e.g., <code>_name</code>) and use the unprefixed name for the property (e.g., <code>name</code>).</li>
+                <li><strong>Document Properties:</strong> Provide clear docstrings for properties, explaining their purpose, constraints, and whether they're read-only.</li>
+                <li><strong>Validate Input:</strong> Always validate input in setters to maintain data integrity and enforce business rules.</li>
+                <li><strong>Return Copies of Mutable Objects:</strong> In getters, return copies of mutable objects (lists, dictionaries, etc.) to prevent unintended modification.</li>
+                <li><strong>Keep Properties Lightweight:</strong> Properties should be relatively fast to compute. For expensive operations, consider caching or lazy loading.</li>
+                <li><strong>Maintain Backward Compatibility:</strong> When adding properties to existing code, ensure they behave the same way as the attributes they replace.</li>
+                <li><strong>Don't Modify State in Getters:</strong> Getters should not modify the object's state. They should be "pure" functions that simply return values.</li>
+                <li><strong>Prefer Properties over Getter/Setter Methods:</strong> In Python, properties are more idiomatic than explicit getter and setter methods.</li>
+                <li><strong>Consider Using Descriptors for Repeated Patterns:</strong> If you find yourself writing similar property patterns (like type checking) across multiple properties, consider using descriptors.</li>
+            </ol>
+        </section>
+
+        <section class="assignment">
+            <h3>Assignment: Build a Course Management System with Properties</h3>
+            <p>For today's assignment, you'll build a simple course management system that makes extensive use of property decorators for validation, computation, and encapsulation.</p>
+            
+            <h4>Requirements:</h4>
+            <ol>
+                <li>Create a <code>Student</code> class with:
+                    <ul>
+                        <li>Properties for name, email, and ID with appropriate validation</li>
+                        <li>A grades dictionary to store course grades</li>
+                        <li>Computed properties for GPA and academic standing</li>
+                    </ul>
+                </li>
+                <li>Create a <code>Course</code> class with:
+                    <ul>
+                        <li>Properties for course code, name, and instructor</li>
+                        <li>A roster of enrolled students</li>
+                        <li>Methods to add/remove students and assign grades</li>
+                        <li>Computed properties for average grade and pass rate</li>
+                    </ul>
+                </li>
+                <li>Create an <code>Instructor</code> class with:
+                    <ul>
+                        <li>Properties for name, email, and department</li>
+                        <li>A list of courses taught</li>
+                        <li>Computed properties for teaching load and student count</li>
+                    </ul>
+                </li>
+                <li>Create a <code>Department</code> class with:
+                    <ul>
+                        <li>Properties for name, budget, and head (an Instructor)</li>
+                        <li>Lists of courses and instructors</li>
+                        <li>Computed properties for total enrollment and average course size</li>
+                    </ul>
+                </li>
+                <li>Implement appropriate validation for all properties to ensure data integrity.</li>
+                <li>Use computed properties for derived data to avoid redundancy and ensure consistency.</li>
+                <li>Provide a simple command-line interface to demonstrate the system.</li>
+            </ol>
+            
+            <h4>Bonus Challenges:</h4>
+            <ol>
+                <li>Implement a custom property descriptor for common validation patterns.</li>
+                <li>Add caching for expensive computed properties.</li>
+                <li>Implement a simple file-based persistence system using properties for lazy loading.</li>
+                <li>Create a <code>Semester</code> class that uses properties to manage temporal relationships between courses.</li>
+                <li>Add a simple web API using Flask that exposes the properties in a RESTful manner.</li>
+            </ol>
+            
+            <p>Submit your work as a Python module with clear structure and organization. Be prepared to explain how your use of properties enhances the system's maintainability, usability, and data integrity.</p>
+        </section>
+
+        <section class="further_reading">
+            <h3>Further Reading and Resources</h3>
+            <ul>
+                <li><a href="https://docs.python.org/3/library/functions.html#property" target="_blank">Python Documentation: property()</a></li>
+                <li><a href="https://docs.python.org/3/howto/descriptor.html" target="_blank">Python Documentation: Descriptor HowTo Guide</a></li>
+                <li><a href="https://realpython.com/python-property/" target="_blank">Real Python: Python's property(): Add Managed Attributes to Your Classes</a></li>
+                <li><a href="https://realpython.com/python-descriptors/" target="_blank">Real Python: Python Descriptors: An Introduction</a></li>
+                <li>Fluent Python by Luciano Ramalho (Chapter 19: Properties, Attributes, and Descriptors)</li>
+                <li>Python Cookbook, 3rd Edition by David Beazley and Brian K. Jones (Chapter 8: Classes and Objects)</li>
+                <li>Effective Python: 90 Specific Ways to Write Better Python by Brett Slatkin (Item 44: Use Plain Attributes Instead of Getter and Setter Methods)</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

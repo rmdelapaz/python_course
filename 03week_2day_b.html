@@ -3,2034 +3,1040 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DOM Manipulation for Python Developers</title>
+    <title>Multiple Inheritance in Python</title>
     <link rel="stylesheet" href="/styles/main.css">
     <link rel="icon" href="/favicon.png">
 </head>
 <body>
     <header>
-        <h1>DOM Manipulation</h1>
-        <p class="subtitle">The Bridge Between JavaScript and the Webpage</p>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 3: Object-Oriented Programming Advanced Concepts</h2>
+        <h3>Multiple Inheritance</h3>
     </header>
 
-    <div class="content">
-        <section>
-            <h2>Introduction to the Document Object Model</h2>
-            <p>Welcome to our deep dive into DOM Manipulation! As Python developers venturing into the frontend world, understanding the Document Object Model (DOM) is your gateway to creating truly interactive web applications.</p>
+    <main>
+        <section class="introduction">
+            <h3>Understanding Multiple Inheritance in Python</h3>
+            <p>Multiple inheritance is a powerful feature of Python's object-oriented programming model that allows a class to inherit attributes and methods from more than one parent class. Unlike some languages (such as Java) that support only single inheritance, Python embraces the flexibility of multiple inheritance, enabling developers to create sophisticated class hierarchies and reuse code from various sources.</p>
             
-            <p>Think of the DOM as a living, breathing representation of your HTML document. If HTML is the blueprint for a building, the DOM is the actual constructed building that you can modify in real-time—adding rooms, changing colors, or even tearing down walls without rebuilding from scratch.</p>
+            <p>Think of multiple inheritance as a child who inherits traits from both parents rather than just one. This child might have their mother's eye color and their father's height. Similarly, a class with multiple inheritance can combine the functionality of several parent classes to create a more specialized and feature-rich entity.</p>
             
-            <div class="analogy">
-                <h3>Analogy: The DOM as a Family Tree</h3>
-                <p>Imagine an ancient family tree where each person is a node (an element). The DOM is structured like this genealogical hierarchy:</p>
-                <ul>
-                    <li>The document itself is the original ancestor</li>
-                    <li>The <code>&lt;html&gt;</code> element is the first descendant</li>
-                    <li>Elements like <code>&lt;head&gt;</code> and <code>&lt;body&gt;</code> are its children</li>
-                    <li>Every element can have multiple children</li>
-                    <li>Elements can have attributes (like traits passed down)</li>
-                    <li>Text content is like the personal stories of each family member</li>
-                </ul>
-                <p>With JavaScript, you can find any family member, learn about them, modify their traits, add new members, or even remove them from the tree.</p>
-            </div>
-            
-            <p>Python developers might recognize similarities to working with XML or HTML using libraries like BeautifulSoup. The key difference? The DOM is <em>live</em> and <em>interactive</em>—changes are immediately reflected on the page.</p>
+            <p>While powerful, multiple inheritance adds complexity that must be managed carefully. In this session, we'll explore the mechanics, benefits, challenges, and best practices of multiple inheritance in Python.</p>
         </section>
 
-        <section>
-            <h2>The DOM and Browser Rendering</h2>
+        <section class="folder_structure">
+            <h3>Today's File Structure</h3>
+            <p>For today's lesson, we'll create a new Python module in our project. Ensure you have the following directory structure:</p>
+            <pre>
+project_root/
+├── multiple_inheritance/
+│   ├── __init__.py  (empty file to make the folder a package)
+│   ├── basic_multiple_inheritance.py
+│   ├── mro_explanation.py
+│   ├── mixins.py
+│   ├── diamond_problem.py
+│   └── real_world_examples.py
+</pre>
+            <p>All code examples will be saved in these files, allowing you to organize and revisit these concepts easily.</p>
+        </section>
+
+        <section class="basic_multiple_inheritance">
+            <h3>Basic Multiple Inheritance</h3>
+            <p>Let's start with the fundamental syntax and behavior of multiple inheritance in Python. Create a file named <code>basic_multiple_inheritance.py</code> with the following code:</p>
             
-            <p>Before we dive into manipulation, let's understand how the browser creates and uses the DOM:</p>
+            <pre>
+# File: multiple_inheritance/basic_multiple_inheritance.py
+
+class Animal:
+    """Base class for all animals"""
+    
+    def __init__(self, name):
+        self.name = name
+    
+    def eat(self):
+        return f"{self.name} is eating."
+    
+    def sleep(self):
+        return f"{self.name} is sleeping."
+
+
+class Flyable:
+    """Mixin class for flying capabilities"""
+    
+    def fly(self):
+        return f"{self.name} is flying through the air."
+    
+    def land(self):
+        return f"{self.name} is landing."
+
+
+class Swimmable:
+    """Mixin class for swimming capabilities"""
+    
+    def swim(self):
+        return f"{self.name} is swimming in the water."
+    
+    def dive(self):
+        return f"{self.name} is diving underwater."
+
+
+class Bird(Animal, Flyable):
+    """Bird class inherits from both Animal and Flyable"""
+    
+    def __init__(self, name, wingspan):
+        Animal.__init__(self, name)  # Explicitly calling parent's __init__
+        self.wingspan = wingspan
+    
+    def chirp(self):
+        return f"{self.name} is chirping."
+
+
+class Duck(Bird, Swimmable):
+    """Duck class inherits from Bird and Swimmable, which means it
+    ultimately inherits from Animal, Flyable, and Swimmable"""
+    
+    def __init__(self, name, wingspan, swimming_speed):
+        Bird.__init__(self, name, wingspan)  # Call Bird's __init__
+        self.swimming_speed = swimming_speed
+    
+    def quack(self):
+        return f"{self.name} is quacking."
+
+
+# Create and use the classes
+print("Creating a Bird:")
+eagle = Bird("Eddie the Eagle", wingspan=2.1)
+print(eagle.eat())       # From Animal
+print(eagle.fly())       # From Flyable
+print(eagle.chirp())     # From Bird
+
+print("\nCreating a Duck:")
+donald = Duck("Donald", wingspan=0.5, swimming_speed=5)
+print(donald.eat())      # From Animal
+print(donald.fly())      # From Flyable
+print(donald.swim())     # From Swimmable
+print(donald.chirp())    # From Bird
+print(donald.quack())    # From Duck
+
+# Display method resolution order
+print("\nMethod Resolution Order for Duck:")
+print(Duck.__mro__)
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>We define a base class <code>Animal</code> with common attributes and behaviors for all animals.</li>
+                <li>We create two "mixin" classes, <code>Flyable</code> and <code>Swimmable</code>, which each provide a specific set of capabilities.</li>
+                <li>The <code>Bird</code> class inherits from both <code>Animal</code> and <code>Flyable</code>, allowing birds to both eat/sleep and fly.</li>
+                <li>The <code>Duck</code> class inherits from both <code>Bird</code> and <code>Swimmable</code>, making it a bird that can also swim.</li>
+                <li>Note how we explicitly call the parent class initializers using <code>Animal.__init__(self, name)</code> and <code>Bird.__init__(self, name, wingspan)</code>.</li>
+            </ul>
+
+            <h4>Alternative Constructor Calling with super()</h4>
+            <p>Instead of explicitly calling each parent class's <code>__init__</code> method, we can use <code>super()</code> with multiple inheritance, but it requires careful consideration of the Method Resolution Order (MRO):</p>
             
+            <pre>
+class Bird(Animal, Flyable):
+    def __init__(self, name, wingspan):
+        super().__init__(name)  # This calls Animal.__init__
+        self.wingspan = wingspan
+
+# This works because Animal is first in the MRO
+</pre>
+            
+            <p>However, with more complex inheritance hierarchies, using <code>super()</code> requires understanding the MRO to know which parent's method will be called.</p>
+            
+            <p><strong>Real-world analogy:</strong> Think of multiple inheritance like a smartphone that is both a phone and a camera. It inherits functionality from two different device types, combining their features into a single device. Similarly, our <code>Duck</code> class inherits the capabilities of an animal, the ability to fly, and the ability to swim.</p>
+        </section>
+
+        <section class="mro_explanation">
+            <h3>Method Resolution Order (MRO)</h3>
+            <p>When a class inherits from multiple parents, Python needs to determine which method to call when there are methods with the same name in different parent classes. The order in which Python searches for methods is called the Method Resolution Order (MRO).</p>
+            
+            <p>Let's create a file named <code>mro_explanation.py</code> to explore this concept:</p>
+            
+            <pre>
+# File: multiple_inheritance/mro_explanation.py
+
+class A:
+    def method(self):
+        return "Method from A"
+
+
+class B:
+    def method(self):
+        return "Method from B"
+
+
+class C(A, B):
+    pass
+
+
+class D(B, A):
+    pass
+
+
+class E(C, D):
+    pass  # This would raise TypeError due to inconsistent MRO
+
+
+# Let's see the MRO for these classes
+print("MRO for C (inherits from A, B):")
+print(C.__mro__)
+
+print("\nMRO for D (inherits from B, A):")
+print(D.__mro__)
+
+# Uncomment to see the error
+# print("\nMRO for E (inherits from C, D):")
+# print(E.__mro__)
+
+# Using the classes
+c = C()
+d = D()
+
+print("\nCalling method on C instance:")
+print(c.method())  # Will call A's method
+
+print("\nCalling method on D instance:")
+print(d.method())  # Will call B's method
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>We define two classes <code>A</code> and <code>B</code>, each with a method called <code>method</code>.</li>
+                <li>We create class <code>C</code> that inherits from <code>A</code> first, then <code>B</code>.</li>
+                <li>We create class <code>D</code> that inherits from <code>B</code> first, then <code>A</code>.</li>
+                <li>Class <code>E</code> tries to inherit from both <code>C</code> and <code>D</code>, which would create an inconsistent MRO.</li>
+                <li>We print the MRO for these classes using <code>__mro__</code> attribute.</li>
+            </ul>
+
+            <h4>C3 Linearization Algorithm</h4>
+            <p>Python uses an algorithm called C3 linearization to determine the MRO. This algorithm ensures that:</p>
             <ol>
-                <li><strong>Parsing:</strong> Browser receives HTML and parses it</li>
-                <li><strong>DOM Construction:</strong> Creates a tree-like object model in memory</li>
-                <li><strong>Render Tree:</strong> Combines DOM with CSS (CSSOM) to determine visual appearance</li>
-                <li><strong>Layout:</strong> Calculates size and position of all elements</li>
-                <li><strong>Paint:</strong> Draws pixels to the screen</li>
+                <li>A subclass appears before its parents</li>
+                <li>If a class inherits from multiple classes, they are kept in the order specified in the class definition</li>
+                <li>The algorithm preserves monotonicity (if A precedes B in one inheritance chain, A must precede B in the linearized MRO)</li>
             </ol>
             
-            <p>When you modify the DOM with JavaScript, you trigger parts of this process again. Understanding this helps you write more efficient code.</p>
+            <p>When the C3 algorithm cannot create a consistent linearization (as in the case of class <code>E</code> above), Python raises a <code>TypeError</code> with the message "Cannot create a consistent method resolution order (MRO)".</p>
             
-            <div class="real-world">
-                <h3>Real-World Impact: Performance</h3>
-                <p>Imagine you need to add 1,000 items to a list. Updating the DOM one by one would trigger 1,000 reflows and repaints. Instead, you could:</p>
-                <pre><code>// Inefficient approach
-const list = document.getElementById('myList');
-for (let i = 0; i < 1000; i++) {
-    list.innerHTML += `&lt;li&gt;Item ${i}&lt;/li&gt;`;  // Forces reflow each time
-}
-
-// Better approach
-const list = document.getElementById('myList');
-let html = '';
-for (let i = 0; i < 1000; i++) {
-    html += `&lt;li&gt;Item ${i}&lt;/li&gt;`;
-}
-list.innerHTML = html;  // Single reflow
-
-// Best approach
-const list = document.getElementById('myList');
-const fragment = document.createDocumentFragment();
-for (let i = 0; i < 1000; i++) {
-    const item = document.createElement('li');
-    item.textContent = `Item ${i}`;
-    fragment.appendChild(item);
-}
-list.appendChild(fragment);  // Single reflow, no string parsing</code></pre>
-            </div>
+            <p><strong>Real-world analogy:</strong> Think of MRO like a chain of command in a company with multiple departments. If an employee needs to get approval for something, they might first ask their direct supervisor, then the department head, then the division manager, and so on up the hierarchy. The MRO defines the exact sequence of who to ask and in what order.</p>
         </section>
 
-        <section>
-            <h2>Accessing DOM Elements</h2>
+        <section class="diamond_problem">
+            <h3>The Diamond Problem</h3>
+            <p>One of the classic challenges in multiple inheritance is the "diamond problem" (also known as the "deadly diamond of death"). This occurs when a class inherits from two classes that both inherit from a common base class, creating a diamond-shaped inheritance hierarchy.</p>
             
-            <p>Before you can manipulate elements, you need to find them. JavaScript provides several methods to access DOM elements:</p>
+            <p>Let's create a file named <code>diamond_problem.py</code> to explore this:</p>
             
-            <div class="code-example">
-                <h3>Element Selection Methods</h3>
-                <pre><code>// By ID (returns a single element)
-const header = document.getElementById('page-header');
+            <pre>
+# File: multiple_inheritance/diamond_problem.py
 
-// By class name (returns a live HTMLCollection)
-const paragraphs = document.getElementsByClassName('content-paragraph');
-
-// By tag name (returns a live HTMLCollection)
-const allDivs = document.getElementsByTagName('div');
-
-// By CSS selector (returns first matching element)
-const firstButton = document.querySelector('.btn-primary');
-
-// By CSS selector (returns all matching elements as a NodeList)
-const allButtons = document.querySelectorAll('.btn');
-
-// Finding elements relative to other elements
-const parentElement = someElement.parentNode;
-const children = someElement.children;
-const nextSibling = someElement.nextElementSibling;
-const previousSibling = someElement.previousElementSibling;</code></pre>
-            </div>
-            
-            <div class="comparison">
-                <h3>Python Comparison: BeautifulSoup vs. JavaScript DOM</h3>
-                <table>
-                    <tr>
-                        <th>BeautifulSoup (Python)</th>
-                        <th>DOM (JavaScript)</th>
-                    </tr>
-                    <tr>
-                        <td><code>soup.find(id="header")</code></td>
-                        <td><code>document.getElementById("header")</code></td>
-                    </tr>
-                    <tr>
-                        <td><code>soup.find_all("p", class_="content")</code></td>
-                        <td><code>document.querySelectorAll("p.content")</code></td>
-                    </tr>
-                    <tr>
-                        <td><code>element.parent</code></td>
-                        <td><code>element.parentNode</code></td>
-                    </tr>
-                    <tr>
-                        <td><code>element.find_next_sibling()</code></td>
-                        <td><code>element.nextElementSibling</code></td>
-                    </tr>
-                </table>
-            </div>
-            
-            <div class="best-practice">
-                <h3>Best Practices for Element Selection</h3>
-                <ul>
-                    <li><strong>Use <code>getElementById</code> when possible:</strong> It's the fastest selection method</li>
-                    <li><strong>Prefer <code>querySelector/querySelectorAll</code> for complex selections:</strong> They're more versatile</li>
-                    <li><strong>Be aware of live vs. static collections:</strong> <code>getElementsByClassName</code> returns a live collection that updates automatically when elements are added/removed</li>
-                    <li><strong>Cache DOM references:</strong> Don't re-query the DOM repeatedly</li>
-                </ul>
-            </div>
-            
-            <div class="example">
-                <h3>Practical Example: Tabbed Interface</h3>
-                <pre><code>// HTML structure
-// &lt;div class="tab-container"&gt;
-//   &lt;div class="tabs"&gt;
-//     &lt;button class="tab active" data-tab="tab1"&gt;Tab 1&lt;/button&gt;
-//     &lt;button class="tab" data-tab="tab2"&gt;Tab 2&lt;/button&gt;
-//     &lt;button class="tab" data-tab="tab3"&gt;Tab 3&lt;/button&gt;
-//   &lt;/div&gt;
-//   &lt;div class="tab-content active" id="tab1"&gt;Content for tab 1&lt;/div&gt;
-//   &lt;div class="tab-content" id="tab2"&gt;Content for tab 2&lt;/div&gt;
-//   &lt;div class="tab-content" id="tab3"&gt;Content for tab 3&lt;/div&gt;
-// &lt;/div&gt;
-
-// JavaScript implementation
-document.addEventListener('DOMContentLoaded', () => {
-    // Cache DOM elements
-    const tabContainer = document.querySelector('.tab-container');
-    const tabs = tabContainer.querySelectorAll('.tab');
-    const tabContents = tabContainer.querySelectorAll('.tab-content');
+class Base:
+    def __init__(self):
+        print("Base.__init__ called")
     
-    // Add click event to each tab
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            // Get the target tab content
-            const targetId = tab.getAttribute('data-tab');
-            const targetContent = document.getElementById(targetId);
+    def method(self):
+        return "Method from Base"
+
+
+class Left(Base):
+    def __init__(self):
+        super().__init__()
+        print("Left.__init__ called")
+    
+    def method(self):
+        return "Method from Left"
+
+
+class Right(Base):
+    def __init__(self):
+        super().__init__()
+        print("Right.__init__ called")
+    
+    def method(self):
+        return "Method from Right"
+
+
+class Diamond(Left, Right):
+    def __init__(self):
+        super().__init__()
+        print("Diamond.__init__ called")
+
+
+# Create an instance of Diamond
+print("Creating a Diamond instance:")
+d = Diamond()
+
+# Check the MRO
+print("\nDiamond MRO:")
+print(Diamond.__mro__)
+
+# Call the method
+print("\nCalling method on Diamond instance:")
+print(d.method())  # Which method will be called?
+
+# Example of super() with diamond inheritance
+class ImprovedBase:
+    def __init__(self, value):
+        self.value = value
+        print(f"ImprovedBase.__init__ called with value={value}")
+
+
+class ImprovedLeft(ImprovedBase):
+    def __init__(self, value):
+        super().__init__(value + 1)
+        print(f"ImprovedLeft.__init__ called with value={value}")
+
+
+class ImprovedRight(ImprovedBase):
+    def __init__(self, value):
+        super().__init__(value + 2)
+        print(f"ImprovedRight.__init__ called with value={value}")
+
+
+class ImprovedDiamond(ImprovedLeft, ImprovedRight):
+    def __init__(self, value):
+        super().__init__(value)
+        print(f"ImprovedDiamond.__init__ called with value={value}")
+
+
+print("\nCreating an ImprovedDiamond instance:")
+improved_d = ImprovedDiamond(10)
+print(f"Final value: {improved_d.value}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>We create a diamond-shaped inheritance hierarchy: <code>Diamond</code> inherits from both <code>Left</code> and <code>Right</code>, which both inherit from <code>Base</code>.</li>
+                <li>Each class defines an <code>__init__</code> method and a <code>method</code> method.</li>
+                <li>We use <code>super().__init__()</code> to call the parent's initializer in each class.</li>
+                <li>We create an instance of <code>Diamond</code> and observe the initialization order.</li>
+                <li>We check the MRO to understand which version of <code>method</code> will be called.</li>
+                <li>We create an improved version of the diamond with value passing to demonstrate how values flow through the hierarchy.</li>
+            </ul>
+
+            <h4>How Python Solves the Diamond Problem</h4>
+            <p>Python solves the diamond problem through its C3 linearization algorithm and the use of <code>super()</code>. When you create an instance of <code>Diamond</code>, the Base class is initialized only once, not twice (as might happen in languages without proper diamond problem handling).</p>
             
-            // Remove active class from all tabs and contents
-            tabs.forEach(t => t.classList.remove('active'));
-            tabContents.forEach(c => c.classList.remove('active'));
+            <p>The MRO ensures a consistent order for method resolution, and <code>super()</code> follows this order when calling methods. In our example, <code>Diamond</code>'s MRO would be: <code>[Diamond, Left, Right, Base, object]</code>, so <code>d.method()</code> would call <code>Left.method()</code>.</p>
             
-            // Add active class to clicked tab and target content
-            tab.classList.add('active');
-            targetContent.classList.add('active');
-        });
-    });
-});</code></pre>
-            </div>
+            <p><strong>Real-world analogy:</strong> Imagine a person who inherits traits from both parents, who in turn share some ancestry (grandparents). The diamond problem is like determining which version of a family trait (e.g., eye color) the person inherits when different versions exist in the family tree. Python's MRO is like a family tree that establishes clear precedence rules for inheritance.</p>
         </section>
 
-        <section>
-            <h2>Manipulating Element Content</h2>
+        <section class="mixins">
+            <h3>Mixins: A Powerful Pattern for Multiple Inheritance</h3>
+            <p>A common and effective use of multiple inheritance in Python is the "mixin" pattern. Mixins are classes that provide a specific set of functionality that can be "mixed in" to other classes without establishing an "is-a" relationship.</p>
             
-            <p>Once you've selected elements, you can modify their content using various properties:</p>
+            <p>Let's create a file named <code>mixins.py</code> to explore this pattern:</p>
             
-            <div class="code-example">
-                <h3>Content Modification</h3>
-                <pre><code>// Text content (safe, no HTML parsing)
-element.textContent = 'New text content';
-const currentText = element.textContent;
+            <pre>
+# File: multiple_inheritance/mixins.py
 
-// Inner HTML (parses HTML, potential security risk with user input)
-element.innerHTML = '&lt;strong&gt;Bold text&lt;/strong&gt; and normal text';
-const currentHTML = element.innerHTML;
-
-// Outer HTML (includes the element itself)
-element.outerHTML = '&lt;div class="new-wrapper"&gt;Replaced content&lt;/div&gt;';
-
-// Value (for form elements)
-inputElement.value = 'New input value';
-const currentValue = inputElement.value;</code></pre>
-            </div>
-            
-            <div class="security-note">
-                <h3>Security Alert: innerHTML and XSS</h3>
-                <p>Be extremely cautious when using <code>innerHTML</code> with user-provided content. It can lead to Cross-Site Scripting (XSS) vulnerabilities:</p>
-                <pre><code>// DANGEROUS - Never do this with user input!
-const userInput = "&lt;img src='x' onerror='alert(\"Hacked!\")' /&gt;";
-element.innerHTML = userInput;  // Will execute the script!
-
-// SAFER - Use textContent for user input
-element.textContent = userInput;  // Safely displays as text
-
-// For sanitized HTML, consider a library like DOMPurify
-// import DOMPurify from 'dompurify';
-// element.innerHTML = DOMPurify.sanitize(userInput);</code></pre>
-            </div>
-            
-            <p>As Python developers, you might be familiar with similar concerns when using template engines like Jinja2, which also need to escape user input to prevent injection attacks.</p>
-        </section>
-
-        <section>
-            <h2>Creating and Modifying Elements</h2>
-            
-            <p>The DOM API allows you to create, modify, and remove elements dynamically:</p>
-            
-            <div class="code-example">
-                <h3>Creating Elements</h3>
-                <pre><code>// Create a new element
-const newDiv = document.createElement('div');
-
-// Create text node
-const textNode = document.createTextNode('This is a text node');
-
-// Create a document fragment (container for holding elements)
-const fragment = document.createDocumentFragment();</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>Adding Elements to the DOM</h3>
-                <pre><code>// Append child to the end
-parentElement.appendChild(newElement);
-
-// Insert before a specific element
-parentElement.insertBefore(newElement, referenceElement);
-
-// Modern methods (better browser support required)
-parentElement.append(element1, element2, 'text');  // Append multiple
-parentElement.prepend(element);  // Insert at beginning
-referenceElement.before(element);  // Insert before
-referenceElement.after(element);  // Insert after
-element.replaceWith(newElement);  // Replace</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>Removing Elements</h3>
-                <pre><code>// Remove a child element (old way)
-parentElement.removeChild(childElement);
-
-// Remove self (modern way)
-element.remove();
-
-// Clear all children
-while (element.firstChild) {
-    element.removeChild(element.firstChild);
-}
-// Or more simply:
-element.innerHTML = '';</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>Cloning Elements</h3>
-                <pre><code>// Clone without event listeners and child elements
-const shallowClone = element.cloneNode(false);
-
-// Clone with all descendants and content
-const deepClone = element.cloneNode(true);</code></pre>
-            </div>
-            
-            <div class="real-world">
-                <h3>Real-World Example: Dynamic Comment System</h3>
-                <pre><code>function createCommentElement(comment) {
-    // Create the comment container
-    const commentEl = document.createElement('div');
-    commentEl.className = 'comment';
+class SerializationMixin:
+    """Mixin providing JSON serialization capabilities"""
     
-    // Create avatar
-    const avatar = document.createElement('img');
-    avatar.className = 'comment-avatar';
-    avatar.src = comment.authorAvatar || '/images/default-avatar.png';
-    avatar.alt = `${comment.author}'s avatar`;
-    
-    // Create comment content
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'comment-content';
-    
-    // Create header with author and date
-    const header = document.createElement('div');
-    header.className = 'comment-header';
-    
-    const author = document.createElement('span');
-    author.className = 'comment-author';
-    author.textContent = comment.author;
-    
-    const date = document.createElement('span');
-    date.className = 'comment-date';
-    date.textContent = new Date(comment.timestamp).toLocaleString();
-    
-    header.appendChild(author);
-    header.appendChild(date);
-    
-    // Create comment text
-    const text = document.createElement('p');
-    text.className = 'comment-text';
-    text.textContent = comment.text;
-    
-    // Create comment actions
-    const actions = document.createElement('div');
-    actions.className = 'comment-actions';
-    
-    const replyBtn = document.createElement('button');
-    replyBtn.textContent = 'Reply';
-    replyBtn.addEventListener('click', () => handleReply(comment.id));
-    
-    const likeBtn = document.createElement('button');
-    likeBtn.textContent = `Like (${comment.likes || 0})`;
-    likeBtn.addEventListener('click', () => handleLike(comment.id));
-    
-    actions.appendChild(replyBtn);
-    actions.appendChild(likeBtn);
-    
-    // Assemble the comment element
-    contentDiv.appendChild(header);
-    contentDiv.appendChild(text);
-    contentDiv.appendChild(actions);
-    
-    commentEl.appendChild(avatar);
-    commentEl.appendChild(contentDiv);
-    
-    return commentEl;
-}
-
-// Usage
-function displayComments(comments) {
-    const commentsContainer = document.getElementById('comments-container');
-    
-    // Clear existing comments
-    commentsContainer.innerHTML = '';
-    
-    if (comments.length === 0) {
-        const noComments = document.createElement('p');
-        noComments.textContent = 'No comments yet. Be the first to comment!';
-        commentsContainer.appendChild(noComments);
-        return;
-    }
-    
-    // Create a fragment to hold all comments
-    const fragment = document.createDocumentFragment();
-    
-    // Add each comment to the fragment
-    comments.forEach(comment => {
-        const commentElement = createCommentElement(comment);
-        fragment.appendChild(commentElement);
-    });
-    
-    // Add all comments to the DOM in a single operation
-    commentsContainer.appendChild(fragment);
-}</code></pre>
-            </div>
-            
-            <div class="analogy">
-                <h3>Analogy: DOM Manipulation as Cooking</h3>
-                <p>Creating and modifying DOM elements is like cooking a meal:</p>
-                <ul>
-                    <li><code>createElement</code> is gathering ingredients (creating raw elements)</li>
-                    <li>Setting properties (<code>textContent</code>, attributes) is preparing the ingredients</li>
-                    <li><code>appendChild</code>/<code>insertBefore</code> is combining ingredients in the cooking pot (the parent element)</li>
-                    <li><code>documentFragment</code> is like a prep bowl for combining ingredients before adding to the final dish</li>
-                    <li><code>cloneNode</code> is like doubling a recipe</li>
-                    <li><code>remove</code> is taking something out of the dish</li>
-                </ul>
-                <p>Just as a good chef prepares ingredients before cooking, a good developer prepares DOM elements before adding them to the document.</p>
-            </div>
-        </section>
-
-        <section>
-            <h2>Working with Element Attributes</h2>
-            
-            <p>HTML elements have attributes that define their behavior and appearance. JavaScript provides several ways to work with these attributes:</p>
-            
-            <div class="code-example">
-                <h3>Standard Attributes</h3>
-                <pre><code>// Get attribute
-const href = linkElement.getAttribute('href');
-
-// Set attribute
-buttonElement.setAttribute('disabled', 'true');
-
-// Check if attribute exists
-const hasTarget = linkElement.hasAttribute('target');
-
-// Remove attribute
-imageElement.removeAttribute('alt');
-
-// Direct property access for standard attributes
-imageElement.src = '/images/new-image.jpg';
-linkElement.href = 'https://example.com';
-buttonElement.disabled = true;</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>Data Attributes</h3>
-                <p>HTML5 introduced data attributes (<code>data-*</code>) for storing custom data:</p>
-                <pre><code>// HTML: &lt;div id="user" data-user-id="123" data-role="admin"&gt;&lt;/div&gt;
-
-const userElement = document.getElementById('user');
-
-// Access via dataset property (camelCase)
-const userId = userElement.dataset.userId;  // "123"
-const role = userElement.dataset.role;      // "admin"
-
-// Modify data attributes
-userElement.dataset.lastLogin = "2023-06-15";
-delete userElement.dataset.role;</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>Working with Classes</h3>
-                <p>The <code>classList</code> API provides an elegant way to work with CSS classes:</p>
-                <pre><code>// Add a class
-element.classList.add('highlight');
-
-// Remove a class
-element.classList.remove('inactive');
-
-// Toggle a class (add if absent, remove if present)
-element.classList.toggle('expanded');
-
-// Check if element has a class
-const isActive = element.classList.contains('active');
-
-// Replace one class with another
-element.classList.replace('loading', 'loaded');
-
-// Add multiple classes
-element.classList.add('visible', 'animated', 'fadeIn');</code></pre>
-            </div>
-            
-            <div class="best-practice">
-                <h3>Best Practices for Working with Attributes</h3>
-                <ul>
-                    <li>Use direct properties (<code>element.src</code>) when available, for better performance</li>
-                    <li>Use <code>dataset</code> for custom data rather than inventing attributes</li>
-                    <li>Use <code>classList</code> instead of manipulating the <code>className</code> string</li>
-                    <li>Set <code>disabled</code>, <code>checked</code>, etc. as boolean properties, not attributes</li>
-                </ul>
-            </div>
-        </section>
-
-        <section>
-            <h2>Styling Elements with JavaScript</h2>
-            
-            <p>JavaScript allows you to directly manipulate an element's style or work with computed styles:</p>
-            
-            <div class="code-example">
-                <h3>Inline Styles</h3>
-                <pre><code>// Get/set individual style properties (camelCase for CSS properties)
-element.style.color = 'blue';
-element.style.backgroundColor = '#f0f0f0';
-element.style.marginTop = '20px';
-const fontSize = element.style.fontSize;
-
-// Bulk style updates
-Object.assign(element.style, {
-    color: 'white',
-    backgroundColor: 'black',
-    padding: '10px',
-    borderRadius: '4px'
-});</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>Computed Styles</h3>
-                <pre><code>// Get the actual computed style (after CSS is applied)
-const styles = window.getComputedStyle(element);
-const width = styles.width;  // "300px"
-const display = styles.display;  // "block"
-
-// Get specific property
-const opacity = window.getComputedStyle(element).getPropertyValue('opacity');</code></pre>
-            </div>
-            
-            <div class="best-practice">
-                <h3>CSS Classes vs. Inline Styles</h3>
-                <p>In most cases, it's better to add/remove CSS classes rather than setting inline styles:</p>
-                <pre><code>// Instead of this
-element.style.color = 'red';
-element.style.fontWeight = 'bold';
-element.style.backgroundColor = 'yellow';
-
-// Do this
-element.classList.add('error-message');</code></pre>
-                <p>Benefits of the class-based approach:</p>
-                <ul>
-                    <li>Better separation of concerns (HTML, CSS, JS)</li>
-                    <li>Easier to maintain and update styles</li>
-                    <li>Better performance (browser can optimize class changes)</li>
-                    <li>Respects CSS specificity rules</li>
-                </ul>
-            </div>
-            
-            <div class="real-world">
-                <h3>Real-World Example: CSS Animation Control</h3>
-                <pre><code>// Simple animation system using classes
-function animateElement(element, animationName, duration = 1000) {
-    return new Promise(resolve => {
-        // Apply animation class
-        element.classList.add(animationName);
-        
-        // Set duration through inline style
-        element.style.animationDuration = `${duration}ms`;
-        
-        // Listen for animation end
-        function handleAnimationEnd() {
-            element.classList.remove(animationName);
-            element.removeEventListener('animationend', handleAnimationEnd);
-            resolve();
+    def to_json(self):
+        """Convert object attributes to a JSON-serializable dictionary"""
+        return {
+            attr: value for attr, value in self.__dict__.items()
+            if not attr.startswith('_')  # Skip private attributes
         }
-        
-        element.addEventListener('animationend', handleAnimationEnd);
-    });
-}
+    
+    def from_json(self, data):
+        """Update object attributes from a dictionary"""
+        for key, value in data.items():
+            setattr(self, key, value)
+        return self
 
-// Usage
-async function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = message;
-    
-    document.body.appendChild(notification);
-    
-    // Animate in
-    await animateElement(notification, 'fade-in', 300);
-    
-    // Wait 3 seconds
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // Animate out
-    await animateElement(notification, 'fade-out', 300);
-    
-    // Remove from DOM
-    notification.remove();
-}</code></pre>
-            </div>
-        </section>
 
-        <section>
-            <h2>Event Handling</h2>
+class ValidationMixin:
+    """Mixin providing data validation capabilities"""
+    
+    def validate(self):
+        """Validate object attributes based on _validation_rules"""
+        if not hasattr(self, '_validation_rules'):
+            return True, []
+        
+        errors = []
+        for attr, rules in self._validation_rules.items():
+            value = getattr(self, attr, None)
             
-            <p>Events are the core of interactive web applications. They allow JavaScript to respond to user actions and system events.</p>
+            # Check required fields
+            if rules.get('required', False) and value is None:
+                errors.append(f"{attr} is required")
+                continue
             
-            <div class="code-example">
-                <h3>Adding Event Listeners</h3>
-                <pre><code>// Basic event listener
-element.addEventListener('click', function(event) {
-    console.log('Element clicked!');
-});
+            # Skip other validations if value is None
+            if value is None:
+                continue
+            
+            # Check minimum value
+            if 'min' in rules and value < rules['min']:
+                errors.append(f"{attr} must be at least {rules['min']}")
+            
+            # Check maximum value
+            if 'max' in rules and value > rules['max']:
+                errors.append(f"{attr} must be at most {rules['max']}")
+            
+            # Check string length
+            if 'min_length' in rules and len(str(value)) < rules['min_length']:
+                errors.append(f"{attr} must be at least {rules['min_length']} characters")
+            
+            # Check string pattern (simplified)
+            if 'pattern' in rules and rules['pattern'] == 'email':
+                if '@' not in str(value):
+                    errors.append(f"{attr} must be a valid email address")
+        
+        return len(errors) == 0, errors
 
-// With arrow function
-element.addEventListener('mouseover', (event) => {
-    element.classList.add('hovered');
-});
 
-// With named function for later removal
-function handleChange(event) {
-    console.log('Value changed to:', event.target.value);
-}
-inputElement.addEventListener('change', handleChange);
+class LoggingMixin:
+    """Mixin providing logging capabilities"""
+    
+    def log(self, message, level='INFO'):
+        """Log a message with the specified level"""
+        prefix = f"[{level}] {self.__class__.__name__}"
+        print(f"{prefix}: {message}")
+    
+    def log_method_call(self, method_name, *args, **kwargs):
+        """Log a method call with its arguments"""
+        args_str = ', '.join([str(arg) for arg in args])
+        kwargs_str = ', '.join([f"{k}={v}" for k, v in kwargs.items()])
+        all_args = f"{args_str}{', ' if args_str and kwargs_str else ''}{kwargs_str}"
+        self.log(f"Called {method_name}({all_args})")
 
-// Removing event listeners
-inputElement.removeEventListener('change', handleChange);</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>Common Events</h3>
-                <table>
-                    <tr>
-                        <th>Category</th>
-                        <th>Events</th>
-                    </tr>
-                    <tr>
-                        <td>Mouse</td>
-                        <td>click, dblclick, mousedown, mouseup, mousemove, mouseover, mouseout, mouseenter, mouseleave</td>
-                    </tr>
-                    <tr>
-                        <td>Keyboard</td>
-                        <td>keydown, keyup, keypress</td>
-                    </tr>
-                    <tr>
-                        <td>Form</td>
-                        <td>submit, reset, change, input, focus, blur</td>
-                    </tr>
-                    <tr>
-                        <td>Document</td>
-                        <td>DOMContentLoaded, load, unload, beforeunload</td>
-                    </tr>
-                    <tr>
-                        <td>Touch</td>
-                        <td>touchstart, touchend, touchmove, touchcancel</td>
-                    </tr>
-                </table>
-            </div>
-            
-            <div class="code-example">
-                <h3>The Event Object</h3>
-                <pre><code>element.addEventListener('click', (event) => {
-    // Event properties
-    console.log(event.type);     // "click"
-    console.log(event.target);   // The element that triggered the event
-    console.log(event.currentTarget); // The element the listener is attached to
-    
-    // Mouse event properties
-    console.log(event.clientX, event.clientY); // Mouse position
-    console.log(event.button);   // Mouse button (0=left, 1=middle, 2=right)
-    
-    // Keyboard event properties
-    // (for keydown/keyup events)
-    console.log(event.key);      // Key value ("a", "Enter", etc.)
-    console.log(event.code);     // Physical key ("KeyA", "Enter")
-    console.log(event.ctrlKey);  // Whether Ctrl was pressed
-    console.log(event.shiftKey); // Whether Shift was pressed
-    
-    // Event control
-    event.preventDefault();      // Prevent default behavior
-    event.stopPropagation();     // Stop event bubbling
-});</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>Event Propagation (Bubbling and Capturing)</h3>
-                <p>Events in the DOM propagate in three phases:</p>
-                <ol>
-                    <li><strong>Capturing Phase:</strong> Event travels down from the window to the target element</li>
-                    <li><strong>Target Phase:</strong> Event reaches the target element</li>
-                    <li><strong>Bubbling Phase:</strong> Event bubbles up from the target back to the window</li>
-                </ol>
-                <pre><code>// By default, listeners handle the bubbling phase
-// Set the third parameter to true to handle the capturing phase
-element.addEventListener('click', handler, true);  // Capture phase
 
-// Stopping propagation
-element.addEventListener('click', (event) => {
-    event.stopPropagation();  // Prevents further bubbling
-});</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>Event Delegation</h3>
-                <p>Instead of attaching events to many elements, attach one to a parent:</p>
-                <pre><code>// Without delegation (inefficient for many items)
-document.querySelectorAll('.menu-item').forEach(item => {
-    item.addEventListener('click', handleItemClick);
-});
-
-// With delegation (better performance)
-document.querySelector('.menu').addEventListener('click', (event) => {
-    // Check if clicked element or its parent has the class we want
-    const menuItem = event.target.closest('.menu-item');
+# Example class using mixins
+class User(SerializationMixin, ValidationMixin, LoggingMixin):
+    """User class with serialization, validation, and logging capabilities"""
     
-    if (menuItem) {
-        // Handle the menu item click
-        console.log('Menu item clicked:', menuItem.textContent);
-    }
-});</code></pre>
-            </div>
-            
-            <div class="analogy">
-                <h3>Analogy: Event Bubbling as News Traveling</h3>
-                <p>Event bubbling is like news traveling through a neighborhood:</p>
-                <ol>
-                    <li>Something happens at a specific house (the target element)</li>
-                    <li>The homeowner knows first (target phase)</li>
-                    <li>Then neighbors on the same street find out (parent elements)</li>
-                    <li>Then the next neighborhood over (ancestors)</li>
-                    <li>Finally, the whole town knows (document/window)</li>
-                </ol>
-                <p>Event delegation is like having one reporter at the town square, rather than placing a reporter at every house.</p>
-            </div>
-            
-            <div class="real-world">
-                <h3>Real-World Example: Interactive Todo List</h3>
-                <pre><code>document.addEventListener('DOMContentLoaded', () => {
-    const todoList = document.getElementById('todo-list');
-    const newTodoForm = document.getElementById('new-todo-form');
-    
-    // Form submission - Add new todo
-    newTodoForm.addEventListener('submit', (event) => {
-        event.preventDefault();
+    def __init__(self, username=None, email=None, age=None):
+        self.username = username
+        self.email = email
+        self.age = age
         
-        const todoInput = document.getElementById('new-todo-input');
-        const todoText = todoInput.value.trim();
-        
-        if (todoText) {
-            addTodoItem(todoText);
-            todoInput.value = '';
-        }
-    });
-    
-    // Event delegation for the entire list
-    todoList.addEventListener('click', (event) => {
-        const target = event.target;
-        
-        // Handle "complete" button click
-        if (target.classList.contains('todo-complete')) {
-            const todoItem = target.closest('.todo-item');
-            todoItem.classList.toggle('completed');
-        }
-        
-        // Handle "delete" button click
-        if (target.classList.contains('todo-delete')) {
-            const todoItem = target.closest('.todo-item');
-            
-            // Add removing animation
-            todoItem.classList.add('removing');
-            
-            // Remove after animation completes
-            todoItem.addEventListener('animationend', () => {
-                todoItem.remove();
-            });
-        }
-    });
-    
-    function addTodoItem(text) {
-        const todoItem = document.createElement('li');
-        todoItem.className = 'todo-item';
-        
-        todoItem.innerHTML = `
-            <span class="todo-text">${text}</span>
-            <div class="todo-actions">
-                <button class="todo-complete" aria-label="Mark as complete">✓</button>
-                <button class="todo-delete" aria-label="Delete">×</button>
-            </div>
-        `;
-        
-        todoList.appendChild(todoItem);
-    }
-});</code></pre>
-            </div>
-        </section>
-
-        <section>
-            <h2>Form Handling</h2>
-            
-            <p>Working with forms is a common task in web development. JavaScript makes it easy to validate, collect, and submit form data.</p>
-            
-            <div class="code-example">
-                <h3>Form Access and Submission</h3>
-                <pre><code>// Get a form by ID
-const form = document.getElementById('registration-form');
-
-// Get form elements
-const emailInput = form.elements.email; // By name attribute
-const passwordInput = form.querySelector('#password'); // By CSS selector
-
-// Handle form submission
-form.addEventListener('submit', (event) => {
-    event.preventDefault(); // Prevent default form submission
-    
-    // Validate form
-    if (validateForm()) {
-        // Get form data
-        const formData = new FormData(form);
-        
-        // Send data to server (we'll cover this later)
-        submitFormData(formData);
-    }
-});</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>Form Data Collection</h3>
-                <pre><code>// Using FormData API
-const formData = new FormData(form);
-
-// Get individual values
-const email = formData.get('email');
-const password = formData.get('password');
-
-// Get all values (for multiple select/checkbox)
-const interests = formData.getAll('interests');
-
-// Convert to object
-const formDataObj = Object.fromEntries(formData.entries());
-
-// Manual collection
-const formDataManual = {
-    email: form.elements.email.value,
-    password: form.elements.password.value,
-    remember: form.elements.remember.checked,
-    interests: Array.from(form.querySelectorAll('[name="interests"]:checked')).map(el => el.value)
-};</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>Form Validation</h3>
-                <pre><code>// Basic form validation
-function validateForm() {
-    let isValid = true;
-    
-    // Clear previous error messages
-    form.querySelectorAll('.error-message').forEach(el => el.remove());
-    
-    // Validate email
-    const emailInput = form.elements.email;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
-    if (!emailRegex.test(emailInput.value)) {
-        showError(emailInput, 'Please enter a valid email address');
-        isValid = false;
-    }
-    
-    // Validate password
-    const passwordInput = form.elements.password;
-    
-    if (passwordInput.value.length < 8) {
-        showError(passwordInput, 'Password must be at least 8 characters');
-        isValid = false;
-    }
-    
-    return isValid;
-}
-
-// Show error message next to input
-function showError(inputElement, message) {
-    // Add error class to input
-    inputElement.classList.add('is-invalid');
-    
-    // Create error message element
-    const errorElement = document.createElement('div');
-    errorElement.className = 'error-message';
-    errorElement.textContent = message;
-    
-    // Insert after input
-    inputElement.parentNode.insertBefore(errorElement, inputElement.nextSibling);
-    
-    // Focus the first invalid input
-    if (!form.querySelector(':focus')) {
-        inputElement.focus();
-    }
-}</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>HTML5 Form Validation</h3>
-                <p>Modern browsers support built-in form validation:</p>
-                <pre><code>&lt;!-- HTML with validation attributes -->
-&lt;form id="registration-form">
-    &lt;div>
-        &lt;label for="email">Email:&lt;/label>
-        &lt;input 
-            type="email" 
-            id="email" 
-            name="email" 
-            required 
-            pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
-        >
-    &lt;/div>
-    &lt;div>
-        &lt;label for="password">Password:&lt;/label>
-        &lt;input 
-            type="password" 
-            id="password" 
-            name="password" 
-            required 
-            minlength="8"
-        >
-    &lt;/div>
-    &lt;button type="submit">Register&lt;/button>
-&lt;/form>
-
-// JavaScript for HTML5 validation
-form.addEventListener('submit', (event) => {
-    if (!form.checkValidity()) {
-        event.preventDefault();
-        // Show custom styling for invalid fields
-        form.classList.add('was-validated');
-    }
-});</code></pre>
-            </div>
-            
-            <div class="real-world">
-                <h3>Real-World Example: Dynamic Form with Validation</h3>
-                <pre><code>document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('registration-form');
-    const passwordInput = document.getElementById('password');
-    const confirmInput = document.getElementById('confirm-password');
-    const passwordStrength = document.getElementById('password-strength');
-    const submitButton = document.querySelector('button[type="submit"]');
-    
-    // Disable submit initially
-    submitButton.disabled = true;
-    
-    // Live validation for passwords
-    passwordInput.addEventListener('input', validatePasswords);
-    confirmInput.addEventListener('input', validatePasswords);
-    
-    // Show password strength as user types
-    passwordInput.addEventListener('input', updatePasswordStrength);
-    
-    function validatePasswords() {
-        const password = passwordInput.value;
-        const confirm = confirmInput.value;
-        
-        // Check if passwords match
-        if (password && confirm) {
-            if (password !== confirm) {
-                confirmInput.setCustomValidity('Passwords do not match');
-            } else {
-                confirmInput.setCustomValidity('');
-            }
-        }
-        
-        // Enable submit only if form is valid
-        submitButton.disabled = !form.checkValidity();
-    }
-    
-    function updatePasswordStrength() {
-        const password = passwordInput.value;
-        
-        // Calculate strength (simplified)
-        let strength = 0;
-        
-        if (password.length >= 8) strength++;
-        if (/[A-Z]/.test(password)) strength++;
-        if (/[a-z]/.test(password)) strength++;
-        if (/[0-9]/.test(password)) strength++;
-        if (/[^A-Za-z0-9]/.test(password)) strength++;
-        
-        // Update UI
-        passwordStrength.className = 'strength-meter';
-        
-        switch (strength) {
-            case 0:
-            case 1:
-                passwordStrength.classList.add('weak');
-                passwordStrength.textContent = 'Weak';
-                break;
-            case 2:
-            case 3:
-                passwordStrength.classList.add('medium');
-                passwordStrength.textContent = 'Medium';
-                break;
-            case 4:
-            case 5:
-                passwordStrength.classList.add('strong');
-                passwordStrength.textContent = 'Strong';
-                break;
-        }
-    }
-    
-    // Handle form submission
-    form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        
-        // Create FormData object
-        const formData = new FormData(form);
-        
-        // Convert to JSON for sending to backend
-        const data = Object.fromEntries(formData.entries());
-        
-        // Send to backend (simulate API call)
-        console.log('Sending registration data:', data);
-        
-        // Show success message
-        form.innerHTML = '<h2>Registration Successful!</h2><p>Thank you for registering!</p>';
-    });
-});</code></pre>
-            </div>
-        </section>
-
-        <section>
-            <h2>DOM Traversal</h2>
-            
-            <p>DOM traversal allows you to navigate through the DOM tree, accessing parent, child, and sibling elements:</p>
-            
-            <div class="code-example">
-                <h3>Parent Relationships</h3>
-                <pre><code>// Direct parent
-const parent = element.parentNode;  // Any node type
-const parentElement = element.parentElement;  // Only element nodes
-
-// All ancestors
-function getAllAncestors(element) {
-    const ancestors = [];
-    let current = element.parentElement;
-    
-    while (current) {
-        ancestors.push(current);
-        current = current.parentElement;
-    }
-    
-    return ancestors;
-}
-
-// Find closest ancestor matching a selector
-const closestForm = element.closest('form');</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>Child Relationships</h3>
-                <pre><code>// All child nodes (including text nodes, comments, etc.)
-const childNodes = element.childNodes;
-
-// Only element children
-const children = element.children;
-
-// First and last child
-const firstChild = element.firstChild;  // Can be any node type
-const firstElementChild = element.firstElementChild;  // Only element nodes
-const lastChild = element.lastChild;
-const lastElementChild = element.lastElementChild;
-
-// Count children
-const childCount = element.childElementCount;</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>Sibling Relationships</h3>
-                <pre><code>// Next sibling
-const nextSibling = element.nextSibling;  // Can be any node type
-const nextElementSibling = element.nextElementSibling;  // Only element nodes
-
-// Previous sibling
-const prevSibling = element.previousSibling;
-const prevElementSibling = element.previousElementSibling;
-
-// Get all siblings
-function getAllSiblings(element) {
-    const siblings = [];
-    let sibling = element.parentNode.firstChild;
-    
-    while (sibling) {
-        if (sibling.nodeType === 1 && sibling !== element) {
-            siblings.push(sibling);
-        }
-        sibling = sibling.nextSibling;
-    }
-    
-    return siblings;
-}</code></pre>
-            </div>
-            
-            <div class="comparison">
-                <h3>Python Comparison: XML/HTML Parsing</h3>
-                <p>DOM traversal is similar to navigating XML/HTML trees in Python libraries:</p>
-                <table>
-                    <tr>
-                        <th>JavaScript DOM</th>
-                        <th>Python BeautifulSoup</th>
-                    </tr>
-                    <tr>
-                        <td><code>element.parentNode</code></td>
-                        <td><code>element.parent</code></td>
-                    </tr>
-                    <tr>
-                        <td><code>element.children</code></td>
-                        <td><code>element.children</code></td>
-                    </tr>
-                    <tr>
-                        <td><code>element.nextElementSibling</code></td>
-                        <td><code>element.next_sibling</code></td>
-                    </tr>
-                    <tr>
-                        <td><code>element.querySelector(selector)</code></td>
-                        <td><code>element.select_one(selector)</code></td>
-                    </tr>
-                </table>
-            </div>
-            
-            <div class="real-world">
-                <h3>Real-World Example: Collapsible Tree Menu</h3>
-                <pre><code>document.addEventListener('DOMContentLoaded', () => {
-    const treeMenu = document.getElementById('tree-menu');
-    
-    // Toggle submenu visibility when clicking on a parent item
-    treeMenu.addEventListener('click', (event) => {
-        // Find the closest tree-item that was clicked
-        const treeItem = event.target.closest('.tree-item');
-        
-        if (!treeItem) return;
-        
-        // Only handle clicks on items with children
-        const submenu = treeItem.querySelector('.submenu');
-        if (submenu) {
-            // Toggle expanded state
-            treeItem.classList.toggle('expanded');
-            
-            // Stop event from reaching parent tree items
-            event.stopPropagation();
-        }
-    });
-    
-    // Function to expand a path to a specific item by ID
-    function expandPathToItem(itemId) {
-        const targetItem = document.getElementById(itemId);
-        
-        if (targetItem) {
-            // Find all parent tree items
-            let current = targetItem.parentElement;
-            
-            while (current) {
-                if (current.classList.contains('submenu')) {
-                    // Find the parent tree item and expand it
-                    const parentItem = current.parentElement;
-                    if (parentItem.classList.contains('tree-item')) {
-                        parentItem.classList.add('expanded');
-                    }
-                }
-                current = current.parentElement;
-            }
-            
-            // Highlight the target item
-            targetItem.classList.add('highlighted');
-            
-            // Scroll into view
-            targetItem.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
-        }
-    }
-    
-    // Example usage
-    // expandPathToItem('nested-item-3-2-1');
-});</code></pre>
-            </div>
-        </section>
-
-        <section>
-            <h2>Performance Considerations</h2>
-            
-            <p>DOM manipulation can be expensive in terms of performance. Here are some best practices to keep your applications responsive:</p>
-            
-            <div class="best-practice">
-                <h3>Minimize DOM Access</h3>
-                <ul>
-                    <li>Cache DOM references instead of repeatedly querying the DOM</li>
-                    <li>Batch DOM updates to reduce reflows and repaints</li>
-                    <li>Use DocumentFragment for multiple additions</li>
-                </ul>
-            </div>
-            
-            <div class="code-example">
-                <h3>Bad vs. Good DOM Manipulation</h3>
-                <pre><code>// BAD: Multiple separate DOM operations
-function addItems(items) {
-    const list = document.getElementById('myList');
-    
-    items.forEach(item => {
-        // This causes a reflow for EACH item
-        list.innerHTML += `&lt;li>${item}&lt;/li>`;
-    });
-}
-
-// BETTER: Single DOM operation
-function addItems(items) {
-    const list = document.getElementById('myList');
-    
-    // Build complete HTML string
-    const html = items.map(item => `&lt;li>${item}&lt;/li>`).join('');
-    
-    // Single DOM update
-    list.innerHTML += html;
-}
-
-// BEST: Use DocumentFragment
-function addItems(items) {
-    const list = document.getElementById('myList');
-    
-    // Create a fragment (doesn't cause reflows)
-    const fragment = document.createDocumentFragment();
-    
-    // Build all elements in memory
-    items.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        fragment.appendChild(li);
-    });
-    
-    // Single DOM insertion
-    list.appendChild(fragment);
-}</code></pre>
-            </div>
-            
-            <div class="best-practice">
-                <h3>Avoid Forced Synchronous Layouts</h3>
-                <p>Reading and then writing to the DOM in a loop can cause layout thrashing:</p>
-                <pre><code>// BAD: Causes layout thrashing
-function resizeElements(elements) {
-    elements.forEach(element => {
-        // Read (forces layout)
-        const height = element.offsetHeight;
-        
-        // Write (invalidates layout)
-        element.style.height = (height * 2) + 'px';
-    });
-}
-
-// BETTER: Separate reads and writes
-function resizeElements(elements) {
-    // Read phase
-    const heights = elements.map(element => element.offsetHeight);
-    
-    // Write phase
-    elements.forEach((element, i) => {
-        element.style.height = (heights[i] * 2) + 'px';
-    });
-}</code></pre>
-            </div>
-            
-            <div class="best-practice">
-                <h3>Use Efficient Selectors</h3>
-                <p>Some selectors are faster than others:</p>
-                <ol>
-                    <li>ID selectors (<code>#myId</code>)</li>
-                    <li>Class selectors (<code>.myClass</code>)</li>
-                    <li>Tag selectors (<code>div</code>)</li>
-                    <li>Descendant selectors (<code>div p</code>)</li>
-                    <li>Attribute selectors (<code>[data-value="foo"]</code>)</li>
-                    <li>Pseudo-classes and pseudo-elements (<code>:hover</code>, <code>::before</code>)</li>
-                </ol>
-            </div>
-            
-            <div class="best-practice">
-                <h3>Event Delegation</h3>
-                <p>For multiple similar elements (like list items), use event delegation instead of individual listeners.</p>
-            </div>
-            
-            <div class="real-world">
-                <h3>Real-World Example: Virtual List</h3>
-                <p>For very large lists, render only visible items:</p>
-                <pre><code>class VirtualList {
-    constructor(container, itemHeight, totalItems, renderItem) {
-        this.container = container;
-        this.itemHeight = itemHeight;
-        this.totalItems = totalItems;
-        this.renderItem = renderItem;
-        
-        // Create list elements
-        this.listElement = document.createElement('div');
-        this.listElement.style.position = 'relative';
-        this.listElement.style.height = `${totalItems * itemHeight}px`;
-        
-        // Create viewport for visible items
-        this.viewport = document.createElement('div');
-        this.viewport.style.overflow = 'auto';
-        this.viewport.style.position = 'relative';
-        this.viewport.style.height = '100%';
-        
-        this.viewport.appendChild(this.listElement);
-        this.container.appendChild(this.viewport);
-        
-        // State
-        this.visibleItems = [];
-        this.visibleRange = { start: 0, end: 0 };
-        
-        // Initialize
-        this.viewport.addEventListener('scroll', this.handleScroll.bind(this));
-        this.updateVisibleItems();
-    }
-    
-    handleScroll() {
-        requestAnimationFrame(() => {
-            this.updateVisibleItems();
-        });
-    }
-    
-    updateVisibleItems() {
-        const scrollTop = this.viewport.scrollTop;
-        const viewportHeight = this.viewport.clientHeight;
-        
-        // Calculate visible range with buffer
-        const buffer = 5;
-        const startIndex = Math.max(0, Math.floor(scrollTop / this.itemHeight) - buffer);
-        const endIndex = Math.min(
-            this.totalItems - 1,
-            Math.ceil((scrollTop + viewportHeight) / this.itemHeight) + buffer
-        );
-        
-        // Only update if visible range changed
-        if (startIndex !== this.visibleRange.start || endIndex !== this.visibleRange.end) {
-            this.visibleRange = { start: startIndex, end: endIndex };
-            this.renderVisibleItems();
-        }
-    }
-    
-    renderVisibleItems() {
-        // Remove existing items
-        while (this.listElement.firstChild) {
-            this.listElement.removeChild(this.listElement.firstChild);
-        }
-        
-        // Create fragment for batch insertion
-        const fragment = document.createDocumentFragment();
-        
-        // Render visible items
-        for (let i = this.visibleRange.start; i <= this.visibleRange.end; i++) {
-            const item = document.createElement('div');
-            item.style.position = 'absolute';
-            item.style.top = `${i * this.itemHeight}px`;
-            item.style.height = `${this.itemHeight}px`;
-            item.style.width = '100%';
-            
-            // Render item content
-            this.renderItem(item, i);
-            
-            fragment.appendChild(item);
-        }
-        
-        // Add all items in single DOM operation
-        this.listElement.appendChild(fragment);
-    }
-}
-
-// Usage
-const container = document.getElementById('list-container');
-const virtualList = new VirtualList(
-    container,
-    50, // Item height in pixels
-    10000, // Total number of items
-    (itemElement, index) => {
-        itemElement.textContent = `Item ${index}`;
-        
-        if (index % 2 === 0) {
-            itemElement.style.backgroundColor = '#f0f0f0';
-        }
-    }
-);</code></pre>
-            </div>
-        </section>
-
-        <section>
-            <h2>Connecting with Python Flask Backend</h2>
-            
-            <p>In a full stack application, your DOM manipulation skills directly integrate with your Python backend through APIs. Here's a typical pattern:</p>
-            
-            <div class="code-example">
-                <h3>Frontend-Backend Integration</h3>
-                <pre><code>// Frontend JavaScript
-document.addEventListener('DOMContentLoaded', () => {
-    // Query DOM
-    const productList = document.getElementById('product-list');
-    const loadingIndicator = document.getElementById('loading');
-    const errorMessage = document.getElementById('error');
-    
-    // Fetch products from Flask API
-    fetch('/api/products')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(products => {
-            // Hide loading indicator
-            loadingIndicator.style.display = 'none';
-            
-            // Create product elements
-            const fragment = document.createDocumentFragment();
-            
-            products.forEach(product => {
-                const productEl = createProductElement(product);
-                fragment.appendChild(productEl);
-            });
-            
-            // Update DOM
-            productList.appendChild(fragment);
-        })
-        .catch(error => {
-            // Show error message
-            loadingIndicator.style.display = 'none';
-            errorMessage.textContent = `Failed to load products: ${error.message}`;
-            errorMessage.style.display = 'block';
-        });
-    
-    function createProductElement(product) {
-        const element = document.createElement('div');
-        element.className = 'product-card';
-        element.dataset.productId = product.id;
-        
-        element.innerHTML = `
-            <img src="${product.image}" alt="${product.name}" class="product-image">
-            <h3 class="product-name">${product.name}</h3>
-            <p class="product-price">$${product.price.toFixed(2)}</p>
-            <button class="add-to-cart-btn">Add to Cart</button>
-        `;
-        
-        // Add event listener
-        const addButton = element.querySelector('.add-to-cart-btn');
-        addButton.addEventListener('click', () => addToCart(product.id));
-        
-        return element;
-    }
-    
-    function addToCart(productId) {
-        // Show loading state on button
-        const button = document.querySelector(`[data-product-id="${productId}"] .add-to-cart-btn`);
-        const originalText = button.textContent;
-        button.disabled = true;
-        button.textContent = 'Adding...';
-        
-        // Send request to Flask backend
-        fetch('/api/cart/add', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
+        # Define validation rules
+        self._validation_rules = {
+            'username': {
+                'required': True,
+                'min_length': 3
             },
-            body: JSON.stringify({ product_id: productId, quantity: 1 })
-        })
-            .then(response => response.json())
-            .then(data => {
-                // Update cart counter
-                document.getElementById('cart-count').textContent = data.cart_total;
-                
-                // Reset button with success indication
-                button.textContent = 'Added!';
-                button.classList.add('success');
-                
-                // Reset button after 2 seconds
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.disabled = false;
-                    button.classList.remove('success');
-                }, 2000);
-            })
-            .catch(error => {
-                // Show error on button
-                button.textContent = 'Error!';
-                button.classList.add('error');
-                
-                // Reset button after 2 seconds
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.disabled = false;
-                    button.classList.remove('error');
-                }, 2000);
-                
-                console.error('Add to cart error:', error);
-            });
-    }
-});</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>Corresponding Flask Backend Code</h3>
-                <pre><code># Python Flask Backend
-from flask import Flask, jsonify, request
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import current_user, login_required
-
-app = Flask(__name__)
-db = SQLAlchemy(app)
-
-# Product model
-class Product(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    price = db.Column(db.Float, nullable=False)
-    image = db.Column(db.String(200))
-    
-# Cart model
-class CartItem(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
-    quantity = db.Column(db.Integer, default=1)
-    
-# API routes
-@app.route('/api/products')
-def get_products():
-    products = Product.query.all()
-    return jsonify([{
-        'id': p.id,
-        'name': p.name,
-        'price': p.price,
-        'image': p.image
-    } for p in products])
-
-@app.route('/api/cart/add', methods=['POST'])
-@login_required
-def add_to_cart():
-    data = request.json
-    product_id = data.get('product_id')
-    quantity = data.get('quantity', 1)
-    
-    # Check if product exists
-    product = Product.query.get_or_404(product_id)
-    
-    # Check if item already in cart
-    cart_item = CartItem.query.filter_by(
-        user_id=current_user.id, 
-        product_id=product_id
-    ).first()
-    
-    if cart_item:
-        # Update quantity
-        cart_item.quantity += quantity
-    else:
-        # Add new item
-        cart_item = CartItem(
-            user_id=current_user.id,
-            product_id=product_id,
-            quantity=quantity
-        )
-        db.session.add(cart_item)
-    
-    db.session.commit()
-    
-    # Get total items in cart
-    cart_total = CartItem.query.filter_by(user_id=current_user.id).count()
-    
-    return jsonify({
-        'success': True,
-        'cart_total': cart_total
-    })
-</code></pre>
-            </div>
-        </section>
-
-        <section>
-            <h2>Advanced DOM Techniques</h2>
-            
-            <div class="code-example">
-                <h3>Custom Events</h3>
-                <p>Create and dispatch custom events for component communication:</p>
-                <pre><code>// Create custom event
-const productAddedEvent = new CustomEvent('productAdded', {
-    detail: { productId: 123, name: 'Laptop', price: 999 },
-    bubbles: true,  // Event bubbles up through DOM
-    cancelable: true  // Event can be canceled
-});
-
-// Dispatch event
-document.getElementById('product-123').dispatchEvent(productAddedEvent);
-
-// Listen for custom event
-document.addEventListener('productAdded', (event) => {
-    console.log('Product added:', event.detail);
-    updateCart(event.detail);
-});</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>Intersection Observer</h3>
-                <p>Detect when elements enter or exit the viewport:</p>
-                <pre><code>// Create observer
-const observer = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            // Element is visible
-            console.log('Element is visible:', entry.target);
-            entry.target.classList.add('visible');
-            
-            // Stop observing if needed
-            observer.unobserve(entry.target);
-        }
-    });
-}, {
-    root: null,  // Viewport
-    rootMargin: '0px',
-    threshold: 0.1  // 10% of element must be visible
-});
-
-// Start observing elements
-document.querySelectorAll('.lazy-load').forEach(el => {
-    observer.observe(el);
-});</code></pre>
-            </div>
-            
-            <div class="code-example">
-                <h3>Mutation Observer</h3>
-                <p>React to changes in the DOM:</p>
-                <pre><code>// Create observer
-const observer = new MutationObserver((mutations) => {
-    mutations.forEach(mutation => {
-        if (mutation.type === 'childList') {
-            console.log('Child nodes changed:', mutation.addedNodes, mutation.removedNodes);
-        } else if (mutation.type === 'attributes') {
-            console.log('Attribute changed:', mutation.attributeName);
-        }
-    });
-});
-
-// Start observing
-observer.observe(document.getElementById('watched-element'), {
-    childList: true,  // Watch for child changes
-    attributes: true,  // Watch for attribute changes
-    subtree: true,  // Watch all descendants too
-    characterData: true  // Watch for text changes
-});</code></pre>
-            </div>
-            
-            <div class="real-world">
-                <h3>Real-World Example: Infinite Scroll with Intersection Observer</h3>
-                <pre><code>class InfiniteScroll {
-    constructor(container, loadMore, options = {}) {
-        this.container = container;
-        this.loadMore = loadMore;
-        this.page = 1;
-        this.loading = false;
-        this.finished = false;
-        
-        // Default options
-        this.options = {
-            threshold: 0.1,
-            loadMargin: '200px',
-            ...options
-        };
-        
-        // Create observer
-        this.observer = new IntersectionObserver(this.handleIntersection.bind(this), {
-            root: null,
-            rootMargin: this.options.loadMargin,
-            threshold: this.options.threshold
-        });
-        
-        // Start observing
-        this.observer.observe(this.container.querySelector('.load-more-trigger'));
-    }
-    
-    handleIntersection(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting && !this.loading && !this.finished) {
-                this.loadMoreItems();
+            'email': {
+                'required': True,
+                'pattern': 'email'
+            },
+            'age': {
+                'min': 18,
+                'max': 120
             }
-        });
-    }
-    
-    async loadMoreItems() {
-        try {
-            this.loading = true;
-            
-            // Show loading indicator
-            const loadingIndicator = this.container.querySelector('.loading-indicator');
-            loadingIndicator.style.display = 'block';
-            
-            // Load more items
-            const items = await this.loadMore(this.page++);
-            
-            // Hide loading indicator
-            loadingIndicator.style.display = 'none';
-            
-            if (items.length === 0) {
-                this.finished = true;
-                this.container.querySelector('.no-more-items').style.display = 'block';
-                return;
-            }
-            
-            // Add items to container
-            const itemsContainer = this.container.querySelector('.items-container');
-            
-            // Create fragment for batch insertion
-            const fragment = document.createDocumentFragment();
-            
-            items.forEach(item => {
-                const itemElement = document.createElement('div');
-                itemElement.className = 'item';
-                
-                // Create item content
-                itemElement.innerHTML = `
-                    <h3>${item.title}</h3>
-                    <p>${item.description}</p>
-                `;
-                
-                fragment.appendChild(itemElement);
-            });
-            
-            // Add all items in single operation
-            itemsContainer.appendChild(fragment);
-            
-            this.loading = false;
-        } catch (error) {
-            console.error('Error loading more items:', error);
-            this.loading = false;
-            
-            // Show error message
-            const errorElement = this.container.querySelector('.error-message');
-            errorElement.textContent = 'Failed to load more items. Please try again.';
-            errorElement.style.display = 'block';
         }
-    }
-}
-
-// Usage
-const infiniteScroll = new InfiniteScroll(
-    document.getElementById('content-feed'),
-    async (page) => {
-        // Fetch data from backend
-        const response = await fetch(`/api/feed?page=${page}`);
-        return response.json();
-    }
-);</code></pre>
-            </div>
-        </section>
-
-        <section>
-            <h2>Browser Compatibility</h2>
-            
-            <p>Different browsers may implement DOM APIs differently. Here are strategies for dealing with browser inconsistencies:</p>
-            
-            <div class="best-practice">
-                <h3>Feature Detection</h3>
-                <pre><code>// Check if a feature is available
-if ('IntersectionObserver' in window) {
-    // Use Intersection Observer
-} else {
-    // Fallback implementation
-}
-
-// Check for method support
-if (Element.prototype.closest) {
-    // Use element.closest()
-} else {
-    // Polyfill or alternative approach
-}</code></pre>
-            </div>
-            
-            <div class="best-practice">
-                <h3>Using Polyfills</h3>
-                <p>Polyfills add missing functionality to older browsers:</p>
-                <pre><code>// Example polyfill for Element.matches()
-if (!Element.prototype.matches) {
-    Element.prototype.matches = 
-        Element.prototype.matchesSelector ||
-        Element.prototype.mozMatchesSelector ||
-        Element.prototype.msMatchesSelector ||
-        Element.prototype.oMatchesSelector ||
-        Element.prototype.webkitMatchesSelector ||
-        function(s) {
-            const matches = (this.document || this.ownerDocument).querySelectorAll(s);
-            let i = matches.length;
-            while (--i >= 0 && matches.item(i) !== this) {}
-            return i > -1;
-        };
-}</code></pre>
-            </div>
-            
-            <div class="best-practice">
-                <h3>Testing Across Browsers</h3>
-                <ul>
-                    <li>Use browser testing services (BrowserStack, LambdaTest)</li>
-                    <li>Virtual machines with different browser versions</li>
-                    <li>Test on real devices when possible</li>
-                    <li>Prioritize testing based on your target audience</li>
-                </ul>
-            </div>
-        </section>
-
-        <section>
-            <h2>The DOM and Security</h2>
-            
-            <div class="security-note">
-                <h3>Cross-Site Scripting (XSS)</h3>
-                <p>XSS attacks occur when untrusted content is added to the DOM:</p>
-                <pre><code>// UNSAFE - Directly inserting user input
-const userComment = userInput.value;
-commentBox.innerHTML = userComment;  // Potential XSS vulnerability
-
-// SAFE - Use textContent for user-generated content
-commentBox.textContent = userComment;  // Escapes HTML</code></pre>
-            </div>
-            
-            <div class="security-note">
-                <h3>Content Security Policy (CSP)</h3>
-                <p>CSP helps prevent XSS by controlling what resources can execute:</p>
-                <pre><code>&lt;!-- Example CSP header -->
-&lt;meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-
-// JavaScript created by innerHTML won't execute with strict CSP
-element.innerHTML = '&lt;button onclick="alert(\'XSS\')">Click me&lt;/button>';  // Won't work with CSP
-
-// Instead, use proper DOM methods
-const button = document.createElement('button');
-button.textContent = 'Click me';
-button.addEventListener('click', () => alert('Safe click!'));
-element.appendChild(button);  // Works with CSP</code></pre>
-            </div>
-            
-            <div class="security-note">
-                <h3>DOM-based Vulnerabilities</h3>
-                <p>Other DOM-based security concerns:</p>
-                <ul>
-                    <li><strong>CSRF (Cross-Site Request Forgery):</strong> Use CSRF tokens in forms</li>
-                    <li><strong>Open Redirects:</strong> Validate URLs before redirecting</li>
-                    <li><strong>DOM Clobbering:</strong> Be careful with element IDs that match property names</li>
-                </ul>
-            </div>
-            
-            <div class="comparison">
-                <h3>Similarities to Flask Security</h3>
-                <table>
-                    <tr>
-                        <th>Flask/Python</th>
-                        <th>JavaScript/DOM</th>
-                    </tr>
-                    <tr>
-                        <td>Jinja2 autoescape</td>
-                        <td>textContent vs innerHTML</td>
-                    </tr>
-                    <tr>
-                        <td>CSRF protection in Flask-WTF</td>
-                        <td>CSRF tokens in forms</td>
-                    </tr>
-                    <tr>
-                        <td>Input validation with WTForms</td>
-                        <td>Client-side form validation</td>
-                    </tr>
-                    <tr>
-                        <td>SQLAlchemy ORM prevents SQL injection</td>
-                        <td>Avoiding eval() and new Function()</td>
-                    </tr>
-                </table>
-            </div>
-        </section>
-
-        <section>
-            <h2>Integrating with Frontend Frameworks</h2>
-            
-            <p>While raw DOM manipulation is powerful, modern web development often uses frameworks to abstract and organize DOM operations:</p>
-            
-            <div class="comparison">
-                <h3>Raw DOM vs. Framework Approach</h3>
-                <pre><code>// Vanilla DOM
-function renderTodo(todo) {
-    const li = document.createElement('li');
-    li.textContent = todo.text;
-    li.dataset.id = todo.id;
     
-    if (todo.completed) {
-        li.classList.add('completed');
-    }
-    
-    const deleteButton = document.createElement('button');
-    deleteButton.textContent = 'Delete';
-    deleteButton.addEventListener('click', () => deleteTodo(todo.id));
-    
-    li.appendChild(deleteButton);
-    todoList.appendChild(li);
-}
-
-// React approach
-function TodoItem({ todo, onDelete }) {
-    return (
-        &lt;li className={todo.completed ? 'completed' : ''} data-id={todo.id}>
-            {todo.text}
-            &lt;button onClick={() => onDelete(todo.id)}>Delete&lt;/button>
-        &lt;/li>
-    );
-}
-
-// Vue approach
-&lt;li :class="{ completed: todo.completed }" :data-id="todo.id">
-    {{ todo.text }}
-    &lt;button @click="deleteTodo(todo.id)">Delete&lt;/button>
-&lt;/li></code></pre>
-            </div>
-            
-            <div class="best-practice">
-                <h3>When to Use Raw DOM vs. Frameworks</h3>
-                <table>
-                    <tr>
-                        <th>Use Raw DOM When</th>
-                        <th>Use Frameworks When</th>
-                    </tr>
-                    <tr>
-                        <td>Building small, simple applications</td>
-                        <td>Building complex, data-driven applications</td>
-                    </tr>
-                    <tr>
-                        <td>Adding minimal interactivity to static pages</td>
-                        <td>Managing many UI components and states</td>
-                    </tr>
-                    <tr>
-                        <td>Performance is absolutely critical</td>
-                        <td>Development speed and maintainability are priorities</td>
-                    </tr>
-                    <tr>
-                        <td>You need to understand how things work under the hood</td>
-                        <td>You want to follow established patterns and practices</td>
-                    </tr>
-                </table>
-            </div>
-            
-            <div class="real-world">
-                <h3>Hybrid Approach: Framework with DOM Manipulation</h3>
-                <p>Sometimes you need to combine frameworks with direct DOM access:</p>
-                <pre><code>// React component with direct DOM manipulation
-import React, { useEffect, useRef } from 'react';
-
-function ChartsComponent({ data }) {
-    const chartRef = useRef(null);
-    
-    useEffect(() => {
-        if (chartRef.current && data) {
-            // Direct DOM manipulation for complex visualization
-            const chart = new ComplexChart(chartRef.current);
-            chart.setData(data);
-            chart.render();
-            
-            // Cleanup on unmount
-            return () => chart.destroy();
-        }
-    }, [data]);
-    
-    return &lt;div ref={chartRef} className="chart-container">&lt;/div>;
-}</code></pre>
-            </div>
-        </section>
-
-        <section>
-            <h2>Exercises and Practice</h2>
-            
-            <div class="exercise">
-                <h3>Exercise 1: Interactive Product List</h3>
-                <p>Create a dynamic product list with the following features:</p>
-                <ul>
-                    <li>Products can be sorted by name, price, or rating</li>
-                    <li>Products can be filtered by category</li>
-                    <li>Each product has an "Add to Cart" button</li>
-                    <li>Clicking on a product shows a modal with details</li>
-                </ul>
-                <p>HTML structure:</p>
-                <pre><code>&lt;div id="product-container">
-    &lt;div class="controls">
-        &lt;div class="sorting">
-            &lt;label for="sort-select">Sort by:&lt;/label>
-            &lt;select id="sort-select">
-                &lt;option value="name">Name&lt;/option>
-                &lt;option value="price-asc">Price (Low to High)&lt;/option>
-                &lt;option value="price-desc">Price (High to Low)&lt;/option>
-                &lt;option value="rating">Rating&lt;/option>
-            &lt;/select>
-        &lt;/div>
+    def save(self):
+        """Save the user (simulation)"""
+        self.log_method_call('save')
         
-        &lt;div class="filtering">
-            &lt;label for="category-filter">Category:&lt;/label>
-            &lt;select id="category-filter">
-                &lt;option value="all">All Categories&lt;/option>
-                &lt;option value="electronics">Electronics&lt;/option>
-                &lt;option value="clothing">Clothing&lt;/option>
-                &lt;option value="home">Home&lt;/option>
-            &lt;/select>
-        &lt;/div>
-    &lt;/div>
-    
-    &lt;div id="products-list">&lt;/div>
-    
-    &lt;div id="product-modal" class="modal">
-        &lt;div class="modal-content">
-            &lt;span class="close">&amp;times;&lt;/span>
-            &lt;div id="modal-product-details">&lt;/div>
-        &lt;/div>
-    &lt;/div>
-&lt;/div></code></pre>
-            </div>
-            
-            <div class="exercise">
-                <h3>Exercise 2: Form Validation</h3>
-                <p>Create a registration form with real-time validation:</p>
-                <ul>
-                    <li>Username (letters and numbers only, 3-20 characters)</li>
-                    <li>Email (valid email format)</li>
-                    <li>Password (at least 8 characters, including uppercase, lowercase, and numbers)</li>
-                    <li>Password confirmation (must match password)</li>
-                    <li>Show validation feedback as the user types</li>
-                    <li>Submit button is only enabled when all fields are valid</li>
-                </ul>
-            </div>
-            
-            <div class="exercise">
-                <h3>Exercise 3: Dynamic Quiz Application</h3>
-                <p>Create a quiz application that:</p>
-                <ul>
-                    <li>Loads questions from a JSON file</li>
-                    <li>Shows one question at a time</li>
-                    <li>Provides immediate feedback on answers</li>
-                    <li>Tracks user score</li>
-                    <li>Shows a summary at the end</li>
-                </ul>
-                <p>Connect this to a Flask backend that stores questions and scores.</p>
-            </div>
-        </section>
+        # Validate before saving
+        is_valid, errors = self.validate()
+        if not is_valid:
+            self.log(f"Validation failed: {errors}", level='ERROR')
+            return False
+        
+        self.log(f"User {self.username} saved successfully")
+        return True
 
-        <section>
-            <h2>Further Learning Resources</h2>
-            
+
+# Test the mixins
+user = User(username="john_doe", email="john@example.com", age=30)
+
+# Test logging
+user.log("User object created")
+
+# Test validation
+is_valid, errors = user.validate()
+print(f"User valid: {is_valid}, Errors: {errors}")
+
+# Test an invalid user
+invalid_user = User(username="jo", email="invalid-email", age=15)
+is_valid, errors = invalid_user.validate()
+print(f"Invalid user valid: {is_valid}, Errors: {errors}")
+
+# Test serialization
+user_data = user.to_json()
+print(f"Serialized user: {user_data}")
+
+# Create a new user from json
+new_user = User().from_json({
+    'username': 'alice_smith',
+    'email': 'alice@example.com',
+    'age': 25
+})
+print(f"Deserialized user: {new_user.to_json()}")
+
+# Test save method
+user.save()
+invalid_user.save()
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
             <ul>
-                <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model">MDN Web Docs: Document Object Model (DOM)</a></li>
-                <li><a href="https://javascript.info/document">JavaScript.info: Document</a></li>
-                <li><a href="https://domenlightenment.com/">DOM Enlightenment</a> by Cody Lindley</li>
-                <li><a href="https://eloquentjavascript.net/14_dom.html">Eloquent JavaScript: The Document Object Model</a></li>
-                <li><a href="https://web.dev/articles/critical-rendering-path">Critical Rendering Path</a> by Google Developers</li>
+                <li>We create three mixin classes:
+                    <ul>
+                        <li><code>SerializationMixin</code>: Provides methods for converting objects to/from JSON-compatible dictionaries</li>
+                        <li><code>ValidationMixin</code>: Provides validation capabilities based on configurable rules</li>
+                        <li><code>LoggingMixin</code>: Provides logging functionality</li>
+                    </ul>
+                </li>
+                <li>The <code>User</code> class inherits from all three mixins, gaining their functionality without establishing an "is-a" relationship with any of them</li>
+                <li>Each mixin is focused on a single, well-defined responsibility, following the Single Responsibility Principle</li>
+                <li>We test the combined functionality with various user objects</li>
+            </ul>
+
+            <h4>Mixin Naming Convention</h4>
+            <p>By convention, mixin classes are often named with the suffix "Mixin" to clearly indicate their purpose. They should typically be designed to:</p>
+            <ol>
+                <li>Provide a specific, well-defined set of functionality</li>
+                <li>Not depend on instance attributes being set by their own <code>__init__</code> methods</li>
+                <li>Be used as additional parents in multiple inheritance, not as the primary parent</li>
+            </ol>
+            
+            <p><strong>Real-world analogy:</strong> Mixins are like modular appliance attachments. A stand mixer can be a basic mixer, but by attaching different modules, it can become a pasta maker, a meat grinder, or a food processor. Each attachment adds specific functionality without changing the fundamental nature of the mixer. Similarly, mixins add specific capabilities to a class without changing its core identity.</p>
+        </section>
+
+        <section class="real_world_examples">
+            <h3>Real-World Examples of Multiple Inheritance in Python Web Development</h3>
+            <p>Let's create a file called <code>real_world_examples.py</code> that demonstrates how multiple inheritance is used in actual web development contexts:</p>
+            
+            <pre>
+# File: multiple_inheritance/real_world_examples.py
+
+# Example 1: Django Class-Based Views Mixins
+class TemplateResponseMixin:
+    """Mixin for rendering templates (simplified Django-like)"""
+    template_name = None
+    
+    def render_to_response(self, context):
+        """Render the template with the given context"""
+        if self.template_name is None:
+            raise ValueError("TemplateResponseMixin requires template_name to be set")
+        
+        return f"Rendered template {self.template_name} with context: {context}"
+
+
+class ContextMixin:
+    """Mixin for providing a context for template rendering"""
+    
+    def get_context_data(self, **kwargs):
+        """Get the context for template rendering"""
+        return kwargs
+
+
+class View:
+    """Base view class (simplified Django-like)"""
+    
+    def dispatch(self, request, *args, **kwargs):
+        """Dispatch the request to the appropriate method"""
+        handler = getattr(self, request.method.lower(), self.http_method_not_allowed)
+        return handler(request, *args, **kwargs)
+    
+    def http_method_not_allowed(self, request, *args, **kwargs):
+        """Handle methods that are not allowed"""
+        return f"Method {request.method} not allowed"
+    
+    def get(self, request, *args, **kwargs):
+        return self.http_method_not_allowed(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        return self.http_method_not_allowed(request, *args, **kwargs)
+
+
+class TemplateView(TemplateResponseMixin, ContextMixin, View):
+    """Template view (simplified Django-like)"""
+    
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
+
+
+# Example 2: SQLAlchemy-like Model Mixins
+class TimestampMixin:
+    """Mixin that adds created_at and updated_at fields"""
+    
+    def __init__(self):
+        self.created_at = "Current timestamp"
+        self.updated_at = "Current timestamp"
+    
+    def update_timestamp(self):
+        self.updated_at = "Updated timestamp"
+
+
+class SoftDeleteMixin:
+    """Mixin that adds soft delete capability"""
+    
+    def __init__(self):
+        self.deleted_at = None
+    
+    def delete(self):
+        self.deleted_at = "Current timestamp"
+        return f"{self.__class__.__name__} soft deleted"
+    
+    def is_deleted(self):
+        return self.deleted_at is not None
+    
+    def restore(self):
+        self.deleted_at = None
+        return f"{self.__class__.__name__} restored"
+
+
+class BaseModel:
+    """Base model class (simplified SQLAlchemy-like)"""
+    
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+    
+    def save(self):
+        return f"{self.__class__.__name__} saved to database"
+
+
+class User(BaseModel, TimestampMixin, SoftDeleteMixin):
+    """User model with timestamps and soft delete"""
+    
+    def __init__(self, username, email, **kwargs):
+        BaseModel.__init__(self, **kwargs)
+        TimestampMixin.__init__(self)
+        SoftDeleteMixin.__init__(self)
+        self.username = username
+        self.email = email
+
+
+# Example 3: Flask-like Extension System
+class FlaskExtension:
+    """Base class for Flask extensions"""
+    
+    def init_app(self, app):
+        """Initialize the extension with the Flask app"""
+        return f"Extension {self.__class__.__name__} initialized with app"
+
+
+class MailExtension(FlaskExtension):
+    """Mixin for sending emails"""
+    
+    def send_mail(self, to, subject, body):
+        return f"Sending email to {to} with subject '{subject}'"
+
+
+class CacheExtension(FlaskExtension):
+    """Mixin for caching"""
+    
+    def cache(self, key, value, timeout=None):
+        return f"Caching {value} with key '{key}' and timeout {timeout}"
+    
+    def get(self, key):
+        return f"Getting value for key '{key}' from cache"
+
+
+class AdvancedMailExtension(MailExtension, CacheExtension):
+    """Advanced mail extension with caching capabilities"""
+    
+    def send_cached_mail(self, to, subject, body, cache_key):
+        # Check if we have a cached result
+        cached_result = self.get(cache_key)
+        
+        # Send the email
+        result = self.send_mail(to, subject, body)
+        
+        # Cache the result
+        self.cache(cache_key, result)
+        
+        return result
+
+
+# Test the examples
+# Example 1: Django-like Views
+class Request:
+    def __init__(self, method):
+        self.method = method
+
+template_view = TemplateView()
+template_view.template_name = "example.html"
+result = template_view.dispatch(Request("GET"), id=123)
+print("Django-like View Result:")
+print(result)
+
+# Example 2: SQLAlchemy-like Models
+user = User(username="jane_doe", email="jane@example.com")
+print("\nSQLAlchemy-like Model Example:")
+print(user.save())
+print(user.delete())
+print(f"Is deleted: {user.is_deleted()}")
+print(user.restore())
+print(f"Is deleted after restore: {user.is_deleted()}")
+
+# Example 3: Flask-like Extensions
+advanced_mail = AdvancedMailExtension()
+print("\nFlask-like Extension Example:")
+print(advanced_mail.init_app("flask_app"))
+print(advanced_mail.send_cached_mail(
+    "recipient@example.com", 
+    "Hello", 
+    "This is a test", 
+    "email:recipient@example.com"
+))
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li><strong>Example 1:</strong> Demonstrates Django-style class-based views, which heavily use multiple inheritance and mixins. Each mixin provides a specific piece of functionality (template rendering, context preparation), and they're combined in the <code>TemplateView</code> class.</li>
+                <li><strong>Example 2:</strong> Shows an SQLAlchemy-inspired approach to model composition, where models can inherit behavior like timestamping and soft deletion from mixins.</li>
+                <li><strong>Example 3:</strong> Illustrates a Flask-like extension system where extensions can be combined to create more complex functionality, such as a mail extension with caching capabilities.</li>
+            </ul>
+
+            <p>These examples show how multiple inheritance and the mixin pattern are used extensively in popular Python web frameworks and libraries. By understanding these patterns, you can more effectively work with these frameworks and apply similar patterns in your own code.</p>
+        </section>
+
+        <section class="best_practices">
+            <h3>Best Practices for Multiple Inheritance</h3>
+            
+            <h4>1. Prefer Composition Over Inheritance When Appropriate</h4>
+            <p>While multiple inheritance is powerful, sometimes composition (where one class contains instances of other classes) can be clearer and more flexible. Use inheritance for "is-a" relationships and composition for "has-a" relationships.</p>
+            
+            <pre>
+# Composition example
+class Engine:
+    def start(self):
+        return "Engine started"
+
+class Car:
+    def __init__(self):
+        self.engine = Engine()  # Composition
+    
+    def start(self):
+        return self.engine.start()
+</pre>
+            
+            <h4>2. Use Mixins for Behavior, Not for State</h4>
+            <p>Mixins should primarily provide behavior (methods) rather than state (instance variables). This reduces the chances of attribute name conflicts.</p>
+            
+            <h4>3. Keep the Inheritance Hierarchy Shallow</h4>
+            <p>Deep inheritance hierarchies can become hard to understand and maintain. Try to keep your inheritance tree relatively shallow to minimize complexity.</p>
+            
+            <h4>4. Follow Naming Conventions</h4>
+            <p>Use the "Mixin" suffix for mixin classes to clearly indicate their purpose. This helps other developers understand your code's structure.</p>
+            
+            <h4>5. Document the Class Hierarchy</h4>
+            <p>Provide clear documentation about the inheritance relationships, especially when using multiple inheritance. This helps others (and your future self) understand the code structure.</p>
+            
+            <h4>6. Be Careful with Method Resolution Order</h4>
+            <p>Understand how Python's MRO works and be mindful of the order of parent classes in your class definition. The order can affect which methods are called when there are name conflicts.</p>
+            
+            <h4>7. Use super() Consistently</h4>
+            <p>When overriding methods, use <code>super()</code> consistently to ensure that all parent methods are called appropriately. This is particularly important in diamond inheritance structures.</p>
+            
+            <pre>
+# Consistent use of super()
+class A:
+    def method(self):
+        print("A.method")
+
+class B(A):
+    def method(self):
+        super().method()
+        print("B.method")
+
+class C(A):
+    def method(self):
+        super().method()
+        print("C.method")
+
+class D(B, C):
+    def method(self):
+        super().method()
+        print("D.method")
+
+# When d.method() is called, all methods in the hierarchy will be executed
+</pre>
+            
+            <h4>8. Avoid the Deadly Diamond of Death</h4>
+            <p>Be cautious with diamond inheritance patterns. While Python handles them correctly, they can still make your code harder to understand. When using diamond inheritance, make sure you understand the MRO and how <code>super()</code> works.</p>
+        </section>
+
+        <section class="practical_exercise">
+            <h3>Practical Exercise: Building a Web Framework Component System</h3>
+            <p>Let's apply what we've learned to build a simple component system for a web framework, using multiple inheritance and mixins to create reusable, composable components:</p>
+            
+            <pre>
+# Exercise: Building a component system with multiple inheritance
+
+class Component:
+    """Base class for all UI components"""
+    
+    def __init__(self, id=None, classes=None):
+        self.id = id
+        self.classes = classes or []
+    
+    def render(self):
+        """Render the component to HTML"""
+        raise NotImplementedError("Subclasses must implement render()")
+    
+    def get_attributes(self):
+        """Get HTML attributes as a string"""
+        attributes = []
+        if self.id:
+            attributes.append(f'id="{self.id}"')
+        if self.classes:
+            class_str = ' '.join(self.classes)
+            attributes.append(f'class="{class_str}"')
+        return ' '.join(attributes)
+
+
+class ClickableMixin:
+    """Mixin for clickable elements"""
+    
+    def __init__(self, *args, onclick=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.onclick = onclick
+    
+    def get_attributes(self):
+        """Add onclick attribute if provided"""
+        attributes = super().get_attributes()
+        if self.onclick:
+            onclick_attr = f'onclick="{self.onclick}"'
+            attributes = f"{attributes} {onclick_attr}" if attributes else onclick_attr
+        return attributes
+
+
+class StyleableMixin:
+    """Mixin for styling elements"""
+    
+    def __init__(self, *args, style=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.style = style or {}
+    
+    def get_attributes(self):
+        """Add style attribute if styles are provided"""
+        attributes = super().get_attributes()
+        if self.style:
+            style_str = '; '.join([f"{k}: {v}" for k, v in self.style.items()])
+            style_attr = f'style="{style_str}"'
+            attributes = f"{attributes} {style_attr}" if attributes else style_attr
+        return attributes
+
+
+class ValidatableMixin:
+    """Mixin for form elements that can be validated"""
+    
+    def __init__(self, *args, required=False, pattern=None, minlength=None, maxlength=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.required = required
+        self.pattern = pattern
+        self.minlength = minlength
+        self.maxlength = maxlength
+    
+    def get_attributes(self):
+        """Add validation attributes"""
+        attributes = super().get_attributes()
+        validation_attrs = []
+        
+        if self.required:
+            validation_attrs.append('required')
+        if self.pattern:
+            validation_attrs.append(f'pattern="{self.pattern}"')
+        if self.minlength is not None:
+            validation_attrs.append(f'minlength="{self.minlength}"')
+        if self.maxlength is not None:
+            validation_attrs.append(f'maxlength="{self.maxlength}"')
+        
+        return f"{attributes} {' '.join(validation_attrs)}" if attributes else ' '.join(validation_attrs)
+
+
+class Button(Component, ClickableMixin, StyleableMixin):
+    """Button component"""
+    
+    def __init__(self, text, type="button", *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.text = text
+        self.type = type
+    
+    def render(self):
+        attributes = self.get_attributes()
+        attributes_str = f" {attributes}" if attributes else ""
+        return f'<button type="{self.type}"{attributes_str}>{self.text}</button>'
+
+
+class Input(Component, ValidatableMixin, StyleableMixin):
+    """Input component"""
+    
+    def __init__(self, name, type="text", value=None, placeholder=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.name = name
+        self.type = type
+        self.value = value
+        self.placeholder = placeholder
+    
+    def render(self):
+        attributes = self.get_attributes()
+        name_attr = f'name="{self.name}"'
+        type_attr = f'type="{self.type}"'
+        value_attr = f'value="{self.value}"' if self.value is not None else ''
+        placeholder_attr = f'placeholder="{self.placeholder}"' if self.placeholder is not None else ''
+        
+        all_attrs = ' '.join(filter(None, [attributes, name_attr, type_attr, value_attr, placeholder_attr]))
+        return f'<input {all_attrs}>'
+
+
+class Form(Component, StyleableMixin):
+    """Form component that can contain other components"""
+    
+    def __init__(self, action="", method="post", children=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.action = action
+        self.method = method
+        self.children = children or []
+    
+    def add_child(self, child):
+        """Add a child component to the form"""
+        self.children.append(child)
+    
+    def render(self):
+        attributes = self.get_attributes()
+        action_attr = f'action="{self.action}"'
+        method_attr = f'method="{self.method}"'
+        
+        all_attrs = ' '.join(filter(None, [attributes, action_attr, method_attr]))
+        
+        children_html = '\n'.join([child.render() for child in self.children])
+        return f'<form {all_attrs}>\n{children_html}\n</form>'
+
+
+# Test the component system
+button = Button(
+    "Click Me", 
+    id="submit-btn", 
+    classes=["btn", "btn-primary"],
+    onclick="submitForm()",
+    style={"background-color": "blue", "color": "white"}
+)
+
+email_input = Input(
+    name="email", 
+    type="email", 
+    placeholder="Enter your email",
+    required=True,
+    pattern=r"[^@]+@[^@]+\.[^@]+",
+    style={"width": "100%", "padding": "10px"}
+)
+
+form = Form(
+    action="/submit", 
+    method="post",
+    id="contact-form",
+    classes=["form", "contact-form"],
+    style={"margin": "20px"}
+)
+
+form.add_child(email_input)
+form.add_child(button)
+
+print("Rendered Button:")
+print(button.render())
+print("\nRendered Input:")
+print(email_input.render())
+print("\nRendered Form:")
+print(form.render())
+</pre>
+
+            <p><strong>Exercise Explanation:</strong></p>
+            <p>In this exercise, we've created a component system for building HTML elements with multiple inheritance and mixins:</p>
+            <ol>
+                <li><code>Component</code>: The base class for all UI components</li>
+                <li>Mixin classes for specific functionality:
+                    <ul>
+                        <li><code>ClickableMixin</code>: Adds click handling</li>
+                        <li><code>StyleableMixin</code>: Adds CSS styling</li>
+                        <li><code>ValidatableMixin</code>: Adds form validation attributes</li>
+                    </ul>
+                </li>
+                <li>Concrete component classes that combine these mixins:
+                    <ul>
+                        <li><code>Button</code>: A clickable, styleable button</li>
+                        <li><code>Input</code>: A validatable, styleable input field</li>
+                        <li><code>Form</code>: A container for other components</li>
+                    </ul>
+                </li>
+            </ol>
+            
+            <p>This system demonstrates how multiple inheritance can create flexible, composable components that share functionality through mixins. Each mixin adds a specific capability, and components can mix and match these capabilities as needed.</p>
+            
+            <p>The use of <code>super().__init__(*args, **kwargs)</code> and <code>super().get_attributes()</code> ensures that all parent classes' methods are called appropriately, avoiding common pitfalls in multiple inheritance.</p>
+            
+            <p>This pattern is similar to how many Python web frameworks like Django and Flask structure their components, and understanding it will help you work more effectively with these frameworks and create your own extensible systems.</p>
+        </section>
+
+        <section class="key_takeaways">
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li><strong>Multiple inheritance</strong> allows a class to inherit attributes and methods from more than one parent class, enabling code reuse and composition of behavior.</li>
+                <li>The <strong>Method Resolution Order (MRO)</strong> determines the order in which Python searches for methods in a multiple inheritance hierarchy. Python uses the C3 linearization algorithm to establish a consistent MRO.</li>
+                <li>The <strong>diamond problem</strong> occurs when a class inherits from two classes that both inherit from a common base class. Python solves this through its MRO and the use of <code>super()</code>.</li>
+                <li><strong>Mixins</strong> are a powerful pattern in multiple inheritance, providing specific, well-defined functionality that can be "mixed in" to other classes without establishing an "is-a" relationship.</li>
+                <li>Multiple inheritance and mixins are widely used in Python web frameworks like Django and Flask, allowing for flexible, composable components.</li>
+                <li>Best practices include preferring composition when appropriate, using mixins primarily for behavior rather than state, keeping inheritance hierarchies shallow, and carefully considering the method resolution order.</li>
             </ul>
         </section>
 
-        <section>
-            <h2>Conclusion and Key Takeaways</h2>
+        <section class="assignment">
+            <h3>Assignment: Extend a Web Application with Mixins and Multiple Inheritance</h3>
+            <p>For today's assignment, you'll extend a web application by implementing mixins and multiple inheritance to add reusable functionality to various components.</p>
             
-            <ul>
-                <li>The DOM is a programmatic representation of your HTML document</li>
-                <li>DOM manipulation allows you to create dynamic, interactive web applications</li>
-                <li>Understanding the DOM is essential for frontend development, even when using frameworks</li>
-                <li>Performance optimization is important for smooth user experiences</li>
-                <li>Security considerations are crucial when manipulating the DOM</li>
-                <li>The DOM is the bridge between your JavaScript code and what users see and interact with</li>
-            </ul>
+            <h4>Requirements:</h4>
+            <ol>
+                <li>Create at least three mixin classes that provide specific functionality:
+                    <ul>
+                        <li>A logging mixin that adds logging capabilities</li>
+                        <li>A serialization mixin that adds JSON serialization/deserialization</li>
+                        <li>A third mixin of your choice (e.g., caching, validation, authentication)</li>
+                    </ul>
+                </li>
+                <li>Implement at least two base classes that represent core components of a web application (e.g., Model, Controller, View)</li>
+                <li>Create at least three concrete classes that use multiple inheritance to combine the base classes and mixins</li>
+                <li>Design your class hierarchy to avoid common pitfalls of multiple inheritance:
+                    <ul>
+                        <li>Use <code>super()</code> consistently to call parent methods</li>
+                        <li>Be mindful of method resolution order</li>
+                        <li>Avoid attribute name conflicts</li>
+                    </ul>
+                </li>
+                <li>Write a demonstration script that shows how your classes interact and how the mixed-in functionality enhances the application</li>
+                <li>Include docstrings and comments to explain your code's structure and design decisions</li>
+            </ol>
             
-            <p>As Python developers expanding into full stack development, your mastery of DOM manipulation completes your toolkit, allowing you to build complete web applications from database to user interface.</p>
+            <h4>Bonus Challenges:</h4>
+            <ol>
+                <li>Implement a diamond inheritance pattern and demonstrate your understanding of how Python resolves method calls in this situation</li>
+                <li>Create a mixin that adds asynchronous capabilities to appropriate classes</li>
+                <li>Design a plugin system that uses multiple inheritance to extend application functionality</li>
+                <li>Create a real-world example that mimics a feature from a popular Python web framework (e.g., Django's class-based views or SQLAlchemy's models)</li>
+            </ol>
+            
+            <p>Submit your work as a Python module with clear structure and organization. Be prepared to explain your design choices and how multiple inheritance enhances your application's modularity and reusability.</p>
         </section>
-    </div>
+
+        <section class="further_reading">
+            <h3>Further Reading and Resources</h3>
+            <ul>
+                <li><a href="https://docs.python.org/3/tutorial/classes.html#multiple-inheritance" target="_blank">Python Official Documentation: Multiple Inheritance</a></li>
+                <li><a href="https://www.python.org/download/releases/2.3/mro/" target="_blank">Python Method Resolution Order (C3 Linearization)</a></li>
+                <li><a href="https://realpython.com/inheritance-composition-python/" target="_blank">Real Python: Inheritance and Composition</a></li>
+                <li><a href="https://docs.djangoproject.com/en/stable/topics/class-based-views/mixins/" target="_blank">Django Documentation: Class-Based Views Mixins</a></li>
+                <li><a href="https://docs.sqlalchemy.org/en/14/orm/extensions/declarative/mixins.html" target="_blank">SQLAlchemy Documentation: Mixin and Custom Base Classes</a></li>
+            </ul>
+        </section>
+    </main>
 
     <footer>
-        <p>&copy; 2025 Full Stack Python Web Development Course</p>
-        <p>Location: <code>/lectures/week3/tuesday/dom_manipulation.html</code></p>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
     </footer>
 </body>
 </html>

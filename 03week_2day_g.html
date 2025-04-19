@@ -1,0 +1,2413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic/Dunder Methods in Python</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 3: Object-Oriented Programming Advanced Concepts</h2>
+        <h3>Magic/Dunder Methods</h3>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>Understanding Magic/Dunder Methods in Python</h3>
+            <p>
+                Magic methods, also known as "dunder" methods (short for "double underscore"), are special methods in Python that have double underscores at the beginning and end of their names, like <code>__init__</code> or <code>__str__</code>. These methods enable Python's unique features and allow your classes to integrate seamlessly with Python's built-in functions and operators.
+            </p>
+            
+            <p>
+                Dunder methods are what make Python's object-oriented programming so powerful and expressive. They allow you to define how your objects behave when used with Python's syntax and built-in functions. For example, by defining the <code>__add__</code> method, you can make your objects work with the <code>+</code> operator, or by defining <code>__str__</code>, you control how your objects are represented as strings.
+            </p>
+            
+            <p>
+                In today's session, we'll explore these powerful methods in detail, learning how they work and how to implement them effectively in your own classes.
+            </p>
+        </section>
+
+        <section class="folder_structure">
+            <h3>Today's File Structure</h3>
+            <p>For today's lesson, we'll create a new Python module in our project. Ensure you have the following directory structure:</p>
+            <pre>
+project_root/
+├── dunder_methods/
+│   ├── __init__.py  (empty file to make the folder a package)
+│   ├── basic_dunder.py
+│   ├── operators.py
+│   ├── container_methods.py
+│   ├── comparison_methods.py
+│   ├── attribute_access.py
+│   ├── callable_objects.py
+│   └── real_world_examples.py
+</pre>
+            <p>All code examples will be saved in these files, allowing you to organize and revisit these concepts easily.</p>
+        </section>
+
+        <section class="basic_dunder">
+            <h3>Basic Dunder Methods</h3>
+            <p>Let's start with some of the most fundamental dunder methods that help define the core behavior of your objects. Create a file named <code>basic_dunder.py</code> with the following code:</p>
+            
+            <pre>
+# File: dunder_methods/basic_dunder.py
+
+class Person:
+    """A class to demonstrate basic dunder methods"""
+    
+    def __init__(self, first_name, last_name, age):
+        """
+        Initialize a Person object.
+        
+        This is called whenever you create a new instance of the class.
+        """
+        self.first_name = first_name
+        self.last_name = last_name
+        self.age = age
+    
+    def __str__(self):
+        """
+        Return a string representation of the Person object.
+        
+        This is called by the str() function and when you use print().
+        """
+        return f"{self.first_name} {self.last_name}, {self.age} years old"
+    
+    def __repr__(self):
+        """
+        Return a developer-friendly string representation of the Person object.
+        
+        This is called by the repr() function and in interactive mode.
+        It should ideally return a string that, when executed, would recreate the object.
+        """
+        return f"Person('{self.first_name}', '{self.last_name}', {self.age})"
+    
+    def __format__(self, format_spec):
+        """
+        Return a formatted string representation of the Person object.
+        
+        This is called by the format() function and when using f-strings with format specifiers.
+        The format_spec is the string after the colon in the format specifier.
+        """
+        if format_spec == 'short':
+            return f"{self.first_name[0]}. {self.last_name}"
+        elif format_spec == 'full':
+            return f"{self.first_name} {self.last_name}, aged {self.age}"
+        else:
+            return str(self)
+    
+    def __bool__(self):
+        """
+        Return a boolean representation of the Person object.
+        
+        This is called by the bool() function and in boolean contexts like if statements.
+        """
+        # Consider a person as "truthy" if they are an adult (18+)
+        return self.age >= 18
+    
+    def __del__(self):
+        """
+        Clean up resources when the object is about to be destroyed.
+        
+        This is called when the object is about to be garbage collected.
+        It's rarely needed in practice but can be useful for cleanup.
+        """
+        print(f"Person object for {self.first_name} {self.last_name} is being destroyed")
+
+
+# Demo basic usage
+if __name__ == "__main__":
+    # Create a Person object
+    person = Person("John", "Doe", 30)
+    
+    # __str__ method
+    print("Demonstrating __str__:")
+    print(str(person))
+    print(person)  # print() calls str() implicitly
+    
+    # __repr__ method
+    print("\nDemonstrating __repr__:")
+    print(repr(person))
+    
+    # __format__ method
+    print("\nDemonstrating __format__:")
+    print(f"Default format: {person}")
+    print(f"Short format: {person:short}")
+    print(f"Full format: {person:full}")
+    
+    # __bool__ method
+    print("\nDemonstrating __bool__:")
+    adult = Person("Jane", "Smith", 25)
+    minor = Person("Billy", "Kid", 15)
+    
+    print(f"Is {adult.first_name} an adult? {bool(adult)}")
+    print(f"Is {minor.first_name} an adult? {bool(minor)}")
+    
+    if adult:
+        print(f"{adult.first_name} is considered truthy")
+    
+    if not minor:
+        print(f"{minor.first_name} is considered falsy")
+    
+    # __del__ method
+    print("\nDemonstrating __del__:")
+    print("Creating a temporary person")
+    temp_person = Person("Temp", "User", 20)
+    print("Deleting the temporary person")
+    del temp_person
+    
+    print("\nProgram finished")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li><code>__init__(self, first_name, last_name, age)</code>: The constructor, called when creating a new object. Initializes the object's attributes.</li>
+                <li><code>__str__(self)</code>: Returns a human-readable string representation of the object. This is called by <code>str()</code> and <code>print()</code>.</li>
+                <li><code>__repr__(self)</code>: Returns a developer-friendly string representation, ideally one that could recreate the object when executed. Called by <code>repr()</code>.</li>
+                <li><code>__format__(self, format_spec)</code>: Handles custom string formatting. Called by <code>format()</code> and when using format specifiers in f-strings.</li>
+                <li><code>__bool__(self)</code>: Returns a boolean value representing the object. Called by <code>bool()</code> and in boolean contexts like <code>if</code> statements.</li>
+                <li><code>__del__(self)</code>: The destructor, called when the object is about to be garbage collected. Rarely needed but useful for cleanup.</li>
+            </ul>
+
+            <p><strong>When to use these methods:</strong></p>
+            <ul>
+                <li>Implement <code>__init__</code> in almost every class to set up the initial state.</li>
+                <li>Implement <code>__str__</code> in most classes to provide a user-friendly string representation.</li>
+                <li>Implement <code>__repr__</code> in classes meant for debugging or development.</li>
+                <li>Implement <code>__format__</code> when you need custom string formatting for your objects.</li>
+                <li>Implement <code>__bool__</code> when your objects have a clear truthy/falsy meaning.</li>
+                <li>Rarely implement <code>__del__</code> unless you have specific cleanup needs not handled by normal garbage collection.</li>
+            </ul>
+            
+            <p><strong>Real-world analogy:</strong> Think of these dunder methods as the social etiquette of your objects. <code>__init__</code> is like introducing yourself when you meet someone for the first time. <code>__str__</code> is how you present yourself to regular people, while <code>__repr__</code> is how you present yourself to colleagues in your profession with more technical details. <code>__format__</code> is like adjusting how you present yourself in different social contexts. <code>__bool__</code> determines whether people consider you "present" or "absent" in a situation.</p>
+        </section>
+
+        <section class="operators">
+            <h3>Operator Overloading with Dunder Methods</h3>
+            <p>One of the most powerful features of dunder methods is operator overloading, which allows your objects to work with Python's operators like +, -, *, etc. Create a file named <code>operators.py</code> with the following code:</p>
+            
+            <pre>
+# File: dunder_methods/operators.py
+
+class Vector2D:
+    """A 2D vector class with operator overloading"""
+    
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    
+    def __str__(self):
+        return f"Vector2D({self.x}, {self.y})"
+    
+    def __repr__(self):
+        return f"Vector2D({self.x}, {self.y})"
+    
+    # Arithmetic operators
+    def __add__(self, other):
+        """Vector addition: self + other"""
+        if isinstance(other, Vector2D):
+            return Vector2D(self.x + other.x, self.y + other.y)
+        else:
+            raise TypeError("Can only add another Vector2D")
+    
+    def __sub__(self, other):
+        """Vector subtraction: self - other"""
+        if isinstance(other, Vector2D):
+            return Vector2D(self.x - other.x, self.y - other.y)
+        else:
+            raise TypeError("Can only subtract another Vector2D")
+    
+    def __mul__(self, other):
+        """
+        Vector scaling or dot product: self * other
+        If other is a scalar, returns a scaled vector.
+        If other is a Vector2D, returns the dot product (a scalar).
+        """
+        if isinstance(other, (int, float)):
+            return Vector2D(self.x * other, self.y * other)
+        elif isinstance(other, Vector2D):
+            return self.x * other.x + self.y * other.y  # Dot product
+        else:
+            raise TypeError("Can only multiply by a scalar or another Vector2D")
+    
+    def __rmul__(self, other):
+        """
+        Right multiplication: other * self
+        Called when the left operand doesn't support the operation.
+        """
+        # We just invoke __mul__ since vector multiplication is commutative with a scalar
+        return self.__mul__(other)
+    
+    def __truediv__(self, other):
+        """Vector division by scalar: self / other"""
+        if isinstance(other, (int, float)):
+            if other == 0:
+                raise ZeroDivisionError("Cannot divide by zero")
+            return Vector2D(self.x / other, self.y / other)
+        else:
+            raise TypeError("Can only divide by a scalar")
+    
+    def __neg__(self):
+        """Negation: -self"""
+        return Vector2D(-self.x, -self.y)
+    
+    def __abs__(self):
+        """Absolute value (magnitude): abs(self)"""
+        return (self.x ** 2 + self.y ** 2) ** 0.5
+    
+    # Augmented assignment operators
+    def __iadd__(self, other):
+        """In-place addition: self += other"""
+        if isinstance(other, Vector2D):
+            self.x += other.x
+            self.y += other.y
+            return self
+        else:
+            raise TypeError("Can only add another Vector2D")
+    
+    def __isub__(self, other):
+        """In-place subtraction: self -= other"""
+        if isinstance(other, Vector2D):
+            self.x -= other.x
+            self.y -= other.y
+            return self
+        else:
+            raise TypeError("Can only subtract another Vector2D")
+    
+    def __imul__(self, other):
+        """In-place multiplication: self *= other (only for scalar)"""
+        if isinstance(other, (int, float)):
+            self.x *= other
+            self.y *= other
+            return self
+        else:
+            raise TypeError("In-place multiplication only supports scalars")
+
+
+# Demo operator overloading
+if __name__ == "__main__":
+    # Create some vectors
+    v1 = Vector2D(3, 4)
+    v2 = Vector2D(1, 2)
+    
+    # Addition and subtraction
+    print(f"v1 = {v1}")
+    print(f"v2 = {v2}")
+    print(f"v1 + v2 = {v1 + v2}")
+    print(f"v1 - v2 = {v1 - v2}")
+    
+    # Multiplication
+    print(f"v1 * 2 = {v1 * 2}")  # Scaling
+    print(f"2 * v1 = {2 * v1}")  # Right multiplication
+    print(f"v1 * v2 = {v1 * v2}")  # Dot product
+    
+    # Division
+    print(f"v1 / 2 = {v1 / 2}")
+    
+    # Negation and absolute value
+    print(f"-v1 = {-v1}")
+    print(f"|v1| = {abs(v1)}")
+    
+    # Augmented assignment
+    v3 = Vector2D(3, 4)
+    print(f"v3 = {v3}")
+    v3 += Vector2D(1, 1)
+    print(f"After v3 += Vector2D(1, 1): {v3}")
+    v3 -= Vector2D(0, 2)
+    print(f"After v3 -= Vector2D(0, 2): {v3}")
+    v3 *= 2
+    print(f"After v3 *= 2: {v3}")
+    
+    # Error handling
+    try:
+        v1 + 5  # Can't add a vector and a scalar
+    except TypeError as e:
+        print(f"Error: {e}")
+    
+    try:
+        v1 / 0  # Can't divide by zero
+    except ZeroDivisionError as e:
+        print(f"Error: {e}")
+
+
+class Money:
+    """A class to represent money with currency, demonstrating operator overloading"""
+    
+    def __init__(self, amount, currency="USD"):
+        self.amount = amount
+        self.currency = currency
+    
+    def __str__(self):
+        return f"{self.currency} {self.amount:.2f}"
+    
+    def __repr__(self):
+        return f"Money({self.amount}, '{self.currency}')"
+    
+    def __add__(self, other):
+        """Add money: self + other"""
+        if isinstance(other, Money):
+            if self.currency != other.currency:
+                raise ValueError("Cannot add different currencies")
+            return Money(self.amount + other.amount, self.currency)
+        elif isinstance(other, (int, float)):
+            return Money(self.amount + other, self.currency)
+        else:
+            raise TypeError("Can only add Money or a number")
+    
+    def __radd__(self, other):
+        """Right addition: other + self"""
+        if isinstance(other, (int, float)):
+            return Money(self.amount + other, self.currency)
+        else:
+            raise TypeError("Can only add Money or a number")
+    
+    def __sub__(self, other):
+        """Subtract money: self - other"""
+        if isinstance(other, Money):
+            if self.currency != other.currency:
+                raise ValueError("Cannot subtract different currencies")
+            return Money(self.amount - other.amount, self.currency)
+        elif isinstance(other, (int, float)):
+            return Money(self.amount - other, self.currency)
+        else:
+            raise TypeError("Can only subtract Money or a number")
+    
+    def __mul__(self, other):
+        """Multiply money by a scalar: self * other"""
+        if isinstance(other, (int, float)):
+            return Money(self.amount * other, self.currency)
+        else:
+            raise TypeError("Can only multiply by a number")
+    
+    def __rmul__(self, other):
+        """Right multiplication: other * self"""
+        return self.__mul__(other)
+    
+    def __truediv__(self, other):
+        """Divide money: self / other"""
+        if isinstance(other, (int, float)):
+            if other == 0:
+                raise ZeroDivisionError("Cannot divide by zero")
+            return Money(self.amount / other, self.currency)
+        elif isinstance(other, Money):
+            if self.currency != other.currency:
+                raise ValueError("Cannot divide different currencies")
+            if other.amount == 0:
+                raise ZeroDivisionError("Cannot divide by zero")
+            return self.amount / other.amount  # Returns a scalar ratio
+        else:
+            raise TypeError("Can only divide by Money or a number")
+    
+    def __lt__(self, other):
+        """Less than: self < other"""
+        if isinstance(other, Money):
+            if self.currency != other.currency:
+                raise ValueError("Cannot compare different currencies")
+            return self.amount < other.amount
+        elif isinstance(other, (int, float)):
+            return self.amount < other
+        else:
+            raise TypeError("Can only compare with Money or a number")
+    
+    def __eq__(self, other):
+        """Equal to: self == other"""
+        if isinstance(other, Money):
+            return self.currency == other.currency and self.amount == other.amount
+        elif isinstance(other, (int, float)):
+            return self.amount == other
+        else:
+            return False
+
+
+# Demo the Money class
+print("\nMoney class examples:")
+m1 = Money(100, "USD")
+m2 = Money(50, "USD")
+m3 = Money(200, "EUR")
+
+print(f"m1 = {m1}")
+print(f"m2 = {m2}")
+print(f"m3 = {m3}")
+
+print(f"m1 + m2 = {m1 + m2}")
+print(f"m1 - m2 = {m1 - m2}")
+print(f"m1 * 2 = {m1 * 2}")
+print(f"m1 / 2 = {m1 / 2}")
+print(f"m1 / m2 = {m1 / m2}")  # Ratio
+
+print(f"m1 + 50 = {m1 + 50}")
+print(f"75 + m2 = {75 + m2}")
+
+print(f"m1 < m2: {m1 < m2}")
+print(f"m1 == Money(100, 'USD'): {m1 == Money(100, 'USD')}")
+print(f"m1 == 100: {m1 == 100}")
+
+try:
+    m1 + m3  # Different currencies
+except ValueError as e:
+    print(f"Error: {e}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <p>We've created two classes that demonstrate operator overloading:</p>
+            
+            <ol>
+                <li><strong>Vector2D</strong>: Represents a 2D vector with mathematical operations
+                    <ul>
+                        <li><code>__add__(self, other)</code>: Handles vector addition with the <code>+</code> operator</li>
+                        <li><code>__sub__(self, other)</code>: Handles vector subtraction with the <code>-</code> operator</li>
+                        <li><code>__mul__(self, other)</code>: Handles multiplication (scaling or dot product) with the <code>*</code> operator</li>
+                        <li><code>__rmul__(self, other)</code>: Handles right multiplication (when the vector is on the right side)</li>
+                        <li><code>__truediv__(self, other)</code>: Handles division by a scalar with the <code>/</code> operator</li>
+                        <li><code>__neg__(self)</code>: Handles negation with the <code>-</code> unary operator</li>
+                        <li><code>__abs__(self)</code>: Handles the <code>abs()</code> function (vector magnitude)</li>
+                        <li><code>__iadd__(self, other)</code>, <code>__isub__(self, other)</code>, <code>__imul__(self, other)</code>: Handle augmented assignment operators (<code>+=</code>, <code>-=</code>, <code>*=</code>)</li>
+                    </ul>
+                </li>
+                <li><strong>Money</strong>: Represents monetary values with currency
+                    <ul>
+                        <li>Similar operators as Vector2D but with currency-specific logic</li>
+                        <li>Also implements comparison operators like <code>__lt__</code> and <code>__eq__</code></li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h4>Common Arithmetic Operator Methods</h4>
+            <table border="1">
+                <tr>
+                    <th>Method</th>
+                    <th>Operator</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>__add__(self, other)</code></td>
+                    <td><code>+</code></td>
+                    <td>Addition</td>
+                </tr>
+                <tr>
+                    <td><code>__sub__(self, other)</code></td>
+                    <td><code>-</code></td>
+                    <td>Subtraction</td>
+                </tr>
+                <tr>
+                    <td><code>__mul__(self, other)</code></td>
+                    <td><code>*</code></td>
+                    <td>Multiplication</td>
+                </tr>
+                <tr>
+                    <td><code>__truediv__(self, other)</code></td>
+                    <td><code>/</code></td>
+                    <td>Division</td>
+                </tr>
+                <tr>
+                    <td><code>__floordiv__(self, other)</code></td>
+                    <td><code>//</code></td>
+                    <td>Floor division</td>
+                </tr>
+                <tr>
+                    <td><code>__mod__(self, other)</code></td>
+                    <td><code>%</code></td>
+                    <td>Modulo</td>
+                </tr>
+                <tr>
+                    <td><code>__pow__(self, other)</code></td>
+                    <td><code>**</code></td>
+                    <td>Exponentiation</td>
+                </tr>
+                <tr>
+                    <td><code>__neg__(self)</code></td>
+                    <td><code>-</code> (unary)</td>
+                    <td>Negation</td>
+                </tr>
+                <tr>
+                    <td><code>__pos__(self)</code></td>
+                    <td><code>+</code> (unary)</td>
+                    <td>Positive</td>
+                </tr>
+                <tr>
+                    <td><code>__abs__(self)</code></td>
+                    <td><code>abs()</code></td>
+                    <td>Absolute value</td>
+                </tr>
+            </table>
+
+            <h4>Reflected Operation Methods</h4>
+            <p>These methods handle operations where your object is on the right side.</p>
+            <table border="1">
+                <tr>
+                    <th>Method</th>
+                    <th>Operator</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>__radd__(self, other)</code></td>
+                    <td><code>other + self</code></td>
+                    <td>Reflected addition</td>
+                </tr>
+                <tr>
+                    <td><code>__rsub__(self, other)</code></td>
+                    <td><code>other - self</code></td>
+                    <td>Reflected subtraction</td>
+                </tr>
+                <tr>
+                    <td><code>__rmul__(self, other)</code></td>
+                    <td><code>other * self</code></td>
+                    <td>Reflected multiplication</td>
+                </tr>
+                <tr>
+                    <td><code>__rtruediv__(self, other)</code></td>
+                    <td><code>other / self</code></td>
+                    <td>Reflected division</td>
+                </tr>
+            </table>
+
+            <h4>Augmented Assignment Methods</h4>
+            <p>These methods handle in-place operations.</p>
+            <table border="1">
+                <tr>
+                    <th>Method</th>
+                    <th>Operator</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>__iadd__(self, other)</code></td>
+                    <td><code>self += other</code></td>
+                    <td>In-place addition</td>
+                </tr>
+                <tr>
+                    <td><code>__isub__(self, other)</code></td>
+                    <td><code>self -= other</code></td>
+                    <td>In-place subtraction</td>
+                </tr>
+                <tr>
+                    <td><code>__imul__(self, other)</code></td>
+                    <td><code>self *= other</code></td>
+                    <td>In-place multiplication</td>
+                </tr>
+                <tr>
+                    <td><code>__itruediv__(self, other)</code></td>
+                    <td><code>self /= other</code></td>
+                    <td>In-place division</td>
+                </tr>
+            </table>
+            
+            <p><strong>Best practices for operator overloading:</strong></p>
+            <ul>
+                <li>Maintain intuitive behavior: <code>+</code> should do something addition-like, <code>*</code> should do something multiplication-like.</li>
+                <li>Follow the principle of least surprise: Operators should behave as users would expect.</li>
+                <li>Implement reflected operators (<code>__radd__</code>, etc.) for interoperability with other types.</li>
+                <li>Implement augmented assignment operators for better performance when modifying objects in place.</li>
+                <li>Raise appropriate exceptions (<code>TypeError</code>, <code>ValueError</code>) when operations are invalid.</li>
+                <li>Document the behavior of your operators clearly, especially if they have domain-specific meanings.</li>
+            </ul>
+            
+            <p><strong>Real-world analogy:</strong> Operator overloading is like teaching your objects a new language. Just as "+" means different things when adding numbers (5 + 3 = 8) versus concatenating strings ("Hello" + "World" = "HelloWorld"), you're teaching your objects what "+" and other symbols mean in their context. It's like teaching your Money objects that when you "add" them, they should check if the currencies match and then sum the amounts.</p>
+        </section>
+
+        <section class="container_methods">
+            <h3>Container and Sequence Methods</h3>
+            <p>Python provides dunder methods that allow your objects to behave like containers or sequences, supporting operations like indexing, slicing, length checking, and iteration. Create a file named <code>container_methods.py</code> with the following code:</p>
+            
+            <pre>
+# File: dunder_methods/container_methods.py
+
+class CustomList:
+    """A custom list-like container class"""
+    
+    def __init__(self, items=None):
+        self.items = items if items is not None else []
+    
+    def __str__(self):
+        return f"CustomList({self.items})"
+    
+    def __repr__(self):
+        return f"CustomList({self.items})"
+    
+    # Container methods
+    def __len__(self):
+        """Return the number of items in the container"""
+        return len(self.items)
+    
+    def __getitem__(self, key):
+        """Get an item or slice from the container"""
+        if isinstance(key, slice):
+            # Handle slicing (e.g., custom_list[1:5])
+            start, stop, step = key.indices(len(self))
+            return CustomList([self.items[i] for i in range(start, stop, step)])
+        elif isinstance(key, int):
+            # Handle integer index (positive or negative)
+            if key < 0:  # Handle negative indices
+                key += len(self)
+            if key < 0 or key >= len(self):
+                raise IndexError("CustomList index out of range")
+            return self.items[key]
+        else:
+            raise TypeError("CustomList indices must be integers or slices")
+    
+    def __setitem__(self, key, value):
+        """Set an item or slice in the container"""
+        if isinstance(key, slice):
+            # Handle slice assignment (e.g., custom_list[1:3] = [4, 5])
+            start, stop, step = key.indices(len(self))
+            if step != 1:
+                raise ValueError("Step must be 1 for slice assignment")
+            if not hasattr(value, '__iter__'):
+                raise TypeError("Can only assign an iterable to a slice")
+            value_list = list(value)
+            self.items[start:stop] = value_list
+        elif isinstance(key, int):
+            # Handle integer index
+            if key < 0:  # Handle negative indices
+                key += len(self)
+            if key < 0 or key >= len(self):
+                raise IndexError("CustomList index out of range")
+            self.items[key] = value
+        else:
+            raise TypeError("CustomList indices must be integers or slices")
+    
+    def __delitem__(self, key):
+        """Delete an item or slice from the container"""
+        if isinstance(key, slice):
+            # Handle slice deletion (e.g., del custom_list[1:3])
+            start, stop, step = key.indices(len(self))
+            if step != 1:
+                # For simplicity, we're only handling step=1
+                # A real implementation would be more robust
+                raise ValueError("Step must be 1 for slice deletion")
+            del self.items[start:stop]
+        elif isinstance(key, int):
+            # Handle integer index
+            if key < 0:  # Handle negative indices
+                key += len(self)
+            if key < 0 or key >= len(self):
+                raise IndexError("CustomList index out of range")
+            del self.items[key]
+        else:
+            raise TypeError("CustomList indices must be integers or slices")
+    
+    def __iter__(self):
+        """Return an iterator for the container"""
+        return iter(self.items)
+    
+    def __contains__(self, item):
+        """Check if an item is in the container (for 'in' operator)"""
+        return item in self.items
+    
+    def __reversed__(self):
+        """Return a reversed iterator (for 'reversed()' function)"""
+        return reversed(self.items)
+    
+    # Additional methods that sequence-like objects often implement
+    def append(self, item):
+        """Add an item to the end of the list"""
+        self.items.append(item)
+    
+    def extend(self, items):
+        """Extend the list with an iterable"""
+        self.items.extend(items)
+    
+    def insert(self, index, item):
+        """Insert an item at a specific position"""
+        self.items.insert(index, item)
+    
+    def remove(self, item):
+        """Remove the first occurrence of an item"""
+        self.items.remove(item)
+    
+    def pop(self, index=-1):
+        """Remove and return an item at a specific position (default: last)"""
+        return self.items.pop(index)
+    
+    def clear(self):
+        """Remove all items"""
+        self.items.clear()
+    
+    def index(self, item, start=0, end=None):
+        """Return the index of the first occurrence of an item"""
+        if end is None:
+            end = len(self)
+        return self.items.index(item, start, end)
+    
+    def count(self, item):
+        """Return the number of occurrences of an item"""
+        return self.items.count(item)
+    
+    def sort(self, key=None, reverse=False):
+        """Sort the list in place"""
+        self.items.sort(key=key, reverse=reverse)
+    
+    def reverse(self):
+        """Reverse the list in place"""
+        self.items.reverse()
+
+
+# Demo container methods
+if __name__ == "__main__":
+    # Create a CustomList
+    custom_list = CustomList([1, 2, 3, 4, 5])
+    print(f"Initial list: {custom_list}")
+    
+    # Length
+    print(f"Length: {len(custom_list)}")
+    
+    # Indexing
+    print(f"custom_list[2]: {custom_list[2]}")
+    print(f"custom_list[-1]: {custom_list[-1]}")
+    
+    # Slicing
+    print(f"custom_list[1:4]: {custom_list[1:4]}")
+    print(f"custom_list[::2]: {custom_list[::2]}")
+    
+    # Setting values
+    custom_list[2] = 10
+    print(f"After custom_list[2] = 10: {custom_list}")
+    
+    custom_list[1:3] = [20, 30]
+    print(f"After custom_list[1:3] = [20, 30]: {custom_list}")
+    
+    # Deleting items
+    del custom_list[0]
+    print(f"After del custom_list[0]: {custom_list}")
+    
+    del custom_list[1:3]
+    print(f"After del custom_list[1:3]: {custom_list}")
+    
+    # Iteration
+    print("Iterating over the list:")
+    for item in custom_list:
+        print(f"  {item}")
+    
+    # Membership testing
+    print(f"Is 30 in the list? {30 in custom_list}")
+    print(f"Is 100 in the list? {100 in custom_list}")
+    
+    # Reversed
+    print("Iterating in reverse:")
+    for item in reversed(custom_list):
+        print(f"  {item}")
+    
+    # Other sequence methods
+    custom_list.append(60)
+    print(f"After append(60): {custom_list}")
+    
+    custom_list.extend([70, 80])
+    print(f"After extend([70, 80]): {custom_list}")
+    
+    custom_list.insert(1, 25)
+    print(f"After insert(1, 25): {custom_list}")
+    
+    custom_list.remove(70)
+    print(f"After remove(70): {custom_list}")
+    
+    popped = custom_list.pop()
+    print(f"Popped: {popped}, After pop(): {custom_list}")
+    
+    index = custom_list.index(60)
+    print(f"Index of 60: {index}")
+    
+    count = custom_list.count(25)
+    print(f"Count of 25: {count}")
+    
+    custom_list.sort(reverse=True)
+    print(f"After sort(reverse=True): {custom_list}")
+    
+    custom_list.reverse()
+    print(f"After reverse(): {custom_list}")
+    
+    custom_list.clear()
+    print(f"After clear(): {custom_list}")
+
+
+class Matrix:
+    """A simple matrix class demonstrating container methods"""
+    
+    def __init__(self, rows, cols, data=None):
+        self.rows = rows
+        self.cols = cols
+        if data is None:
+            self.data = [[0 for _ in range(cols)] for _ in range(rows)]
+        else:
+            if len(data) != rows or any(len(row) != cols for row in data):
+                raise ValueError(f"Data must be a {rows}x{cols} matrix")
+            self.data = [row[:] for row in data]  # Make a deep copy
+    
+    def __str__(self):
+        matrix_str = "\n".join(
+            " ".join(f"{self.data[i][j]:4}" for j in range(self.cols))
+            for i in range(self.rows)
+        )
+        return f"Matrix({self.rows}x{self.cols}):\n{matrix_str}"
+    
+    def __repr__(self):
+        return f"Matrix({self.rows}, {self.cols}, {self.data})"
+    
+    def __getitem__(self, key):
+        """Get an item from the matrix using row, col notation: matrix[row, col]"""
+        if isinstance(key, tuple) and len(key) == 2:
+            row, col = key
+            if 0 <= row < self.rows and 0 <= col < self.cols:
+                return self.data[row][col]
+            else:
+                raise IndexError("Matrix indices out of range")
+        elif isinstance(key, int):
+            if 0 <= key < self.rows:
+                return self.data[key]  # Return a row
+            else:
+                raise IndexError("Matrix row index out of range")
+        else:
+            raise TypeError("Matrix indices must be integers or 2-tuples")
+    
+    def __setitem__(self, key, value):
+        """Set an item in the matrix using row, col notation: matrix[row, col] = value"""
+        if isinstance(key, tuple) and len(key) == 2:
+            row, col = key
+            if 0 <= row < self.rows and 0 <= col < self.cols:
+                self.data[row][col] = value
+            else:
+                raise IndexError("Matrix indices out of range")
+        elif isinstance(key, int):
+            if 0 <= key < self.rows:
+                if len(value) != self.cols:
+                    raise ValueError(f"Row must have {self.cols} elements")
+                self.data[key] = value[:]  # Set a row (copy the value)
+            else:
+                raise IndexError("Matrix row index out of range")
+        else:
+            raise TypeError("Matrix indices must be integers or 2-tuples")
+    
+    def __len__(self):
+        """Return the number of rows in the matrix"""
+        return self.rows
+    
+    def __iter__(self):
+        """Return an iterator over the rows of the matrix"""
+        return iter(self.data)
+    
+    # Matrix addition using operator overloading
+    def __add__(self, other):
+        """Matrix addition"""
+        if not isinstance(other, Matrix):
+            raise TypeError("Can only add another Matrix")
+        if self.rows != other.rows or self.cols != other.cols:
+            raise ValueError("Matrices must have the same dimensions")
+        
+        result = Matrix(self.rows, self.cols)
+        for i in range(self.rows):
+            for j in range(self.cols):
+                result[i, j] = self[i, j] + other[i, j]
+        return result
+
+
+# Demo the Matrix class
+print("\nMatrix examples:")
+mat1 = Matrix(3, 3, [[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+print(f"Matrix 1:\n{mat1}")
+
+# Accessing elements
+print(f"mat1[1, 2]: {mat1[1, 2]}")
+print(f"mat1[0]: {mat1[0]}")  # Get a row
+
+# Setting elements
+mat1[0, 0] = 10
+print(f"After mat1[0, 0] = 10:\n{mat1}")
+
+mat1[1] = [11, 12, 13]  # Set a row
+print(f"After mat1[1] = [11, 12, 13]:\n{mat1}")
+
+# Matrix operations
+mat2 = Matrix(3, 3, [[9, 8, 7], [6, 5, 4], [3, 2, 1]])
+print(f"Matrix 2:\n{mat2}")
+
+mat3 = mat1 + mat2
+print(f"Matrix 1 + Matrix 2:\n{mat3}")
+
+# Iteration
+print("Matrix rows:")
+for row in mat1:
+    print(row)
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <p>We've created two classes that demonstrate container and sequence behavior:</p>
+            
+            <ol>
+                <li><strong>CustomList</strong>: A custom list-like container implementing various sequence methods:
+                    <ul>
+                        <li><code>__len__(self)</code>: Returns the length, enabling <code>len(obj)</code></li>
+                        <li><code>__getitem__(self, key)</code>: Enables indexing and slicing with <code>obj[key]</code></li>
+                        <li><code>__setitem__(self, key, value)</code>: Enables assignment with <code>obj[key] = value</code></li>
+                        <li><code>__delitem__(self, key)</code>: Enables deletion with <code>del obj[key]</code></li>
+                        <li><code>__iter__(self)</code>: Makes the object iterable with <code>for item in obj</code></li>
+                        <li><code>__contains__(self, item)</code>: Enables membership testing with <code>item in obj</code></li>
+                        <li><code>__reversed__(self)</code>: Supports the <code>reversed()</code> function</li>
+                    </ul>
+                </li>
+                <li><strong>Matrix</strong>: A 2D matrix class that demonstrates container methods for multi-dimensional data:
+                    <ul>
+                        <li>Uses tuple indexing <code>matrix[row, col]</code> for 2D access</li>
+                        <li>Supports row-based iteration and row extraction</li>
+                        <li>Implements matrix addition with <code>__add__</code></li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h4>Common Container and Sequence Methods</h4>
+            <table border="1">
+                <tr>
+                    <th>Method</th>
+                    <th>Operation</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>__len__(self)</code></td>
+                    <td><code>len(obj)</code></td>
+                    <td>Return the length of the container</td>
+                </tr>
+                <tr>
+                    <td><code>__getitem__(self, key)</code></td>
+                    <td><code>obj[key]</code></td>
+                    <td>Get an item or slice</td>
+                </tr>
+                <tr>
+                    <td><code>__setitem__(self, key, value)</code></td>
+                    <td><code>obj[key] = value</code></td>
+                    <td>Set an item or slice</td>
+                </tr>
+                <tr>
+                    <td><code>__delitem__(self, key)</code></td>
+                    <td><code>del obj[key]</code></td>
+                    <td>Delete an item or slice</td>
+                </tr>
+                <tr>
+                    <td><code>__iter__(self)</code></td>
+                    <td><code>for x in obj</code></td>
+                    <td>Return an iterator</td>
+                </tr>
+                <tr>
+                    <td><code>__contains__(self, item)</code></td>
+                    <td><code>item in obj</code></td>
+                    <td>Membership test</td>
+                </tr>
+                <tr>
+                    <td><code>__reversed__(self)</code></td>
+                    <td><code>reversed(obj)</code></td>
+                    <td>Return a reversed iterator</td>
+                </tr>
+            </table>
+            
+            <p><strong>Best practices for container methods:</strong></p>
+            <ul>
+                <li>Make your container objects behave like standard Python containers (list, dict, etc.) when appropriate.</li>
+                <li>Handle slices correctly in <code>__getitem__</code>, <code>__setitem__</code>, and <code>__delitem__</code>.</li>
+                <li>Support negative indexing when it makes sense.</li>
+                <li>Raise appropriate exceptions (<code>IndexError</code>, <code>KeyError</code>, etc.) for invalid operations.</li>
+                <li>Make your iterators efficient, especially for large containers.</li>
+                <li>Implement all relevant container methods for consistency.</li>
+            </ul>
+            
+            <p><strong>Real-world analogy:</strong> Container methods turn your objects into collections that can be used like boxes or shelves. <code>__getitem__</code> is like retrieval instructions (e.g., "get me the item in the third drawer"), <code>__setitem__</code> is like placement instructions (e.g., "put this book on the second shelf"), and <code>__len__</code> is like counting how many items are stored. <code>__iter__</code> is like providing a guided tour through all items in the collection.</p>
+        </section>
+
+        <section class="comparison_methods">
+            <h3>Comparison Dunder Methods</h3>
+            <p>Python provides dunder methods for making your objects comparable with operators like ==, !=, <, >, etc. Create a file named <code>comparison_methods.py</code> with the following code:</p>
+            
+            <pre>
+# File: dunder_methods/comparison_methods.py
+
+class Version:
+    """A class to represent software versions (e.g., 1.2.3)"""
+    
+    def __init__(self, major, minor=0, patch=0):
+        self.major = major
+        self.minor = minor
+        self.patch = patch
+    
+    def __str__(self):
+        return f"{self.major}.{self.minor}.{self.patch}"
+    
+    def __repr__(self):
+        return f"Version({self.major}, {self.minor}, {self.patch})"
+    
+    # Comparison methods
+    def __eq__(self, other):
+        """Equal to: self == other"""
+        if not isinstance(other, Version):
+            return NotImplemented
+        return (self.major, self.minor, self.patch) == (other.major, other.minor, other.patch)
+    
+    def __ne__(self, other):
+        """Not equal to: self != other"""
+        if not isinstance(other, Version):
+            return NotImplemented
+        return (self.major, self.minor, self.patch) != (other.major, other.minor, other.patch)
+    
+    def __lt__(self, other):
+        """Less than: self < other"""
+        if not isinstance(other, Version):
+            return NotImplemented
+        return (self.major, self.minor, self.patch) < (other.major, other.minor, other.patch)
+    
+    def __le__(self, other):
+        """Less than or equal to: self <= other"""
+        if not isinstance(other, Version):
+            return NotImplemented
+        return (self.major, self.minor, self.patch) <= (other.major, other.minor, other.patch)
+    
+    def __gt__(self, other):
+        """Greater than: self > other"""
+        if not isinstance(other, Version):
+            return NotImplemented
+        return (self.major, self.minor, self.patch) > (other.major, other.minor, other.patch)
+    
+    def __ge__(self, other):
+        """Greater than or equal to: self >= other"""
+        if not isinstance(other, Version):
+            return NotImplemented
+        return (self.major, self.minor, self.patch) >= (other.major, other.minor, other.patch)
+    
+
+# Demo comparison methods
+if __name__ == "__main__":
+    # Create some versions
+    v1 = Version(1, 0, 0)
+    v2 = Version(1, 1, 0)
+    v3 = Version(1, 1, 0)  # Same as v2
+    v4 = Version(2, 0, 0)
+    
+    print(f"v1 = {v1}")
+    print(f"v2 = {v2}")
+    print(f"v3 = {v3}")
+    print(f"v4 = {v4}")
+    
+    # Equality and inequality
+    print(f"v1 == v2: {v1 == v2}")
+    print(f"v2 == v3: {v2 == v3}")
+    print(f"v1 != v2: {v1 != v2}")
+    
+    # Less than and greater than
+    print(f"v1 < v2: {v1 < v2}")
+    print(f"v2 < v4: {v2 < v4}")
+    print(f"v1 <= v2: {v1 <= v2}")
+    print(f"v2 <= v3: {v2 <= v3}")
+    
+    print(f"v4 > v2: {v4 > v2}")
+    print(f"v3 > v2: {v3 > v2}")
+    print(f"v4 >= v2: {v4 >= v2}")
+    print(f"v3 >= v2: {v3 >= v2}")
+    
+    # Other uses of comparison methods
+    versions = [v4, v1, v3, v2]
+    print(f"Unsorted versions: {versions}")
+    sorted_versions = sorted(versions)
+    print(f"Sorted versions: {sorted_versions}")
+    
+    print(f"Min version: {min(versions)}")
+    print(f"Max version: {max(versions)}")
+
+
+class Person:
+    """A class to represent a person, with rich comparison methods"""
+    
+    def __init__(self, first_name, last_name, age):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.age = age
+    
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}, {self.age} years old"
+    
+    def __repr__(self):
+        return f"Person('{self.first_name}', '{self.last_name}', {self.age})"
+    
+    def __eq__(self, other):
+        """Equal to: self == other"""
+        if not isinstance(other, Person):
+            return NotImplemented
+        return ((self.last_name, self.first_name, self.age) == 
+                (other.last_name, other.first_name, other.age))
+    
+    def __lt__(self, other):
+        """Less than: self < other
+        
+        Sorts by last name, then first name, then age.
+        """
+        if not isinstance(other, Person):
+            return NotImplemented
+        return ((self.last_name, self.first_name, self.age) < 
+                (other.last_name, other.first_name, other.age))
+    
+    # We only need to implement __eq__ and __lt__ if we use the @total_ordering decorator
+    from functools import total_ordering
+    
+    @total_ordering
+    class PersonEfficient:
+        """A version of Person using the total_ordering decorator"""
+        
+        def __init__(self, first_name, last_name, age):
+            self.first_name = first_name
+            self.last_name = last_name
+            self.age = age
+        
+        def __str__(self):
+            return f"{self.first_name} {self.last_name}, {self.age} years old"
+        
+        def __repr__(self):
+            return f"PersonEfficient('{self.first_name}', '{self.last_name}', {self.age})"
+        
+        def __eq__(self, other):
+            """Equal to: self == other"""
+            if not isinstance(other, PersonEfficient):
+                return NotImplemented
+            return ((self.last_name, self.first_name, self.age) == 
+                    (other.last_name, other.first_name, other.age))
+        
+        def __lt__(self, other):
+            """Less than: self < other"""
+            if not isinstance(other, PersonEfficient):
+                return NotImplemented
+            return ((self.last_name, self.first_name, self.age) < 
+                    (other.last_name, other.first_name, other.age))
+
+
+# Demo the Person class
+print("\nPerson examples:")
+p1 = Person("John", "Doe", 30)
+p2 = Person("Jane", "Doe", 28)
+p3 = Person("Jane", "Doe", 28)  # Same as p2
+p4 = Person("Alice", "Smith", 35)
+
+print(f"p1 = {p1}")
+print(f"p2 = {p2}")
+print(f"p3 = {p3}")
+print(f"p4 = {p4}")
+
+print(f"p1 == p2: {p1 == p2}")
+print(f"p2 == p3: {p2 == p3}")
+
+print(f"p1 < p2: {p1 < p2}")  # Compare last name, first name, age
+print(f"p2 < p4: {p2 < p4}")  # Doe comes before Smith
+print(f"p4 > p1: {p4 > p1}")  # Smith comes after Doe
+
+# Sorting
+people = [p1, p2, p4, p3]
+print(f"Unsorted people: {people}")
+sorted_people = sorted(people)
+print(f"Sorted people: {sorted_people}")
+
+# Using the efficient version with total_ordering
+from functools import total_ordering
+
+pe1 = PersonEfficient("John", "Doe", 30)
+pe2 = PersonEfficient("Jane", "Doe", 28)
+
+print(f"\nUsing total_ordering:")
+print(f"pe1 <= pe2: {pe1 <= pe2}")  # This is derived from __lt__ and __eq__
+print(f"pe1 >= pe2: {pe1 >= pe2}")  # This is derived from __lt__ and __eq__
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <p>We've created two classes that demonstrate comparison methods:</p>
+            
+            <ol>
+                <li><strong>Version</strong>: Represents software versions (e.g., 1.2.3) with complete comparison support:
+                    <ul>
+                        <li><code>__eq__(self, other)</code>: Equality comparison (<code>==</code>)</li>
+                        <li><code>__ne__(self, other)</code>: Inequality comparison (<code>!=</code>)</li>
+                        <li><code>__lt__(self, other)</code>: Less than comparison (<code><</code>)</li>
+                        <li><code>__le__(self, other)</code>: Less than or equal to comparison (<code><=</code>)</li>
+                        <li><code>__gt__(self, other)</code>: Greater than comparison (<code>></code>)</li>
+                        <li><code>__ge__(self, other)</code>: Greater than or equal to comparison (<code>>=</code>)</li>
+                    </ul>
+                </li>
+                <li><strong>Person</strong> and <strong>PersonEfficient</strong>: Demonstrate comparison methods for sorting people:
+                    <ul>
+                        <li><code>Person</code> implements all comparison methods manually</li>
+                        <li><code>PersonEfficient</code> uses the <code>@total_ordering</code> decorator to generate the remaining comparison methods after implementing just <code>__eq__</code> and <code>__lt__</code></li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h4>Comparison Method Table</h4>
+            <table border="1">
+                <tr>
+                    <th>Method</th>
+                    <th>Operator</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>__eq__(self, other)</code></td>
+                    <td><code>==</code></td>
+                    <td>Equality</td>
+                </tr>
+                <tr>
+                    <td><code>__ne__(self, other)</code></td>
+                    <td><code>!=</code></td>
+                    <td>Inequality</td>
+                </tr>
+                <tr>
+                    <td><code>__lt__(self, other)</code></td>
+                    <td><code><</code></td>
+                    <td>Less than</td>
+                </tr>
+                <tr>
+                    <td><code>__le__(self, other)</code></td>
+                    <td><code><=</code></td>
+                    <td>Less than or equal to</td>
+                </tr>
+                <tr>
+                    <td><code>__gt__(self, other)</code></td>
+                    <td><code>></code></td>
+                    <td>Greater than</td>
+                </tr>
+                <tr>
+                    <td><code>__ge__(self, other)</code></td>
+                    <td><code>>=</code></td>
+                    <td>Greater than or equal to</td>
+                </tr>
+            </table>
+            
+            <p><strong>Best practices for comparison methods:</strong></p>
+            <ul>
+                <li>Return <code>NotImplemented</code> when comparing with incompatible types, not <code>False</code> or an error.</li>
+                <li>Ensure that your comparison methods are consistent (if <code>a == b</code> then <code>b == a</code>, etc.).</li>
+                <li>Use the <code>@total_ordering</code> decorator to reduce boilerplate when implementing comparison methods.</li>
+                <li>Make sure your comparison creates a total ordering to avoid sorting issues.</li>
+                <li>Document your comparison semantics, especially for domain-specific objects.</li>
+                <li>Consider using tuples for multi-field comparisons, as shown in the examples.</li>
+            </ul>
+            
+            <p><strong>The <code>@total_ordering</code> decorator:</strong></p>
+            <p>The <code>@total_ordering</code> decorator from the <code>functools</code> module provides a way to reduce the boilerplate code when implementing comparison methods. If you implement <code>__eq__</code> and any one of <code>__lt__</code>, <code>__le__</code>, <code>__gt__</code>, or <code>__ge__</code>, the decorator will generate the other comparison methods for you.</p>
+            
+            <p><strong>Real-world analogy:</strong> Comparison methods are like the rules for sorting and comparing objects in the real world. For example, a library might sort books by author's last name, then first name, then title. Similarly, your comparison methods define the natural ordering of your custom objects, allowing them to be sorted and compared just like built-in types.</p>
+        </section>
+
+        <section class="attribute_access">
+            <h3>Attribute Access Methods</h3>
+            <p>Python provides special methods to customize attribute access, which can be used for validation, computed properties, and more. Create a file named <code>attribute_access.py</code> with the following code:</p>
+            
+            <pre>
+# File: dunder_methods/attribute_access.py
+
+class ProtectedAttributes:
+    """A class demonstrating attribute access customization"""
+    
+    def __init__(self, **kwargs):
+        # Initialize with any provided attributes
+        self._data = {}
+        for key, value in kwargs.items():
+            self._data[key] = value
+    
+    def __getattr__(self, name):
+        """Called when an attribute lookup fails with AttributeError
+        
+        This is called when the attribute is not found through normal lookup.
+        """
+        if name in self._data:
+            return self._data[name]
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+    
+    def __setattr__(self, name, value):
+        """Called when an attribute is set: obj.name = value"""
+        # Allow _data and other attributes starting with _ to be set normally
+        if name.startswith('_'):
+            object.__setattr__(self, name, value)
+        else:
+            # Store other attributes in the _data dictionary
+            if hasattr(self, '_data'):
+                self._data[name] = value
+            else:
+                # During initialization, _data might not exist yet
+                object.__setattr__(self, name, value)
+    
+    def __delattr__(self, name):
+        """Called when an attribute is deleted: del obj.name"""
+        if name.startswith('_'):
+            object.__delattr__(self, name)
+        elif name in self._data:
+            del self._data[name]
+        else:
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+    
+    def __dir__(self):
+        """Return the list of attributes (used by the dir() function)"""
+        # Combine standard attributes with our custom attributes
+        return list(set(dir(self.__class__)) | set(self._data.keys()))
+
+
+class ValidatedPerson:
+    """A class that validates attributes when they are set"""
+    
+    def __init__(self, name=None, age=None, email=None):
+        # Use the descriptor property for validation
+        self.name = name
+        self.age = age
+        self.email = email
+    
+    def __setattr__(self, name, value):
+        """Validate attributes before setting them"""
+        if name == 'name' and value is not None:
+            if not isinstance(value, str):
+                raise TypeError("Name must be a string")
+            if len(value) < 2:
+                raise ValueError("Name must be at least 2 characters")
+        elif name == 'age' and value is not None:
+            if not isinstance(value, int):
+                raise TypeError("Age must be an integer")
+            if value < 0 or value > 120:
+                raise ValueError("Age must be between 0 and 120")
+        elif name == 'email' and value is not None:
+            if not isinstance(value, str):
+                raise TypeError("Email must be a string")
+            if '@' not in value:
+                raise ValueError("Email must contain an @ symbol")
+        
+        # Set the attribute after validation
+        object.__setattr__(self, name, value)
+
+
+class LazyProperties:
+    """A class demonstrating lazy-loaded properties"""
+    
+    def __init__(self):
+        self._data = {}
+        self._computed = {}
+    
+    def __getattr__(self, name):
+        """Handle lazy-loaded properties"""
+        if name.startswith('compute_'):
+            # If it's a compute_* method, run it and cache the result
+            property_name = name[8:]  # Remove 'compute_' prefix
+            compute_method = getattr(self.__class__, name)
+            result = compute_method(self)
+            self._computed[property_name] = result
+            return result
+        
+        if name in self._computed:
+            # Return pre-computed property
+            return self._computed[name]
+        
+        # Check if there's a compute_* method for this property
+        compute_method_name = f"compute_{name}"
+        if hasattr(self.__class__, compute_method_name):
+            # Compute the property, cache it, and return it
+            compute_method = getattr(self.__class__, compute_method_name)
+            result = compute_method(self)
+            self._computed[name] = result
+            return result
+        
+        # Default behavior: look in _data or raise AttributeError
+        if name in self._data:
+            return self._data[name]
+        
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+    
+    def __setattr__(self, name, value):
+        """Handle attribute assignment"""
+        if name.startswith('_'):
+            # Allow internal attributes to be set normally
+            object.__setattr__(self, name, value)
+        else:
+            # Store other attributes in the _data dictionary
+            if hasattr(self, '_data'):
+                self._data[name] = value
+                # Clear any computed value for this property
+                if name in self._computed:
+                    del self._computed[name]
+            else:
+                # During initialization, _data might not exist yet
+                object.__setattr__(self, name, value)
+    
+    # Example compute methods
+    def compute_full_name(self):
+        """Compute the full name from first_name and last_name"""
+        first_name = self._data.get('first_name', '')
+        last_name = self._data.get('last_name', '')
+        return f"{first_name} {last_name}".strip()
+    
+    def compute_age_in_days(self):
+        """Compute age in days from the age in years"""
+        age_years = self._data.get('age', 0)
+        return age_years * 365
+
+
+class Point:
+    """A simple Point class with a descriptor for coordinate validation"""
+    
+    def __init__(self, x=0, y=0):
+        self.x = x
+        self.y = y
+    
+    def __str__(self):
+        return f"Point({self.x}, {self.y})"
+    
+    def __getattribute__(self, name):
+        """Called for all attribute access (even attributes that exist)"""
+        # Log all attribute access (for demonstration purposes)
+        print(f"Accessing attribute: {name}")
+        
+        # Call the original __getattribute__ to actually get the attribute
+        return object.__getattribute__(self, name)
+
+
+# Demo attribute access methods
+if __name__ == "__main__":
+    # ProtectedAttributes example
+    print("ProtectedAttributes example:")
+    obj = ProtectedAttributes(a=1, b=2, c=3)
+    print(f"obj.a = {obj.a}")
+    print(f"obj.b = {obj.b}")
+    
+    obj.d = 4
+    print(f"After setting obj.d = 4: obj.d = {obj.d}")
+    
+    del obj.c
+    try:
+        print(obj.c)
+    except AttributeError as e:
+        print(f"Error: {e}")
+    
+    print(f"dir(obj): {dir(obj)}")
+    
+    # ValidatedPerson example
+    print("\nValidatedPerson example:")
+    person = ValidatedPerson(name="John Doe", age=30, email="john@example.com")
+    print(f"Initial person: name={person.name}, age={person.age}, email={person.email}")
+    
+    try:
+        person.age = -5  # Invalid age
+    except ValueError as e:
+        print(f"Error setting invalid age: {e}")
+    
+    try:
+        person.email = "invalid-email"  # Invalid email
+    except ValueError as e:
+        print(f"Error setting invalid email: {e}")
+    
+    # LazyProperties example
+    print("\nLazyProperties example:")
+    props = LazyProperties()
+    props.first_name = "John"
+    props.last_name = "Doe"
+    props.age = 30
+    
+    # Access a computed property
+    print(f"props.full_name = {props.full_name}")  # This will compute and cache the full name
+    print(f"props.full_name = {props.full_name}")  # This will use the cached value
+    
+    # Change an input and the computed property should update
+    props.first_name = "Jane"
+    print(f"After changing first_name: props.full_name = {props.full_name}")
+    
+    # Try accessing the compute method directly
+    print(f"props.compute_age_in_days() = {props.compute_age_in_days()}")
+    print(f"props.age_in_days = {props.age_in_days}")
+    
+    # Point example with __getattribute__
+    print("\nPoint example:")
+    p = Point(3, 4)
+    x = p.x  # This will log the access
+    y = p.y  # This will log the access
+    print(f"p = {p}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <p>We've created several classes that demonstrate customizing attribute access:</p>
+            
+            <ol>
+                <li><strong>ProtectedAttributes</strong>: A class that stores attributes in a protected dictionary:
+                    <ul>
+                        <li><code>__getattr__(self, name)</code>: Called when an attribute lookup fails through normal mechanisms.</li>
+                        <li><code>__setattr__(self, name, value)</code>: Called when an attribute is set.</li>
+                        <li><code>__delattr__(self, name)</code>: Called when an attribute is deleted.</li>
+                        <li><code>__dir__(self)</code>: Called to get the list of attributes (used by <code>dir()</code>).</li>
+                    </ul>
+                </li>
+                <li><strong>ValidatedPerson</strong>: A class that validates attributes when set:
+                    <ul>
+                        <li><code>__setattr__(self, name, value)</code>: Validates attributes before setting them.</li>
+                    </ul>
+                </li>
+                <li><strong>LazyProperties</strong>: A class with lazy-loaded computed properties:
+                    <ul>
+                        <li><code>__getattr__(self, name)</code>: Handles lazy computation of properties.</li>
+                        <li><code>__setattr__(self, name, value)</code>: Clears cached computed values when dependencies change.</li>
+                    </ul>
+                </li>
+                <li><strong>Point</strong>: A simple class demonstrating <code>__getattribute__</code>:
+                    <ul>
+                        <li><code>__getattribute__(self, name)</code>: Called for all attribute access, even existing attributes.</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h4>Attribute Access Method Table</h4>
+            <table border="1">
+                <tr>
+                    <th>Method</th>
+                    <th>Called When</th>
+                    <th>Primary Use</th>
+                </tr>
+                <tr>
+                    <td><code>__getattr__(self, name)</code></td>
+                    <td>When normal attribute lookup fails</td>
+                    <td>Fallback for missing attributes</td>
+                </tr>
+                <tr>
+                    <td><code>__getattribute__(self, name)</code></td>
+                    <td>For all attribute access (even existing attributes)</td>
+                    <td>Intercept all attribute access</td>
+                </tr>
+                <tr>
+                    <td><code>__setattr__(self, name, value)</code></td>
+                    <td>When an attribute is set</td>
+                    <td>Validate or transform attributes before setting</td>
+                </tr>
+                <tr>
+                    <td><code>__delattr__(self, name)</code></td>
+                    <td>When an attribute is deleted</td>
+                    <td>Custom deletion behavior</td>
+                </tr>
+                <tr>
+                    <td><code>__dir__(self)</code></td>
+                    <td>When <code>dir(obj)</code> is called</td>
+                    <td>Customize the list of attributes</td>
+                </tr>
+            </table>
+            
+            <h4>Important Differences</h4>
+            <ul>
+                <li><code>__getattr__</code> is only called when normal attribute lookup fails (i.e., the attribute doesn't exist).</li>
+                <li><code>__getattribute__</code> is called for all attribute access, even for attributes that exist. This makes it more powerful but also more dangerous, as incorrect implementation can lead to infinite recursion.</li>
+            </ul>
+            
+            <p><strong>Best practices for attribute access methods:</strong></p>
+            <ul>
+                <li>Use <code>__getattr__</code> for fallback behavior (e.g., lazy loading, dynamic attributes).</li>
+                <li>Use <code>__getattribute__</code> sparingly and carefully, as it's easy to create infinite recursion.</li>
+                <li>When implementing <code>__getattribute__</code>, always use <code>object.__getattribute__(self, name)</code> to access attributes.</li>
+                <li>When implementing <code>__setattr__</code>, use <code>object.__setattr__(self, name, value)</code> to avoid infinite recursion.</li>
+                <li>Consider using descriptors (properties) for simple attribute customization instead of <code>__setattr__</code>.</li>
+                <li>Implement <code>__dir__</code> when using <code>__getattr__</code> to ensure <code>dir()</code> returns all available attributes.</li>
+            </ul>
+            
+            <p><strong>Real-world analogy:</strong> Attribute access methods are like receptionists or security guards for your objects. <code>__getattr__</code> is like a helpful receptionist who steps in only when a visitor asks for someone who isn't in the directory. <code>__getattribute__</code> is like a security guard who checks every single person entering the building, regardless of whether they're in the system or not. <code>__setattr__</code> is like a mail room that inspects and processes all packages before they're delivered.</p>
+        </section>
+
+        <section class="callable_objects">
+            <h3>Callable Objects with __call__</h3>
+            <p>Python allows you to make your objects callable, like functions, by implementing the <code>__call__</code> method. Create a file named <code>callable_objects.py</code> with the following code:</p>
+            
+            <pre>
+# File: dunder_methods/callable_objects.py
+
+class Counter:
+    """A simple counter that can be called to increment"""
+    
+    def __init__(self, start=0, step=1):
+        self.value = start
+        self.step = step
+    
+    def __call__(self, step=None):
+        """Makes the object callable, incrementing the counter"""
+        if step is None:
+            step = self.step
+        self.value += step
+        return self.value
+    
+    def reset(self, value=0):
+        """Reset the counter to a specific value"""
+        self.value = value
+    
+    def __str__(self):
+        return str(self.value)
+    
+    def __repr__(self):
+        return f"Counter(start={self.value}, step={self.step})"
+
+
+class Multiplier:
+    """A callable object that multiplies its arguments by a fixed factor"""
+    
+    def __init__(self, factor):
+        self.factor = factor
+    
+    def __call__(self, *args):
+        """Multiply all arguments by the factor"""
+        if len(args) == 1:
+            return args[0] * self.factor
+        return tuple(arg * self.factor for arg in args)
+    
+    def __str__(self):
+        return f"Multiplier(factor={self.factor})"
+    
+    def __repr__(self):
+        return f"Multiplier({self.factor})"
+
+
+class FunctionCache:
+    """A class that caches function results based on arguments"""
+    
+    def __init__(self, func):
+        self.func = func
+        self.cache = {}
+    
+    def __call__(self, *args):
+        """Call the function with caching"""
+        # We can only cache if all arguments are hashable
+        if args in self.cache:
+            print(f"Cache hit for {args}")
+            return self.cache[args]
+        
+        # Call the original function and cache the result
+        result = self.func(*args)
+        self.cache[args] = result
+        print(f"Cache miss for {args}, cached result")
+        return result
+    
+    def clear_cache(self):
+        """Clear the cache"""
+        self.cache.clear()
+    
+    def __str__(self):
+        return f"FunctionCache({self.func.__name__})"
+    
+    def __repr__(self):
+        return f"FunctionCache(func={self.func.__name__})"
+
+
+# A complex function to be cached
+def fibonacci(n):
+    """Calculate the nth Fibonacci number"""
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+
+class HTMLElement:
+    """A class representing an HTML element that can be called to add content"""
+    
+    def __init__(self, tag, **attrs):
+        self.tag = tag
+        self.attrs = attrs
+        self.content = []
+    
+    def __call__(self, *content):
+        """Add content to the element and return self for chaining"""
+        self.content.extend(content)
+        return self
+    
+    def __str__(self):
+        """Render the HTML element as a string"""
+        # Create the opening tag with attributes
+        attrs_str = ' '.join(f'{k}="{v}"' for k, v in self.attrs.items())
+        if attrs_str:
+            opening_tag = f"<{self.tag} {attrs_str}>"
+        else:
+            opening_tag = f"<{self.tag}>"
+        
+        # Create the closing tag
+        closing_tag = f"</{self.tag}>"
+        
+        # If there's no content, return a self-closing tag
+        if not self.content:
+            return opening_tag + closing_tag
+        
+        # Join the content (converting objects to strings)
+        content_str = ''.join(str(item) for item in self.content)
+        
+        # Return the complete element
+        return opening_tag + content_str + closing_tag
+
+
+# Demo callable objects
+if __name__ == "__main__":
+    # Counter example
+    print("Counter example:")
+    counter = Counter()
+    print(f"Initial counter: {counter}")
+    print(f"counter(): {counter()}")
+    print(f"counter(): {counter()}")
+    print(f"counter(10): {counter(10)}")
+    print(f"Final counter: {counter}")
+    
+    counter.reset()
+    print(f"After reset: {counter}")
+    
+    # Multiplier example
+    print("\nMultiplier example:")
+    double = Multiplier(2)
+    triple = Multiplier(3)
+    half = Multiplier(0.5)
+    
+    print(f"double(5): {double(5)}")
+    print(f"triple(5): {triple(5)}")
+    print(f"half(5): {half(5)}")
+    
+    print(f"double(1, 2, 3): {double(1, 2, 3)}")
+    print(f"triple('hello'): {triple('hello')}")
+    
+    # FunctionCache example
+    print("\nFunctionCache example:")
+    # Create a cached version of the fibonacci function
+    cached_fibonacci = FunctionCache(fibonacci)
+    
+    # First call (cache miss)
+    print(f"cached_fibonacci(10): {cached_fibonacci(10)}")
+    
+    # Second call (cache hit)
+    print(f"cached_fibonacci(10): {cached_fibonacci(10)}")
+    
+    # Different argument (cache miss)
+    print(f"cached_fibonacci(12): {cached_fibonacci(12)}")
+    
+    # Clear the cache
+    cached_fibonacci.clear_cache()
+    print("Cache cleared")
+    
+    # This will be a miss again
+    print(f"cached_fibonacci(10): {cached_fibonacci(10)}")
+    
+    # HTMLElement example
+    print("\nHTMLElement example:")
+    # Create HTML elements
+    div = HTMLElement('div', id='content', class_='container')
+    p = HTMLElement('p', style='color: blue;')
+    h1 = HTMLElement('h1')
+    
+    # Add content using the call syntax
+    h1('Hello, World!')
+    p('This is a paragraph with ', b := HTMLElement('b')('bold'), ' text.')
+    div(h1, p)
+    
+    # Render the HTML
+    print(div)
+    
+    # Chain calls
+    html = HTMLElement('html')(
+        HTMLElement('head')(
+            HTMLElement('title')('My Page')
+        ),
+        HTMLElement('body')(
+            HTMLElement('h1')('Welcome'),
+            HTMLElement('p')('This is my page.')
+        )
+    )
+    
+    print("\nHTML document created with chaining:")
+    print(html)
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <p>We've created several classes that demonstrate the <code>__call__</code> method, which makes objects callable like functions:</p>
+            
+            <ol>
+                <li><strong>Counter</strong>: A simple counter that increments when called:
+                    <ul>
+                        <li><code>counter()</code> increments the counter by the default step</li>
+                        <li><code>counter(10)</code> increments the counter by a specified amount</li>
+                    </ul>
+                </li>
+                <li><strong>Multiplier</strong>: A callable object that multiplies its arguments by a fixed factor:
+                    <ul>
+                        <li><code>double = Multiplier(2)</code> creates a function-like object that doubles its arguments</li>
+                        <li><code>double(5) -> 10</code></li>
+                    </ul>
+                </li>
+                <li><strong>FunctionCache</strong>: A class that caches function results based on arguments:
+                    <ul>
+                        <li>Wraps an existing function and caches its results</li>
+                        <li>Demonstrates a practical use of callable objects for function decoration</li>
+                    </ul>
+                </li>
+                <li><strong>HTMLElement</strong>: A class representing an HTML element that can be called to add content:
+                    <ul>
+                        <li>Uses the callable pattern to create a fluent interface for building HTML</li>
+                        <li>Demonstrates method chaining with <code>__call__</code></li>
+                    </ul>
+                </li>
+            </ol>
+
+            <p><strong>When to use <code>__call__</code>:</strong></p>
+            <ul>
+                <li>When you want your objects to be callable like functions</li>
+                <li>When creating function-like objects with state</li>
+                <li>For implementing callback objects</li>
+                <li>For fluent interfaces and method chaining</li>
+                <li>For implementing decorators or wrappers</li>
+                <li>For strategy or command design patterns</li>
+            </ul>
+            
+            <p><strong>Best practices for <code>__call__</code>:</strong></p>
+            <ul>
+                <li>Keep the purpose of <code>__call__</code> clear and intuitive</li>
+                <li>Document the calling convention clearly</li>
+                <li>Consider making your callable objects also implement relevant function-related protocols (e.g., <code>__get__</code> for descriptors)</li>
+                <li>Use <code>__call__</code> when the object really behaves like a function, not just for convenience</li>
+                <li>Make sure your callable object's purpose is clear from its name</li>
+            </ul>
+            
+            <p><strong>Real-world analogy:</strong> The <code>__call__</code> method is like giving your objects the ability to be "activated" or "triggered" like a button. Just as a button can be pressed to perform an action, an object with <code>__call__</code> can be invoked like a function to perform its primary action. For example, a Camera object might be callable to take a picture, or a Database object might be callable to execute a query.</p>
+        </section>
+
+        <section class="real_world_examples">
+            <h3>Real-World Examples</h3>
+            <p>Let's look at some real-world examples of how dunder methods are used in practice. Create a file named <code>real_world_examples.py</code> with the following code:</p>
+            
+            <pre>
+# File: dunder_methods/real_world_examples.py
+
+import json
+import os
+from datetime import datetime, timedelta
+from functools import wraps
+import time
+
+
+class APIResponse:
+    """A class representing an API response"""
+    
+    def __init__(self, data=None, status_code=200, message=None):
+        self.data = data
+        self.status_code = status_code
+        self.message = message
+        self.timestamp = datetime.now()
+    
+    def __str__(self):
+        """String representation for users"""
+        if self.message:
+            return f"[{self.status_code}] {self.message}"
+        return f"[{self.status_code}] {'Success' if self.status_code < 400 else 'Error'}"
+    
+    def __repr__(self):
+        """Detailed representation for developers"""
+        return f"APIResponse(status_code={self.status_code}, message='{self.message}', data={self.data})"
+    
+    def __bool__(self):
+        """Return True if the response is successful (status_code < 400)"""
+        return self.status_code < 400
+    
+    def __getitem__(self, key):
+        """Allow accessing data attributes using dictionary notation"""
+        if not self.data:
+            raise KeyError(key)
+        if isinstance(self.data, dict):
+            return self.data[key]
+        raise TypeError("Response data is not a dictionary")
+    
+    def to_dict(self):
+        """Convert the response to a dictionary"""
+        return {
+            'status_code': self.status_code,
+            'message': self.message,
+            'data': self.data,
+            'timestamp': self.timestamp.isoformat()
+        }
+    
+    def to_json(self):
+        """Convert the response to a JSON string"""
+        return json.dumps(self.to_dict(), default=str)
+
+
+class ExponentialBackoff:
+    """A callable object implementing exponential backoff for retries"""
+    
+    def __init__(self, initial_delay=1, max_delay=60, factor=2, max_retries=5):
+        self.initial_delay = initial_delay
+        self.max_delay = max_delay
+        self.factor = factor
+        self.max_retries = max_retries
+        self.retries = 0
+    
+    def __call__(self):
+        """Return the next delay time in seconds"""
+        if self.retries >= self.max_retries:
+            raise Exception(f"Maximum retries ({self.max_retries}) exceeded")
+        
+        delay = min(self.initial_delay * (self.factor ** self.retries), self.max_delay)
+        self.retries += 1
+        return delay
+    
+    def reset(self):
+        """Reset retry counter"""
+        self.retries = 0
+
+
+def retry_with_backoff(func):
+    """Decorator to retry a function with exponential backoff"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        backoff = ExponentialBackoff()
+        while True:
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                try:
+                    delay = backoff()
+                    print(f"Error: {e}. Retrying in {delay} seconds...")
+                    time.sleep(delay)
+                except Exception as backoff_error:
+                    print(f"Giving up after {backoff.retries} retries: {e}")
+                    raise e
+    return wrapper
+
+
+class ConfigDict:
+    """A dictionary-like configuration class with dot notation access"""
+    
+    def __init__(self, config=None):
+        self._config = {}
+        if config:
+            for key, value in config.items():
+                self[key] = value
+    
+    def __getitem__(self, key):
+        """Access config items with dictionary notation"""
+        return self._config[key]
+    
+    def __setitem__(self, key, value):
+        """Set config items with dictionary notation"""
+        # If the value is a dictionary, convert it to a ConfigDict
+        if isinstance(value, dict):
+            value = ConfigDict(value)
+        self._config[key] = value
+    
+    def __delitem__(self, key):
+        """Delete config items with dictionary notation"""
+        del self._config[key]
+    
+    def __contains__(self, key):
+        """Check if config contains a key"""
+        return key in self._config
+    
+    def __getattr__(self, name):
+        """Access config items with dot notation"""
+        if name in self._config:
+            return self._config[name]
+        raise AttributeError(f"No configuration setting named '{name}'")
+    
+    def __setattr__(self, name, value):
+        """Set config items with dot notation"""
+        if name == '_config':
+            # Allow setting the internal _config dictionary
+            super().__setattr__(name, value)
+        else:
+            # Set other attributes in the config dictionary
+            self[name] = value
+    
+    def __iter__(self):
+        """Iterate over config keys"""
+        return iter(self._config)
+    
+    def __len__(self):
+        """Get the number of config items"""
+        return len(self._config)
+    
+    def get(self, key, default=None):
+        """Get a config item with a default value"""
+        return self._config.get(key, default)
+
+
+class Cache:
+    """A simple cache with expiring entries"""
+    
+    def __init__(self, default_ttl=300):  # Default TTL: 5 minutes
+        self._cache = {}
+        self._expiry = {}
+        self.default_ttl = default_ttl
+    
+    def __getitem__(self, key):
+        """Get an item from the cache, checking for expiration"""
+        if key not in self._cache:
+            raise KeyError(key)
+        
+        # Check if the entry has expired
+        if key in self._expiry and datetime.now() > self._expiry[key]:
+            # Remove expired entry
+            del self._cache[key]
+            del self._expiry[key]
+            raise KeyError(f"Cache entry '{key}' has expired")
+        
+        return self._cache[key]
+    
+    def __setitem__(self, key, value):
+        """Set an item in the cache with default TTL"""
+        self.set(key, value, self.default_ttl)
+    
+    def __delitem__(self, key):
+        """Delete an item from the cache"""
+        if key in self._cache:
+            del self._cache[key]
+        if key in self._expiry:
+            del self._expiry[key]
+    
+    def __contains__(self, key):
+        """Check if key is in the cache and not expired"""
+        if key not in self._cache:
+            return False
+        
+        # Check if the entry has expired
+        if key in self._expiry and datetime.now() > self._expiry[key]:
+            # Remove expired entry
+            del self._cache[key]
+            del self._expiry[key]
+            return False
+        
+        return True
+    
+    def set(self, key, value, ttl=None):
+        """Set an item in the cache with a specific TTL"""
+        self._cache[key] = value
+        
+        if ttl is not None:
+            self._expiry[key] = datetime.now() + timedelta(seconds=ttl)
+    
+    def get(self, key, default=None):
+        """Get an item from the cache or return default"""
+        try:
+            return self[key]
+        except KeyError:
+            return default
+    
+    def clear(self):
+        """Clear the cache"""
+        self._cache.clear()
+        self._expiry.clear()
+
+
+class FileSystemStorage:
+    """A class for managing file storage with context manager support"""
+    
+    def __init__(self, base_path):
+        self.base_path = base_path
+        self.file = None
+    
+    def __enter__(self):
+        """Context manager entry point"""
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit point"""
+        if self.file:
+            self.file.close()
+            self.file = None
+    
+    def __getitem__(self, file_path):
+        """Read file content using dictionary notation"""
+        full_path = os.path.join(self.base_path, file_path)
+        try:
+            with open(full_path, 'r') as f:
+                return f.read()
+        except FileNotFoundError:
+            raise KeyError(f"File not found: {file_path}")
+    
+    def __setitem__(self, file_path, content):
+        """Write file content using dictionary notation"""
+        full_path = os.path.join(self.base_path, file_path)
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        with open(full_path, 'w') as f:
+            f.write(content)
+    
+    def __delitem__(self, file_path):
+        """Delete a file using dictionary notation"""
+        full_path = os.path.join(self.base_path, file_path)
+        if not os.path.exists(full_path):
+            raise KeyError(f"File not found: {file_path}")
+        os.remove(full_path)
+    
+    def __contains__(self, file_path):
+        """Check if a file exists using 'in' operator"""
+        full_path = os.path.join(self.base_path, file_path)
+        return os.path.exists(full_path)
+    
+    def open(self, file_path, mode='r'):
+        """Open a file and return the file object"""
+        full_path = os.path.join(self.base_path, file_path)
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        self.file = open(full_path, mode)
+        return self.file
+    
+    def list_files(self):
+        """List all files in the storage"""
+        files = []
+        for root, _, filenames in os.walk(self.base_path):
+            for filename in filenames:
+                full_path = os.path.join(root, filename)
+                rel_path = os.path.relpath(full_path, self.base_path)
+                files.append(rel_path)
+        return files
+
+
+# Demo real-world examples
+if __name__ == "__main__":
+    # APIResponse example
+    print("APIResponse example:")
+    success_response = APIResponse(
+        data={"user_id": 123, "username": "john_doe"},
+        status_code=200,
+        message="User retrieved successfully"
+    )
+    
+    error_response = APIResponse(
+        status_code=404,
+        message="User not found"
+    )
+    
+    print(f"Success response: {success_response}")
+    print(f"Error response: {error_response}")
+    
+    # Using __bool__
+    if success_response:
+        print("Success response evaluated as True")
+    
+    if not error_response:
+        print("Error response evaluated as False")
+    
+    # Using __getitem__
+    print(f"User ID: {success_response['user_id']}")
+    print(f"Username: {success_response['username']}")
+    
+    # ExponentialBackoff example
+    print("\nExponentialBackoff example:")
+    backoff = ExponentialBackoff(initial_delay=0.1, max_delay=2, factor=2, max_retries=5)
+    
+    for _ in range(5):
+        delay = backoff()
+        print(f"Retry in {delay} seconds")
+    
+    try:
+        backoff()  # This should exceed max retries
+    except Exception as e:
+        print(f"Error: {e}")
+    
+    # ConfigDict example
+    print("\nConfigDict example:")
+    config = ConfigDict({
+        'app': {
+            'name': 'My App',
+            'version': '1.0.0'
+        },
+        'database': {
+            'host': 'localhost',
+            'port': 5432,
+            'user': 'admin'
+        },
+        'debug': True
+    })
+    
+    # Access with dot notation
+    print(f"App name: {config.app.name}")
+    print(f"Database host: {config.database.host}")
+    print(f"Debug mode: {config.debug}")
+    
+    # Access with dictionary notation
+    print(f"App version: {config['app']['version']}")
+    print(f"Database port: {config['database']['port']}")
+    
+    # Modify with dot notation
+    config.app.version = '1.1.0'
+    print(f"Updated app version: {config.app.version}")
+    
+    # Add new settings
+    config.logging = {'level': 'INFO'}
+    print(f"Logging level: {config.logging.level}")
+    
+    # Cache example
+    print("\nCache example:")
+    cache = Cache(default_ttl=2)  # 2 seconds TTL for testing
+    
+    cache['key1'] = 'value1'
+    cache.set('key2', 'value2', ttl=5)  # 5 seconds TTL
+    
+    print(f"key1 in cache: {cache.get('key1')}")
+    print(f"key2 in cache: {cache.get('key2')}")
+    print(f"key3 in cache: {cache.get('key3', 'default')}")
+    
+    print("Waiting for key1 to expire...")
+    time.sleep(3)
+    
+    print(f"key1 in cache: {cache.get('key1', 'expired')}")
+    print(f"key2 in cache: {cache.get('key2', 'expired')}")
+    
+    # FileSystemStorage example (commented out to avoid actual file operations)
+    """
+    print("\nFileSystemStorage example:")
+    storage = FileSystemStorage("./temp_storage")
+    
+    with storage:
+        # Write files
+        storage['test.txt'] = 'Hello, World!'
+        storage['folder/nested.txt'] = 'Nested file content'
+        
+        # Read files
+        print(f"test.txt content: {storage['test.txt']}")
+        print(f"folder/nested.txt content: {storage['folder/nested.txt']}")
+        
+        # Check if file exists
+        print(f"'test.txt' exists: {'test.txt' in storage}")
+        print(f"'nonexistent.txt' exists: {'nonexistent.txt' in storage}")
+        
+        # List files
+        print(f"All files: {storage.list_files()}")
+        
+        # Delete a file
+        del storage['test.txt']
+        print(f"After deletion, 'test.txt' exists: {'test.txt' in storage}")
+    """
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <p>We've created several practical classes that demonstrate how dunder methods can be used in real-world applications:</p>
+            
+            <ol>
+                <li><strong>APIResponse</strong>: Represents an API response with methods for string representation, truthiness checking, and data access:
+                    <ul>
+                        <li><code>__str__</code> and <code>__repr__</code> for different string representations</li>
+                        <li><code>__bool__</code> to determine success based on status code</li>
+                        <li><code>__getitem__</code> for dictionary-like access to response data</li>
+                    </ul>
+                </li>
+                <li><strong>ExponentialBackoff</strong>: A callable object implementing exponential backoff for retry logic:
+                    <ul>
+                        <li><code>__call__</code> for function-like behavior</li>
+                        <li>Used in the <code>retry_with_backoff</code> decorator</li>
+                    </ul>
+                </li>
+                <li><strong>ConfigDict</strong>: A configuration dictionary supporting both dictionary and dot notation access:
+                    <ul>
+                        <li>Container methods like <code>__getitem__</code>, <code>__setitem__</code>, etc.</li>
+                        <li>Attribute access methods like <code>__getattr__</code> and <code>__setattr__</code></li>
+                    </ul>
+                </li>
+                <li><strong>Cache</strong>: A simple caching system with expiring entries:
+                    <ul>
+                        <li>Container methods for dictionary-like access</li>
+                        <li>Time-based expiration of cache entries</li>
+                    </ul>
+                </li>
+                <li><strong>FileSystemStorage</strong>: A file storage system with context manager support:
+                    <ul>
+                        <li><code>__enter__</code> and <code>__exit__</code> for context manager (with statement) support</li>
+                        <li>Container methods for file access using dictionary notation</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <p>These examples demonstrate how dunder methods can be combined to create intuitive, Pythonic interfaces for complex functionality. By implementing the appropriate dunder methods, we can make our classes behave like built-in types, making them more familiar and easier to use for other developers.</p>
+        </section>
+
+        <section class="key_takeaways">
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li><strong>Dunder methods</strong> (a.k.a. magic methods) are special methods with double underscores that enable Python's built-in features on your custom classes.</li>
+                <li><strong>Basic dunder methods</strong> like <code>__init__</code>, <code>__str__</code>, and <code>__repr__</code> define the core behavior of your objects.</li>
+                <li><strong>Operator overloading</strong> methods like <code>__add__</code>, <code>__mul__</code>, etc., allow your objects to work with Python's operators.</li>
+                <li><strong>Container and sequence methods</strong> like <code>__getitem__</code>, <code>__len__</code>, and <code>__iter__</code> make your objects behave like lists, dictionaries, or other containers.</li>
+                <li><strong>Comparison methods</strong> like <code>__eq__</code>, <code>__lt__</code>, etc., enable your objects to be compared with operators like <code>==</code>, <code><</code>, etc.</li>
+                <li><strong>Attribute access methods</strong> like <code>__getattr__</code> and <code>__setattr__</code> let you customize how attributes are accessed and set.</li>
+                <li><strong>The <code>__call__</code> method</strong> makes your objects callable like functions, enabling function-like objects with state.</li>
+                <li><strong>Context manager methods</strong> <code>__enter__</code> and <code>__exit__</code> allow your objects to be used with the <code>with</code> statement.</li>
+                <li><strong>Implementing dunder methods properly</strong> makes your classes more intuitive, Pythonic, and integrated with Python's built-in functions and syntax.</li>
+            </ul>
+        </section>
+
+        <section class="best_practices">
+            <h3>Best Practices for Dunder Methods</h3>
+            
+            <ol>
+                <li><strong>Follow Python's conventions:</strong> Implement dunder methods that align with Python's intended semantics. For example, <code>__add__</code> should do something addition-like.</li>
+                <li><strong>Provide complementary methods:</strong> If you implement <code>__add__</code>, consider implementing <code>__radd__</code> too. If you implement <code>__eq__</code>, consider implementing <code>__ne__</code> as well.</li>
+                <li><strong>Use <code>NotImplemented</code> for unsupported operations:</strong> Return <code>NotImplemented</code> (not to be confused with <code>NotImplementedError</code>) when an operation is not supported for a given type.</li>
+                <li><strong>Keep dunder methods consistent:</strong> Your dunder methods should behave consistently with each other and with Python's built-in types.</li>
+                <li><strong>Be careful with performance:</strong> Some dunder methods like <code>__getattribute__</code> are called frequently, so keep them efficient.</li>
+                <li><strong>Don't abuse dunder methods:</strong> Only implement the dunder methods that make sense for your class's domain.</li>
+                <li><strong>Avoid infinite recursion:</strong> Be careful when implementing methods like <code>__getattribute__</code> and <code>__setattr__</code> to avoid calling themselves recursively.</li>
+                <li><strong>Document your dunder methods:</strong> Especially if they behave in non-standard ways.</li>
+                <li><strong>Use appropriate return types:</strong> For example, <code>__len__</code> should return an integer, <code>__bool__</code> should return a boolean.</li>
+                <li><strong>Consider immutability:</strong> For value-like objects, consider making them immutable and implementing dunder methods accordingly.</li>
+            </ol>
+        </section>
+
+        <section class="assignment">
+            <h3>Assignment: Create a Financial Dashboard with Dunder Methods</h3>
+            <p>For this assignment, you'll create a financial dashboard system that makes extensive use of dunder methods to provide a clean, intuitive interface.</p>
+            
+            <h4>Requirements:</h4>
+            <ol>
+                <li>Create a <code>Currency</code> class:
+                    <ul>
+                        <li>Support for different currency symbols (USD, EUR, GBP, etc.)</li>
+                        <li>Operator overloading for arithmetic operations</li>
+                        <li>String representation with proper formatting</li>
+                        <li>Comparison operators for comparing monetary values</li>
+                    </ul>
+                </li>
+                <li>Create a <code>Portfolio</code> class:
+                    <ul>
+                        <li>Container methods for managing investments (add, remove, get by name)</li>
+                        <li>Iteration support for looping through investments</li>
+                        <li>Length checking for counting investments</li>
+                        <li>Attribute access for accessing portfolio statistics</li>
+                    </ul>
+                </li>
+                <li>Create an <code>Investment</code> class:
+                    <ul>
+                        <li>Basic dunder methods for string representation</li>
+                        <li>Callable behavior for updating the investment value</li>
+                        <li>Comparison methods for ranking investments</li>
+                    </ul>
+                </li>
+                <li>Create a <code>Transaction</code> class:
+                    <ul>
+                        <li>String representation for transaction details</li>
+                        <li>Attribute access with validation</li>
+                        <li>Boolean evaluation based on transaction status</li>
+                    </ul>
+                </li>
+                <li>Create a <code>Report</code> class:
+                    <ul>
+                        <li>Context manager support for report generation</li>
+                        <li>Callable behavior for filtering report data</li>
+                        <li>Container methods for accessing report sections</li>
+                    </ul>
+                </li>
+                <li>Integration of these classes into a cohesive financial dashboard system</li>
+                <li>Documentation and examples showing how the dunder methods enhance the user experience</li>
+            </ol>
+            
+            <h4>Bonus Challenges:</h4>
+            <ol>
+                <li>Implement a <code>TimeRange</code> class with dunder methods for date/time operations</li>
+                <li>Create a <code>DataFrameView</code> class that uses dunder methods to provide a pandas-like interface</li>
+                <li>Implement lazy-loading of portfolio data using <code>__getattr__</code></li>
+                <li>Create a simple GUI or web interface that leverages your dunder methods for display and interaction</li>
+                <li>Add persistence with file or database operations using dunder methods</li>
+            </ol>
+            
+            <p>Submit your work as a Python module with clear structure and organization. Be prepared to explain how the dunder methods you've implemented enhance the usability and expressiveness of your code.</p>
+        </section>
+
+        <section class="further_reading">
+            <h3>Further Reading and Resources</h3>
+            <ul>
+                <li><a href="https://docs.python.org/3/reference/datamodel.html" target="_blank">Python Data Model (Official Documentation)</a></li>
+                <li><a href="https://rszalski.github.io/magicmethods/" target="_blank">A Guide to Python's Magic Methods</a></li>
+                <li><a href="https://realpython.com/operator-function-overloading/" target="_blank">Real Python: Operator and Function Overloading in Python</a></li>
+                <li><a href="https://docs.python.org/3/library/functools.html#functools.total_ordering" target="_blank">functools.total_ordering (Official Documentation)</a></li>
+                <li>Python Cookbook, 3rd Edition by David Beazley and Brian K. Jones (Chapter 8: Classes and Objects)</li>
+                <li>Fluent Python by Luciano Ramalho (Chapters on the Python Data Model)</li>
+                <li>Effective Python: 90 Specific Ways to Write Better Python by Brett Slatkin (Items 43-46)</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>
+            # If it's a compute_* method, run it and cache the result

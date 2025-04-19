@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Self Parameter in Python Methods</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>The Self Parameter in Python Methods</h1>
+        <h2>Week 3: Monday Afternoon Session</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>Understanding the Self Parameter in Python Methods</h3>
+            <p>Welcome to our exploration of one of the most fundamental aspects of Python's object-oriented programming: the <code>self</code> parameter.</p>
+            
+            <p>If you've been working with Python classes, you've likely noticed that almost every method within a class includes a mysterious first parameter called <code>self</code>. This parameter is essential to how Python implements object-oriented programming, yet it can be confusing for beginners. In this session, we'll demystify <code>self</code> and understand its critical role in making classes and objects work in Python.</p>
+            
+            <div class="concept-highlight">
+                <p><strong>Real-world analogy:</strong> Think of methods in a class as instructions for performing actions, and <code>self</code> as a way for an object to say "do this to <em>me</em>." It's like the difference between a general recipe (class) and making that recipe for a specific dinner (object). The recipe might say "add salt to taste," but when you're actually cooking, you're adding salt to <em>this</em> particular pot of soup.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>What Exactly Is Self?</h3>
+            
+            <p>The <code>self</code> parameter refers to the instance of the class on which a method is being called. It's a reference to the specific object that is executing the method. This allows each object to maintain and work with its own attributes, distinct from other objects of the same class.</p>
+            
+            <p>Let's look at a simple example to understand this concept:</p>
+            
+            <div class="code-example">
+                <pre><code>class Dog:
+    def __init__(self, name, breed):
+        self.name = name
+        self.breed = breed
+    
+    def bark(self):
+        return f"{self.name} says Woof!"
+
+# Create two Dog objects
+buddy = Dog("Buddy", "Golden Retriever")
+max = Dog("Max", "German Shepherd")
+
+# Each dog barks with its own name
+print(buddy.bark())  # Output: Buddy says Woof!
+print(max.bark())    # Output: Max says Woof!</code></pre>
+            </div>
+            
+            <p>In this example:</p>
+            <ul>
+                <li>We defined a <code>Dog</code> class with two methods: <code>__init__</code> and <code>bark</code></li>
+                <li>Both methods have <code>self</code> as their first parameter</li>
+                <li>We created two different <code>Dog</code> objects: <code>buddy</code> and <code>max</code></li>
+                <li>When we call <code>buddy.bark()</code>, <code>self</code> inside the <code>bark</code> method refers to the <code>buddy</code> object</li>
+                <li>When we call <code>max.bark()</code>, <code>self</code> inside the <code>bark</code> method refers to the <code>max</code> object</li>
+            </ul>
+            
+            <p>This is why each dog's <code>bark</code> method can access the correct <code>name</code> attribute for that specific dog.</p>
+            
+            <div class="concept-highlight">
+                <p><strong>Key insight:</strong> <code>self</code> allows methods to know which specific object instance they're working with. Without <code>self</code>, the methods wouldn't know which object's attributes to access or modify.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Why Python Requires Self (When Many Languages Don't)</h3>
+            
+            <p>If you've worked with other object-oriented languages like Java or C#, you might have noticed that they don't require an explicit <code>self</code> parameter. So why does Python make it explicit?</p>
+            
+            <p>The answer lies in Python's design philosophy and how it implements method calls. In Python, methods are effectively just functions that happen to be defined inside a class. When you call a method on an object, Python translates that into a function call, passing the object itself as the first argument.</p>
+            
+            <div class="code-example">
+                <pre><code># These two lines are equivalent:
+buddy.bark()
+Dog.bark(buddy)</code></pre>
+            </div>
+            
+            <p>The second line shows what's happening behind the scenes: Python is calling the <code>bark</code> function defined in the <code>Dog</code> class, and passing <code>buddy</code> as the first argument, which is received as <code>self</code> inside the method.</p>
+            
+            <p>This explicit approach has several advantages:</p>
+            <ul>
+                <li>It makes the code more readable and explicit about what's happening</li>
+                <li>It allows you to call methods on the class itself, passing in an instance as the first argument</li>
+                <li>It creates consistency in how methods are defined and called</li>
+                <li>It gives you more flexibility in how you implement and use methods</li>
+            </ul>
+            
+            <div class="concept-highlight">
+                <p><strong>Python's approach:</strong> By making <code>self</code> explicit, Python brings clarity to the relationship between classes, objects, and methods. This is part of Python's philosophy of "explicit is better than implicit."</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Self in the Constructor Method (__init__)</h3>
+            
+            <p>The constructor method <code>__init__</code> is particularly important for understanding <code>self</code>, because this is typically where instance attributes are defined. Let's look more closely at how <code>self</code> works in constructors:</p>
+            
+            <div class="code-example">
+                <pre><code>class Rectangle:
+    def __init__(self, width, height):
+        # self.width is an instance attribute
+        self.width = width
+        
+        # self.height is another instance attribute
+        self.height = height
+        
+        # We can compute and store other attributes too
+        self.area = width * height
+        self.perimeter = 2 * (width + height)
+    
+    def describe(self):
+        return f"Rectangle(width={self.width}, height={self.height}, area={self.area})"
+
+# Create two rectangle objects
+rect1 = Rectangle(5, 3)
+rect2 = Rectangle(10, 8)
+
+print(rect1.describe())  # Uses self.width, self.height, and self.area for rect1
+print(rect2.describe())  # Uses self.width, self.height, and self.area for rect2</code></pre>
+            </div>
+            
+            <p>In this example, <code>self</code> in the <code>__init__</code> method refers to the new rectangle object being created. By assigning to attributes like <code>self.width</code>, we're attaching data to that specific instance.</p>
+            
+            <p>Here's what happens step by step when we execute <code>rect1 = Rectangle(5, 3)</code>:</p>
+            <ol>
+                <li>Python creates a new empty object of type <code>Rectangle</code></li>
+                <li>Python calls <code>Rectangle.__init__(</code><em>that new object</em><code>, 5, 3)</code></li>
+                <li>Inside <code>__init__</code>, <code>self</code> refers to the new object, <code>width</code> is 5, and <code>height</code> is 3</li>
+                <li>The method sets <code>self.width = 5</code>, <code>self.height = 3</code>, and computes <code>self.area</code> and <code>self.perimeter</code></li>
+                <li>The initialized object is returned and assigned to <code>rect1</code></li>
+            </ol>
+            
+            <div class="concept-highlight">
+                <p><strong>Constructor pattern:</strong> The <code>__init__</code> method typically follows the pattern of accepting parameters and using them to initialize instance attributes with the same names (e.g., <code>self.width = width</code>). This pattern is so common that it's almost a convention in Python.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>How Self Works in Other Methods</h3>
+            
+            <p>Beyond the constructor, <code>self</code> works the same way in all instance methods. It always refers to the instance on which the method was called. This allows methods to:</p>
+            
+            <ul>
+                <li>Access instance attributes (<code>self.attribute</code>)</li>
+                <li>Modify instance attributes (<code>self.attribute = new_value</code>)</li>
+                <li>Call other methods on the same instance (<code>self.other_method()</code>)</li>
+            </ul>
+            
+            <p>Let's look at an example that demonstrates all of these capabilities:</p>
+            
+            <div class="code-example">
+                <pre><code>class BankAccount:
+    def __init__(self, account_number, owner_name, balance=0):
+        self.account_number = account_number
+        self.owner_name = owner_name
+        self.balance = balance
+        self.transactions = []
+        
+        # Record initial deposit if any
+        if balance > 0:
+            self._record_transaction("Initial deposit", balance)
+    
+    def deposit(self, amount):
+        """Deposit money into the account."""
+        if amount <= 0:
+            return "Deposit amount must be positive"
+        
+        self.balance += amount
+        self._record_transaction("Deposit", amount)
+        return f"Deposited ${amount}. New balance: ${self.balance}"
+    
+    def withdraw(self, amount):
+        """Withdraw money from the account."""
+        if amount <= 0:
+            return "Withdrawal amount must be positive"
+        
+        if amount > self.balance:
+            return "Insufficient funds"
+        
+        self.balance -= amount
+        self._record_transaction("Withdrawal", amount)
+        return f"Withdrew ${amount}. New balance: ${self.balance}"
+    
+    def get_balance(self):
+        """Get the current balance."""
+        return self.balance
+    
+    def _record_transaction(self, transaction_type, amount):
+        """Record a transaction in the transaction history."""
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.transactions.append(f"{timestamp}: {transaction_type} ${amount}")
+    
+    def get_transaction_history(self):
+        """Get the transaction history."""
+        if not self.transactions:
+            return "No transactions"
+        
+        return "\n".join(self.transactions)
+
+# Create an account
+account = BankAccount("12345", "Alice", 500)
+
+# Use methods that use self in different ways
+print(account.deposit(300))
+print(account.withdraw(100))
+print(f"Current balance: ${account.get_balance()}")
+print("\nTransaction History:")
+print(account.get_transaction_history())</code></pre>
+            </div>
+            
+            <p>In this example, <code>self</code> is used in multiple ways:</p>
+            <ul>
+                <li>To access instance attributes (<code>self.balance</code> in <code>get_balance</code>)</li>
+                <li>To modify instance attributes (<code>self.balance += amount</code> in <code>deposit</code>)</li>
+                <li>To call another method (<code>self._record_transaction</code> in <code>deposit</code> and <code>withdraw</code>)</li>
+            </ul>
+            
+            <div class="concept-highlight">
+                <p><strong>Method interaction:</strong> Through <code>self</code>, methods can work together by calling each other. In our example, both <code>deposit</code> and <code>withdraw</code> call the <code>_record_transaction</code> method to handle the common task of updating the transaction history.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Common Misconceptions About Self</h3>
+            
+            <p>There are several common misconceptions about <code>self</code> that can lead to confusion. Let's clear these up:</p>
+            
+            <h4>Misconception 1: "Self" is a Python Keyword</h4>
+            <p><code>self</code> is not a Python keyword or a special reserved word. It's just a convention. You could technically use any valid parameter name instead:</p>
+            
+            <div class="code-example">
+                <pre><code>class Dog:
+    def __init__(this_dog, name, breed):
+        this_dog.name = name
+        this_dog.breed = breed
+    
+    def bark(dog_instance):
+        return f"{dog_instance.name} says Woof!"
+
+# This works just fine
+dog = Dog("Rex", "German Shepherd")
+print(dog.bark())  # Output: Rex says Woof!</code></pre>
+            </div>
+            
+            <p>However, using anything other than <code>self</code> is strongly discouraged because:</p>
+            <ul>
+                <li>It goes against a well-established convention</li>
+                <li>It makes your code harder for other Python developers to read</li>
+                <li>It can lead to confusion and errors</li>
+            </ul>
+            
+            <h4>Misconception 2: Self Is Automatically Passed to All Methods</h4>
+            <p><code>self</code> is automatically passed only to instance methods, not to class methods or static methods. Class methods use <code>cls</code> instead, and static methods don't use either:</p>
+            
+            <div class="code-example">
+                <pre><code>class Example:
+    class_variable = "I belong to the class"
+    
+    def __init__(self, instance_variable):
+        self.instance_variable = instance_variable
+    
+    # Instance method - receives self
+    def instance_method(self):
+        return f"Instance method: {self.instance_variable}"
+    
+    # Class method - receives cls, not self
+    @classmethod
+    def class_method(cls):
+        return f"Class method: {cls.class_variable}"
+    
+    # Static method - receives neither self nor cls
+    @staticmethod
+    def static_method():
+        return "Static method: I don't have access to instance or class variables directly"
+
+# Create an instance
+example = Example("I belong to the instance")
+
+# Call the methods
+print(example.instance_method())
+print(Example.class_method())
+print(Example.static_method())</code></pre>
+            </div>
+            
+            <h4>Misconception 3: You Have to Type Self When Calling Methods</h4>
+            <p>When calling a method, you never include <code>self</code> in the arguments. Python automatically passes the object as the first argument:</p>
+            
+            <div class="code-example">
+                <pre><code>class Counter:
+    def __init__(self):
+        self.count = 0
+    
+    def increment(self):
+        self.count += 1
+        return self.count
+
+counter = Counter()
+
+# Correct way to call a method
+print(counter.increment())  # Output: 1
+
+# Incorrect way - this would pass counter twice!
+# print(counter.increment(counter))  # This would raise a TypeError</code></pre>
+            </div>
+            
+            <div class="concept-highlight">
+                <p><strong>Self is implicit in method calls:</strong> When you call <code>object.method()</code>, the object itself is implicitly passed as the <code>self</code> parameter. You only need to provide the other arguments, if any.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Self and Method Chaining</h3>
+            
+            <p>An interesting usage pattern involving <code>self</code> is method chaining. By returning <code>self</code> from methods that modify an object, you can chain multiple method calls together:</p>
+            
+            <div class="code-example">
+                <pre><code>class TextProcessor:
+    def __init__(self, text=""):
+        self.text = text
+    
+    def append(self, more_text):
+        self.text += more_text
+        return self  # Return self for chaining
+    
+    def replace(self, old, new):
+        self.text = self.text.replace(old, new)
+        return self  # Return self for chaining
+    
+    def upper(self):
+        self.text = self.text.upper()
+        return self  # Return self for chaining
+    
+    def lower(self):
+        self.text = self.text.lower()
+        return self  # Return self for chaining
+    
+    def __str__(self):
+        return self.text
+
+# Using method chaining
+processor = TextProcessor("Hello")
+result = processor.append(", World!").replace("World", "Python").upper()
+
+print(result)  # Output: HELLO, PYTHON!</code></pre>
+            </div>
+            
+            <p>This pattern is popular in many Python libraries, such as Pandas and SQLAlchemy, as it allows for concise and readable code.</p>
+            
+            <div class="concept-highlight">
+                <p><strong>Method chaining pattern:</strong> Return <code>self</code> from methods that modify the object to enable chaining. This creates a fluent interface that can make your code more readable and concise.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Self and Inheritance</h3>
+            
+            <p>When working with inheritance, <code>self</code> becomes even more powerful. It allows methods to work with the actual type of the object, even if the method is defined in a parent class.</p>
+            
+            <div class="code-example">
+                <pre><code>class Animal:
+    def __init__(self, name):
+        self.name = name
+    
+    def speak(self):
+        # This will call the child class's get_sound method if available
+        return f"{self.name} says {self.get_sound()}"
+    
+    def get_sound(self):
+        return "???"
+
+class Dog(Animal):
+    def get_sound(self):
+        return "Woof!"
+
+class Cat(Animal):
+    def get_sound(self):
+        return "Meow!"
+
+# Create instances of the child classes
+dog = Dog("Buddy")
+cat = Cat("Whiskers")
+
+# Call the parent class's speak method
+print(dog.speak())   # Output: Buddy says Woof!
+print(cat.speak())   # Output: Whiskers says Meow!</code></pre>
+            </div>
+            
+            <p>In this example, even though <code>speak</code> is defined in the <code>Animal</code> class, <code>self</code> refers to the actual <code>Dog</code> or <code>Cat</code> instance. This means that when <code>self.get_sound()</code> is called from the <code>speak</code> method, it calls the appropriate version of <code>get_sound</code> for that specific type of animal.</p>
+            
+            <p>This behavior enables polymorphism - one of the key principles of object-oriented programming. It allows a parent class to define a method that behaves differently depending on the specific child class of the instance it's called on.</p>
+            
+            <div class="concept-highlight">
+                <p><strong>Self and polymorphism:</strong> When a parent class method uses <code>self</code> to call another method, it calls the version of that method that's appropriate for the actual type of the object, even if that means using a method from a child class.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Advanced Self Usage: Accessing Other Instances</h3>
+            
+            <p>While <code>self</code> typically refers to the current instance, methods can also work with other instances of the same class. This is common in comparison or relationship operations:</p>
+            
+            <div class="code-example">
+                <pre><code>class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+        self.friends = []
+    
+    def add_friend(self, friend):
+        """Add another Person as a friend."""
+        if not isinstance(friend, Person):
+            raise TypeError("Friends must be Person objects")
+        
+        if friend not in self.friends:
+            self.friends.append(friend)
+            # Friendship is mutual - friend also adds self as a friend
+            friend.add_friend(self)
+    
+    def is_friends_with(self, other):
+        """Check if this Person is friends with another Person."""
+        return other in self.friends
+    
+    def get_older_friends(self):
+        """Get friends who are older than this Person."""
+        return [friend for friend in self.friends if friend.age > self.age]
+    
+    def __str__(self):
+        friend_names = [friend.name for friend in self.friends]
+        friends_str = ", ".join(friend_names) if friend_names else "no one"
+        return f"{self.name} ({self.age}) - Friends with: {friends_str}"
+
+# Create some people
+alice = Person("Alice", 25)
+bob = Person("Bob", 30)
+charlie = Person("Charlie", 22)
+diana = Person("Diana", 28)
+
+# Create friendships
+alice.add_friend(bob)
+alice.add_friend(charlie)
+diana.add_friend(bob)
+
+# Check friendships
+print(alice.is_friends_with(bob))       # Output: True
+print(bob.is_friends_with(alice))       # Output: True (mutual friendship)
+print(alice.is_friends_with(diana))     # Output: False
+
+# Get older friends
+print(f"{alice.name}'s older friends:")
+for friend in alice.get_older_friends():
+    print(f"- {friend.name} ({friend.age})")
+
+# Print everyone's friend lists
+print("\nFriend Networks:")
+print(alice)
+print(bob)
+print(charlie)
+print(diana)</code></pre>
+            </div>
+            
+            <p>In this example, <code>self</code> is used to access the current instance's attributes and methods, but the methods also work with other <code>Person</code> instances. For example:</p>
+            <ul>
+                <li><code>add_friend</code> modifies both <code>self.friends</code> and <code>friend.friends</code></li>
+                <li><code>is_friends_with</code> checks if another person is in <code>self.friends</code></li>
+                <li><code>get_older_friends</code> compares <code>self.age</code> with <code>friend.age</code></li>
+            </ul>
+            
+            <div class="concept-highlight">
+                <p><strong>Self in relationships:</strong> Methods can use <code>self</code> to represent one side of a relationship between objects and parameters to represent the other side. This is especially useful for modeling real-world relationships like friendships, connections, or comparisons.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Self and Private Attributes</h3>
+            
+            <p>In Python, there's no true private visibility for attributes, but there are conventions for indicating that an attribute is intended for internal use. The convention is to prefix attribute names with an underscore (<code>_</code>). These attributes can still be accessed through <code>self</code>:</p>
+            
+            <div class="code-example">
+                <pre><code>class TemperatureSensor:
+    def __init__(self, location):
+        self.location = location
+        self._temperature = 0  # "Private" attribute
+        self._calibration_factor = 1.02  # Another "private" attribute
+    
+    def set_temperature(self, raw_value):
+        """Set the temperature from a raw sensor value."""
+        # Apply calibration factor
+        self._temperature = raw_value * self._calibration_factor
+    
+    def get_temperature(self):
+        """Get the current temperature."""
+        return self._temperature
+    
+    def get_calibrated_reading(self):
+        """Get a calibrated temperature reading."""
+        # Use the "private" attributes internally
+        return f"Temperature at {self.location}: {self._temperature:.1f}°C (calibration: {self._calibration_factor})"
+
+# Create a temperature sensor
+sensor = TemperatureSensor("Living Room")
+
+# Set and get temperature
+sensor.set_temperature(20.5)
+print(f"Temperature: {sensor.get_temperature()}°C")
+print(sensor.get_calibrated_reading())
+
+# We can still access the "private" attribute directly, but it's discouraged
+print(f"Direct access to private attribute: {sensor._temperature}°C")</code></pre>
+            </div>
+            
+            <p>For more strict encapsulation, Python also supports name mangling with double underscores (<code>__</code>). Attributes that start with double underscores (but don't end with them) are renamed internally to include the class name:</p>
+            
+            <div class="code-example">
+                <pre><code>class PrivateExample:
+    def __init__(self):
+        self.public_attr = "Public"
+        self._protected_attr = "Protected"
+        self.__private_attr = "Private"  # Will be name-mangled
+    
+    def get_private(self):
+        return self.__private_attr  # Accessible within the class
+
+# Create an instance
+example = PrivateExample()
+
+# Access attributes
+print(example.public_attr)      # Works: "Public"
+print(example._protected_attr)  # Works but discouraged: "Protected"
+
+try:
+    print(example.__private_attr)  # Error: AttributeError
+except AttributeError as e:
+    print(f"Error: {e}")
+
+# Name mangling - the attribute is renamed to _PrivateExample__private_attr
+print(example._PrivateExample__private_attr)  # Works but REALLY discouraged: "Private"
+
+# Using the accessor method
+print(example.get_private())  # Proper way to access: "Private"</code></pre>
+            </div>
+            
+            <div class="concept-highlight">
+                <p><strong>Privacy conventions:</strong> Use <code>self._attr</code> for attributes that should be considered "protected" (internal use), and <code>self.__attr</code> for attributes that should be even more strongly protected. However, remember that Python relies on conventions rather than strict enforcement - the "we're all consenting adults here" philosophy.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Common Errors Involving Self</h3>
+            
+            <p>Understanding common errors related to <code>self</code> can help you debug your code and avoid common pitfalls:</p>
+            
+            <h4>Error 1: Forgetting Self in Method Definitions</h4>
+            <p>One of the most common errors is forgetting to include <code>self</code> as the first parameter in instance methods:</p>
+            
+            <div class="code-example">
+                <pre><code>class Counter:
+    def __init__(self):
+        self.count = 0
+    
+    # Missing self parameter!
+    def increment():
+        self.count += 1  # This will raise a TypeError
+        return self.count
+
+try:
+    counter = Counter()
+    counter.increment()
+except TypeError as e:
+    print(f"Error: {e}")  # Output: increment() takes 0 positional arguments but 1 was given</code></pre>
+            </div>
+            
+            <h4>Error 2: Forgetting Self When Accessing Attributes</h4>
+            <p>Another common error is forgetting to prefix instance attributes with <code>self</code>:</p>
+            
+            <div class="code-example">
+                <pre><code>class Circle:
+    def __init__(self, radius):
+        self.radius = radius  # Correct
+    
+    def area(self):
+        # Missing self! This tries to use radius as a local variable
+        return 3.14159 * radius * radius  # This will raise a NameError
+
+try:
+    circle = Circle(5)
+    print(circle.area())
+except NameError as e:
+    print(f"Error: {e}")  # Output: name 'radius' is not defined</code></pre>
+            </div>
+            
+            <h4>Error 3: Including Self When Calling Methods</h4>
+            <p>As mentioned earlier, a common misconception is including <code>self</code> when calling a method:</p>
+            
+            <div class="code-example">
+                <pre><code>class Example:
+    def method(self, arg):
+        return f"Method called with arg: {arg}"
+
+example = Example()
+
+# Correct way to call the method
+print(example.method("hello"))  # Output: Method called with arg: hello
+
+# Incorrect way - this would pass example twice!
+try:
+    print(example.method(example, "hello"))
+except TypeError as e:
+    print(f"Error: {e}")  # Output: method() takes 2 positional arguments but 3 were given</code></pre>
+            </div>
+            
+            <h4>Error 4: Using Self Outside of Class Methods</h4>
+            <p>The <code>self</code> parameter only makes sense within class methods. Using it outside of a class definition or in functions that aren't methods will result in an error:</p>
+            
+            <div class="code-example">
+                <pre><code># This doesn't work - self is meaningless here
+def standalone_function(self, arg):
+    return self.value * arg
+
+# This would fail because there's no self to refer to
+try:
+    result = standalone_function(5)
+except TypeError as e:
+    print(f"Error: {e}")  # Output: standalone_function() missing 1 required positional argument: 'arg'
+
+# Even passing an object as the first argument won't work right
+class MyClass:
+    def __init__(self):
+        self.value = 10
+
+my_obj = MyClass()
+try:
+    result = standalone_function(my_obj, 5)
+    print(result)
+except AttributeError as e:
+    # This might work if MyClass happens to have the attributes used in the function,
+    # but it's a bad practice and not the intended use of self.
+    print(f"This approach is problematic and error-prone")</code></pre>
+            </div>
+            
+            <div class="concept-highlight">
+                <p><strong>Debugging tip:</strong> If you encounter errors related to the wrong number of arguments in method calls, check that you've included <code>self</code> in the method definition but not in the method call. Remember that <code>self</code> is implicitly passed when you call <code>object.method()</code>.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Self in Real-World Applications</h3>
+            
+            <p>To solidify your understanding, let's look at a more comprehensive example that shows how <code>self</code> is used in a real-world application. We'll implement a simplified library management system:</p>
+            
+            <div class="code-example">
+                <pre><code>class Book:
+    def __init__(self, title, author, isbn):
+        self.title = title
+        self.author = author
+        self.isbn = isbn
+        self.checked_out = False
+        self.checkout_history = []
+    
+    def checkout(self, member):
+        """Check out the book to a library member."""
+        if self.checked_out:
+            return f"{self.title} is already checked out"
+        
+        self.checked_out = True
+        checkout_info = {
+            "member_id": member.member_id,
+            "member_name": member.name,
+            "checkout_date": self._get_current_date()
+        }
+        self.checkout_history.append(checkout_info)
+        return f"{self.title} has been checked out to {member.name}"
+    
+    def return_book(self):
+        """Return the book to the library."""
+        if not self.checked_out:
+            return f"{self.title} is not checked out"
+        
+        self.checked_out = False
+        # Update the last checkout record with return date
+        if self.checkout_history:
+            self.checkout_history[-1]["return_date"] = self._get_current_date()
+        
+        return f"{self.title} has been returned"
+    
+    def _get_current_date(self):
+        """Helper method to get the current date."""
+        import datetime
+        return datetime.datetime.now().strftime("%Y-%m-%d")
+    
+    def get_status(self):
+        """Get the current status of the book."""
+        status = "Available" if not self.checked_out else "Checked Out"
+        if self.checked_out and self.checkout_history:
+            member_name = self.checkout_history[-1]["member_name"]
+            status += f" to {member_name}"
+        return status
+    
+    def __str__(self):
+        return f"{self.title} by {self.author} ({self.get_status()})"
+
+
+class LibraryMember:
+    def __init__(self, member_id, name, email=None):
+        self.member_id = member_id
+        self.name = name
+        self.email = email
+        self.borrowed_books = []
+    
+    def borrow_book(self, book):
+        """Borrow a book from the library."""
+        if book.checked_out:
+            return f"{book.title} is already checked out"
+        
+        # Use the book's checkout method
+        result = book.checkout(self)
+        
+        # If successful, add to our list of borrowed books
+        if not book.checked_out:
+            self.borrowed_books.append(book)
+        
+        return result
+    
+    def return_book(self, book):
+        """Return a borrowed book."""
+        if book not in self.borrowed_books:
+            return f"You haven't borrowed {book.title}"
+        
+        # Use the book's return_book method
+        result = book.return_book()
+        
+        # If successful, remove from our list of borrowed books
+        if not book.checked_out:
+            self.borrowed_books.remove(book)
+        
+        return result
+    
+    def get_borrowed_books(self):
+        """Get a list of books currently borrowed by this member."""
+        if not self.borrowed_books:
+            return f"{self.name} has no borrowed books"
+        
+        return "\n".join([str(book) for book in self.borrowed_books])
+    
+    def __str__(self):
+        return f"{self.name} (ID: {self.member_id})"
+
+
+class Library:
+    def __init__(self, name):
+        self.name = name
+        self.books = {}  # ISBN -> Book
+        self.members = {}  # Member ID -> LibraryMember
+    
+    def add_book(self, book):
+        """Add a book to the library collection."""
+        self.books[book.isbn] = book
+        return f"Added {book.title} to {self.name} Library"
+    
+    def add_member(self, member):
+        """Register a new library member."""
+        self.members[member.member_id] = member
+        return f"Added {member.name} as a member of {self.name} Library"
+    
+    def checkout_book(self, isbn, member_id):
+        """Process a book checkout."""
+        if isbn not in self.books:
+            return "Book not found"
+        
+        if member_id not in self.members:
+            return "Member not found"
+        
+        book = self.books[isbn]
+        member = self.members[member_id]
+        
+        return member.borrow_book(book)
+    
+    def return_book(self, isbn, member_id):
+        """Process a book return."""
+        if isbn not in self.books:
+            return "Book not found"
+        
+        if member_id not in self.members:
+            return "Member not found"
+        
+        book = self.books[isbn]
+        member = self.members[member_id]
+        
+        return member.return_book(book)
+    
+    def get_available_books(self):
+        """Get a list of all available books."""
+        available_books = [book for book in self.books.values() if not book.checked_out]
+        return available_books
+    
+    def get_checked_out_books(self):
+        """Get a list of all checked out books."""
+        checked_out_books = [book for book in self.books.values() if book.checked_out]
+        return checked_out_books
+    
+    def get_member_account(self, member_id):
+        """Get information about a member's account."""
+        if member_id not in self.members:
+            return "Member not found"
+        
+        member = self.members[member_id]
+        result = f"Account for {member}:\n"
+        result += member.get_borrowed_books()
+        return result
+    
+    def __str__(self):
+        return f"{self.name} Library ({len(self.books)} books, {len(self.members)} members)"
+
+# Using the library system
+library = Library("City Public")
+
+# Add books
+book1 = Book("The Great Gatsby", "F. Scott Fitzgerald", "9780743273565")
+book2 = Book("To Kill a Mockingbird", "Harper Lee", "9780060935467")
+book3 = Book("1984", "George Orwell", "9780451524935")
+
+library.add_book(book1)
+library.add_book(book2)
+library.add_book(book3)
+
+# Add members
+alice = LibraryMember("A123", "Alice Smith", "alice@example.com")
+bob = LibraryMember("B456", "Bob Johnson")
+
+library.add_member(alice)
+library.add_member(bob)
+
+# Checkout books
+print(library.checkout_book("9780743273565", "A123"))  # Alice borrows The Great Gatsby
+print(library.checkout_book("9780060935467", "B456"))  # Bob borrows To Kill a Mockingbird
+
+# Try to checkout an already checked out book
+print(library.checkout_book("9780743273565", "B456"))  # Should fail
+
+# Get member accounts
+print("\nMember Accounts:")
+print(library.get_member_account("A123"))
+print(library.get_member_account("B456"))
+
+# Return a book
+print("\nReturning a book:")
+print(library.return_book("9780743273565", "A123"))  # Alice returns The Great Gatsby
+
+# Check available and checked out books
+print("\nLibrary Status:")
+print(f"Available Books: {len(library.get_available_books())}")
+print(f"Checked Out Books: {len(library.get_checked_out_books())}")
+
+# Get updated member account
+print("\nUpdated Member Account:")
+print(library.get_member_account("A123"))</code></pre>
+            </div>
+            
+            <p>This example demonstrates how <code>self</code> enables complex interactions between multiple classes:</p>
+            <ul>
+                <li>Each object (book, member, library) maintains its own state through instance attributes (<code>self.attribute</code>)</li>
+                <li>Methods update the state of the object they belong to (<code>self.attribute = new_value</code>)</li>
+                <li>Objects interact with each other through method calls (<code>book.checkout(member)</code>)</li>
+                <li>Methods can call other methods on the same object (<code>self._get_current_date()</code>)</li>
+            </ul>
+            
+            <div class="concept-highlight">
+                <p><strong>Real-world application insight:</strong> In complex applications with multiple interacting classes, <code>self</code> helps maintain clear boundaries between objects while enabling them to work together. Each object is responsible for its own state, but can interact with other objects through well-defined methods.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Best Practices for Using Self</h3>
+            
+            <p>To wrap up, here are some best practices for working with <code>self</code> in Python:</p>
+            
+            <h4>Always Use Self as the First Parameter</h4>
+            <p>Follow the convention of using <code>self</code> as the name for the first parameter in instance methods. This makes your code more readable and consistent with Python conventions.</p>
+            
+            <h4>Use Self Consistently Within Methods</h4>
+            <p>Always prefix instance attributes and method calls with <code>self</code> within methods to clearly distinguish them from local variables and functions.</p>
+            
+            <h4>Be Mindful of Self in Inheritance</h4>
+            <p>Remember that <code>self</code> refers to the actual instance type, which might be a subclass. Design parent class methods accordingly, especially when they call other methods that might be overridden.</p>
+            
+            <h4>Consider Method Chaining with Self</h4>
+            <p>For methods that modify an object's state, consider returning <code>self</code> to enable method chaining. This can lead to more concise and readable code.</p>
+            
+            <h4>Use Self to Maintain Object Boundaries</h4>
+            <p>Use <code>self</code> to clearly distinguish between an object's own attributes and methods versus those of other objects or global functions. This helps maintain clean object boundaries.</p>
+            
+            <h4>Watch for Common Self-Related Errors</h4>
+            <p>Be vigilant about common errors like forgetting <code>self</code> in method definitions, forgetting to prefix attributes with <code>self</code>, or incorrectly including <code>self</code> when calling methods.</p>
+            
+            <div class="concept-highlight">
+                <p><strong>Self philosophy:</strong> Think of <code>self</code> as the object's sense of identity. It's how methods know which object they're working with and how objects maintain their individual state. Using <code>self</code> consistently and correctly is fundamental to writing clean, object-oriented Python code.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Conclusion</h3>
+            <p>The <code>self</code> parameter is a fundamental aspect of Python's approach to object-oriented programming. It's the mechanism by which methods know which specific object instance they're operating on, allowing each object to maintain its own state and behavior.</p>
+            
+            <p>Key points to remember about <code>self</code>:</p>
+            <ul>
+                <li>It refers to the instance on which a method is called</li>
+                <li>It must be the first parameter in instance methods</li>
+                <li>It's automatically passed when you call a method on an object</li>
+                <li>It allows methods to access and modify instance attributes</li>
+                <li>It enables method chaining when returned from methods</li>
+                <li>It facilitates polymorphism in inheritance hierarchies</li>
+            </ul>
+            
+            <p>Understanding <code>self</code> is essential for writing effective object-oriented Python code. With a solid grasp of how <code>self</code> works, you'll be able to design classes that are intuitive, maintainable, and powerful.</p>
+            
+            <div class="practice-exercise">
+                <h4>Practice Exercise</h4>
+                <p>Design a <code>ShoppingCart</code> class that uses <code>self</code> effectively. Your class should:</p>
+                <ol>
+                    <li>Track items in the cart (product name, price, quantity)</li>
+                    <li>Allow adding and removing items</li>
+                    <li>Calculate the total cost</li>
+                    <li>Apply discounts</li>
+                    <li>Use method chaining for a fluent interface</li>
+                    <li>Include helper methods that use <code>self</code> to access the cart's state</li>
+                </ol>
+                <p>Test your implementation by creating a shopping cart and performing various operations on it.</p>
+            </div>
+        </section>
+
+        <section class="additional-resources">
+            <h3>Additional Resources</h3>
+            <ul>
+                <li><a href="https://docs.python.org/3/tutorial/classes.html#random-remarks" target="_blank">Python Documentation: Classes and Instances</a></li>
+                <li><a href="https://realpython.com/instance-class-and-static-methods-demystified/" target="_blank">Real Python: Instance, Class, and Static Methods Demystified</a></li>
+                <li><a href="https://www.python-course.eu/python3_object_oriented_programming.php" target="_blank">Python Course: Object-Oriented Programming</a></li>
+                <li><a href="https://docs.python.org/3/reference/datamodel.html#special-method-names" target="_blank">Python Data Model: Special Method Names</a></li>
+                <li>Recommended Book: "Fluent Python" by Luciano Ramalho (Chapter 9: A Pythonic Object)</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

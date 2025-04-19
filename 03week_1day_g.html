@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Instantiation in Python</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Object Instantiation in Python</h1>
+        <h2>Week 3: Monday Afternoon Session</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>Understanding Object Instantiation</h3>
+            <p>Welcome to our afternoon session on Object Instantiation!</p>
+            
+            <p>In this session, we'll dive deep into how objects are created from classes in Python. Object instantiation is the process of creating an object (an instance) from a class blueprint. It's like bringing a blueprint to life - turning an abstract design into a concrete, usable entity that occupies memory and can perform actions.</p>
+            
+            <div class="concept-highlight">
+                <p><strong>Real-world analogy:</strong> Think of a class as a cookie cutter and objects as the cookies. The cookie cutter defines the shape and structure (the class), but you can use it to create many individual cookies (objects), each with its own state (perhaps different colors of frosting or sprinkles), while all sharing the same fundamental shape.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>The Basic Instantiation Process</h3>
+            
+            <p>In Python, instantiation is performed by simply calling the class name as if it were a function. Let's start with a simple class and see how to create objects from it:</p>
+            
+            <div class="code-example">
+                <pre><code># Define a simple class
+class Dog:
+    def __init__(self, name, breed):
+        self.name = name
+        self.breed = breed
+    
+    def bark(self):
+        return f"{self.name} says Woof!"
+
+# Instantiate objects
+buddy = Dog("Buddy", "Golden Retriever")
+max = Dog("Max", "German Shepherd")
+
+# Use the objects
+print(buddy.name)    # Output: Buddy
+print(max.breed)     # Output: German Shepherd
+print(buddy.bark())  # Output: Buddy says Woof!
+print(max.bark())    # Output: Max says Woof!</code></pre>
+            </div>
+            
+            <p>When we write <code>buddy = Dog("Buddy", "Golden Retriever")</code>, several things happen behind the scenes:</p>
+            <ol>
+                <li>Python creates a new empty object in memory</li>
+                <li>The <code>__init__</code> method is called with the new object as the <code>self</code> parameter, along with any other arguments we provided</li>
+                <li>The <code>__init__</code> method sets up the attributes of the object</li>
+                <li>The new, fully initialized object is returned and assigned to the variable</li>
+            </ol>
+            
+            <div class="concept-highlight">
+                <p><strong>Analogy:</strong> Instantiation is like checking into a hotel. The hotel itself (the class) already exists and defines what's available (rooms, services, etc.). When you check in (instantiation), you get a specific room (memory allocation) with its own state (your belongings), and you can request services (methods) according to what the hotel offers.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>What Really Happens During Instantiation</h3>
+            
+            <p>Let's peek deeper into what Python does when you instantiate an object. The instantiation process actually involves two key special methods:</p>
+            
+            <h4>The <code>__new__</code> Method</h4>
+            <p>This is the first method called during instantiation. It's responsible for creating and returning a new instance. Most classes inherit the default implementation from <code>object</code>, so you rarely need to override it. The <code>__new__</code> method is a static method (though not decorated as such) that takes the class as its first parameter, along with any other arguments passed during instantiation.</p>
+            
+            <h4>The <code>__init__</code> Method</h4>
+            <p>After <code>__new__</code> creates the instance, <code>__init__</code> is called to initialize it. This is where you typically set up the object's attributes and perform any necessary setup. The <code>__init__</code> method is an instance method that takes the instance as its first parameter (<code>self</code>), along with any other arguments passed during instantiation.</p>
+            
+            <div class="code-example">
+                <pre><code>class CustomObject:
+    def __new__(cls, *args, **kwargs):
+        print(f"1. __new__ called with class: {cls.__name__}")
+        print(f"   Arguments: {args}, {kwargs}")
+        # Create and return the instance
+        instance = super().__new__(cls)
+        print(f"2. Instance created: {instance}")
+        return instance
+    
+    def __init__(self, name, value):
+        print(f"3. __init__ called with self: {self}")
+        print(f"   Arguments: name={name}, value={value}")
+        self.name = name
+        self.value = value
+        print(f"4. Instance initialized with name={self.name}, value={self.value}")
+
+# Instantiate an object
+print("Creating a CustomObject...")
+obj = CustomObject("example", 42)
+print("\nInstance created and ready to use!")
+print(f"obj.name: {obj.name}")
+print(f"obj.value: {obj.value}")</code></pre>
+            </div>
+            
+            <p>This code outputs the sequence of steps that happen during instantiation, showing how <code>__new__</code> creates the empty object and <code>__init__</code> initializes it with attributes.</p>
+            
+            <div class="concept-highlight">
+                <p><strong>Important note:</strong> You almost never need to override <code>__new__</code> in your classes. It's useful in rare cases, such as implementing singleton patterns or custom immutable types, but for most classes, the default implementation is sufficient.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Arguments and Parameters in Instantiation</h3>
+            
+            <p>When you instantiate an object, you can pass arguments that are used to initialize the object's state. These arguments are passed to both <code>__new__</code> and <code>__init__</code>, though typically you only work with them in <code>__init__</code>.</p>
+            
+            <h4>Positional Arguments</h4>
+            <p>Positional arguments are matched with parameters based on their position:</p>
+            
+            <div class="code-example">
+                <pre><code>class Rectangle:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.area = width * height
+
+# Positional arguments
+rect1 = Rectangle(10, 5)
+print(f"Rectangle: {rect1.width} x {rect1.height}, Area: {rect1.area}")
+# Output: Rectangle: 10 x 5, Area: 50</code></pre>
+            </div>
+            
+            <h4>Keyword Arguments</h4>
+            <p>Keyword arguments are matched with parameters based on their names:</p>
+            
+            <div class="code-example">
+                <pre><code># Using the Rectangle class defined above
+rect2 = Rectangle(width=6, height=8)
+print(f"Rectangle: {rect2.width} x {rect2.height}, Area: {rect2.area}")
+# Output: Rectangle: 6 x 8, Area: 48
+
+# You can mix positional and keyword arguments
+rect3 = Rectangle(7, height=9)
+print(f"Rectangle: {rect3.width} x {rect3.height}, Area: {rect3.area}")
+# Output: Rectangle: 7 x 9, Area: 63</code></pre>
+            </div>
+            
+            <h4>Default Parameters</h4>
+            <p>You can define default values for parameters, making them optional during instantiation:</p>
+            
+            <div class="code-example">
+                <pre><code>class Circle:
+    def __init__(self, radius=1, color="red"):
+        self.radius = radius
+        self.color = color
+        import math
+        self.area = math.pi * radius ** 2
+
+# Using all defaults
+circle1 = Circle()
+print(f"Circle: radius={circle1.radius}, color={circle1.color}, area={circle1.area:.2f}")
+# Output: Circle: radius=1, color=red, area=3.14
+
+# Providing some arguments
+circle2 = Circle(radius=2)
+print(f"Circle: radius={circle2.radius}, color={circle2.color}, area={circle2.area:.2f}")
+# Output: Circle: radius=2, color=red, area=12.57
+
+# Providing all arguments
+circle3 = Circle(3, "blue")
+print(f"Circle: radius={circle3.radius}, color={circle3.color}, area={circle3.area:.2f}")
+# Output: Circle: radius=3, color=blue, area=28.27</code></pre>
+            </div>
+            
+            <h4>Variable Arguments</h4>
+            <p>For more flexible instantiation, you can use <code>*args</code> and <code>**kwargs</code> to accept a variable number of arguments:</p>
+            
+            <div class="code-example">
+                <pre><code>class FlexibleObject:
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+    
+    def describe(self):
+        arg_desc = f"Positional arguments: {self.args}" if self.args else "No positional arguments"
+        kwarg_desc = f"Keyword arguments: {self.kwargs}" if self.kwargs else "No keyword arguments"
+        return f"{arg_desc}\n{kwarg_desc}"
+
+# Different ways to instantiate
+obj1 = FlexibleObject()
+obj2 = FlexibleObject(1, 2, 3)
+obj3 = FlexibleObject(name="John", age=30)
+obj4 = FlexibleObject(10, 20, x=100, y=200)
+
+print("Object 1:")
+print(obj1.describe())
+print("\nObject 2:")
+print(obj2.describe())
+print("\nObject 3:")
+print(obj3.describe())
+print("\nObject 4:")
+print(obj4.describe())</code></pre>
+            </div>
+            
+            <div class="concept-highlight">
+                <p><strong>Real-world example:</strong> Think of instantiation arguments like placing a coffee order. Some parameters are required (size, coffee type), while others are optional (milk, sugar, flavor shots). The barista (the <code>__init__</code> method) uses these specifications to create your specific coffee (the object instance).</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Instantiation in Inheritance</h3>
+            
+            <p>Inheritance adds complexity to instantiation because you need to ensure that all parent classes are properly initialized. In Python, this is typically done using the <code>super()</code> function to call the parent's <code>__init__</code> method.</p>
+            
+            <div class="code-example">
+                <pre><code>class Vehicle:
+    def __init__(self, make, model, year):
+        self.make = make
+        self.model = model
+        self.year = year
+        self.is_running = False
+    
+    def start(self):
+        self.is_running = True
+        return f"{self.make} {self.model} started"
+    
+    def stop(self):
+        self.is_running = False
+        return f"{self.make} {self.model} stopped"
+
+class Car(Vehicle):
+    def __init__(self, make, model, year, num_doors, fuel_type="gasoline"):
+        # Call parent's __init__ to initialize inherited attributes
+        super().__init__(make, model, year)
+        
+        # Initialize Car-specific attributes
+        self.num_doors = num_doors
+        self.fuel_type = fuel_type
+
+class ElectricCar(Car):
+    def __init__(self, make, model, year, num_doors, battery_capacity, range_km):
+        # Call parent's __init__ with specific values
+        super().__init__(make, model, year, num_doors, fuel_type="electric")
+        
+        # Initialize ElectricCar-specific attributes
+        self.battery_capacity = battery_capacity
+        self.range_km = range_km
+    
+    def start(self):
+        # Override the inherited start method
+        self.is_running = True
+        return f"{self.make} {self.model} started silently"
+
+# Instantiate different types of vehicles
+regular_car = Car("Toyota", "Corolla", 2020, 4)
+tesla = ElectricCar("Tesla", "Model 3", 2021, 4, 75, 400)
+
+print(f"Regular car: {regular_car.make} {regular_car.model}, Fuel: {regular_car.fuel_type}")
+print(f"Electric car: {tesla.make} {tesla.model}, Battery: {tesla.battery_capacity} kWh, Range: {tesla.range_km} km")
+
+print(regular_car.start())  # Using inherited method
+print(tesla.start())        # Using overridden method</code></pre>
+            </div>
+            
+            <p>When the <code>ElectricCar</code> is instantiated, the initialization process involves a chain of <code>__init__</code> calls:</p>
+            <ol>
+                <li>First, <code>ElectricCar.__init__</code> is called with the arguments</li>
+                <li>It calls <code>Car.__init__</code> using <code>super()</code></li>
+                <li><code>Car.__init__</code> then calls <code>Vehicle.__init__</code> using <code>super()</code></li>
+                <li>Each class initializes its specific attributes</li>
+                <li>The process returns back down the chain, completing the initialization</li>
+            </ol>
+            
+            <div class="concept-highlight">
+                <p><strong>Analogy:</strong> Think of inheritance instantiation like moving into a house that your parents designed. The basic structure (foundation, walls, roof) comes from the parent class, but you add your own specific features and customizations. When building (instantiating), you need to ensure the basic structure is sound before adding your custom elements.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Alternative Construction Patterns</h3>
+            
+            <p>Sometimes you may want to create objects in different ways or from different data sources. Python classes can provide alternative constructors using class methods.</p>
+            
+            <h4>Class Methods as Alternative Constructors</h4>
+            
+            <div class="code-example">
+                <pre><code>class Date:
+    def __init__(self, year, month, day):
+        self.year = year
+        self.month = month
+        self.day = day
+    
+    def __str__(self):
+        return f"{self.year:04d}-{self.month:02d}-{self.day:02d}"
+    
+    @classmethod
+    def from_string(cls, date_string):
+        """Create a Date from a string in 'YYYY-MM-DD' format."""
+        year, month, day = map(int, date_string.split('-'))
+        return cls(year, month, day)
+    
+    @classmethod
+    def from_timestamp(cls, timestamp):
+        """Create a Date from a Unix timestamp."""
+        import datetime
+        dt = datetime.datetime.fromtimestamp(timestamp)
+        return cls(dt.year, dt.month, dt.day)
+    
+    @classmethod
+    def today(cls):
+        """Create a Date representing today."""
+        import datetime
+        dt = datetime.datetime.now()
+        return cls(dt.year, dt.month, dt.day)
+
+# Different ways to instantiate Date objects
+date1 = Date(2023, 10, 15)                # Regular constructor
+date2 = Date.from_string("2023-11-20")    # Alternative constructor
+date3 = Date.from_timestamp(1640995200)   # Alternative constructor (2022-01-01)
+date4 = Date.today()                      # Alternative constructor
+
+print(f"date1: {date1}")
+print(f"date2: {date2}")
+print(f"date3: {date3}")
+print(f"date4: {date4}")</code></pre>
+            </div>
+            
+            <p>These alternative constructors (often called factory methods) provide clear, expressive ways to create objects from different data sources or in different ways.</p>
+            
+            <h4>The Factory Pattern</h4>
+            <p>For more complex instantiation logic, you might use the factory pattern, which encapsulates the creation logic in a separate class or module:</p>
+            
+            <div class="code-example">
+                <pre><code>class Animal:
+    def __init__(self, name):
+        self.name = name
+    
+    def speak(self):
+        pass  # To be implemented by subclasses
+
+class Dog(Animal):
+    def speak(self):
+        return f"{self.name} says Woof!"
+
+class Cat(Animal):
+    def speak(self):
+        return f"{self.name} says Meow!"
+
+class Bird(Animal):
+    def speak(self):
+        return f"{self.name} says Tweet!"
+
+class AnimalFactory:
+    @staticmethod
+    def create_animal(animal_type, name):
+        """Factory method to create different types of animals."""
+        animal_types = {
+            "dog": Dog,
+            "cat": Cat,
+            "bird": Bird
+        }
+        
+        if animal_type.lower() not in animal_types:
+            raise ValueError(f"Unknown animal type: {animal_type}")
+        
+        # Get the appropriate class and instantiate it
+        animal_class = animal_types[animal_type.lower()]
+        return animal_class(name)
+
+# Using the factory to create animals
+animals = [
+    AnimalFactory.create_animal("dog", "Buddy"),
+    AnimalFactory.create_animal("cat", "Whiskers"),
+    AnimalFactory.create_animal("bird", "Tweety")
+]
+
+# Using the animals
+for animal in animals:
+    print(animal.speak())</code></pre>
+            </div>
+            
+            <p>The factory pattern is useful when:</p>
+            <ul>
+                <li>The exact class of the object to be created isn't known until runtime</li>
+                <li>Creation logic is complex and should be centralized</li>
+                <li>You want to provide a consistent interface for creating related objects</li>
+            </ul>
+            
+            <div class="concept-highlight">
+                <p><strong>Real-world example:</strong> Think of a car dealership. You tell the salesperson what type of car you want (SUV, sedan, etc.), and they handle all the details of getting that specific model from the manufacturer. You don't need to know how the car is built; you just specify the high-level requirements, and the factory (dealership) handles the rest.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Singleton Pattern: Controlling Instantiation</h3>
+            
+            <p>Sometimes you want to ensure that only one instance of a class ever exists. This is the singleton pattern, which can be implemented by overriding the <code>__new__</code> method:</p>
+            
+            <div class="code-example">
+                <pre><code>class Singleton:
+    _instance = None
+    
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    def __init__(self, name=None):
+        # Only set the name if it hasn't been set before
+        if not hasattr(self, 'name') or name:
+            self.name = name if name else "Default"
+
+# Create instances
+singleton1 = Singleton("First")
+print(f"singleton1: {singleton1.name}, id: {id(singleton1)}")
+
+singleton2 = Singleton("Second")
+print(f"singleton2: {singleton2.name}, id: {id(singleton2)}")
+
+# Even though we passed a different name, both variables refer to the same instance
+# The name doesn't change because __init__ is called again but skips the assignment
+print(f"Are they the same object? {singleton1 is singleton2}")
+
+# If we really want to update the name, we can do it directly
+singleton1.name = "Updated"
+print(f"singleton1: {singleton1.name}")
+print(f"singleton2: {singleton2.name}")  # Both show the same name</code></pre>
+            </div>
+            
+            <p>The singleton pattern is useful for resources that should only exist once in an application, such as:</p>
+            <ul>
+                <li>Configuration managers</li>
+                <li>Database connections</li>
+                <li>Logging systems</li>
+                <li>Device managers (e.g., printer spoolers)</li>
+            </ul>
+            
+            <div class="concept-highlight">
+                <p><strong>Caution:</strong> While the singleton pattern is useful in some cases, it can make testing and debugging more difficult because it introduces global state. Use it judiciously.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Builder Pattern: Step-by-Step Instantiation</h3>
+            
+            <p>For complex objects with many configuration options, the builder pattern provides a more readable and flexible way to construct objects:</p>
+            
+            <div class="code-example">
+                <pre><code>class Computer:
+    """A class representing a computer with many configuration options."""
+    
+    def __init__(self):
+        # Default configuration
+        self.cpu = None
+        self.memory = None
+        self.storage = None
+        self.gpu = None
+        self.os = None
+        self.extras = []
+    
+    def __str__(self):
+        """Return a string description of the computer."""
+        components = [
+            f"CPU: {self.cpu}" if self.cpu else "CPU: Not specified",
+            f"Memory: {self.memory} GB" if self.memory else "Memory: Not specified",
+            f"Storage: {self.storage}" if self.storage else "Storage: Not specified",
+            f"GPU: {self.gpu}" if self.gpu else "GPU: Not specified",
+            f"OS: {self.os}" if self.os else "OS: Not specified"
+        ]
+        
+        if self.extras:
+            components.append(f"Extras: {', '.join(self.extras)}")
+        
+        return "\n".join(components)
+
+class ComputerBuilder:
+    """A builder class for creating computers."""
+    
+    def __init__(self):
+        """Initialize a new builder, starting with an empty computer."""
+        self.computer = Computer()
+    
+    def with_cpu(self, cpu):
+        """Set the CPU."""
+        self.computer.cpu = cpu
+        return self  # Return self for method chaining
+    
+    def with_memory(self, memory_gb):
+        """Set the memory size in GB."""
+        self.computer.memory = memory_gb
+        return self
+    
+    def with_storage(self, storage_desc):
+        """Set the storage description."""
+        self.computer.storage = storage_desc
+        return self
+    
+    def with_gpu(self, gpu):
+        """Set the GPU."""
+        self.computer.gpu = gpu
+        return self
+    
+    def with_os(self, os_name):
+        """Set the operating system."""
+        self.computer.os = os_name
+        return self
+    
+    def add_extra(self, extra):
+        """Add an extra component."""
+        self.computer.extras.append(extra)
+        return self
+    
+    def build(self):
+        """Return the configured computer."""
+        return self.computer
+
+# Build a gaming PC
+gaming_pc = ComputerBuilder() \
+    .with_cpu("Intel Core i9-12900K") \
+    .with_memory(32) \
+    .with_storage("2TB NVMe SSD") \
+    .with_gpu("NVIDIA RTX 3080") \
+    .with_os("Windows 11") \
+    .add_extra("RGB Lighting") \
+    .add_extra("Liquid Cooling") \
+    .build()
+
+print("Gaming PC Configuration:")
+print(gaming_pc)
+
+# Build a simple office PC
+office_pc = ComputerBuilder() \
+    .with_cpu("Intel Core i5-11400") \
+    .with_memory(16) \
+    .with_storage("512GB SSD") \
+    .with_os("Windows 10") \
+    .build()
+
+print("\nOffice PC Configuration:")
+print(office_pc)</code></pre>
+            </div>
+            
+            <p>The builder pattern offers several advantages:</p>
+            <ul>
+                <li>Improved readability with method chaining</li>
+                <li>Ability to build objects in steps</li>
+                <li>Support for creating different representations of an object</li>
+                <li>Separation of construction logic from the object's representation</li>
+            </ul>
+            
+            <div class="concept-highlight">
+                <p><strong>Real-world analogy:</strong> Think of a custom home builder. Instead of trying to specify everything at once, you work with the builder to decide on each aspect of the house one by one: first the layout, then the materials, then the fixtures, and so on. The builder pattern similarly breaks down complex object creation into manageable steps.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Common Instantiation Pitfalls</h3>
+            
+            <p>As you work with object instantiation, be aware of these common pitfalls:</p>
+            
+            <h4>Mutable Default Arguments</h4>
+            <p>This is one of the most common mistakes in Python class design. If you use a mutable object (like a list or dictionary) as a default parameter value, it will be shared among all instances:</p>
+            
+            <div class="code-example">
+                <pre><code>class BadExample:
+    def __init__(self, items=[]):  # PROBLEMATIC: Default list is shared
+        self.items = items
+    
+    def add_item(self, item):
+        self.items.append(item)
+        return self.items
+
+# Create two instances
+bad1 = BadExample()
+bad2 = BadExample()
+
+# Modify one instance
+bad1.add_item("A")
+print(f"bad1.items: {bad1.items}")  # Output: ['A']
+
+# The other instance is also affected!
+print(f"bad2.items: {bad2.items}")  # Output: ['A']
+
+# Correct approach
+class GoodExample:
+    def __init__(self, items=None):  # Use None as default
+        self.items = items if items is not None else []  # Create a new list if None
+    
+    def add_item(self, item):
+        self.items.append(item)
+        return self.items
+
+# Create two instances
+good1 = GoodExample()
+good2 = GoodExample()
+
+# Modify one instance
+good1.add_item("A")
+print(f"good1.items: {good1.items}")  # Output: ['A']
+
+# The other instance is not affected
+print(f"good2.items: {good2.items}")  # Output: []</code></pre>
+            </div>
+            
+            <h4>Forgetting to Initialize the Parent Class</h4>
+            <p>In inheritance, forgetting to call the parent's <code>__init__</code> method can lead to missing attributes and unexpected behavior:</p>
+            
+            <div class="code-example">
+                <pre><code>class Parent:
+    def __init__(self, value):
+        self.value = value
+        self.initialized = True
+
+class BadChild(Parent):
+    def __init__(self, value, extra):
+        # Forgot to call Parent.__init__
+        self.extra = extra
+
+class GoodChild(Parent):
+    def __init__(self, value, extra):
+        # Properly initialize the parent
+        super().__init__(value)
+        self.extra = extra
+
+# This will cause problems
+try:
+    bad = BadChild(10, "extra")
+    print(f"bad.value: {bad.value}")  # AttributeError: 'BadChild' object has no attribute 'value'
+except AttributeError as e:
+    print(f"Error with BadChild: {e}")
+
+# This works correctly
+good = GoodChild(10, "extra")
+print(f"good.value: {good.value}")
+print(f"good.extra: {good.extra}")
+print(f"good.initialized: {good.initialized}")</code></pre>
+            </div>
+            
+            <h4>Circular Dependencies in Initialization</h4>
+            <p>Be careful when initializing objects that reference each other - this can create circular dependencies:</p>
+            
+            <div class="code-example">
+                <pre><code>class Person:
+    def __init__(self, name, friend=None):
+        self.name = name
+        self.friend = friend
+        # If friend is provided, set this person as their friend too
+        if friend is not None:
+            friend.friend = self  # This can cause infinite recursion!
+
+# Better approach
+class BetterPerson:
+    def __init__(self, name):
+        self.name = name
+        self.friend = None
+    
+    def befriend(self, other_person):
+        self.friend = other_person
+        other_person.friend = self
+        return f"{self.name} and {other_person.name} are now friends"
+
+# Create people
+alice = BetterPerson("Alice")
+bob = BetterPerson("Bob")
+
+# Make them friends
+print(alice.befriend(bob))
+print(f"{alice.name}'s friend is {alice.friend.name}")
+print(f"{bob.name}'s friend is {bob.friend.name}")</code></pre>
+            </div>
+            
+            <div class="concept-highlight">
+                <p><strong>Best practice:</strong> Always carefully design your <code>__init__</code> methods to ensure proper initialization and avoid these common pitfalls. Keep initialization logic simple, validate inputs, and be mindful of mutable defaults and inheritance.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Practical Example: Order Processing System</h3>
+            
+            <p>Let's apply what we've learned about object instantiation to create an order processing system with various instantiation patterns:</p>
+            
+            <div class="code-example">
+                <pre><code>class Product:
+    """A class representing a product that can be ordered."""
+    
+    def __init__(self, product_id, name, price, category):
+        self.product_id = product_id
+        self.name = name
+        self.price = price
+        self.category = category
+    
+    def __str__(self):
+        return f"{self.name} (${self.price:.2f})"
+
+
+class OrderItem:
+    """A class representing an item in an order."""
+    
+    def __init__(self, product, quantity=1):
+        self.product = product
+        self.quantity = quantity
+    
+    @property
+    def subtotal(self):
+        return self.product.price * self.quantity
+    
+    def __str__(self):
+        return f"{self.quantity} x {self.product.name} = ${self.subtotal:.2f}"
+
+
+class Order:
+    """A class representing a customer order."""
+    
+    next_order_id = 1000  # Class variable for generating order IDs
+    
+    def __init__(self, customer_name, items=None):
+        self.order_id = Order.next_order_id
+        Order.next_order_id += 1
+        self.customer_name = customer_name
+        self.items = items or []
+        self.order_date = self._get_current_date()
+        self.status = "Pending"
+    
+    @staticmethod
+    def _get_current_date():
+        import datetime
+        return datetime.datetime.now()
+    
+    @property
+    def total(self):
+        return sum(item.subtotal for item in self.items)
+    
+    def add_item(self, product, quantity=1):
+        """Add a product to the order."""
+        self.items.append(OrderItem(product, quantity))
+    
+    def remove_item(self, index):
+        """Remove an item from the order by index."""
+        if 0 <= index < len(self.items):
+            removed = self.items.pop(index)
+            return f"Removed {removed.product.name} from order"
+        return "Invalid item index"
+    
+    def process(self):
+        """Process the order, changing its status to 'Processed'."""
+        self.status = "Processed"
+        return f"Order #{self.order_id} processed"
+    
+    def __str__(self):
+        """Return a string representation of the order."""
+        result = [
+            f"Order #{self.order_id} - {self.customer_name}",
+            f"Date: {self.order_date.strftime('%Y-%m-%d %H:%M')}",
+            f"Status: {self.status}",
+            "Items:"
+        ]
+        
+        for i, item in enumerate(self.items, 1):
+            result.append(f"  {i}. {item}")
+        
+        result.append(f"Total: ${self.total:.2f}")
+        return "\n".join(result)
+    
+    @classmethod
+    def create_from_dict(cls, order_data, product_catalog):
+        """Factory method to create an order from a dictionary."""
+        customer_name = order_data.get("customer_name")
+        if not customer_name:
+            raise ValueError("Customer name is required")
+        
+        order = cls(customer_name)
+        
+        for item_data in order_data.get("items", []):
+            product_id = item_data.get("product_id")
+            quantity = item_data.get("quantity", 1)
+            
+            if product_id in product_catalog:
+                order.add_item(product_catalog[product_id], quantity)
+            else:
+                print(f"Warning: Product ID {product_id} not found in catalog")
+        
+        return order
+
+
+class OrderBuilder:
+    """A builder class for creating orders step by step."""
+    
+    def __init__(self, customer_name):
+        self.order = Order(customer_name)
+    
+    def add_item(self, product, quantity=1):
+        """Add an item to the order."""
+        self.order.add_item(product, quantity)
+        return self
+    
+    def set_date(self, date):
+        """Set the order date (for backdating orders)."""
+        self.order.order_date = date
+        return self
+    
+    def with_status(self, status):
+        """Set the order status."""
+        self.order.status = status
+        return self
+    
+    def build(self):
+        """Return the built order."""
+        return self.order
+
+
+class OrderProcessor:
+    """A singleton class for processing orders."""
+    
+    _instance = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._processed_orders = []
+        return cls._instance
+    
+    def process_order(self, order):
+        """Process an order and add it to the processed orders list."""
+        result = order.process()
+        self._processed_orders.append(order)
+        return result
+    
+    def get_processed_orders(self):
+        """Get all processed orders."""
+        return self._processed_orders
+    
+    def get_processed_count(self):
+        """Get the count of processed orders."""
+        return len(self._processed_orders)
+
+
+# Create product catalog
+products = {
+    "P001": Product("P001", "Laptop", 1200.00, "Electronics"),
+    "P002": Product("P002", "Mouse", 25.99, "Electronics"),
+    "P003": Product("P003", "Keyboard", 45.50, "Electronics"),
+    "P004": Product("P004", "Monitor", 350.00, "Electronics"),
+    "P005": Product("P005", "Headphones", 89.99, "Electronics")
+}
+
+# Using different instantiation methods
+
+# 1. Regular instantiation
+order1 = Order("Alice Smith")
+order1.add_item(products["P001"])  # Laptop
+order1.add_item(products["P002"], 2)  # 2 Mice
+print("Order 1 (Regular Instantiation):")
+print(order1)
+print()
+
+# 2. Factory method instantiation
+order_data = {
+    "customer_name": "Bob Johnson",
+    "items": [
+        {"product_id": "P003", "quantity": 1},
+        {"product_id": "P004", "quantity": 2},
+        {"product_id": "P005", "quantity": 1}
+    ]
+}
+order2 = Order.create_from_dict(order_data, products)
+print("Order 2 (Factory Method):")
+print(order2)
+print()
+
+# 3. Builder pattern instantiation
+import datetime
+order3 = OrderBuilder("Charlie Brown") \
+    .add_item(products["P001"]) \
+    .add_item(products["P003"]) \
+    .add_item(products["P005"]) \
+    .set_date(datetime.datetime(2023, 10, 15, 14, 30)) \
+    .with_status("Rush") \
+    .build()
+print("Order 3 (Builder Pattern):")
+print(order3)
+print()
+
+# 4. Using the singleton OrderProcessor
+processor = OrderProcessor()
+processor.process_order(order1)
+processor.process_order(order2)
+
+# Another instance gets the same singleton
+another_processor = OrderProcessor()
+print(f"Are processors the same object? {processor is another_processor}")
+print(f"Total processed orders: {another_processor.get_processed_count()}")
+print("Processed order IDs:", [order.order_id for order in another_processor.get_processed_orders()])</code></pre>
+            </div>
+            
+            <p>This example demonstrates:</p>
+            <ul>
+                <li>Regular instantiation with <code>__init__</code> for creating simple objects</li>
+                <li>Class methods as factory methods for alternative instantiation</li>
+                <li>The builder pattern for step-by-step construction of complex objects</li>
+                <li>The singleton pattern for centralizing order processing</li>
+                <li>Properties for derived attributes like subtotals and totals</li>
+                <li>Composition of objects (Orders contain OrderItems which reference Products)</li>
+            </ul>
+            
+            <p>This kind of system is similar to what you might find in e-commerce applications, inventory management systems, or order processing services.</p>
+        </section>
+
+        <section>
+            <h3>Best Practices for Object Instantiation</h3>
+            
+            <p>To wrap up, here are some best practices to follow when designing and using classes for instantiation:</p>
+            
+            <h4>Design for Instantiation</h4>
+            <ul>
+                <li><strong>Keep constructors simple:</strong> Focus on initializing attributes rather than complex logic</li>
+                <li><strong>Validate inputs:</strong> Check parameters for validity to ensure objects start in a good state</li>
+                <li><strong>Provide defaults:</strong> Use default parameter values for optional attributes</li>
+                <li><strong>Use factory methods:</strong> For complex instantiation scenarios, provide class methods</li>
+                <li><strong>Consider immutability:</strong> For value objects, consider making them immutable after creation</li>
+            </ul>
+            
+            <h4>Implementation Tips</h4>
+            <ul>
+                <li><strong>Avoid mutable defaults:</strong> Never use mutable objects as default parameter values</li>
+                <li><strong>Call parent initializers:</strong> Always call <code>super().__init__()</code> in subclasses</li>
+                <li><strong>Minimize side effects:</strong> Constructors should focus on initialization, not actions</li>
+                <li><strong>Separate concerns:</strong> Use patterns like Builder for complex creation processes</li>
+                <li><strong>Document parameters:</strong> Clearly document what each parameter does</li>
+            </ul>
+            
+            <h4>Usage Guidelines</h4>
+            <ul>
+                <li><strong>Be explicit:</strong> Use keyword arguments for clarity in complex constructors</li>
+                <li><strong>Prefer composition:</strong> Compose objects rather than creating deep inheritance hierarchies</li>
+                <li><strong>Use design patterns:</strong> Apply appropriate patterns for different instantiation needs</li>
+                <li><strong>Follow conventions:</strong> Adhere to Python's conventions for special methods</li>
+                <li><strong>Test initialization:</strong> Write tests that verify objects are properly initialized</li>
+            </ul>
+            
+            <div class="concept-highlight">
+                <p><strong>Final thought:</strong> Good object instantiation design creates a foundation for robust, maintainable code. By following these practices, you'll create classes that are easy to use correctly and hard to use incorrectly.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Conclusion</h3>
+            <p>Object instantiation is a fundamental aspect of object-oriented programming in Python. We've explored the mechanics of how objects are created, different patterns for instantiation, and best practices to follow. By understanding these concepts, you'll be able to design classes that are intuitive to use and create objects that behave predictably.</p>
+            
+            <p>Remember that instantiation is just the beginning of an object's lifecycle. After an object is created, it will be used, possibly modified, and eventually destroyed. Good instantiation design sets the stage for the rest of the object's life.</p>
+            
+            <div class="practice-exercise">
+                <h4>Practice Exercise</h4>
+                <p>Design and implement a <code>BankAccount</code> class with the following features:</p>
+                <ol>
+                    <li>Regular constructor for creating accounts with owner name, account number, and initial balance</li>
+                    <li>Factory method for creating a joint account with multiple owners</li>
+                    <li>Builder pattern for creating accounts with various optional features (overdraft protection, interest rate, etc.)</li>
+                    <li>Proper validation to ensure initial balance is not negative</li>
+                    <li>Track all created accounts using a class variable</li>
+                </ol>
+                <p>Test your implementation by creating different types of accounts using the various instantiation methods you've provided.</p>
+            </div>
+        </section>
+
+        <section class="additional-resources">
+            <h3>Additional Resources</h3>
+            <ul>
+                <li><a href="https://docs.python.org/3/reference/datamodel.html#object-creation" target="_blank">Python Official Documentation: Object Creation</a></li>
+                <li><a href="https://realpython.com/python-metaclasses/" target="_blank">Real Python: Python Metaclasses</a></li>
+                <li><a href="https://refactoring.guru/design-patterns/creational-patterns" target="_blank">Refactoring Guru: Creational Design Patterns</a></li>
+                <li><a href="https://python-patterns.guide/" target="_blank">Python Patterns Guide</a></li>
+                <li>Recommended Book: "Fluent Python" by Luciano Ramalho (Chapters on Object Creation)</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

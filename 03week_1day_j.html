@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Classes vs. JavaScript Classes/Prototypes</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Classes vs. JavaScript Classes/Prototypes</h1>
+        <h2>Week 3: Monday Afternoon Session</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>Introduction: From JavaScript to Python Classes</h3>
+            <p>Welcome JavaScript developers!</p>
+            
+            <p>As a JavaScript developer transitioning to Python, you'll find both similarities and key differences in how these languages implement object-oriented programming. While JavaScript has evolved to include class syntax in ES6+, it's still prototype-based under the hood. Python, on the other hand, has had class-based OOP as a core feature since its inception. Understanding these differences will help you become a more effective Python developer while leveraging your existing JavaScript knowledge.</p>
+            
+            <div class="concept-highlight">
+                <p><strong>Mental model shift:</strong> Think of JavaScript as retrofitting class-like behavior onto its prototype system, whereas Python was designed from the ground up with classes in mind. JavaScript's class syntax is syntactic sugar over its prototype mechanism, while Python's classes are fundamental to the language design.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Basic Class Definition: Syntax Comparison</h3>
+            
+            <p>Let's start by comparing the basic syntax for defining classes in both languages:</p>
+            
+            <div class="code-example">
+                <p><strong>JavaScript Class (ES6+)</strong></p>
+                <pre><code>class Person {
+  constructor(name, age) {
+    this.name = name;
+    this.age = age;
+  }
+  
+  greet() {
+    return `Hello, my name is ${this.name} and I am ${this.age} years old.`;
+  }
+  
+  // Static method
+  static createAnonymous() {
+    return new Person('Anonymous', 0);
+  }
+}</code></pre>
+
+                <p><strong>Python Class</strong></p>
+                <pre><code>class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+    
+    def greet(self):
+        return f"Hello, my name is {self.name} and I am {self.age} years old."
+    
+    # Static method
+    @staticmethod
+    def create_anonymous():
+        return Person('Anonymous', 0)</code></pre>
+            </div>
+            
+            <p>Key syntax differences to note:</p>
+            <ul>
+                <li>Python uses <code>:</code> and indentation instead of <code>{}</code> to define blocks</li>
+                <li>Python's constructor is named <code>__init__</code> rather than <code>constructor</code></li>
+                <li>Python methods explicitly declare <code>self</code> as their first parameter</li>
+                <li>Python uses decorators like <code>@staticmethod</code> instead of the <code>static</code> keyword</li>
+                <li>Python uses snake_case naming convention rather than camelCase</li>
+            </ul>
+            
+            <div class="concept-highlight">
+                <p><strong>The explicit self parameter:</strong> Perhaps the most striking difference is Python's explicit <code>self</code> parameter. While JavaScript implicitly provides <code>this</code> in methods, Python requires you to explicitly declare and use <code>self</code>. This makes the code more explicit and avoids some of the confusion around <code>this</code> binding in JavaScript.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Creating and Using Objects</h3>
+            
+            <p>The process of instantiating objects and calling methods is quite similar in both languages, with some subtle differences:</p>
+            
+            <div class="code-example">
+                <p><strong>JavaScript</strong></p>
+                <pre><code>// Creating objects
+const alice = new Person('Alice', 30);
+const anonymous = Person.createAnonymous();
+
+// Using objects
+console.log(alice.name);  // Alice
+console.log(alice.greet());  // Hello, my name is Alice and I am 30 years old.
+console.log(anonymous.greet());  // Hello, my name is Anonymous and I am 0 years old.</code></pre>
+
+                <p><strong>Python</strong></p>
+                <pre><code># Creating objects
+alice = Person('Alice', 30)
+anonymous = Person.create_anonymous()
+
+# Using objects
+print(alice.name)  # Alice
+print(alice.greet())  # Hello, my name is Alice and I am 30 years old.
+print(anonymous.greet())  # Hello, my name is Anonymous and I am 0 years old.</code></pre>
+            </div>
+            
+            <p>Notable similarities and differences:</p>
+            <ul>
+                <li>Both languages use the <code>new</code> keyword for instantiation (though Python doesn't use <code>new</code>)</li>
+                <li>Both use dot notation for accessing properties and methods</li>
+                <li>Both allow static/class methods to be called directly on the class</li>
+                <li>Python uses <code>=</code> for variable assignment without <code>const</code>, <code>let</code>, or <code>var</code></li>
+            </ul>
+            
+            <div class="concept-highlight">
+                <p><strong>No "new" keyword in Python:</strong> In JavaScript, forgetting the <code>new</code> keyword can lead to subtle bugs. Python doesn't use a special keyword for instantiation - you simply call the class as if it were a function. This design choice eliminates an entire class of potential errors.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Constructors and Initialization</h3>
+            
+            <p>Constructors work differently in Python and JavaScript:</p>
+            
+            <div class="code-example">
+                <p><strong>JavaScript Constructor</strong></p>
+                <pre><code>class Product {
+  constructor(name, price) {
+    this.name = name;
+    this.price = price;
+    this.created = new Date();
+    
+    // Constructor can contain logic
+    if (price < 0) {
+      throw new Error("Price cannot be negative");
+    }
+    
+    // Constructor implicitly returns the new object
+  }
+}</code></pre>
+
+                <p><strong>Python Constructor</strong></p>
+                <pre><code>class Product:
+    def __init__(self, name, price):
+        self.name = name
+        self.price = price
+        
+        import datetime
+        self.created = datetime.datetime.now()
+        
+        # __init__ can contain logic
+        if price < 0:
+            raise ValueError("Price cannot be negative")
+        
+        # __init__ should not return anything</code></pre>
+            </div>
+            
+            <p>Key differences:</p>
+            <ul>
+                <li>Python uses <code>__init__</code> rather than <code>constructor</code></li>
+                <li>Python's <code>__init__</code> method shouldn't return a value (it's not actually creating the object)</li>
+                <li>Python errors are raised with <code>raise ExceptionType("message")</code> rather than <code>throw new Error("message")</code></li>
+                <li>Python generally imports modules when needed rather than having global access like JavaScript's <code>Date</code></li>
+            </ul>
+            
+            <div class="concept-highlight">
+                <p><strong>Two-phase initialization in Python:</strong> In Python, object creation is actually a two-step process: <code>__new__</code> creates the object, and <code>__init__</code> initializes it. As a beginner, you'll rarely need to override <code>__new__</code>, but it's helpful to understand that <code>__init__</code> doesn't actually create the object—it just sets up an already-created object.</p>
+            </div>
+            
+            <p>Default argument values are handled similarly in both languages, but with different syntax:</p>
+            
+            <div class="code-example">
+                <p><strong>JavaScript Default Parameters</strong></p>
+                <pre><code>class User {
+  constructor(username, isAdmin = false, level = 1) {
+    this.username = username;
+    this.isAdmin = isAdmin;
+    this.level = level;
+  }
+}</code></pre>
+
+                <p><strong>Python Default Parameters</strong></p>
+                <pre><code>class User:
+    def __init__(self, username, is_admin = False, level = 1):
+        self.username = username
+        self.is_admin = is_admin
+        self.level = level</code></pre>
+            </div>
+            
+            <div class="concept-highlight">
+                <p><strong>Caution with mutable defaults in Python:</strong> One key difference not shown above is that Python has a gotcha with mutable default arguments. If you use a mutable object (like a list or dictionary) as a default parameter value, it's created once when the function is defined, not each time the function is called. This can lead to unexpected behavior:</p>
+                
+                <pre><code># This can cause problems
+class User:
+    def __init__(self, username, roles=[]):  # This list is shared across all instances!
+        self.username = username
+        self.roles = roles
+
+# Correct approach
+class User:
+    def __init__(self, username, roles=None):
+        self.username = username
+        self.roles = roles if roles is not None else []</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h3>Properties and Access Control</h3>
+            
+            <p>JavaScript and Python have different approaches to properties and access control:</p>
+            
+            <div class="code-example">
+                <p><strong>JavaScript Getters and Setters</strong></p>
+                <pre><code>class Circle {
+  constructor(radius) {
+    this._radius = radius;  // Convention: underscore for "private"
+  }
+  
+  // Getter
+  get radius() {
+    return this._radius;
+  }
+  
+  // Setter with validation
+  set radius(value) {
+    if (value <= 0) {
+      throw new Error("Radius must be positive");
+    }
+    this._radius = value;
+  }
+  
+  // Computed property
+  get area() {
+    return Math.PI * this._radius * this._radius;
+  }
+}</code></pre>
+
+                <p><strong>Python Properties</strong></p>
+                <pre><code>class Circle:
+    def __init__(self, radius):
+        self._radius = radius  # Convention: underscore for "private"
+    
+    # Property getter
+    @property
+    def radius(self):
+        return self._radius
+    
+    # Property setter with validation
+    @radius.setter
+    def radius(self, value):
+        if value <= 0:
+            raise ValueError("Radius must be positive")
+        self._radius = value
+    
+    # Computed property
+    @property
+    def area(self):
+        import math
+        return math.pi * self._radius * self._radius</code></pre>
+            </div>
+            
+            <p>Using these properties is similar in both languages:</p>
+            
+            <div class="code-example">
+                <p><strong>JavaScript</strong></p>
+                <pre><code>const circle = new Circle(5);
+console.log(circle.radius);  // 5 (calls the getter)
+console.log(circle.area);    // 78.54... (calls the getter)
+
+circle.radius = 10;          // Calls the setter
+console.log(circle.area);    // 314.16... (calls the getter)
+
+try {
+  circle.radius = -1;        // Throws an error
+} catch (e) {
+  console.error(e.message);  // "Radius must be positive"
+}</code></pre>
+
+                <p><strong>Python</strong></p>
+                <pre><code>circle = Circle(5)
+print(circle.radius)  # 5 (calls the getter)
+print(circle.area)    # 78.54... (calls the getter)
+
+circle.radius = 10    # Calls the setter
+print(circle.area)    # 314.16... (calls the getter)
+
+try:
+    circle.radius = -1  # Raises an error
+except ValueError as e:
+    print(e)  # "Radius must be positive"</code></pre>
+            </div>
+            
+            <p>Key differences in property systems:</p>
+            <ul>
+                <li>Python uses decorators (<code>@property</code>, <code>@name.setter</code>) rather than <code>get</code>/<code>set</code> keywords</li>
+                <li>JavaScript's private fields are evolving (with <code>#privateField</code> syntax in newer versions), but Python still relies mainly on conventions</li>
+                <li>Both languages use underscore prefix as a convention for "private" attributes, but neither enforces true privacy</li>
+            </ul>
+            
+            <div class="concept-highlight">
+                <p><strong>Python's privacy model:</strong> Python follows a "we're all consenting adults here" philosophy. Instead of strict access control, it uses conventions (like leading underscores for private attributes) and documentation to indicate how things should be used. There's a name mangling feature for attributes starting with double underscores (e.g., <code>__attr</code>), but it's more to prevent accidental name collisions in inheritance than to enforce privacy.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Class vs. Instance Attributes</h3>
+            
+            <p>Both JavaScript and Python distinguish between class-level and instance-level attributes, but they do so differently:</p>
+            
+            <div class="code-example">
+                <p><strong>JavaScript Static Properties and Methods</strong></p>
+                <pre><code>class MathUtils {
+  // Static property (class-level)
+  static PI = 3.14159;
+  
+  // Instance property (initialized in constructor)
+  constructor(value) {
+    this.value = value;
+  }
+  
+  // Instance method
+  square() {
+    return this.value * this.value;
+  }
+  
+  // Static method (class-level)
+  static sum(a, b) {
+    return a + b;
+  }
+}</code></pre>
+
+                <p><strong>Python Class and Instance Attributes</strong></p>
+                <pre><code>class MathUtils:
+    # Class attribute (shared by all instances)
+    PI = 3.14159
+    
+    def __init__(self, value):
+        # Instance attribute (unique to each instance)
+        self.value = value
+    
+    # Instance method
+    def square(self):
+        return self.value * self.value
+    
+    # Static method
+    @staticmethod
+    def sum(a, b):
+        return a + b</code></pre>
+            </div>
+            
+            <p>Using these attributes and methods:</p>
+            
+            <div class="code-example">
+                <p><strong>JavaScript</strong></p>
+                <pre><code>// Accessing static property and method
+console.log(MathUtils.PI);  // 3.14159
+console.log(MathUtils.sum(5, 3));  // 8
+
+// Using instance
+const math = new MathUtils(4);
+console.log(math.value);  // 4
+console.log(math.square());  // 16
+
+// Static members aren't available on instances
+console.log(math.PI);  // undefined
+// And instance members aren't available on the class
+console.log(MathUtils.value);  // undefined</code></pre>
+
+                <p><strong>Python</strong></p>
+                <pre><code># Accessing class attribute and static method
+print(MathUtils.PI)  # 3.14159
+print(MathUtils.sum(5, 3))  # 8
+
+# Using instance
+math = MathUtils(4)
+print(math.value)  # 4
+print(math.square())  # 16
+
+# Here's a key difference: class attributes ARE accessible from instances
+print(math.PI)  # 3.14159
+# But instance attributes aren't available on the class
+print(MathUtils.value)  # AttributeError</code></pre>
+            </div>
+            
+            <p>A critical difference lies in how Python handles class attributes:</p>
+            
+            <div class="code-example">
+                <p><strong>Python Class Attribute Behavior (Beware!)</strong></p>
+                <pre><code>class Counter:
+    count = 0  # Class attribute shared by all instances
+    
+    def __init__(self, name):
+        self.name = name  # Instance attribute
+    
+    def increment(self):
+        self.count += 1  # CAUTION: This creates an instance attribute!
+        return self.count
+
+# Create counters
+c1 = Counter("Counter 1")
+c2 = Counter("Counter 2")
+
+print(Counter.count)  # 0
+print(c1.count)       # 0
+print(c2.count)       # 0
+
+# Increment c1's count
+c1.increment()
+print(c1.count)       # 1
+print(c2.count)       # 0 (unchanged!)
+print(Counter.count)  # 0 (unchanged!)
+
+# Why? Because c1.count += 1 created a new instance attribute that shadows the class attribute!
+
+# Correct way to modify class attribute:
+Counter.count += 10
+print(Counter.count)  # 10
+print(c2.count)       # 10
+print(c1.count)       # 1 (still has its own instance attribute)</code></pre>
+            </div>
+            
+            <div class="concept-highlight">
+                <p><strong>Class attribute shadowing:</strong> One of the most confusing aspects of Python for JavaScript developers is this shadowing behavior. When you access <code>instance.class_attribute</code>, Python first checks if the instance has that attribute. If not, it looks for a class attribute with that name. But if you assign to <code>instance.class_attribute</code>, it always creates or updates an instance attribute, which then shadows the class attribute for that specific instance.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Inheritance</h3>
+            
+            <p>Inheritance syntax is similar in both languages, but with some important implementation differences:</p>
+            
+            <div class="code-example">
+                <p><strong>JavaScript Inheritance</strong></p>
+                <pre><code>class Animal {
+  constructor(name) {
+    this.name = name;
+  }
+  
+  speak() {
+    return `${this.name} makes a noise.`;
+  }
+}
+
+class Dog extends Animal {
+  constructor(name, breed) {
+    super(name);  // Call parent constructor
+    this.breed = breed;
+  }
+  
+  speak() {
+    return `${this.name} barks!`;  // Override method
+  }
+  
+  fetch() {
+    return `${this.name} fetches the ball.`;  // New method
+  }
+}</code></pre>
+
+                <p><strong>Python Inheritance</strong></p>
+                <pre><code>class Animal:
+    def __init__(self, name):
+        self.name = name
+    
+    def speak(self):
+        return f"{self.name} makes a noise."
+
+class Dog(Animal):  # Parentheses instead of 'extends'
+    def __init__(self, name, breed):
+        super().__init__(name)  # Call parent constructor
+        self.breed = breed
+    
+    def speak(self):
+        return f"{self.name} barks!"  # Override method
+    
+    def fetch(self):
+        return f"{self.name} fetches the ball."  # New method</code></pre>
+            </div>
+            
+            <p>Using these classes:</p>
+            
+            <div class="code-example">
+                <p><strong>JavaScript</strong></p>
+                <pre><code>const animal = new Animal("Animal");
+const dog = new Dog("Buddy", "Golden Retriever");
+
+console.log(animal.speak());  // "Animal makes a noise."
+console.log(dog.speak());     // "Buddy barks!"
+console.log(dog.fetch());     // "Buddy fetches the ball."
+
+// Checking inheritance
+console.log(dog instanceof Animal);  // true
+console.log(dog instanceof Dog);     // true</code></pre>
+
+                <p><strong>Python</strong></p>
+                <pre><code>animal = Animal("Animal")
+dog = Dog("Buddy", "Golden Retriever")
+
+print(animal.speak())  # "Animal makes a noise."
+print(dog.speak())     # "Buddy barks!"
+print(dog.fetch())     # "Buddy fetches the ball."
+
+# Checking inheritance
+print(isinstance(dog, Animal))  # True
+print(isinstance(dog, Dog))     # True
+print(issubclass(Dog, Animal))  # True</code></pre>
+            </div>
+            
+            <p>Important differences in inheritance:</p>
+            <ul>
+                <li>Python uses parentheses <code>Class(Parent)</code> instead of the <code>extends</code> keyword</li>
+                <li>Both use <code>super()</code> to call the parent class's methods, but the syntax differs slightly</li>
+                <li>Python supports multiple inheritance, which JavaScript doesn't</li>
+                <li>Python uses <code>isinstance()</code> and <code>issubclass()</code> instead of the <code>instanceof</code> operator</li>
+            </ul>
+            
+            <h4>Multiple Inheritance in Python</h4>
+            <p>Unlike JavaScript, Python supports inheriting from multiple parent classes:</p>
+            
+            <div class="code-example">
+                <pre><code>class Swimmer:
+    def swim(self):
+        return "Swimming"
+
+class Flyer:
+    def fly(self):
+        return "Flying"
+
+class Duck(Swimmer, Flyer):  # Multiple inheritance
+    def __init__(self, name):
+        self.name = name
+    
+    def speak(self):
+        return "Quack!"
+
+# Using the Duck class
+duck = Duck("Donald")
+print(duck.swim())  # "Swimming"
+print(duck.fly())   # "Flying"
+print(duck.speak()) # "Quack!"</code></pre>
+            </div>
+            
+            <div class="concept-highlight">
+                <p><strong>Method Resolution Order (MRO):</strong> With multiple inheritance, Python needs to determine which parent class's method to call when methods are inherited from multiple parents. Python uses a deterministic algorithm called C3 linearization to establish the Method Resolution Order (MRO). You can view a class's MRO with <code>ClassName.__mro__</code> or <code>ClassName.mro()</code>.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Prototypes vs. Classes</h3>
+            
+            <p>JavaScript's class syntax is just syntactic sugar over its prototype-based inheritance. Understanding the underlying difference helps explain some behavioral differences:</p>
+            
+            <div class="code-example">
+                <p><strong>JavaScript Class vs. Prototype Syntax</strong></p>
+                <pre><code>// Modern class syntax
+class Person {
+  constructor(name) {
+    this.name = name;
+  }
+  
+  greet() {
+    return `Hello, my name is ${this.name}`;
+  }
+}
+
+// Equivalent prototype syntax (pre-ES6)
+function PersonProto(name) {
+  this.name = name;
+}
+
+PersonProto.prototype.greet = function() {
+  return `Hello, my name is ${this.name}`;
+};</code></pre>
+            </div>
+            
+            <p>Key conceptual differences between JavaScript's prototype system and Python's class system:</p>
+            
+            <ul>
+                <li><strong>Object Creation:</strong> JavaScript objects delegate to their prototype; Python objects are instances created from class blueprints</li>
+                <li><strong>Method Storage:</strong> In JavaScript, methods live on the prototype and are shared; in Python, methods are defined in the class</li>
+                <li><strong>Dynamic Changes:</strong> In JavaScript, you can modify prototypes at runtime affecting all objects; in Python, modifying a class affects future instances but not existing ones typically</li>
+                <li><strong>Inheritance Chain:</strong> JavaScript uses a prototype chain; Python uses a class hierarchy</li>
+            </ul>
+            
+            <div class="concept-highlight">
+                <p><strong>Dynamic vs. Static Nature:</strong> JavaScript's prototype system is inherently more dynamic than Python's class system. In JavaScript, you can modify a class's prototype at runtime, and all existing instances will immediately have access to the new methods. In Python, adding methods to a class at runtime only affects future instances, not existing ones (unless you modify the class's <code>__dict__</code> directly, which is generally discouraged).</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Special Methods (Python Magic Methods)</h3>
+            
+            <p>Python has special methods (surrounded by double underscores) that let classes integrate with Python's built-in operators and functions. These are somewhat similar to JavaScript's Symbol-based methods but more extensive:</p>
+            
+            <div class="code-example">
+                <p><strong>JavaScript Examples</strong></p>
+                <pre><code>class CustomArray {
+  constructor(...items) {
+    this.items = items;
+  }
+  
+  // Iterable protocol
+  [Symbol.iterator]() {
+    let index = 0;
+    return {
+      next: () => {
+        if (index < this.items.length) {
+          return { value: this.items[index++], done: false };
+        } else {
+          return { done: true };
+        }
+      }
+    };
+  }
+  
+  // Custom string representation
+  toString() {
+    return `[${this.items.join(', ')}]`;
+  }
+  
+  // Array-like access
+  get length() {
+    return this.items.length;
+  }
+}
+
+const arr = new CustomArray(1, 2, 3);
+console.log(arr.toString());  // "[1, 2, 3]"
+console.log([...arr]);        // [1, 2, 3] (spreads using iterator)
+console.log(arr.length);      // 3</code></pre>
+
+                <p><strong>Python Equivalent with Magic Methods</strong></p>
+                <pre><code>class CustomArray:
+    def __init__(self, *items):
+        self.items = items
+    
+    # Iterator protocol
+    def __iter__(self):
+        return iter(self.items)
+    
+    # String representation
+    def __str__(self):
+        return f"[{', '.join(str(item) for item in self.items)}]"
+    
+    # Developer representation 
+    def __repr__(self):
+        return f"CustomArray{self.items}"
+    
+    # Length function
+    def __len__(self):
+        return len(self.items)
+    
+    # Index access - get item
+    def __getitem__(self, index):
+        return self.items[index]
+
+# Using the class
+arr = CustomArray(1, 2, 3)
+print(str(arr))      # "[1, 2, 3]"
+print(list(arr))     # [1, 2, 3] (converts using iterator)
+print(len(arr))      # 3
+print(arr[1])        # 2 (uses __getitem__)</code></pre>
+            </div>
+            
+            <p>Python has many special methods for different operations:</p>
+            
+            <div class="code-example">
+                <p><strong>Python Vector Class with Special Methods</strong></p>
+                <pre><code>class Vector:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    
+    # String representation
+    def __str__(self):
+        return f"({self.x}, {self.y})"
+    
+    # Addition (v1 + v2)
+    def __add__(self, other):
+        return Vector(self.x + other.x, self.y + other.y)
+    
+    # Subtraction (v1 - v2)
+    def __sub__(self, other):
+        return Vector(self.x - other.x, self.y - other.y)
+    
+    # Multiplication by scalar (v * 3)
+    def __mul__(self, scalar):
+        return Vector(self.x * scalar, self.y * scalar)
+    
+    # Reverse multiplication (3 * v)
+    def __rmul__(self, scalar):
+        return self.__mul__(scalar)
+    
+    # Equality (v1 == v2)
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+    
+    # Length (abs(v) or magnitude)
+    def __abs__(self):
+        return (self.x**2 + self.y**2)**0.5
+
+# Using the Vector class
+v1 = Vector(3, 4)
+v2 = Vector(1, 2)
+
+print(v1 + v2)        # (4, 6)
+print(v1 - v2)        # (2, 2)
+print(v1 * 2)         # (6, 8)
+print(3 * v2)         # (3, 6)
+print(v1 == Vector(3, 4))  # True
+print(abs(v1))        # 5.0</code></pre>
+            </div>
+            
+            <div class="concept-highlight">
+                <p><strong>Operator overloading:</strong> Python's special methods allow for operator overloading, making your classes work with Python's built-in operators and functions. This results in more readable, intuitive code. JavaScript has limited support for this through recent features like Symbol methods, but it's not as extensive or widely used.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Modules and Imports</h3>
+            
+            <p>Class organization differs between JavaScript and Python:</p>
+            
+            <div class="code-example">
+                <p><strong>JavaScript Module Export</strong></p>
+                <pre><code>// person.js
+class Person {
+  constructor(name) {
+    this.name = name;
+  }
+  
+  greet() {
+    return `Hello, I'm ${this.name}`;
+  }
+}
+
+// Export the class
+export default Person;
+// Or named export
+// export { Person };</code></pre>
+
+                <p><strong>JavaScript Module Import</strong></p>
+                <pre><code>// main.js
+import Person from './person.js';
+// Or named import
+// import { Person } from './person.js';
+
+const alice = new Person('Alice');
+console.log(alice.greet());</code></pre>
+
+                <p><strong>Python Module Export</strong></p>
+                <pre><code># person.py
+class Person:
+    def __init__(self, name):
+        self.name = name
+    
+    def greet(self):
+        return f"Hello, I'm {self.name}"
+
+# No explicit export needed - all definitions are available</code></pre>
+
+                <p><strong>Python Module Import</strong></p>
+                <pre><code># main.py
+# Import the class
+from person import Person
+# Or import the entire module
+# import person
+
+alice = Person('Alice')
+print(alice.greet())</code></pre>
+            </div>
+            
+            <p>Key differences in modules and imports:</p>
+            <ul>
+                <li>Python doesn't need explicit exports - everything is implicitly available</li>
+                <li>Python has multiple import styles: <code>from module import Class</code> or <code>import module</code></li>
+                <li>Python module names typically match their filenames (without the <code>.py</code> extension)</li>
+                <li>Python doesn't use relative paths with <code>./</code> in imports</li>
+            </ul>
+            
+            <div class="concept-highlight">
+                <p><strong>Module system differences:</strong> JavaScript's module system was added later in the language's evolution, whereas Python's was there from the beginning. JavaScript requires explicit exports and has a richer syntax for managing imports/exports. Python's approach is simpler but less granular - typically one class per file is less common, and you often have multiple related classes in the same module.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Practical Example: Building a Todo App</h3>
+            
+            <p>Let's tie everything together with a practical example - a simple todo list application implemented in both languages:</p>
+            
+            <div class="code-example">
+                <p><strong>JavaScript Todo App</strong></p>
+                <pre><code>// Define a Todo item class
+class TodoItem {
+  constructor(title, description = "") {
+    this.title = title;
+    this.description = description;
+    this.completed = false;
+    this.createdAt = new Date();
+    this.completedAt = null;
+  }
+  
+  complete() {
+    this.completed = true;
+    this.completedAt = new Date();
+  }
+  
+  toString() {
+    const status = this.completed ? "✓" : "□";
+    return `[${status}] ${this.title}`;
+  }
+}
+
+// Define a TodoList class
+class TodoList {
+  constructor(name) {
+    this.name = name;
+    this.items = [];
+  }
+  
+  addItem(title, description = "") {
+    const item = new TodoItem(title, description);
+    this.items.push(item);
+    return item;
+  }
+  
+  completeItem(index) {
+    if (index >= 0 && index < this.items.length) {
+      this.items[index].complete();
+      return true;
+    }
+    return false;
+  }
+  
+  getCompletedItems() {
+    return this.items.filter(item => item.completed);
+  }
+  
+  getPendingItems() {
+    return this.items.filter(item => !item.completed);
+  }
+  
+  toString() {
+    let result = `=== ${this.name} ===\n`;
+    
+    if (this.items.length === 0) {
+      result += "No items\n";
+    } else {
+      this.items.forEach((item, i) => {
+        result += `${i + 1}. ${item}\n`;
+      });
+    }
+    
+    return result;
+  }
+}
+
+// Using the Todo classes
+const todoList = new TodoList("My Tasks");
+todoList.addItem("Learn JavaScript");
+todoList.addItem("Learn Python", "Focus on OOP differences");
+todoList.addItem("Build a project");
+
+console.log(todoList.toString());
+
+// Complete an item
+todoList.completeItem(0);
+console.log("\nAfter completing first item:");
+console.log(todoList.toString());
+
+// Check completed and pending
+console.log("\nPending:", todoList.getPendingItems().length);
+console.log("Completed:", todoList.getCompletedItems().length);</code></pre>
+
+                <p><strong>Python Todo App</strong></p>
+                <pre><code>import datetime
+
+class TodoItem:
+    def __init__(self, title, description=""):
+        self.title = title
+        self.description = description
+        self.completed = False
+        self.created_at = datetime.datetime.now()
+        self.completed_at = None
+    
+    def complete(self):
+        self.completed = True
+        self.completed_at = datetime.datetime.now()
+    
+    def __str__(self):
+        status = "✓" if self.completed else "□"
+        return f"[{status}] {self.title}"
+
+class TodoList:
+    def __init__(self, name):
+        self.name = name
+        self.items = []
+    
+    def add_item(self, title, description=""):
+        item = TodoItem(title, description)
+        self.items.append(item)
+        return item
+    
+    def complete_item(self, index):
+        if 0 <= index < len(self.items):
+            self.items[index].complete()
+            return True
+        return False
+    
+    def get_completed_items(self):
+        return [item for item in self.items if item.completed]
+    
+    def get_pending_items(self):
+        return [item for item in self.items if not item.completed]
+    
+    def __str__(self):
+        result = f"=== {self.name} ===\n"
+        
+        if len(self.items) == 0:
+            result += "No items\n"
+        else:
+            for i, item in enumerate(self.items):
+                result += f"{i + 1}. {item}\n"
+        
+        return result
+
+# Using the Todo classes
+todo_list = TodoList("My Tasks")
+todo_list.add_item("Learn JavaScript")
+todo_list.add_item("Learn Python", "Focus on OOP differences")
+todo_list.add_item("Build a project")
+
+print(todo_list)
+
+# Complete an item
+todo_list.complete_item(0)
+print("\nAfter completing first item:")
+print(todo_list)
+
+# Check completed and pending
+print("\nPending:", len(todo_list.get_pending_items()))
+print("Completed:", len(todo_list.get_completed_items()))</code></pre>
+            </div>
+            
+            <p>This example demonstrates:</p>
+            <ul>
+                <li>Class definitions and inheritance</li>
+                <li>Constructors and initialization</li>
+                <li>Instance methods</li>
+                <li>String representation</li>
+                <li>Composition (TodoList contains TodoItems)</li>
+                <li>List operations (filtering, comprehensions)</li>
+            </ul>
+            
+            <p>Despite the syntactic differences, the structure and logic are remarkably similar. This highlights that once you understand the core OOP concepts, transitioning between languages is mostly about learning syntax differences and language-specific idioms.</p>
+            
+            <div class="concept-highlight">
+                <p><strong>Idiomatic differences:</strong> While the Todo app implementations look similar, there are subtle idiomatic differences. JavaScript tends to use more functional programming patterns (like <code>filter</code>), while Python often uses list comprehensions. Python uses special methods like <code>__str__</code> where JavaScript uses named methods like <code>toString</code>. Learning these idiomatic differences is key to writing "Pythonic" code rather than "JavaScript in Python".</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Conclusion: Embracing Python's OOP Style</h3>
+            
+            <p>As a JavaScript developer learning Python, embracing Python's approach to object-oriented programming will make your transition smoother. Here are some key takeaways:</p>
+            
+            <h4>Key Similarities</h4>
+            <ul>
+                <li>Both languages support classes, inheritance, and encapsulation</li>
+                <li>Both use similar dot notation for accessing attributes and methods</li>
+                <li>Both allow for instance creation, method overriding, and polymorphism</li>
+                <li>Both support various levels of abstraction in OOP design</li>
+            </ul>
+            
+            <h4>Key Differences to Remember</h4>
+            <ul>
+                <li>Python uses <code>self</code> explicitly; JavaScript uses <code>this</code> implicitly</li>
+                <li>Python constructors are named <code>__init__</code> and don't create the object (they initialize it)</li>
+                <li>Python uses naming conventions for privacy, not strict access modifiers</li>
+                <li>Python supports multiple inheritance; JavaScript doesn't</li>
+                <li>Python has a richer set of special methods ("magic methods") for operator overloading</li>
+                <li>Class attributes in Python behave differently than static properties in JavaScript</li>
+                <li>Python follows different naming conventions (snake_case vs. camelCase)</li>
+            </ul>
+            
+            <div class="concept-highlight">
+                <p><strong>Becoming Pythonic:</strong> The goal isn't just to write working Python code, but to write "Pythonic" code—code that follows Python's idioms and conventions. This means embracing Python's design philosophy, including "Explicit is better than implicit" (hence <code>self</code>), "Simple is better than complex," and "Readability counts." As you continue learning Python, focus not just on making your code work, but on making it clear, readable, and idiomatic.</p>
+            </div>
+            
+            <p>Your JavaScript background gives you a solid foundation in object-oriented concepts. By understanding the syntactic and behavioral differences outlined in this tutorial, you'll be well-equipped to write effective Python classes and leverage your existing OOP knowledge in this new language.</p>
+            
+            <div class="practice-exercise">
+                <h4>Practice Exercise</h4>
+                <p>Take a small JavaScript class you've written before and convert it to Python, paying special attention to:</p>
+                <ol>
+                    <li>Converting constructor to <code>__init__</code> with explicit <code>self</code> parameter</li>
+                    <li>Changing camelCase names to snake_case</li>
+                    <li>Using appropriate Python special methods (<code>__str__</code>, <code>__eq__</code>, etc.)</li>
+                    <li>Implementing properties using the <code>@property</code> decorator instead of getters/setters</li>
+                    <li>Handling class vs. instance attributes correctly</li>
+                </ol>
+                <p>This exercise will help reinforce the differences and similarities between JavaScript and Python OOP approaches.</p>
+            </div>
+        </section>
+
+        <section class="additional-resources">
+            <h3>Additional Resources</h3>
+            <ul>
+                <li><a href="https://docs.python.org/3/tutorial/classes.html" target="_blank">Python Official Documentation on Classes</a></li>
+                <li><a href="https://realpython.com/python3-object-oriented-programming/" target="_blank">Real Python: Object-Oriented Programming in Python 3</a></li>
+                <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes" target="_blank">MDN: JavaScript Classes</a></li>
+                <li><a href="https://realpython.com/inheritance-composition-python/" target="_blank">Real Python: Inheritance and Composition in Python</a></li>
+                <li><a href="https://www.pythoncheatsheet.org/" target="_blank">Python Cheatsheet</a></li>
+                <li>Recommended Book: "Fluent Python" by Luciano Ramalho</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

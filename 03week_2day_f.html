@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Methods and Static Methods in Python</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 3: Object-Oriented Programming Advanced Concepts</h2>
+        <h3>Class Methods and Static Methods</h3>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>Understanding Method Types in Python</h3>
+            <p>
+                Python offers three different types of methods within a class: instance methods, class methods, and static methods. 
+                Each type serves a specific purpose and has unique characteristics that make it suitable for different scenarios.
+            </p>
+            
+            <p>
+                Today, we'll focus on class methods and static methods, exploring their syntax, use cases, and how they differ from regular instance methods.
+                Understanding when and how to use each type of method will allow you to design more elegant, maintainable, and efficient object-oriented code.
+            </p>
+            
+            <p>
+                By the end of this session, you'll be able to:
+            </p>
+            <ul>
+                <li>Distinguish between instance methods, class methods, and static methods</li>
+                <li>Use the <code>@classmethod</code> and <code>@staticmethod</code> decorators properly</li>
+                <li>Implement alternative constructors using class methods</li>
+                <li>Apply these concepts in real-world scenarios common to web development</li>
+            </ul>
+        </section>
+
+        <section class="folder_structure">
+            <h3>Today's File Structure</h3>
+            <p>For today's lesson, we'll create a new Python module in our project. Ensure you have the following directory structure:</p>
+            <pre>
+project_root/
+├── class_methods/
+│   ├── __init__.py  (empty file to make the folder a package)
+│   ├── method_types.py
+│   ├── class_methods.py
+│   ├── static_methods.py
+│   ├── factory_methods.py
+│   └── real_world_examples.py
+</pre>
+            <p>All code examples will be saved in these files, allowing you to organize and revisit these concepts easily.</p>
+        </section>
+
+        <section class="method_types">
+            <h3>Understanding Different Method Types</h3>
+            <p>Let's start by exploring the three types of methods in Python and how they differ from each other. Create a file named <code>method_types.py</code> with the following code:</p>
+            
+            <pre>
+# File: class_methods/method_types.py
+
+class MethodTypes:
+    """A class to demonstrate the different types of methods in Python"""
+    
+    class_variable = "I am a class variable"
+    
+    def __init__(self, instance_variable):
+        self.instance_variable = instance_variable
+    
+    def instance_method(self):
+        """Regular instance method - can access instance and class variables"""
+        print(f"Instance method called")
+        print(f"Can access instance variable: {self.instance_variable}")
+        print(f"Can access class variable: {self.class_variable}")
+        print(f"Self is: {self}")
+        return self
+    
+    @classmethod
+    def class_method(cls):
+        """Class method - can access class variables but not instance variables"""
+        print(f"Class method called")
+        print(f"Can access class variable: {cls.class_variable}")
+        # Would raise an error: print(f"Cannot access instance variable: {self.instance_variable}")
+        print(f"Cls is: {cls}")
+        return cls
+    
+    @staticmethod
+    def static_method():
+        """Static method - cannot access instance or class variables directly"""
+        print(f"Static method called")
+        # Would raise an error: print(f"Cannot access class variable: {MethodTypes.class_variable}")
+        # Would raise an error: print(f"Cannot access instance variable: {self.instance_variable}")
+        print(f"No automatic self or cls parameter")
+        # If needed, can still access class variables via class name
+        print(f"Can explicitly access class variable: {MethodTypes.class_variable}")
+        return "static method return"
+
+
+# Create an instance
+obj = MethodTypes("I am an instance variable")
+
+# Call instance method - requires an instance
+print("\nCalling instance method:")
+result_instance = obj.instance_method()
+print(f"Returns: {result_instance}")
+
+# Call class method - can be called from class or instance
+print("\nCalling class method from instance:")
+result_class1 = obj.class_method()
+print(f"Returns: {result_class1}")
+
+print("\nCalling class method from class:")
+result_class2 = MethodTypes.class_method()
+print(f"Returns: {result_class2}")
+
+# Call static method - can be called from class or instance
+print("\nCalling static method from instance:")
+result_static1 = obj.static_method()
+print(f"Returns: {result_static1}")
+
+print("\nCalling static method from class:")
+result_static2 = MethodTypes.static_method()
+print(f"Returns: {result_static2}")
+
+# Demonstrate what happens when we try to call an instance method from the class
+print("\nTrying to call instance method from class:")
+try:
+    MethodTypes.instance_method()
+except TypeError as e:
+    print(f"Error: {e}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>The <code>MethodTypes</code> class demonstrates the three types of methods in Python:
+                    <ul>
+                        <li><strong>Instance methods</strong>: Regular methods that receive <code>self</code> as the first parameter, giving them access to instance-specific data.</li>
+                        <li><strong>Class methods</strong>: Methods decorated with <code>@classmethod</code> that receive <code>cls</code> as the first parameter, giving them access to class-level data but not instance-specific data.</li>
+                        <li><strong>Static methods</strong>: Methods decorated with <code>@staticmethod</code> that don't receive any automatic first parameter, giving them no direct access to instance or class data.</li>
+                    </ul>
+                </li>
+                <li>We demonstrate how each method can be called:
+                    <ul>
+                        <li>Instance methods can only be called from an instance of the class.</li>
+                        <li>Class methods can be called from either an instance or the class itself.</li>
+                        <li>Static methods can also be called from either an instance or the class itself.</li>
+                    </ul>
+                </li>
+                <li>We show what each method can access:
+                    <ul>
+                        <li>Instance methods can access both instance variables and class variables.</li>
+                        <li>Class methods can access class variables but not instance variables.</li>
+                        <li>Static methods cannot directly access either instance or class variables, but can access class variables through the class name.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h4>Key Differences</h4>
+            <table border="1">
+                <tr>
+                    <th>Feature</th>
+                    <th>Instance Method</th>
+                    <th>Class Method</th>
+                    <th>Static Method</th>
+                </tr>
+                <tr>
+                    <td>First parameter</td>
+                    <td><code>self</code> (instance)</td>
+                    <td><code>cls</code> (class)</td>
+                    <td>None (no automatic parameters)</td>
+                </tr>
+                <tr>
+                    <td>Can access instance variables</td>
+                    <td>Yes</td>
+                    <td>No</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td>Can access class variables</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                    <td>Only through class name</td>
+                </tr>
+                <tr>
+                    <td>Can modify instance state</td>
+                    <td>Yes</td>
+                    <td>No</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td>Can modify class state</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                    <td>Only through class name</td>
+                </tr>
+                <tr>
+                    <td>Can be called from instance</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                </tr>
+                <tr>
+                    <td>Can be called from class</td>
+                    <td>No</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                </tr>
+            </table>
+            
+            <p><strong>Real-world analogy:</strong> Think of a car manufacturing company:</p>
+            <ul>
+                <li><strong>Instance methods</strong> are like operations performed on individual cars (checking a specific car's mileage, starting a specific car, etc.).</li>
+                <li><strong>Class methods</strong> are like operations related to the car model or factory as a whole (counting how many cars of this model were produced, changing the manufacturing process for all future cars, etc.).</li>
+                <li><strong>Static methods</strong> are like utility operations that are related to cars but don't need any specific information about individual cars or the manufacturing process (converting between miles and kilometers, calculating fuel efficiency based on inputs, etc.).</li>
+            </ul>
+        </section>
+
+        <section class="class_methods">
+            <h3>Class Methods in Depth</h3>
+            <p>Let's explore class methods in more detail. Create a file named <code>class_methods.py</code> with the following code:</p>
+            
+            <pre>
+# File: class_methods/class_methods.py
+
+class Student:
+    """A class to represent students"""
+    
+    # Class variables
+    school = "Python Academy"
+    student_count = 0
+    
+    def __init__(self, first_name, last_name, age, grade):
+        # Instance variables
+        self.first_name = first_name
+        self.last_name = last_name
+        self.age = age
+        self.grade = grade
+        
+        # Update the student count
+        Student.student_count += 1
+    
+    def full_name(self):
+        """Return the student's full name"""
+        return f"{self.first_name} {self.last_name}"
+    
+    def is_passing(self):
+        """Check if the student is passing (grade >= 60)"""
+        return self.grade >= 60
+    
+    @classmethod
+    def change_school(cls, new_school):
+        """Change the school name for all students"""
+        cls.school = new_school
+        return f"School changed to {cls.school}"
+    
+    @classmethod
+    def get_student_count(cls):
+        """Get the total number of students"""
+        return cls.student_count
+    
+    @classmethod
+    def from_string(cls, student_string):
+        """Create a student from a comma-separated string: first_name,last_name,age,grade"""
+        first_name, last_name, age, grade = student_string.split(',')
+        # Convert string values to appropriate types
+        age = int(age)
+        grade = float(grade)
+        # Create and return a new Student instance
+        return cls(first_name, last_name, age, grade)
+    
+    @classmethod
+    def create_honor_student(cls, first_name, last_name, age):
+        """Create a student with a grade of 90 (honor student)"""
+        return cls(first_name, last_name, age, 90)
+
+
+# Create students using the constructor
+alice = Student("Alice", "Smith", 15, 85)
+bob = Student("Bob", "Jones", 16, 75)
+
+print(f"Student count: {Student.get_student_count()}")
+print(f"School: {Student.school}")
+
+# Change the school using the class method
+print(Student.change_school("Python College"))
+print(f"Updated school: {Student.school}")
+
+# Verify that the change affected existing instances
+print(f"Alice's school: {alice.school}")
+print(f"Bob's school: {bob.school}")
+
+# Create a student using the alternative constructor from_string
+charlie = Student.from_string("Charlie,Brown,14,95")
+print(f"New student: {charlie.full_name()}, Age: {charlie.age}, Grade: {charlie.grade}")
+print(f"Updated student count: {Student.get_student_count()}")
+
+# Create an honor student
+dave = Student.create_honor_student("Dave", "Miller", 16)
+print(f"Honor student: {dave.full_name()}, Grade: {dave.grade}")
+print(f"Final student count: {Student.get_student_count()}")
+
+# Inheritance example
+class GraduateStudent(Student):
+    """A class to represent graduate students"""
+    
+    graduate_count = 0
+    
+    def __init__(self, first_name, last_name, age, grade, research_area):
+        super().__init__(first_name, last_name, age, grade)
+        self.research_area = research_area
+        GraduateStudent.graduate_count += 1
+    
+    @classmethod
+    def get_graduate_count(cls):
+        """Get the total number of graduate students"""
+        return cls.graduate_count
+
+
+# Create a graduate student
+eve = GraduateStudent("Eve", "Brown", 24, 88, "Machine Learning")
+print(f"\nGraduate student: {eve.full_name()}, Research: {eve.research_area}")
+print(f"Total students: {Student.get_student_count()}")
+print(f"Graduate students: {GraduateStudent.get_graduate_count()}")
+
+# Change the school again through the GraduateStudent class
+GraduateStudent.change_school("Advanced Python Institute")
+print(f"School after change through GraduateStudent: {Student.school}")
+print(f"Eve's school: {eve.school}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>We define a <code>Student</code> class with instance variables (<code>first_name</code>, <code>last_name</code>, etc.) and class variables (<code>school</code>, <code>student_count</code>).</li>
+                <li>We implement several class methods:
+                    <ul>
+                        <li><code>change_school</code>: Modifies a class variable (<code>school</code>) affecting all instances.</li>
+                        <li><code>get_student_count</code>: Retrieves a class variable.</li>
+                        <li><code>from_string</code>: An alternative constructor that creates a <code>Student</code> from a string.</li>
+                        <li><code>create_honor_student</code>: Another alternative constructor that creates a <code>Student</code> with a preset grade.</li>
+                    </ul>
+                </li>
+                <li>We demonstrate how class methods work with inheritance:
+                    <ul>
+                        <li>The <code>GraduateStudent</code> class inherits from <code>Student</code>.</li>
+                        <li>When we call <code>change_school</code> on <code>GraduateStudent</code>, it affects all students, including regular <code>Student</code> instances.</li>
+                        <li>The <code>cls</code> parameter refers to the class that the method was called on, not necessarily the class where the method was defined.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h4>Common Use Cases for Class Methods</h4>
+            <ol>
+                <li><strong>Alternative Constructors</strong>: Creating instances from different types of data (like <code>from_string</code>).</li>
+                <li><strong>Factory Methods</strong>: Creating instances with preset values or in specific states (like <code>create_honor_student</code>).</li>
+                <li><strong>Modifying Class State</strong>: Changing class variables that affect all instances (like <code>change_school</code>).</li>
+                <li><strong>Tracking Class-Level Statistics</strong>: Maintaining counters or other statistics about the class (like <code>get_student_count</code>).</li>
+                <li><strong>Implementing Design Patterns</strong>: Supporting patterns like Singleton, Factory, or Builder.</li>
+            </ol>
+            
+            <p><strong>Real-world analogy:</strong> Class methods are like procedures performed by the management of a company that affect all employees. For example, changing the company name, updating the vacation policy, or tracking the total number of employees. These operations don't target specific employees but rather apply to the company as a whole.</p>
+        </section>
+
+        <section class="static_methods">
+            <h3>Static Methods in Depth</h3>
+            <p>Now let's explore static methods in detail. Create a file named <code>static_methods.py</code> with the following code:</p>
+            
+            <pre>
+# File: class_methods/static_methods.py
+
+import math
+from datetime import date, datetime, timedelta
+
+
+class MathUtils:
+    """A utility class for mathematical operations"""
+    
+    @staticmethod
+    def is_prime(n):
+        """Check if a number is prime"""
+        if n <= 1:
+            return False
+        if n <= 3:
+            return True
+        if n % 2 == 0 or n % 3 == 0:
+            return False
+        i = 5
+        while i * i <= n:
+            if n % i == 0 or n % (i + 2) == 0:
+                return False
+            i += 6
+        return True
+    
+    @staticmethod
+    def gcd(a, b):
+        """Calculate the greatest common divisor of two numbers"""
+        while b:
+            a, b = b, a % b
+        return a
+    
+    @staticmethod
+    def lcm(a, b):
+        """Calculate the least common multiple of two numbers"""
+        return a * b // MathUtils.gcd(a, b)
+    
+    @staticmethod
+    def factorial(n):
+        """Calculate the factorial of a number"""
+        if not isinstance(n, int) or n < 0:
+            raise ValueError("Factorial is only defined for non-negative integers")
+        result = 1
+        for i in range(2, n + 1):
+            result *= i
+        return result
+
+
+class DateUtils:
+    """A utility class for date operations"""
+    
+    @staticmethod
+    def is_weekend(date_obj):
+        """Check if a date falls on a weekend (Saturday or Sunday)"""
+        return date_obj.weekday() >= 5  # 5 is Saturday, 6 is Sunday
+    
+    @staticmethod
+    def get_next_business_day(date_obj):
+        """Get the next business day (skip weekends)"""
+        days_ahead = 1
+        if date_obj.weekday() == 4:  # Friday
+            days_ahead = 3  # Skip to Monday
+        elif date_obj.weekday() == 5:  # Saturday
+            days_ahead = 2  # Skip to Monday
+        return date_obj + timedelta(days=days_ahead)
+    
+    @staticmethod
+    def format_date(date_obj, format_str="%Y-%m-%d"):
+        """Format a date according to the specified format"""
+        return date_obj.strftime(format_str)
+    
+    @staticmethod
+    def parse_date(date_str, format_str="%Y-%m-%d"):
+        """Parse a date string according to the specified format"""
+        return datetime.strptime(date_str, format_str).date()
+
+
+class StringUtils:
+    """A utility class for string operations"""
+    
+    @staticmethod
+    def reverse(s):
+        """Reverse a string"""
+        return s[::-1]
+    
+    @staticmethod
+    def is_palindrome(s):
+        """Check if a string is a palindrome (reads the same forwards and backwards)"""
+        # Convert to lowercase and remove non-alphanumeric characters
+        s = ''.join(c.lower() for c in s if c.isalnum())
+        return s == s[::-1]
+    
+    @staticmethod
+    def word_count(s):
+        """Count the number of words in a string"""
+        return len(s.split())
+    
+    @staticmethod
+    def title_case(s):
+        """Convert a string to title case (capitalize first letter of each word)"""
+        return ' '.join(word.capitalize() for word in s.split())
+
+
+# Using the MathUtils class
+print("MathUtils examples:")
+print(f"Is 17 prime? {MathUtils.is_prime(17)}")
+print(f"Is 20 prime? {MathUtils.is_prime(20)}")
+print(f"GCD of 48 and 18: {MathUtils.gcd(48, 18)}")
+print(f"LCM of 15 and 20: {MathUtils.lcm(15, 20)}")
+print(f"Factorial of 5: {MathUtils.factorial(5)}")
+
+# Using the DateUtils class
+print("\nDateUtils examples:")
+today = date.today()
+print(f"Today: {DateUtils.format_date(today)}")
+print(f"Is today a weekend? {DateUtils.is_weekend(today)}")
+next_business_day = DateUtils.get_next_business_day(today)
+print(f"Next business day: {DateUtils.format_date(next_business_day)}")
+date_str = "2023-12-25"
+christmas = DateUtils.parse_date(date_str)
+print(f"Parsed date: {christmas}")
+print(f"Is Christmas 2023 a weekend? {DateUtils.is_weekend(christmas)}")
+
+# Using the StringUtils class
+print("\nStringUtils examples:")
+text = "Python is amazing"
+print(f"Original: '{text}'")
+print(f"Reversed: '{StringUtils.reverse(text)}'")
+print(f"Word count: {StringUtils.word_count(text)}")
+print(f"Title case: '{StringUtils.title_case(text)}'")
+palindrome = "A man, a plan, a canal: Panama"
+print(f"Is '{palindrome}' a palindrome? {StringUtils.is_palindrome(palindrome)}")
+
+# Demonstrating that static methods don't need an instance
+print("\nStatic methods don't need an instance:")
+# No need to create an instance of MathUtils to use its methods
+is_prime_17 = MathUtils.is_prime(17)
+print(f"Called directly from class: Is 17 prime? {is_prime_17}")
+
+# But you can call them from an instance if you want to
+math_utils = MathUtils()
+is_prime_23 = math_utils.is_prime(23)
+print(f"Called from instance: Is 23 prime? {is_prime_23}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>We define three utility classes, each with a set of static methods:
+                    <ul>
+                        <li><code>MathUtils</code>: Mathematical operations like primality testing, GCD, LCM, etc.</li>
+                        <li><code>DateUtils</code>: Date-related operations like weekend checking, formatting, parsing, etc.</li>
+                        <li><code>StringUtils</code>: String operations like reversing, palindrome checking, word counting, etc.</li>
+                    </ul>
+                </li>
+                <li>Each static method:
+                    <ul>
+                        <li>Does not use or modify any instance or class state</li>
+                        <li>Operates solely on its input parameters</li>
+                        <li>Provides a utility function related to the class's domain</li>
+                    </ul>
+                </li>
+                <li>We demonstrate that static methods can be called directly from the class without creating an instance.</li>
+                <li>We also show that static methods can be called from an instance if desired, although there's no advantage to doing so.</li>
+            </ul>
+
+            <h4>Common Use Cases for Static Methods</h4>
+            <ol>
+                <li><strong>Utility Functions</strong>: Operations that are related to the class's domain but don't need instance or class state.</li>
+                <li><strong>Helper Methods</strong>: Internal methods that perform common tasks for other methods in the class.</li>
+                <li><strong>Pure Functions</strong>: Operations that always produce the same output for the same input, without side effects.</li>
+                <li><strong>Grouping Related Functions</strong>: Organizing functions that logically belong together under a namespace.</li>
+                <li><strong>Implementing Design Patterns</strong>: Supporting patterns like Strategy or Command.</li>
+            </ol>
+            
+            <p><strong>Real-world analogy:</strong> Static methods are like tools in a workshop that anyone can use without needing special access or information. They perform specific tasks based only on what you give them, without caring about who's using them or the broader context. For example, a calculator, a measuring tape, or a reference chart.</p>
+        </section>
+
+        <section class="factory_methods">
+            <h3>Factory Methods with Class Methods</h3>
+            <p>One of the most common and powerful uses of class methods is to create factory methods that provide alternative ways to create instances. Let's explore this pattern in more detail. Create a file named <code>factory_methods.py</code> with the following code:</p>
+            
+            <pre>
+# File: class_methods/factory_methods.py
+
+import json
+from datetime import datetime, date
+
+
+class Person:
+    """A class to represent a person"""
+    
+    def __init__(self, first_name, last_name, birth_date, email=None):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.birth_date = birth_date
+        self.email = email
+    
+    def full_name(self):
+        """Get the person's full name"""
+        return f"{self.first_name} {self.last_name}"
+    
+    def age(self):
+        """Calculate the person's age"""
+        today = date.today()
+        return today.year - self.birth_date.year - (
+            (today.month, today.day) < (self.birth_date.month, self.birth_date.day)
+        )
+    
+    def __str__(self):
+        """String representation of the person"""
+        return f"{self.full_name()}, Age: {self.age()}, Email: {self.email or 'N/A'}"
+    
+    @classmethod
+    def from_dict(cls, data):
+        """Create a Person from a dictionary"""
+        # Extract the required attributes
+        first_name = data.get('first_name')
+        last_name = data.get('last_name')
+        
+        # Convert birth_date string to date object
+        birth_date_str = data.get('birth_date')
+        birth_date = datetime.strptime(birth_date_str, "%Y-%m-%d").date() if birth_date_str else None
+        
+        # Extract optional attributes
+        email = data.get('email')
+        
+        # Create and return a new Person instance
+        return cls(first_name, last_name, birth_date, email)
+    
+    @classmethod
+    def from_json(cls, json_str):
+        """Create a Person from a JSON string"""
+        # Parse the JSON string to a dictionary
+        data = json.loads(json_str)
+        
+        # Use the from_dict factory method
+        return cls.from_dict(data)
+    
+    @classmethod
+    def from_csv_row(cls, csv_row):
+        """Create a Person from a CSV row (comma-separated string)"""
+        # Split the row into fields
+        fields = csv_row.split(',')
+        
+        # Ensure we have at least the required fields
+        if len(fields) < 3:
+            raise ValueError("CSV row must have at least first_name, last_name, and birth_date")
+        
+        # Extract the fields
+        first_name, last_name, birth_date_str = fields[:3]
+        
+        # Extract email if available
+        email = fields[3] if len(fields) > 3 else None
+        
+        # Convert birth_date string to date object
+        birth_date = datetime.strptime(birth_date_str, "%Y-%m-%d").date()
+        
+        # Create and return a new Person instance
+        return cls(first_name, last_name, birth_date, email)
+
+
+# Regular instantiation
+alice = Person("Alice", "Smith", date(1990, 5, 15), "alice@example.com")
+print(f"Regular constructor: {alice}")
+
+# Using the from_dict factory method
+bob_dict = {
+    'first_name': 'Bob',
+    'last_name': 'Jones',
+    'birth_date': '1985-10-20',
+    'email': 'bob@example.com'
+}
+bob = Person.from_dict(bob_dict)
+print(f"from_dict factory: {bob}")
+
+# Using the from_json factory method
+charlie_json = '{"first_name": "Charlie", "last_name": "Brown", "birth_date": "1995-03-08"}'
+charlie = Person.from_json(charlie_json)
+print(f"from_json factory: {charlie}")
+
+# Using the from_csv_row factory method
+dave_csv = "Dave,Miller,1988-12-10,dave@example.com"
+dave = Person.from_csv_row(dave_csv)
+print(f"from_csv_row factory: {dave}")
+
+# Factory methods with inheritance
+class Employee(Person):
+    """A class to represent an employee, extending Person"""
+    
+    def __init__(self, first_name, last_name, birth_date, email=None, employee_id=None, department=None):
+        super().__init__(first_name, last_name, birth_date, email)
+        self.employee_id = employee_id
+        self.department = department
+    
+    def __str__(self):
+        """String representation of the employee"""
+        person_str = super().__str__()
+        return f"{person_str}, ID: {self.employee_id or 'N/A'}, Department: {self.department or 'N/A'}"
+    
+    @classmethod
+    def from_dict(cls, data):
+        """Create an Employee from a dictionary, extending Person.from_dict"""
+        # Create a Person using the parent class's from_dict
+        person = super().from_dict(data)
+        
+        # Extract employee-specific attributes
+        employee_id = data.get('employee_id')
+        department = data.get('department')
+        
+        # Create and return a new Employee instance
+        return cls(
+            person.first_name,
+            person.last_name,
+            person.birth_date,
+            person.email,
+            employee_id,
+            department
+        )
+    
+    @classmethod
+    def from_person(cls, person, employee_id=None, department=None):
+        """Create an Employee from a Person instance"""
+        return cls(
+            person.first_name,
+            person.last_name,
+            person.birth_date,
+            person.email,
+            employee_id,
+            department
+        )
+
+
+# Using Employee factory methods
+eve_dict = {
+    'first_name': 'Eve',
+    'last_name': 'Brown',
+    'birth_date': '1992-07-03',
+    'email': 'eve@example.com',
+    'employee_id': 'E12345',
+    'department': 'Engineering'
+}
+eve = Employee.from_dict(eve_dict)
+print(f"\nEmployee from_dict factory: {eve}")
+
+# Converting a Person to an Employee
+frank = Person("Frank", "Wilson", date(1980, 2, 25), "frank@example.com")
+frank_employee = Employee.from_person(frank, "E67890", "Marketing")
+print(f"Employee from_person factory: {frank_employee}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>We define a <code>Person</code> class with several factory methods:
+                    <ul>
+                        <li><code>from_dict</code>: Creates a <code>Person</code> from a dictionary.</li>
+                        <li><code>from_json</code>: Creates a <code>Person</code> from a JSON string.</li>
+                        <li><code>from_csv_row</code>: Creates a <code>Person</code> from a CSV row (comma-separated string).</li>
+                    </ul>
+                </li>
+                <li>Each factory method:
+                    <ul>
+                        <li>Takes a different input format</li>
+                        <li>Extracts the necessary information</li>
+                        <li>Creates and returns a new instance of the class</li>
+                    </ul>
+                </li>
+                <li>We demonstrate how factory methods work with inheritance:
+                    <ul>
+                        <li>The <code>Employee</code> class inherits from <code>Person</code>.</li>
+                        <li>It overrides <code>from_dict</code> to handle additional employee-specific attributes.</li>
+                        <li>It adds a new factory method <code>from_person</code> to convert a <code>Person</code> to an <code>Employee</code>.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h4>Benefits of Factory Methods</h4>
+            <ol>
+                <li><strong>Flexibility</strong>: They allow creating objects from different input formats or sources.</li>
+                <li><strong>Descriptive Names</strong>: The method names can describe what they do, making the code more readable.</li>
+                <li><strong>Encapsulation</strong>: They encapsulate the creation logic, keeping it separate from the constructor.</li>
+                <li><strong>Default Values</strong>: They can provide sensible defaults for certain scenarios.</li>
+                <li><strong>Preprocessing</strong>: They can perform validation or transformation of inputs before creating the instance.</li>
+                <li><strong>Polymorphism</strong>: They work with inheritance, using <code>cls</code> to create instances of the actual class they're called on.</li>
+            </ol>
+            
+            <p><strong>Real-world analogy:</strong> Factory methods are like different entrances to a building, each designed for a specific purpose or type of visitor. The main entrance (constructor) works for most people, but there might be special entrances for deliveries, employees, or VIPs. Each entrance leads to the same building but processes visitors differently depending on their needs or format.</p>
+        </section>
+
+        <section class="real_world_examples">
+            <h3>Real-World Examples in Web Development</h3>
+            <p>Let's explore some real-world examples of how class methods and static methods are used in Python web development. Create a file named <code>real_world_examples.py</code> with the following code:</p>
+            
+            <pre>
+# File: class_methods/real_world_examples.py
+
+import os
+import re
+import hashlib
+import json
+from datetime import datetime, timedelta
+from urllib.parse import urljoin, urlparse
+
+
+class Config:
+    """A configuration class that uses class methods to load and manage configuration settings"""
+    
+    # Class variables to store configuration settings
+    _config = {}
+    _instance = None
+    
+    def __init__(self):
+        """Private constructor to prevent direct instantiation"""
+        raise RuntimeError("Use Config.get_instance() to get the Config instance")
+    
+    @classmethod
+    def get_instance(cls):
+        """Get the singleton instance of Config (lazy initialization)"""
+        if cls._instance is None:
+            # Create the instance without calling __init__
+            cls._instance = cls.__new__(cls)
+            cls._instance._config = {}
+        return cls._instance
+    
+    @classmethod
+    def load_from_file(cls, file_path):
+        """Load configuration from a JSON file"""
+        try:
+            with open(file_path, 'r') as file:
+                config = json.load(file)
+                cls._config.update(config)
+            return True
+        except Exception as e:
+            print(f"Error loading configuration from {file_path}: {e}")
+            return False
+    
+    @classmethod
+    def load_from_env(cls, prefix='APP_'):
+        """Load configuration from environment variables with a specific prefix"""
+        for key, value in os.environ.items():
+            if key.startswith(prefix):
+                config_key = key[len(prefix):].lower()
+                cls._config[config_key] = value
+    
+    @classmethod
+    def get(cls, key, default=None):
+        """Get a configuration value by key"""
+        return cls._config.get(key, default)
+    
+    @classmethod
+    def set(cls, key, value):
+        """Set a configuration value"""
+        cls._config[key] = value
+
+
+class User:
+    """A user class that uses class methods for different user types and static methods for validation"""
+    
+    # Class variable to track all users
+    _users = {}
+    
+    def __init__(self, username, email, password, role='user'):
+        self.username = username
+        self.email = email
+        self._password_hash = self._hash_password(password)
+        self.role = role
+        self.created_at = datetime.now()
+        self.last_login = None
+        
+        # Add to users dictionary
+        User._users[username] = self
+    
+    def __str__(self):
+        return f"User({self.username}, {self.email}, role={self.role})"
+    
+    def check_password(self, password):
+        """Check if the provided password matches the stored hash"""
+        return self._password_hash == self._hash_password(password)
+    
+    def login(self):
+        """Record a login"""
+        self.last_login = datetime.now()
+    
+    @staticmethod
+    def _hash_password(password):
+        """Hash a password using SHA-256 (in a real app, use bcrypt or another secure method)"""
+        return hashlib.sha256(password.encode()).hexdigest()
+    
+    @staticmethod
+    def validate_username(username):
+        """Validate a username (static method because it doesn't use any instance or class state)"""
+        if not username or not isinstance(username, str):
+            return False
+        # Username should be 3-20 characters, alphanumeric with underscores
+        return bool(re.match(r'^[a-zA-Z0-9_]{3,20}$', username))
+    
+    @staticmethod
+    def validate_email(email):
+        """Validate an email address (simplified)"""
+        if not email or not isinstance(email, str):
+            return False
+        # Simple email validation
+        return bool(re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email))
+    
+    @staticmethod
+    def validate_password(password):
+        """Validate a password (simplified)"""
+        if not password or not isinstance(password, str):
+            return False
+        # Password should be at least 8 characters with at least one letter and one number
+        return len(password) >= 8 and any(c.isalpha() for c in password) and any(c.isdigit() for c in password)
+    
+    @classmethod
+    def get_user(cls, username):
+        """Get a user by username"""
+        return cls._users.get(username)
+    
+    @classmethod
+    def create_admin(cls, username, email, password):
+        """Create an admin user"""
+        # Validate inputs
+        if not cls.validate_username(username) or not cls.validate_email(email) or not cls.validate_password(password):
+            raise ValueError("Invalid username, email, or password")
+        
+        # Create an admin user
+        return cls(username, email, password, role='admin')
+    
+    @classmethod
+    def create_moderator(cls, username, email, password):
+        """Create a moderator user"""
+        # Validate inputs
+        if not cls.validate_username(username) or not cls.validate_email(email) or not cls.validate_password(password):
+            raise ValueError("Invalid username, email, or password")
+        
+        # Create a moderator user
+        return cls(username, email, password, role='moderator')
+
+
+class URL:
+    """A URL utility class that uses static methods for URL operations"""
+    
+    @staticmethod
+    def is_valid(url):
+        """Check if a URL is valid"""
+        try:
+            result = urlparse(url)
+            return all([result.scheme, result.netloc])
+        except:
+            return False
+    
+    @staticmethod
+    def join(base, path):
+        """Join a base URL and a path"""
+        return urljoin(base, path)
+    
+    @staticmethod
+    def get_domain(url):
+        """Extract the domain from a URL"""
+        return urlparse(url).netloc
+    
+    @staticmethod
+    def remove_query_params(url):
+        """Remove query parameters from a URL"""
+        parsed = urlparse(url)
+        return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+
+
+class Session:
+    """A session class that uses class methods for session management and static methods for utilities"""
+    
+    # Class variable to store all active sessions
+    _sessions = {}
+    
+    def __init__(self, user_id, ip_address=None):
+        self.session_id = self._generate_session_id()
+        self.user_id = user_id
+        self.ip_address = ip_address
+        self.created_at = datetime.now()
+        self.expires_at = self.created_at + timedelta(hours=24)  # 24-hour expiration
+        self.data = {}
+        
+        # Add to sessions dictionary
+        Session._sessions[self.session_id] = self
+    
+    def __str__(self):
+        return f"Session({self.session_id}, user_id={self.user_id}, expires={self.expires_at})"
+    
+    def is_expired(self):
+        """Check if the session is expired"""
+        return datetime.now() > self.expires_at
+    
+    @staticmethod
+    def _generate_session_id():
+        """Generate a unique session ID"""
+        # In a real app, use a more secure method
+        return hashlib.md5(str(datetime.now().timestamp()).encode()).hexdigest()
+    
+    @classmethod
+    def get_session(cls, session_id):
+        """Get a session by ID"""
+        session = cls._sessions.get(session_id)
+        if session and not session.is_expired():
+            return session
+        # Remove expired session
+        if session:
+            del cls._sessions[session_id]
+        return None
+    
+    @classmethod
+    def get_sessions_for_user(cls, user_id):
+        """Get all sessions for a user"""
+        return [session for session in cls._sessions.values() if session.user_id == user_id and not session.is_expired()]
+    
+    @classmethod
+    def clear_expired_sessions(cls):
+        """Clear all expired sessions"""
+        expired_sessions = [sid for sid, session in cls._sessions.items() if session.is_expired()]
+        for sid in expired_sessions:
+            del cls._sessions[sid]
+        return len(expired_sessions)
+
+
+class Response:
+    """A simple HTTP response class with static methods for common responses"""
+    
+    def __init__(self, content, status_code=200, headers=None):
+        self.content = content
+        self.status_code = status_code
+        self.headers = headers or {}
+    
+    def __str__(self):
+        return f"Response({self.status_code}, {len(self.content)} bytes)"
+    
+    @staticmethod
+    def json(data, status_code=200, headers=None):
+        """Create a JSON response"""
+        headers = headers or {}
+        headers['Content-Type'] = 'application/json'
+        return Response(json.dumps(data), status_code, headers)
+    
+    @staticmethod
+    def html(content, status_code=200, headers=None):
+        """Create an HTML response"""
+        headers = headers or {}
+        headers['Content-Type'] = 'text/html'
+        return Response(content, status_code, headers)
+    
+    @staticmethod
+    def redirect(url, permanent=False):
+        """Create a redirect response"""
+        status_code = 301 if permanent else 302
+        headers = {'Location': url}
+        return Response('', status_code, headers)
+    
+    @staticmethod
+    def not_found():
+        """Create a 404 Not Found response"""
+        return Response('Not Found', 404)
+    
+    @staticmethod
+    def server_error(error_message='Internal Server Error'):
+        """Create a 500 Internal Server Error response"""
+        return Response(error_message, 500)
+
+
+# Using the Config class (Singleton pattern with class methods)
+print("Config example:")
+config = Config.get_instance()
+Config.set('debug', True)
+Config.set('database_url', 'postgres://user:pass@localhost/mydb')
+print(f"Debug mode: {Config.get('debug')}")
+print(f"Database URL: {Config.get('database_url')}")
+
+# Using the User class (factory methods and static validators)
+print("\nUser example:")
+try:
+    # Validate inputs using static methods
+    username = "john_doe"
+    email = "john@example.com"
+    password = "p@ssw0rd123"
+    
+    if User.validate_username(username) and User.validate_email(email) and User.validate_password(password):
+        # Create users using different factory methods
+        admin = User.create_admin("admin", "admin@example.com", "Admin123!")
+        moderator = User.create_moderator("moderator", "mod@example.com", "Mod123!")
+        regular_user = User(username, email, password)
+        
+        print(f"Created users: {admin}, {moderator}, {regular_user}")
+        
+        # Log in a user
+        user = User.get_user(username)
+        if user and user.check_password(password):
+            user.login()
+            print(f"User {username} logged in at {user.last_login}")
+    else:
+        print("Invalid username, email, or password")
+except ValueError as e:
+    print(f"Error: {e}")
+
+# Using the URL class (static utility methods)
+print("\nURL example:")
+base_url = "https://example.com/api"
+path = "/users/profile"
+full_url = URL.join(base_url, path)
+print(f"Joined URL: {full_url}")
+print(f"Domain: {URL.get_domain(full_url)}")
+url_with_params = f"{full_url}?user_id=123&format=json"
+print(f"URL without params: {URL.remove_query_params(url_with_params)}")
+
+# Using the Session class (class methods for management)
+print("\nSession example:")
+session1 = Session("user123", "192.168.1.1")
+session2 = Session("user123", "192.168.1.2")
+session3 = Session("user456", "192.168.1.3")
+
+print(f"Created sessions: {session1}, {session2}, {session3}")
+print(f"Sessions for user123: {Session.get_sessions_for_user('user123')}")
+
+# Force session1 to expire
+session1.expires_at = datetime.now() - timedelta(minutes=1)
+cleared = Session.clear_expired_sessions()
+print(f"Cleared {cleared} expired sessions")
+print(f"Sessions for user123 after cleanup: {Session.get_sessions_for_user('user123')}")
+
+# Using the Response class (static factory methods)
+print("\nResponse example:")
+json_response = Response.json({"status": "success", "data": {"user_id": 123}})
+html_response = Response.html("<html><body><h1>Hello, World!</h1></body></html>")
+redirect_response = Response.redirect("https://example.com/login")
+not_found_response = Response.not_found()
+error_response = Response.server_error("Database connection failed")
+
+print(f"JSON Response: {json_response}")
+print(f"HTML Response: {html_response}")
+print(f"Redirect Response: {redirect_response}")
+print(f"Not Found Response: {not_found_response}")
+print(f"Error Response: {error_response}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li><code>Config</code> class demonstrates:
+                    <ul>
+                        <li>Using class methods to implement the Singleton pattern</li>
+                        <li>Loading configuration from different sources (files, environment variables)</li>
+                        <li>Providing a centralized way to access configuration settings</li>
+                    </ul>
+                </li>
+                <li><code>User</code> class demonstrates:
+                    <ul>
+                        <li>Using static methods for validation functions</li>
+                        <li>Using class methods for creating different types of users</li>
+                        <li>Storing and retrieving users in a class variable</li>
+                    </ul>
+                </li>
+                <li><code>URL</code> class demonstrates:
+                    <ul>
+                        <li>Using static methods for URL-related utility functions</li>
+                        <li>Grouping related functions under a namespace</li>
+                    </ul>
+                </li>
+                <li><code>Session</code> class demonstrates:
+                    <ul>
+                        <li>Using class methods for session management</li>
+                        <li>Using static methods for helper functions</li>
+                    </ul>
+                </li>
+                <li><code>Response</code> class demonstrates:
+                    <ul>
+                        <li>Using static methods as factory methods for different types of HTTP responses</li>
+                        <li>Creating specialized response objects based on common patterns</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <p>These examples show how class methods and static methods are commonly used in real-world web development to implement design patterns, provide utility functions, manage resources, and create factory methods for specialized objects.</p>
+        </section>
+
+        <section class="best_practices">
+            <h3>Best Practices for Class and Static Methods</h3>
+            
+            <h4>When to Use Class Methods</h4>
+            <ul>
+                <li>When you need to access or modify class variables</li>
+                <li>When creating alternative constructors or factory methods</li>
+                <li>When implementing design patterns like Singleton, Factory, or Repository</li>
+                <li>When tracking class-level statistics or maintaining shared state</li>
+                <li>When you need the method to work with inheritance (using <code>cls</code>)</li>
+            </ul>
+            
+            <h4>When to Use Static Methods</h4>
+            <ul>
+                <li>When a method doesn't need access to instance or class state</li>
+                <li>For utility functions that are related to the class's domain</li>
+                <li>For helper functions that are used by multiple methods in the class</li>
+                <li>To create namespace-like groupings of related functions</li>
+                <li>When implementing design patterns like Strategy or Command</li>
+            </ul>
+            
+            <h4>General Best Practices</h4>
+            <ol>
+                <li><strong>Use Descriptive Names</strong>: Make method names clear and descriptive, especially for factory methods.</li>
+                <li><strong>Follow Conventions</strong>: Use <code>cls</code> for the class parameter in class methods and <code>self</code> for the instance parameter in instance methods.</li>
+                <li><strong>Document Your Methods</strong>: Provide clear docstrings explaining what each method does, what parameters it expects, and what it returns.</li>
+                <li><strong>Keep Methods Focused</strong>: Each method should do one thing well, following the Single Responsibility Principle.</li>
+                <li><strong>Use the Right Method Type</strong>: Choose instance, class, or static methods based on what the method needs to access.</li>
+                <li><strong>Consider Method Visibility</strong>: Use naming conventions (e.g., leading underscore) to indicate which methods are internal or private.</li>
+                <li><strong>Be Consistent</strong>: Maintain a consistent style and pattern across your codebase.</li>
+            </ol>
+            
+            <h4>Common Pitfalls to Avoid</h4>
+            <ol>
+                <li><strong>Using Static Methods When Class Methods Are Needed</strong>: If you need to access class variables or create instances, use a class method, not a static method.</li>
+                <li><strong>Using Class Methods When Static Methods Are Sufficient</strong>: If a method doesn't need to access class state or create instances, a static method is often cleaner.</li>
+                <li><strong>Mixing Instance and Class State</strong>: Be careful when a class method modifies class variables that affect instance behavior.</li>
+                <li><strong>Overusing Class Variables</strong>: Class variables are shared among all instances and can lead to unexpected behavior if not used carefully.</li>
+                <li><strong>Forgetting About Inheritance</strong>: Remember that class methods are affected by inheritance, but static methods are not.</li>
+            </ol>
+        </section>
+
+        <section class="key_takeaways">
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li><strong>Python offers three types of methods</strong>: instance methods, class methods, and static methods, each with different purposes and characteristics.</li>
+                <li><strong>Instance methods</strong> receive <code>self</code> as the first parameter and can access both instance and class variables.</li>
+                <li><strong>Class methods</strong> are decorated with <code>@classmethod</code>, receive <code>cls</code> as the first parameter, and can access class variables but not instance variables.</li>
+                <li><strong>Static methods</strong> are decorated with <code>@staticmethod</code>, don't receive any automatic parameters, and cannot directly access instance or class variables.</li>
+                <li><strong>Class methods are commonly used for</strong>:
+                    <ul>
+                        <li>Alternative constructors and factory methods</li>
+                        <li>Modifying class state that affects all instances</li>
+                        <li>Tracking class-level statistics</li>
+                        <li>Implementing design patterns like Singleton or Factory</li>
+                    </ul>
+                </li>
+                <li><strong>Static methods are commonly used for</strong>:
+                    <ul>
+                        <li>Utility functions related to the class's domain</li>
+                        <li>Helper methods that don't need access to instance or class state</li>
+                        <li>Grouping related functions under a namespace</li>
+                        <li>Implementing design patterns like Strategy or Command</li>
+                    </ul>
+                </li>
+                <li><strong>Both class methods and static methods</strong> can be called from either the class or an instance, unlike instance methods which can only be called from an instance.</li>
+                <li><strong>In web development</strong>, these method types are used for configuration management, user and session handling, URL operations, HTTP response generation, and implementing various design patterns.</li>
+                <li><strong>Choosing the right method type</strong> depends on what the method needs to access and how it will be used, following the principle of "use the simplest tool that gets the job done."</li>
+            </ul>
+        </section>
+
+        <section class="assignment">
+            <h3>Assignment: Implement a URL Shortener</h3>
+            <p>For today's assignment, you'll implement a URL shortener that demonstrates the use of class methods and static methods.</p>
+            
+            <h4>Requirements:</h4>
+            <ol>
+                <li>Create a <code>URLShortener</code> class with the following features:
+                    <ul>
+                        <li>Class variables to store all shortened URLs</li>
+                        <li>Static methods to validate and normalize URLs</li>
+                        <li>Static methods to generate short codes</li>
+                        <li>Class methods to create, retrieve, and manage shortened URLs</li>
+                        <li>Class methods to provide statistics on shortened URLs</li>
+                    </ul>
+                </li>
+                <li>Create a <code>ShortenedURL</code> class to represent individual shortened URLs with:
+                    <ul>
+                        <li>Instance variables for the original URL, short code, creation date, etc.</li>
+                        <li>Instance methods to record visits and retrieve visit statistics</li>
+                        <li>Class methods to create instances from different sources (alternative constructors)</li>
+                        <li>Static methods for URL-related utilities</li>
+                    </ul>
+                </li>
+                <li>Create a <code>URLVisit</code> class to represent visits to shortened URLs:
+                    <ul>
+                        <li>Instance variables for timestamps, IP addresses, referrers, etc.</li>
+                        <li>Class methods to aggregate and analyze visit data</li>
+                        <li>Static methods for data processing and formatting</li>
+                    </ul>
+                </li>
+                <li>Implement the following functionality:
+                    <ul>
+                        <li>Shortening a URL and generating a unique code</li>
+                        <li>Retrieving the original URL from a short code</li>
+                        <li>Recording visits to shortened URLs</li>
+                        <li>Generating statistics on URL usage</li>
+                        <li>Persistence of data (optional, can be in-memory, file-based, or database)</li>
+                    </ul>
+                </li>
+                <li>Provide a simple command-line interface to interact with the URL shortener.</li>
+                <li>Include proper error handling, validation, and documentation.</li>
+            </ol>
+            
+            <h4>Bonus Challenges:</h4>
+            <ol>
+                <li>Implement URL expiration using class methods to manage TTL (Time-To-Live).</li>
+                <li>Add user authentication and user-specific URLs with different factory methods.</li>
+                <li>Implement custom short codes with validation and collision detection.</li>
+                <li>Create a simple web interface using Flask or another web framework.</li>
+                <li>Add analytics features to track and visualize URL usage patterns.</li>
+            </ol>
+            
+            <p>Submit your work as a Python module with clear structure and organization. Be prepared to explain your design choices and how class and static methods enhance your implementation's maintainability and flexibility.</p>
+        </section>
+
+        <section class="further_reading">
+            <h3>Further Reading and Resources</h3>
+            <ul>
+                <li><a href="https://docs.python.org/3/tutorial/classes.html#class-and-instance-variables" target="_blank">Python Official Documentation: Class and Instance Variables</a></li>
+                <li><a href="https://docs.python.org/3/library/functions.html#classmethod" target="_blank">Python Official Documentation: classmethod</a></li>
+                <li><a href="https://docs.python.org/3/library/functions.html#staticmethod" target="_blank">Python Official Documentation: staticmethod</a></li>
+                <li><a href="https://realpython.com/instance-class-and-static-methods-demystified/" target="_blank">Real Python: Instance, Class, and Static Methods Demystified</a></li>
+                <li><a href="https://realpython.com/python-multiple-constructors/" target="_blank">Real Python: Python Multiple Constructors</a></li>
+                <li><a href="https://en.wikipedia.org/wiki/Factory_method_pattern" target="_blank">Wikipedia: Factory Method Pattern</a></li>
+                <li><a href="https://en.wikipedia.org/wiki/Singleton_pattern" target="_blank">Wikipedia: Singleton Pattern</a></li>
+                <li>Clean Code: A Handbook of Agile Software Craftsmanship by Robert C. Martin (Chapter 3: Functions)</li>
+                <li>Design Patterns: Elements of Reusable Object-Oriented Software by Erich Gamma, Richard Helm, Ralph Johnson, and John Vlissides</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

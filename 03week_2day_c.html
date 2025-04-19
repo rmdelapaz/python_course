@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abstract Classes and Interfaces in Python</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 3: Object-Oriented Programming Advanced Concepts</h2>
+        <h3>Abstract Classes and Interfaces</h3>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>Understanding Abstract Classes and Interfaces in Python</h3>
+            <p>Abstract classes and interfaces are fundamental concepts in object-oriented programming that help create more structured, maintainable, and robust code. While these concepts originated in languages like Java and C#, Python provides its own mechanisms to implement them through the <code>abc</code> (Abstract Base Classes) module.</p>
+            
+            <p>Think of abstract classes and interfaces as blueprints or contracts. They define what a class should do without specifying how it should do it. This separation between "what" and "how" enables polymorphism and promotes the design principle of "programming to an interface, not an implementation."</p>
+            
+            <p>In today's session, we'll explore how to implement and use abstract classes and interfaces in Python, understand their benefits, and see how they're applied in real-world web development scenarios.</p>
+        </section>
+
+        <section class="folder_structure">
+            <h3>Today's File Structure</h3>
+            <p>For today's lesson, we'll create a new Python module in our project. Ensure you have the following directory structure:</p>
+            <pre>
+project_root/
+├── abstract_classes/
+│   ├── __init__.py  (empty file to make the folder a package)
+│   ├── abc_basics.py
+│   ├── abstract_methods.py
+│   ├── python_interfaces.py
+│   ├── protocol_classes.py
+│   └── real_world_examples.py
+</pre>
+            <p>All code examples will be saved in these files, allowing you to organize and revisit these concepts easily.</p>
+        </section>
+
+        <section class="abstract_classes_basics">
+            <h3>Abstract Base Classes in Python</h3>
+            <p>Let's start by understanding what abstract base classes are and how to implement them in Python using the <code>abc</code> module. Create a file named <code>abc_basics.py</code> with the following code:</p>
+            
+            <pre>
+# File: abstract_classes/abc_basics.py
+
+import abc
+
+class Shape(abc.ABC):
+    """Abstract base class for shapes"""
+    
+    def __init__(self, color):
+        self.color = color
+    
+    @abc.abstractmethod
+    def area(self):
+        """Calculate the area of the shape"""
+        pass
+    
+    @abc.abstractmethod
+    def perimeter(self):
+        """Calculate the perimeter of the shape"""
+        pass
+    
+    def describe(self):
+        """Non-abstract method that can be inherited as-is"""
+        return f"A {self.color} shape with area {self.area()} and perimeter {self.perimeter()}"
+
+
+# Trying to instantiate an abstract class directly will raise an error
+try:
+    shape = Shape("red")
+except TypeError as e:
+    print(f"Error: {e}")
+
+
+class Circle(Shape):
+    """Concrete implementation of a Shape: Circle"""
+    
+    def __init__(self, color, radius):
+        super().__init__(color)
+        self.radius = radius
+    
+    def area(self):
+        """Implementation of the abstract area method"""
+        import math
+        return math.pi * self.radius ** 2
+    
+    def perimeter(self):
+        """Implementation of the abstract perimeter method"""
+        import math
+        return 2 * math.pi * self.radius
+
+
+class Rectangle(Shape):
+    """Concrete implementation of a Shape: Rectangle"""
+    
+    def __init__(self, color, width, height):
+        super().__init__(color)
+        self.width = width
+        self.height = height
+    
+    def area(self):
+        """Implementation of the abstract area method"""
+        return self.width * self.height
+    
+    def perimeter(self):
+        """Implementation of the abstract perimeter method"""
+        return 2 * (self.width + self.height)
+
+
+# Create instances of concrete classes
+circle = Circle("blue", 5)
+rectangle = Rectangle("green", 4, 6)
+
+print(circle.describe())
+print(rectangle.describe())
+
+# This would raise an error because Triangle doesn't implement all abstract methods
+class IncompleteTriangle(Shape):
+    def __init__(self, color, base, height):
+        super().__init__(color)
+        self.base = base
+        self.height = height
+    
+    def area(self):
+        return 0.5 * self.base * self.height
+    
+    # Missing perimeter implementation will cause an error when instantiating
+
+try:
+    triangle = IncompleteTriangle("yellow", 3, 4)
+except TypeError as e:
+    print(f"Error: {e}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>We import the <code>abc</code> module, which provides the infrastructure for defining abstract base classes (ABCs).</li>
+                <li>We create an abstract base class <code>Shape</code> by inheriting from <code>abc.ABC</code> and using the <code>@abc.abstractmethod</code> decorator to define abstract methods.</li>
+                <li>Abstract methods (<code>area</code> and <code>perimeter</code>) declare what subclasses must implement but don't provide an implementation themselves.</li>
+                <li>Non-abstract methods (<code>describe</code>) provide default behavior that subclasses can inherit or override.</li>
+                <li>We can't instantiate abstract classes directly; attempting to do so raises a <code>TypeError</code>.</li>
+                <li>Concrete subclasses (<code>Circle</code> and <code>Rectangle</code>) must implement all abstract methods defined in the parent class.</li>
+                <li>The <code>IncompleteTriangle</code> class demonstrates what happens when a subclass doesn't implement all abstract methods.</li>
+            </ul>
+
+            <p><strong>Real-world analogy:</strong> Think of an abstract class like a blueprint for a building. The blueprint specifies what rooms should be in the building (abstract methods) but doesn't dictate how those rooms should be decorated or arranged (implementation details). Different types of buildings (concrete classes) must include all the required rooms but can arrange and decorate them differently.</p>
+        </section>
+
+        <section class="abstract_methods">
+            <h3>Abstract Methods and Properties</h3>
+            <p>Python's <code>abc</code> module provides decorators for creating abstract methods, class methods, static methods, and properties. Let's explore these capabilities in a file named <code>abstract_methods.py</code>:</p>
+            
+            <pre>
+# File: abstract_classes/abstract_methods.py
+
+import abc
+
+class Vehicle(abc.ABC):
+    """Abstract base class for vehicles"""
+    
+    def __init__(self, manufacturer, model, year):
+        self.manufacturer = manufacturer
+        self.model = model
+        self.year = year
+        self._fuel_level = 0  # Private-by-convention attribute
+    
+    @abc.abstractmethod
+    def start_engine(self):
+        """Start the vehicle's engine"""
+        pass
+    
+    @abc.abstractmethod
+    def stop_engine(self):
+        """Stop the vehicle's engine"""
+        pass
+    
+    @abc.abstractproperty
+    def fuel_level(self):
+        """Get the current fuel level (abstract property)"""
+        pass
+    
+    @fuel_level.setter
+    @abc.abstractmethod
+    def fuel_level(self, value):
+        """Set the fuel level (abstract property setter)"""
+        pass
+    
+    @abc.abstractclassmethod
+    def get_vehicle_type(cls):
+        """Get the type of vehicle (abstract class method)"""
+        pass
+    
+    @abc.abstractstaticmethod
+    def get_wheel_count():
+        """Get the number of wheels (abstract static method)"""
+        pass
+
+
+class Car(Vehicle):
+    """Concrete implementation of a Vehicle: Car"""
+    
+    def __init__(self, manufacturer, model, year, fuel_capacity):
+        super().__init__(manufacturer, model, year)
+        self._fuel_capacity = fuel_capacity
+    
+    def start_engine(self):
+        if self._fuel_level > 0:
+            return f"The {self.manufacturer} {self.model}'s engine is now running."
+        return f"The {self.manufacturer} {self.model} has no fuel!"
+    
+    def stop_engine(self):
+        return f"The {self.manufacturer} {self.model}'s engine is now off."
+    
+    @property
+    def fuel_level(self):
+        """Implementation of the abstract fuel_level property"""
+        return self._fuel_level
+    
+    @fuel_level.setter
+    def fuel_level(self, value):
+        """Implementation of the abstract fuel_level setter"""
+        if value < 0:
+            raise ValueError("Fuel level cannot be negative")
+        if value > self._fuel_capacity:
+            value = self._fuel_capacity
+        self._fuel_level = value
+    
+    @classmethod
+    def get_vehicle_type(cls):
+        """Implementation of the abstract class method"""
+        return "Car"
+    
+    @staticmethod
+    def get_wheel_count():
+        """Implementation of the abstract static method"""
+        return 4
+
+
+# Create and use a Car instance
+car = Car("Toyota", "Corolla", 2022, 50)
+car.fuel_level = 25  # Set fuel level to 50%
+
+print(f"Vehicle Type: {Car.get_vehicle_type()}")
+print(f"Wheel Count: {Car.get_wheel_count()}")
+print(f"Fuel Level: {car.fuel_level}")
+print(car.start_engine())
+car.fuel_level = 0
+print(car.start_engine())
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>We define various types of abstract members in the <code>Vehicle</code> class:
+                    <ul>
+                        <li><code>@abc.abstractmethod</code>: Regular abstract instance methods</li>
+                        <li><code>@abc.abstractproperty</code>: Abstract properties</li>
+                        <li><code>@abc.abstractclassmethod</code>: Abstract class methods</li>
+                        <li><code>@abc.abstractstaticmethod</code>: Abstract static methods</li>
+                    </ul>
+                </li>
+                <li>The <code>Car</code> class implements all of these abstract members with concrete implementations.</li>
+                <li>Notice how the property implementation uses the standard <code>@property</code> and <code>@fuel_level.setter</code> decorators.</li>
+                <li>Abstract class methods and static methods must be implemented as class methods and static methods in the subclass.</li>
+            </ul>
+
+            <p><strong>Important note:</strong> In modern Python (3.3+), <code>@abc.abstractproperty</code> is deprecated in favor of using <code>@property</code> and <code>@abc.abstractmethod</code> together:</p>
+            
+            <pre>
+@property
+@abc.abstractmethod
+def fuel_level(self):
+    pass
+
+@fuel_level.setter
+@abc.abstractmethod
+def fuel_level(self, value):
+    pass
+</pre>
+            
+            <p><strong>Real-world analogy:</strong> If we think of an abstract class as a job description, then abstract methods, properties, class methods, and static methods are like different responsibilities that a person filling the position must be able to handle. Some tasks require access to the employee's personal desk (instance methods), some relate to the department as a whole (class methods), and some are general company procedures that anyone should be able to follow (static methods).</p>
+        </section>
+
+        <section class="python_interfaces">
+            <h3>Interfaces in Python</h3>
+            <p>Unlike languages like Java or C#, Python doesn't have a specific <code>interface</code> keyword. However, we can use abstract base classes with only abstract methods to create interface-like structures. Create a file named <code>python_interfaces.py</code> with the following code:</p>
+            
+            <pre>
+# File: abstract_classes/python_interfaces.py
+
+import abc
+
+class DatabaseInterface(abc.ABC):
+    """Interface for database operations"""
+    
+    @abc.abstractmethod
+    def connect(self, connection_string):
+        """Connect to the database"""
+        pass
+    
+    @abc.abstractmethod
+    def disconnect(self):
+        """Disconnect from the database"""
+        pass
+    
+    @abc.abstractmethod
+    def execute_query(self, query, parameters=None):
+        """Execute a query with optional parameters"""
+        pass
+    
+    @abc.abstractmethod
+    def fetch_all(self):
+        """Fetch all rows from the result set"""
+        pass
+    
+    @abc.abstractmethod
+    def fetch_one(self):
+        """Fetch a single row from the result set"""
+        pass
+
+
+class PostgreSQLDatabase(DatabaseInterface):
+    """PostgreSQL implementation of the DatabaseInterface"""
+    
+    def __init__(self):
+        self.connection = None
+        self.cursor = None
+    
+    def connect(self, connection_string):
+        print(f"Connecting to PostgreSQL with: {connection_string}")
+        # In a real implementation, we would use psycopg2 or another PostgreSQL driver
+        self.connection = f"PostgreSQL Connection: {connection_string}"
+        self.cursor = "PostgreSQL Cursor"
+        return True
+    
+    def disconnect(self):
+        print("Disconnecting from PostgreSQL")
+        self.connection = None
+        self.cursor = None
+    
+    def execute_query(self, query, parameters=None):
+        if not self.connection:
+            raise RuntimeError("Not connected to the database")
+        
+        print(f"Executing PostgreSQL query: {query}")
+        if parameters:
+            print(f"With parameters: {parameters}")
+        
+        return True
+    
+    def fetch_all(self):
+        if not self.cursor:
+            raise RuntimeError("No active query result")
+        
+        print("Fetching all rows from PostgreSQL")
+        # Simulated result set
+        return [{"id": 1, "name": "John"}, {"id": 2, "name": "Jane"}]
+    
+    def fetch_one(self):
+        if not self.cursor:
+            raise RuntimeError("No active query result")
+        
+        print("Fetching one row from PostgreSQL")
+        # Simulated result
+        return {"id": 1, "name": "John"}
+
+
+class MySQLDatabase(DatabaseInterface):
+    """MySQL implementation of the DatabaseInterface"""
+    
+    def __init__(self):
+        self.connection = None
+        self.cursor = None
+    
+    def connect(self, connection_string):
+        print(f"Connecting to MySQL with: {connection_string}")
+        # In a real implementation, we would use mysql-connector or another MySQL driver
+        self.connection = f"MySQL Connection: {connection_string}"
+        self.cursor = "MySQL Cursor"
+        return True
+    
+    def disconnect(self):
+        print("Disconnecting from MySQL")
+        self.connection = None
+        self.cursor = None
+    
+    def execute_query(self, query, parameters=None):
+        if not self.connection:
+            raise RuntimeError("Not connected to the database")
+        
+        print(f"Executing MySQL query: {query}")
+        if parameters:
+            print(f"With parameters: {parameters}")
+        
+        return True
+    
+    def fetch_all(self):
+        if not self.cursor:
+            raise RuntimeError("No active query result")
+        
+        print("Fetching all rows from MySQL")
+        # Simulated result set
+        return [{"id": 1, "name": "John"}, {"id": 2, "name": "Jane"}]
+    
+    def fetch_one(self):
+        if not self.cursor:
+            raise RuntimeError("No active query result")
+        
+        print("Fetching one row from MySQL")
+        # Simulated result
+        return {"id": 1, "name": "John"}
+
+
+# Function that works with any class implementing the DatabaseInterface
+def fetch_user_data(database, user_id):
+    """Fetch user data using any database implementation"""
+    database.connect("host=localhost;user=admin;password=secret")
+    
+    try:
+        database.execute_query("SELECT * FROM users WHERE id = %s", [user_id])
+        user = database.fetch_one()
+        return user
+    finally:
+        database.disconnect()
+
+
+# Use both implementations interchangeably
+postgres_db = PostgreSQLDatabase()
+mysql_db = MySQLDatabase()
+
+print("Fetching user data with PostgreSQL:")
+user1 = fetch_user_data(postgres_db, 1)
+print(f"User: {user1}")
+
+print("\nFetching user data with MySQL:")
+user2 = fetch_user_data(mysql_db, 1)
+print(f"User: {user2}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>We define a <code>DatabaseInterface</code> as an abstract base class with only abstract methods, making it function like an interface in other languages.</li>
+                <li>Two concrete implementations, <code>PostgreSQLDatabase</code> and <code>MySQLDatabase</code>, provide specific implementations for each database system.</li>
+                <li>The <code>fetch_user_data</code> function demonstrates polymorphism—it works with any class that implements the <code>DatabaseInterface</code>, regardless of the specific implementation.</li>
+                <li>This demonstrates the principle of "programming to an interface, not an implementation," which makes code more flexible and easier to test.</li>
+            </ul>
+
+            <h4>Key Characteristics of Interfaces in Python</h4>
+            <ol>
+                <li>Interfaces typically contain only abstract methods (no implementation).</li>
+                <li>Classes can implement multiple interfaces (through multiple inheritance).</li>
+                <li>Interfaces define a contract that implementing classes must fulfill.</li>
+                <li>Interfaces enable polymorphism and dependency inversion.</li>
+            </ol>
+            
+            <p><strong>Real-world analogy:</strong> Interfaces are like electrical outlets. They define a standard way to connect to a power source, but they don't specify how the electricity is generated. Different power plants (implementations) can generate electricity in different ways (coal, nuclear, solar), but as long as they deliver it through the standard outlet (interface), any appliance can use it without knowing or caring about the source.</p>
+        </section>
+
+        <section class="protocol_classes">
+            <h3>Protocol Classes (Python 3.8+)</h3>
+            <p>Python 3.8 introduced a new feature called "Protocols" through the <code>typing</code> module, providing a more Pythonic way to define interfaces with structural subtyping (duck typing). Create a file named <code>protocol_classes.py</code> with the following code:</p>
+            
+            <pre>
+# File: abstract_classes/protocol_classes.py
+
+from typing import Protocol, runtime_checkable
+from datetime import datetime
+
+@runtime_checkable
+class Serializable(Protocol):
+    """Protocol defining serializable objects"""
+    
+    def to_dict(self) -> dict:
+        """Convert the object to a dictionary"""
+        ...
+    
+    def from_dict(self, data: dict) -> None:
+        """Update the object from a dictionary"""
+        ...
+
+
+@runtime_checkable
+class HasTimestamp(Protocol):
+    """Protocol for objects with timestamp capabilities"""
+    
+    @property
+    def created_at(self) -> datetime:
+        """Get the creation timestamp"""
+        ...
+    
+    @property
+    def updated_at(self) -> datetime:
+        """Get the update timestamp"""
+        ...
+
+
+class BlogPost:
+    """Blog post class implementing Serializable and HasTimestamp protocols"""
+    
+    def __init__(self, title, content, author):
+        self.title = title
+        self.content = content
+        self.author = author
+        self._created_at = datetime.now()
+        self._updated_at = self._created_at
+    
+    def to_dict(self) -> dict:
+        """Convert the blog post to a dictionary"""
+        return {
+            'title': self.title,
+            'content': self.content,
+            'author': self.author,
+            'created_at': self._created_at.isoformat(),
+            'updated_at': self._updated_at.isoformat()
+        }
+    
+    def from_dict(self, data: dict) -> None:
+        """Update the blog post from a dictionary"""
+        self.title = data.get('title', self.title)
+        self.content = data.get('content', self.content)
+        self.author = data.get('author', self.author)
+        
+        # Update the updated_at timestamp
+        self._updated_at = datetime.now()
+    
+    @property
+    def created_at(self) -> datetime:
+        """Get the creation timestamp"""
+        return self._created_at
+    
+    @property
+    def updated_at(self) -> datetime:
+        """Get the update timestamp"""
+        return self._updated_at
+
+
+class User:
+    """User class implementing only Serializable protocol"""
+    
+    def __init__(self, username, email):
+        self.username = username
+        self.email = email
+    
+    def to_dict(self) -> dict:
+        """Convert the user to a dictionary"""
+        return {
+            'username': self.username,
+            'email': self.email
+        }
+    
+    def from_dict(self, data: dict) -> None:
+        """Update the user from a dictionary"""
+        self.username = data.get('username', self.username)
+        self.email = data.get('email', self.email)
+
+
+class Comment:
+    """Comment class implementing only HasTimestamp protocol"""
+    
+    def __init__(self, text, author):
+        self.text = text
+        self.author = author
+        self._created_at = datetime.now()
+        self._updated_at = self._created_at
+    
+    @property
+    def created_at(self) -> datetime:
+        """Get the creation timestamp"""
+        return self._created_at
+    
+    @property
+    def updated_at(self) -> datetime:
+        """Get the update timestamp"""
+        return self._updated_at
+
+
+# Functions that work with protocol classes
+def save_serializable(obj: Serializable, filename: str) -> None:
+    """Save a serializable object to a file"""
+    import json
+    
+    data = obj.to_dict()
+    print(f"Saving to {filename}: {data}")
+    # In a real implementation, we would actually write to the file
+
+
+def print_timestamps(obj: HasTimestamp) -> None:
+    """Print timestamps for an object"""
+    print(f"Created: {obj.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Updated: {obj.updated_at.strftime('%Y-%m-%d %H:%M:%S')}")
+
+
+# Create objects
+post = BlogPost("Python Protocols", "A guide to Protocol classes...", "John Doe")
+user = User("johndoe", "john@example.com")
+comment = Comment("Great post!", "Jane Smith")
+
+# Check if objects implement protocols
+print(f"Is BlogPost Serializable? {isinstance(post, Serializable)}")
+print(f"Is BlogPost HasTimestamp? {isinstance(post, HasTimestamp)}")
+print(f"Is User Serializable? {isinstance(user, Serializable)}")
+print(f"Is User HasTimestamp? {isinstance(user, HasTimestamp)}")
+print(f"Is Comment Serializable? {isinstance(comment, Serializable)}")
+print(f"Is Comment HasTimestamp? {isinstance(comment, HasTimestamp)}")
+
+# Use the functions with different objects
+print("\nSaving BlogPost:")
+save_serializable(post, "post.json")
+
+print("\nSaving User:")
+save_serializable(user, "user.json")
+
+print("\nTimestamps for BlogPost:")
+print_timestamps(post)
+
+print("\nTimestamps for Comment:")
+print_timestamps(comment)
+
+# This would raise a TypeError at runtime
+try:
+    print("\nTrying to save Comment (not Serializable):")
+    save_serializable(comment, "comment.json")
+except TypeError as e:
+    print(f"Error: {e}")
+
+try:
+    print("\nTrying to print timestamps for User (not HasTimestamp):")
+    print_timestamps(user)
+except TypeError as e:
+    print(f"Error: {e}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>We define two protocols, <code>Serializable</code> and <code>HasTimestamp</code>, using the <code>Protocol</code> class from <code>typing</code>.</li>
+                <li>The <code>@runtime_checkable</code> decorator allows runtime checking with <code>isinstance()</code>.</li>
+                <li>Protocol methods use <code>...</code> as a body, indicating they're method signatures without implementations.</li>
+                <li>We implement three classes: <code>BlogPost</code> (implements both protocols), <code>User</code> (implements only <code>Serializable</code>), and <code>Comment</code> (implements only <code>HasTimestamp</code>).</li>
+                <li>The functions <code>save_serializable</code> and <code>print_timestamps</code> accept any object that adheres to the respective protocol.</li>
+                <li>We use <code>isinstance()</code> to check if objects implement the protocols at runtime.</li>
+                <li>Trying to use an object with a function that expects a different protocol raises a <code>TypeError</code>.</li>
+            </ul>
+
+            <h4>Key Advantages of Protocols</h4>
+            <ol>
+                <li><strong>Structural Subtyping:</strong> Classes don't need to explicitly inherit from or implement protocols—they just need to have the required methods/attributes.</li>
+                <li><strong>Static Type Checking:</strong> Protocols work with static type checkers like mypy to catch type errors before runtime.</li>
+                <li><strong>Duck Typing:</strong> Protocols formalize Python's "duck typing" philosophy—"If it walks like a duck and quacks like a duck, then it probably is a duck."</li>
+                <li><strong>No Runtime Overhead:</strong> Unless using <code>@runtime_checkable</code>, protocols have no runtime cost; they're purely for static type checking.</li>
+            </ol>
+            
+            <p><strong>Real-world analogy:</strong> Protocols are like informal qualifications for a job. Instead of requiring specific certifications (explicit inheritance), you just need to demonstrate the skills (have the right methods). If someone can perform all the tasks required for the job, it doesn't matter where or how they learned to do them.</p>
+        </section>
+
+        <section class="real_world_examples">
+            <h3>Real-World Examples in Python Web Development</h3>
+            <p>Let's create a file called <code>real_world_examples.py</code> that demonstrates how abstract classes and interfaces are used in actual web development contexts:</p>
+            
+            <pre>
+# File: abstract_classes/real_world_examples.py
+
+import abc
+from typing import Protocol, List, Dict, Any, Optional
+
+# Example 1: ORM (Object-Relational Mapping) Models
+class Model(abc.ABC):
+    """Abstract base class for database models"""
+    
+    @classmethod
+    @abc.abstractmethod
+    def find_by_id(cls, id):
+        """Find a record by ID"""
+        pass
+    
+    @classmethod
+    @abc.abstractmethod
+    def find_all(cls):
+        """Find all records"""
+        pass
+    
+    @abc.abstractmethod
+    def save(self):
+        """Save the record to the database"""
+        pass
+    
+    @abc.abstractmethod
+    def delete(self):
+        """Delete the record from the database"""
+        pass
+
+
+class SQLModel(Model):
+    """SQL implementation of the Model class"""
+    
+    def __init__(self, **kwargs):
+        self.id = kwargs.get('id')
+        self._data = kwargs
+    
+    @classmethod
+    def find_by_id(cls, id):
+        print(f"SQL query: SELECT * FROM {cls.__name__.lower()} WHERE id = {id}")
+        # Simulated database query
+        return cls(id=id, name=f"Object {id}")
+    
+    @classmethod
+    def find_all(cls):
+        print(f"SQL query: SELECT * FROM {cls.__name__.lower()}")
+        # Simulated database query
+        return [cls(id=i, name=f"Object {i}") for i in range(1, 4)]
+    
+    def save(self):
+        if self.id:
+            print(f"SQL query: UPDATE {self.__class__.__name__.lower()} SET {self._data} WHERE id = {self.id}")
+        else:
+            print(f"SQL query: INSERT INTO {self.__class__.__name__.lower()} VALUES ({self._data})")
+            self.id = 1  # Simulated ID assignment
+        return True
+    
+    def delete(self):
+        print(f"SQL query: DELETE FROM {self.__class__.__name__.lower()} WHERE id = {self.id}")
+        return True
+
+
+class User(SQLModel):
+    """User model extending SQLModel"""
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.username = kwargs.get('username')
+        self.email = kwargs.get('email')
+
+
+# Example 2: Web Authentication Providers
+class AuthProvider(abc.ABC):
+    """Abstract base class for authentication providers"""
+    
+    @abc.abstractmethod
+    def authenticate(self, username, password):
+        """Authenticate a user"""
+        pass
+    
+    @abc.abstractmethod
+    def get_user(self, user_id):
+        """Get a user by ID"""
+        pass
+    
+    @abc.abstractmethod
+    def create_user(self, username, password, **kwargs):
+        """Create a new user"""
+        pass
+
+
+class LocalAuthProvider(AuthProvider):
+    """Local database authentication provider"""
+    
+    def authenticate(self, username, password):
+        print(f"Authenticating user {username} with local database")
+        # Simulated authentication
+        return {"id": 1, "username": username}
+    
+    def get_user(self, user_id):
+        print(f"Getting user {user_id} from local database")
+        # Simulated user retrieval
+        return {"id": user_id, "username": f"user{user_id}"}
+    
+    def create_user(self, username, password, **kwargs):
+        print(f"Creating user {username} in local database")
+        # Simulated user creation
+        return {"id": 1, "username": username}
+
+
+class OAuth2Provider(AuthProvider):
+    """OAuth2 authentication provider"""
+    
+    def __init__(self, provider_name, client_id, client_secret):
+        self.provider_name = provider_name
+        self.client_id = client_id
+        self.client_secret = client_secret
+    
+    def authenticate(self, username, password):
+        print(f"Authenticating user with {self.provider_name} OAuth2")
+        # Simulated OAuth2 authentication
+        return {"id": 1, "username": username, "oauth_provider": self.provider_name}
+    
+    def get_user(self, user_id):
+        print(f"Getting user {user_id} from {self.provider_name} OAuth2")
+        # Simulated user retrieval
+        return {"id": user_id, "username": f"user{user_id}", "oauth_provider": self.provider_name}
+    
+    def create_user(self, username, password, **kwargs):
+        print(f"Creating user {username} with {self.provider_name} OAuth2")
+        # Simulated user creation
+        return {"id": 1, "username": username, "oauth_provider": self.provider_name}
+
+
+# Example 3: Template Rendering (using Protocol)
+class TemplateRenderer(Protocol):
+    """Protocol for template renderers"""
+    
+    def render(self, template_name: str, context: Dict[str, Any]) -> str:
+        """Render a template with the given context"""
+        ...
+
+
+class JinjaRenderer:
+    """Jinja2 template renderer"""
+    
+    def render(self, template_name: str, context: Dict[str, Any]) -> str:
+        print(f"Rendering template {template_name} with Jinja2")
+        # Simulated Jinja2 rendering
+        return f"<html><body><h1>{context.get('title', '')}</h1></body></html>"
+
+
+class MakoRenderer:
+    """Mako template renderer"""
+    
+    def render(self, template_name: str, context: Dict[str, Any]) -> str:
+        print(f"Rendering template {template_name} with Mako")
+        # Simulated Mako rendering
+        return f"<html><body><h1>{context.get('title', '')}</h1></body></html>"
+
+
+# Example 4: Web Framework Request Handlers
+class RequestHandler(abc.ABC):
+    """Abstract base class for HTTP request handlers"""
+    
+    def __init__(self, request):
+        self.request = request
+    
+    @abc.abstractmethod
+    def get(self, *args, **kwargs):
+        """Handle HTTP GET requests"""
+        pass
+    
+    @abc.abstractmethod
+    def post(self, *args, **kwargs):
+        """Handle HTTP POST requests"""
+        pass
+    
+    def handle_request(self, method, *args, **kwargs):
+        """Dispatch the request to the appropriate method"""
+        if method.lower() == 'get':
+            return self.get(*args, **kwargs)
+        elif method.lower() == 'post':
+            return self.post(*args, **kwargs)
+        return {"error": "Method not allowed"}
+
+
+class HomeHandler(RequestHandler):
+    """Home page handler"""
+    
+    def get(self, *args, **kwargs):
+        return {"title": "Home Page", "content": "Welcome to our website!"}
+    
+    def post(self, *args, **kwargs):
+        return {"error": "POST not supported on home page"}
+
+
+class ContactHandler(RequestHandler):
+    """Contact form handler"""
+    
+    def get(self, *args, **kwargs):
+        return {"title": "Contact Us", "content": "Contact form"}
+    
+    def post(self, *args, **kwargs):
+        return {"success": "Message sent successfully"}
+
+
+# Test the examples
+# Example 1: ORM Models
+print("ORM Models Example:")
+user = User(username="john", email="john@example.com")
+user.save()
+users = User.find_all()
+print()
+
+# Example 2: Authentication Providers
+print("Authentication Providers Example:")
+local_auth = LocalAuthProvider()
+oauth_auth = OAuth2Provider("Google", "client123", "secret456")
+
+local_user = local_auth.authenticate("john", "password123")
+oauth_user = oauth_auth.authenticate("john", "token123")
+print()
+
+# Example 3: Template Renderers
+print("Template Renderers Example:")
+jinja = JinjaRenderer()
+mako = MakoRenderer()
+
+# We can use either renderer without checking its type
+def render_page(renderer: TemplateRenderer, template_name: str, context: Dict[str, Any]) -> str:
+    return renderer.render(template_name, context)
+
+jinja_output = render_page(jinja, "home.html", {"title": "Home"})
+mako_output = render_page(mako, "home.html", {"title": "Home"})
+print()
+
+# Example 4: Request Handlers
+print("Request Handlers Example:")
+# Simulate a request object
+class Request:
+    def __init__(self, method, path, data=None):
+        self.method = method
+        self.path = path
+        self.data = data or {}
+
+home_request = Request("GET", "/")
+contact_get_request = Request("GET", "/contact")
+contact_post_request = Request("POST", "/contact", {"email": "john@example.com", "message": "Hello!"})
+
+home_handler = HomeHandler(home_request)
+contact_handler = ContactHandler(contact_post_request)
+
+print("Home Handler Result:")
+print(home_handler.handle_request("GET"))
+print("\nContact Handler Result:")
+print(contact_handler.handle_request("POST"))
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li><strong>Example 1:</strong> Demonstrates an abstract <code>Model</code> class for an ORM (Object-Relational Mapping) system, similar to what you might find in Django or SQLAlchemy. The <code>SQLModel</code> implementation provides concrete methods for database operations, and the <code>User</code> class extends it for specific user-related functionality.</li>
+                <li><strong>Example 2:</strong> Shows an authentication system with an abstract <code>AuthProvider</code> class and two implementations: <code>LocalAuthProvider</code> for database authentication and <code>OAuth2Provider</code> for OAuth2-based authentication. This pattern allows swapping authentication providers without changing the application code.</li>
+                <li><strong>Example 3:</strong> Uses the Protocol approach to define a <code>TemplateRenderer</code> interface. Both <code>JinjaRenderer</code> and <code>MakoRenderer</code> implement this protocol, allowing them to be used interchangeably in the <code>render_page</code> function.</li>
+                <li><strong>Example 4:</strong> Implements a request handling system similar to web frameworks like Flask or Django. The abstract <code>RequestHandler</code> class defines the interface for handling HTTP requests, and concrete handlers like <code>HomeHandler</code> and <code>ContactHandler</code> implement specific behavior for different routes.</li>
+            </ul>
+
+            <p>These examples show how abstract classes and interfaces are fundamental to modern web development frameworks and libraries. They enable modular, extensible, and maintainable code by separating interface from implementation and allowing components to be swapped or extended easily.</p>
+        </section>
+
+        <section class="abstract_vs_interfaces">
+            <h3>Abstract Classes vs. Interfaces: When to Use Each</h3>
+            
+            <h4>Abstract Classes</h4>
+            <p><strong>Use when:</strong></p>
+            <ul>
+                <li>You want to share code among several closely related classes</li>
+                <li>The classes that will extend your abstract class have many common methods or fields</li>
+                <li>You want to declare non-abstract methods that subclasses can use or override</li>
+                <li>You need to define a template method pattern with some default behavior</li>
+            </ul>
+            
+            <h4>Interfaces (Protocol Classes)</h4>
+            <p><strong>Use when:</strong></p>
+            <ul>
+                <li>You want to define a contract that unrelated classes can implement</li>
+                <li>You need to achieve something similar to multiple inheritance (a class can implement multiple interfaces)</li>
+                <li>You want to specify the behavior of a particular data type but not concerned about who implements its behavior</li>
+                <li>You want to take advantage of polymorphism without forcing inheritance relationships</li>
+            </ul>
+            
+            <h4>Comparison Table</h4>
+            <table border="1">
+                <tr>
+                    <th>Feature</th>
+                    <th>Abstract Classes</th>
+                    <th>Interfaces (Protocols)</th>
+                </tr>
+                <tr>
+                    <td>Implementation</td>
+                    <td>Can provide method implementations</td>
+                    <td>No method implementations (just signatures)</td>
+                </tr>
+                <tr>
+                    <td>Inheritance</td>
+                    <td>A class can inherit from only one abstract class</td>
+                    <td>A class can implement multiple interfaces</td>
+                </tr>
+                <tr>
+                    <td>State</td>
+                    <td>Can have instance variables and constructor</td>
+                    <td>Typically no state, just method signatures</td>
+                </tr>
+                <tr>
+                    <td>Purpose</td>
+                    <td>Code reuse and defining a common base class</td>
+                    <td>Defining a contract for behavior</td>
+                </tr>
+                <tr>
+                    <td>Relationship</td>
+                    <td>"is-a" relationship (inheritance)</td>
+                    <td>"can-do" relationship (capability)</td>
+                </tr>
+            </table>
+            
+            <p><strong>Concrete example:</strong> Consider a system for drawing shapes. An abstract class might be appropriate for a <code>Shape</code> base class if all shapes share common properties like position and color, and some common methods like calculating area. Interfaces might be appropriate for capabilities like <code>Drawable</code> or <code>Rotatable</code> that could apply to shapes and other objects.</p>
+        </section>
+
+        <section class="best_practices">
+            <h3>Best Practices</h3>
+            
+            <h4>1. Keep Interfaces Simple and Focused</h4>
+            <p>Follow the Interface Segregation Principle (ISP): "Clients should not be forced to depend upon interfaces that they do not use." Create smaller, more focused interfaces rather than large, monolithic ones.</p>
+            
+            <pre>
+# Good: Focused interfaces
+class Readable(Protocol):
+    def read(self) -> str: ...
+
+class Writable(Protocol):
+    def write(self, data: str) -> None: ...
+
+# Bad: Monolithic interface
+class FileHandler(Protocol):
+    def read(self) -> str: ...
+    def write(self, data: str) -> None: ...
+    def create(self) -> None: ...
+    def delete(self) -> None: ...
+    def copy(self, destination: str) -> None: ...
+    # Too many methods in one interface
+</pre>
+            
+            <h4>2. Favor Composition Over Inheritance</h4>
+            <p>Abstract classes are a form of inheritance. Remember that inheritance can sometimes lead to rigid hierarchies. When possible, consider composition (using objects as components) as an alternative.</p>
+            
+            <h4>3. Design for Extension</h4>
+            <p>Follow the Open/Closed Principle: "Software entities should be open for extension but closed for modification." Design abstract classes and interfaces that can be extended without modifying the original code.</p>
+            
+            <h4>4. Document Your Abstract Classes and Interfaces</h4>
+            <p>Clear documentation is essential for abstract classes and interfaces. Document the contract, the expected behavior, and any implementation requirements for each abstract method.</p>
+            
+            <h4>5. Use Type Hints</h4>
+            <p>Type hints make your code more readable and help catch errors early. Use them to specify the expected types for abstract method parameters and return values.</p>
+            
+            <pre>
+class Repository(abc.ABC):
+    @abc.abstractmethod
+    def find_by_id(self, id: int) -> Optional[Dict[str, Any]]:
+        """Find a record by ID, returns None if not found"""
+        pass
+</pre>
+            
+            <h4>6. Be Consistent with Method Signatures</h4>
+            <p>When implementing abstract methods in subclasses, maintain consistent method signatures (parameter names and types, return types). This makes your code more predictable and easier to maintain.</p>
+            
+            <h4>7. Provide Base Implementations When Appropriate</h4>
+            <p>If most subclasses would implement a method similarly, consider providing a default implementation in the abstract class that subclasses can call or override as needed.</p>
+        </section>
+
+        <section class="key_takeaways">
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li><strong>Abstract Base Classes</strong> in Python are created using the <code>abc</code> module and provide a way to define classes that cannot be instantiated directly but must be subclassed.</li>
+                <li><strong>Abstract Methods</strong> declare what subclasses must implement without providing an implementation. They act as a contract that concrete subclasses must fulfill.</li>
+                <li><strong>Interfaces</strong> in Python are typically implemented as abstract classes with only abstract methods. They define a contract for behavior that implementing classes must provide.</li>
+                <li><strong>Protocol Classes</strong> (Python 3.8+) offer a more Pythonic approach to interfaces through structural subtyping, formalizing Python's duck typing philosophy.</li>
+                <li><strong>Real-World Applications</strong> of abstract classes and interfaces in web development include ORM models, authentication providers, template renderers, and request handlers.</li>
+                <li>The choice between abstract classes and interfaces depends on whether you're looking to share implementation (abstract classes) or just define a contract (interfaces/protocols).</li>
+                <li>Following best practices like keeping interfaces simple, favoring composition, and designing for extension will lead to more maintainable and flexible code.</li>
+            </ul>
+        </section>
+
+        <section class="assignment">
+            <h3>Assignment: Extend Your Previous Class System with Abstract Classes and Interfaces</h3>
+            <p>For today's assignment, you'll extend the class-based system you created in previous lessons by implementing abstract classes and interfaces.</p>
+            
+            <h4>Requirements:</h4>
+            <ol>
+                <li>Create at least one abstract base class that defines common attributes and methods for a group of related classes.</li>
+                <li>Implement at least two concrete subclasses that inherit from your abstract base class.</li>
+                <li>Define at least one interface (using either the <code>abc</code> module or Protocol classes) that specifies a set of methods that unrelated classes might implement.</li>
+                <li>Create at least two classes that implement your interface.</li>
+                <li>Implement a function or class that demonstrates polymorphism by working with any object that implements your interface.</li>
+                <li>Include docstrings and comments to explain your code's structure and design decisions.</li>
+                <li>Create a demonstration script that shows how your abstract classes and interfaces enable code reuse and polymorphism.</li>
+            </ol>
+            
+            <h4>Bonus Challenges:</h4>
+            <ol>
+                <li>Implement a class that inherits from an abstract base class and also implements one or more interfaces, demonstrating how both concepts can be combined.</li>
+                <li>Create a layered architecture with abstract classes at each layer (e.g., abstract models, abstract services, abstract controllers).</li>
+                <li>Implement a simple plugin system where plugins must implement a specific interface to be usable by the main application.</li>
+                <li>Use Protocol classes from <code>typing</code> to define interfaces and demonstrate how static type checking works with structural subtyping.</li>
+            </ol>
+            
+            <p>Submit your work as a Python module with clear structure and organization. Be prepared to explain your design choices and how abstract classes and interfaces enhance your system's flexibility and extensibility.</p>
+        </section>
+
+        <section class="further_reading">
+            <h3>Further Reading and Resources</h3>
+            <ul>
+                <li><a href="https://docs.python.org/3/library/abc.html" target="_blank">Python Official Documentation: Abstract Base Classes</a></li>
+                <li><a href="https://www.python.org/dev/peps/pep-0544/" target="_blank">PEP 544: Protocols - Structural subtyping (static duck typing)</a></li>
+                <li><a href="https://docs.python.org/3/library/typing.html#typing.Protocol" target="_blank">Python typing.Protocol Documentation</a></li>
+                <li><a href="https://realpython.com/python-interface/" target="_blank">Real Python: Implementing an Interface in Python</a></li>
+                <li>Design Patterns: Elements of Reusable Object-Oriented Software (Gang of Four book)</li>
+                <li>Clean Architecture: A Craftsman's Guide to Software Structure and Design by Robert C. Martin</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encapsulation in Python</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 3: Object-Oriented Programming Advanced Concepts</h2>
+        <h3>Encapsulation in Python</h3>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>Understanding Encapsulation in Python</h3>
+            <p>Encapsulation is one of the four fundamental principles of object-oriented programming, alongside inheritance, polymorphism, and abstraction. At its core, encapsulation is about bundling data (attributes) and methods that operate on that data into a single unit (a class), while also controlling access to that data.</p>
+            
+            <p>The key aspects of encapsulation include:</p>
+            <ul>
+                <li><strong>Bundling data and methods together:</strong> Organizing related data and functionality within a class.</li>
+                <li><strong>Information hiding:</strong> Restricting direct access to an object's components.</li>
+                <li><strong>Access control:</strong> Providing controlled ways to interact with an object's data.</li>
+                <li><strong>Implementation hiding:</strong> Concealing internal details from the outside world.</li>
+            </ul>
+            
+            <p>Think of encapsulation like a medicine capsule: the outer coating (the class interface) neatly contains and protects the ingredients inside (the data), while providing a controlled way for the medicine to be used. This tutorial will explore how Python implements encapsulation and how you can leverage it in your web development projects.</p>
+        </section>
+
+        <section class="folder_structure">
+            <h3>Today's File Structure</h3>
+            <p>For today's lesson, we'll create a new Python module in our project. Ensure you have the following directory structure:</p>
+            <pre>
+project_root/
+├── encapsulation/
+│   ├── __init__.py  (empty file to make the folder a package)
+│   ├── basic_encapsulation.py
+│   ├── property_decorators.py
+│   ├── private_methods.py
+│   ├── name_mangling.py
+│   └── real_world_examples.py
+</pre>
+            <p>All code examples will be saved in these files, allowing you to organize and revisit these concepts easily.</p>
+        </section>
+
+        <section class="python_access_modifiers">
+            <h3>Access Modifiers in Python</h3>
+            <p>Unlike languages such as Java or C++, Python does not have strict access modifiers like <code>public</code>, <code>private</code>, or <code>protected</code>. Instead, Python follows a convention-based approach to encapsulation, often summarized as "We're all consenting adults here."</p>
+            
+            <p>Python uses naming conventions to indicate the intended visibility of attributes and methods:</p>
+            
+            <ul>
+                <li><strong>Public:</strong> Names without a leading underscore (e.g., <code>name</code>) are considered public and can be accessed from anywhere.</li>
+                <li><strong>Protected:</strong> Names with a single leading underscore (e.g., <code>_name</code>) are considered protected, suggesting they should only be accessed within the class and its subclasses.</li>
+                <li><strong>Private:</strong> Names with double leading underscores (e.g., <code>__name</code>) trigger name mangling, making them harder (but not impossible) to access from outside the class.</li>
+            </ul>
+            
+            <p>It's important to understand that these are just conventions. Python does not enforce access restrictions like some other languages do. Instead, it relies on developers to respect these conventions.</p>
+        </section>
+
+        <section class="basic_encapsulation">
+            <h3>Basic Encapsulation</h3>
+            <p>Let's start with the fundamental principles of encapsulation in Python. Create a file named <code>basic_encapsulation.py</code> with the following code:</p>
+            
+            <pre>
+# File: encapsulation/basic_encapsulation.py
+
+class BankAccount:
+    """A simple bank account class demonstrating basic encapsulation"""
+    
+    def __init__(self, account_holder, initial_balance=0):
+        # Public attribute - accessible from anywhere
+        self.account_holder = account_holder
+        
+        # Protected attribute - should only be accessed within the class and subclasses
+        self._account_number = "ACCT-" + str(id(self))[-8:]
+        
+        # Private attribute - intended to be accessed only within this class
+        self.__balance = initial_balance
+    
+    def deposit(self, amount):
+        """Deposit money into the account"""
+        if amount <= 0:
+            raise ValueError("Deposit amount must be positive")
+        self.__balance += amount
+        return self.__balance
+    
+    def withdraw(self, amount):
+        """Withdraw money from the account"""
+        if amount <= 0:
+            raise ValueError("Withdrawal amount must be positive")
+        if amount > self.__balance:
+            raise ValueError("Insufficient funds")
+        self.__balance -= amount
+        return self.__balance
+    
+    def get_balance(self):
+        """Get the current balance"""
+        return self.__balance
+    
+    def __str__(self):
+        """String representation of the account"""
+        return f"Account of {self.account_holder} (Acc#: {self._account_number}) - Balance: ${self.__balance}"
+
+
+# Create a bank account
+account = BankAccount("John Doe", 1000)
+
+# Access public attribute
+print(f"Account holder: {account.account_holder}")
+
+# Access protected attribute (note: this works, but convention suggests you shouldn't)
+print(f"Account number: {account._account_number}")
+
+# Try to access private attribute (this will raise an AttributeError)
+try:
+    print(f"Balance: {account.__balance}")
+except AttributeError as e:
+    print(f"Error: {e}")
+
+# Use public methods to interact with the private attribute
+print(f"Initial balance: ${account.get_balance()}")
+account.deposit(500)
+print(f"After deposit: ${account.get_balance()}")
+account.withdraw(200)
+print(f"After withdrawal: ${account.get_balance()}")
+
+# Print the account (uses __str__ method)
+print(account)
+
+# What's happening behind the scenes with name mangling
+print("\nName mangling demonstration:")
+print(f"Mangled balance attribute name: {account._BankAccount__balance}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>The <code>BankAccount</code> class demonstrates basic encapsulation by:
+                    <ul>
+                        <li>Bundling data (<code>account_holder</code>, <code>_account_number</code>, <code>__balance</code>) with methods that operate on that data (<code>deposit</code>, <code>withdraw</code>, <code>get_balance</code>).</li>
+                        <li>Using naming conventions to indicate different levels of access control.</li>
+                        <li>Providing controlled access to the private <code>__balance</code> attribute through public methods.</li>
+                    </ul>
+                </li>
+                <li>We demonstrate how Python handles different types of attributes:
+                    <ul>
+                        <li>Public attributes can be accessed directly.</li>
+                        <li>Protected attributes can also be accessed directly (though convention suggests you shouldn't).</li>
+                        <li>Private attributes cannot be accessed directly using their original name due to name mangling.</li>
+                    </ul>
+                </li>
+                <li>The last line shows that private attributes are not truly inaccessible—they are just renamed internally to <code>_ClassName__attribute</code>.</li>
+            </ul>
+
+            <h4>Benefits of Encapsulation</h4>
+            <p>Even with Python's relatively loose approach to encapsulation, the pattern provides several benefits:</p>
+            <ol>
+                <li><strong>Data Hiding:</strong> By marking attributes as private or protected, you signal which parts of your implementation should not be directly accessed.</li>
+                <li><strong>Controlled Access:</strong> Public methods provide a controlled interface for interacting with an object's data.</li>
+                <li><strong>Validation:</strong> Methods can validate inputs before modifying attributes (e.g., ensuring a deposit amount is positive).</li>
+                <li><strong>Abstraction:</strong> Users of the class don't need to know how data is stored or processed internally.</li>
+                <li><strong>Flexibility:</strong> The implementation can change without affecting code that uses the class, as long as the public interface remains consistent.</li>
+            </ol>
+            
+            <p><strong>Real-world analogy:</strong> Encapsulation is like a vending machine. Users interact with the machine through a well-defined interface (buttons and coin slots), but they don't need to know how the internal mechanisms work. The machine's internal components are hidden and protected, while still providing the necessary functionality to users.</p>
+        </section>
+
+        <section class="property_decorators">
+            <h3>Property Decorators</h3>
+            <p>Python provides a more sophisticated way to control access to attributes using properties. The <code>@property</code> decorator allows you to define methods that behave like attributes, giving you control over getting, setting, and deleting attribute values.</p>
+            
+            <p>Create a file named <code>property_decorators.py</code> with the following code:</p>
+            
+            <pre>
+# File: encapsulation/property_decorators.py
+
+class Person:
+    """A class demonstrating the use of property decorators for encapsulation"""
+    
+    def __init__(self, first_name, last_name, age):
+        self._first_name = first_name
+        self._last_name = last_name
+        self._age = age
+    
+    @property
+    def first_name(self):
+        """Getter for first_name"""
+        return self._first_name
+    
+    @first_name.setter
+    def first_name(self, value):
+        """Setter for first_name"""
+        if not value or not isinstance(value, str):
+            raise ValueError("First name must be a non-empty string")
+        self._first_name = value
+    
+    @property
+    def last_name(self):
+        """Getter for last_name"""
+        return self._last_name
+    
+    @last_name.setter
+    def last_name(self, value):
+        """Setter for last_name"""
+        if not value or not isinstance(value, str):
+            raise ValueError("Last name must be a non-empty string")
+        self._last_name = value
+    
+    @property
+    def full_name(self):
+        """Computed property for full_name"""
+        return f"{self._first_name} {self._last_name}"
+    
+    @property
+    def age(self):
+        """Getter for age"""
+        return self._age
+    
+    @age.setter
+    def age(self, value):
+        """Setter for age with validation"""
+        if not isinstance(value, int):
+            raise ValueError("Age must be an integer")
+        if value < 0 or value > 120:
+            raise ValueError("Age must be between 0 and 120")
+        self._age = value
+    
+    @age.deleter
+    def age(self):
+        """Deleter for age"""
+        print("Age cannot be deleted, setting to None instead")
+        self._age = None
+
+
+# Create a person
+person = Person("John", "Doe", 30)
+
+# Access properties as if they were attributes
+print(f"First name: {person.first_name}")
+print(f"Last name: {person.last_name}")
+print(f"Full name: {person.full_name}")
+print(f"Age: {person.age}")
+
+# Modify properties
+person.first_name = "Jane"
+person.last_name = "Smith"
+person.age = 25
+
+print(f"\nAfter modifications:")
+print(f"Full name: {person.full_name}")
+print(f"Age: {person.age}")
+
+# Try invalid modifications
+print("\nTrying invalid modifications:")
+try:
+    person.first_name = ""  # Empty string
+except ValueError as e:
+    print(f"Error: {e}")
+
+try:
+    person.age = 150  # Out of range
+except ValueError as e:
+    print(f"Error: {e}")
+
+try:
+    person.age = "thirty"  # Wrong type
+except ValueError as e:
+    print(f"Error: {e}")
+
+# Try to modify a computed property
+try:
+    person.full_name = "Jane Doe"  # Can't set a property without a setter
+except AttributeError as e:
+    print(f"Error: {e}")
+
+# Try to delete a property
+try:
+    del person.age
+    print(f"Age after deletion: {person.age}")
+except AttributeError as e:
+    print(f"Error: {e}")
+
+
+# A more advanced example: a Temperature class that converts between units
+class Temperature:
+    """A class to store and convert temperature between units"""
+    
+    def __init__(self, celsius=0):
+        self._celsius = celsius
+    
+    @property
+    def celsius(self):
+        """Temperature in Celsius"""
+        return self._celsius
+    
+    @celsius.setter
+    def celsius(self, value):
+        if not isinstance(value, (int, float)):
+            raise ValueError("Temperature must be a number")
+        self._celsius = value
+    
+    @property
+    def fahrenheit(self):
+        """Temperature in Fahrenheit"""
+        return (self._celsius * 9/5) + 32
+    
+    @fahrenheit.setter
+    def fahrenheit(self, value):
+        if not isinstance(value, (int, float)):
+            raise ValueError("Temperature must be a number")
+        self._celsius = (value - 32) * 5/9
+    
+    @property
+    def kelvin(self):
+        """Temperature in Kelvin"""
+        return self._celsius + 273.15
+    
+    @kelvin.setter
+    def kelvin(self, value):
+        if not isinstance(value, (int, float)):
+            raise ValueError("Temperature must be a number")
+        if value < 0:
+            raise ValueError("Temperature in Kelvin cannot be negative")
+        self._celsius = value - 273.15
+
+
+# Create a temperature object
+temp = Temperature(25)  # 25°C
+
+# Access in different units
+print("\nTemperature Conversion Example:")
+print(f"Celsius: {temp.celsius}°C")
+print(f"Fahrenheit: {temp.fahrenheit}°F")
+print(f"Kelvin: {temp.kelvin}K")
+
+# Change the temperature in Fahrenheit
+temp.fahrenheit = 68
+print(f"\nAfter setting to 68°F:")
+print(f"Celsius: {temp.celsius}°C")
+print(f"Fahrenheit: {temp.fahrenheit}°F")
+print(f"Kelvin: {temp.kelvin}K")
+
+# Change the temperature in Kelvin
+temp.kelvin = 300
+print(f"\nAfter setting to 300K:")
+print(f"Celsius: {temp.celsius}°C")
+print(f"Fahrenheit: {temp.fahrenheit}°F")
+print(f"Kelvin: {temp.kelvin}K")
+
+# Try to set an invalid kelvin value
+try:
+    temp.kelvin = -10  # Negative Kelvin
+except ValueError as e:
+    print(f"\nError: {e}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>The <code>Person</code> class demonstrates the use of property decorators:
+                    <ul>
+                        <li><code>@property</code> defines a getter method that allows reading an attribute.</li>
+                        <li><code>@attribute.setter</code> defines a setter method that allows modifying an attribute.</li>
+                        <li><code>@attribute.deleter</code> defines a deleter method that handles attempts to delete an attribute.</li>
+                    </ul>
+                </li>
+                <li>Properties provide several advantages:
+                    <ul>
+                        <li>They allow data validation when setting values.</li>
+                        <li>They can compute values on-the-fly (like <code>full_name</code>).</li>
+                        <li>They can control whether an attribute can be set or deleted.</li>
+                        <li>They provide a clean interface that looks like direct attribute access.</li>
+                    </ul>
+                </li>
+                <li>The <code>Temperature</code> class shows a more advanced example where properties are used to convert between different units while maintaining a single source of truth (<code>_celsius</code>).</li>
+            </ul>
+
+            <h4>When to Use Properties</h4>
+            <p>Properties are particularly useful when:</p>
+            <ol>
+                <li>You need to validate data before assigning it to an attribute.</li>
+                <li>You want to compute a value on-the-fly rather than storing it.</li>
+                <li>You need to trigger actions when an attribute is accessed, modified, or deleted.</li>
+                <li>You want to change the internal implementation without affecting the public interface.</li>
+                <li>You need to maintain backward compatibility while refactoring code.</li>
+            </ol>
+            
+            <p><strong>Real-world analogy:</strong> Properties are like smart home devices. From the user's perspective, turning on a light works the same way it always has (flipping a switch), but behind the scenes, the smart system might be doing much more complex operations (checking if someone is home, adjusting brightness based on time of day, etc.). The interface remains simple while the implementation can be sophisticated.</p>
+        </section>
+
+        <section class="private_methods">
+            <h3>Private Methods</h3>
+            <p>Just like attributes, methods in Python can also be marked as private or protected using naming conventions. Private methods are intended to be used only within the class, not by external code.</p>
+            
+            <p>Create a file named <code>private_methods.py</code> with the following code:</p>
+            
+            <pre>
+# File: encapsulation/private_methods.py
+
+class PaymentProcessor:
+    """A class demonstrating the use of private methods for encapsulation"""
+    
+    def __init__(self, api_key):
+        self._api_key = api_key
+    
+    def process_payment(self, amount, card_number, expiry, cvv):
+        """Public method to process a payment"""
+        
+        # Validate inputs
+        if not self.__validate_card(card_number, expiry, cvv):
+            return {"success": False, "error": "Invalid card details"}
+        
+        # Process the payment (in a real scenario, this would call an external API)
+        payment_id = self.__generate_payment_id()
+        transaction = self.__create_transaction(payment_id, amount, card_number)
+        
+        # Simulate successful payment
+        return {"success": True, "transaction_id": transaction["id"], "amount": amount}
+    
+    def __validate_card(self, card_number, expiry, cvv):
+        """Private method to validate card details"""
+        print(f"Validating card: {self.__mask_card_number(card_number)}")
+        
+        # Simple validation (in a real scenario, these would be more sophisticated)
+        if len(card_number) < 13 or len(card_number) > 19:
+            return False
+        if len(expiry) != 5 or expiry[2] != '/':  # Expect format MM/YY
+            return False
+        if len(cvv) < 3 or len(cvv) > 4:
+            return False
+        
+        return True
+    
+    def __mask_card_number(self, card_number):
+        """Private method to mask a card number for security"""
+        # Only show the last 4 digits
+        return 'X' * (len(card_number) - 4) + card_number[-4:]
+    
+    def __generate_payment_id(self):
+        """Private method to generate a unique payment ID"""
+        import uuid
+        return str(uuid.uuid4())
+    
+    def __create_transaction(self, payment_id, amount, card_number):
+        """Private method to create a transaction record"""
+        print(f"Creating transaction for payment: {payment_id}")
+        
+        # In a real scenario, this would save to a database
+        transaction = {
+            "id": "TXN-" + payment_id[:8],
+            "payment_id": payment_id,
+            "amount": amount,
+            "card": self.__mask_card_number(card_number),
+            "timestamp": self.__get_timestamp()
+        }
+        
+        return transaction
+    
+    def __get_timestamp(self):
+        """Private method to get the current timestamp"""
+        from datetime import datetime
+        return datetime.now().isoformat()
+
+
+# Create a payment processor
+processor = PaymentProcessor("secret-api-key")
+
+# Process a payment (using the public interface)
+result = processor.process_payment(
+    amount=99.99,
+    card_number="4111111111111111",
+    expiry="12/23",
+    cvv="123"
+)
+
+print(f"\nPayment result: {result}")
+
+# Try to call a private method directly (this will raise an AttributeError)
+try:
+    processor.__validate_card("4111111111111111", "12/23", "123")
+except AttributeError as e:
+    print(f"\nError when trying to call private method: {e}")
+
+# What's happening behind the scenes with name mangling
+print("\nName mangling demonstration:")
+validation_result = processor._PaymentProcessor__validate_card(
+    "4111111111111111", "12/23", "123"
+)
+print(f"Validation result (accessed through mangled name): {validation_result}")
+
+
+# Extending the class to show how private methods affect inheritance
+class EnhancedPaymentProcessor(PaymentProcessor):
+    """A subclass demonstrating how private methods affect inheritance"""
+    
+    def process_subscription_payment(self, subscription_id, amount, card_number, expiry, cvv):
+        """Process a recurring subscription payment"""
+        print(f"\nProcessing subscription payment for subscription: {subscription_id}")
+        
+        # This works because process_payment is public
+        payment_result = self.process_payment(amount, card_number, expiry, cvv)
+        
+        if payment_result["success"]:
+            # Add subscription information
+            payment_result["subscription_id"] = subscription_id
+            
+            # Try to access a private method from the parent class
+            try:
+                # This will fail because __create_transaction is private to PaymentProcessor
+                transaction = self.__create_transaction("SUB-" + subscription_id, amount, card_number)
+            except AttributeError:
+                # Instead, we need to create our own implementation or use the mangled name
+                transaction = self._PaymentProcessor__create_transaction(
+                    "SUB-" + subscription_id, amount, card_number
+                )
+                payment_result["subscription_transaction"] = transaction["id"]
+        
+        return payment_result
+
+
+# Create an enhanced payment processor
+enhanced_processor = EnhancedPaymentProcessor("enhanced-api-key")
+
+# Process a subscription payment
+subscription_result = enhanced_processor.process_subscription_payment(
+    subscription_id="12345",
+    amount=19.99,
+    card_number="5555555555554444",
+    expiry="01/25",
+    cvv="321"
+)
+
+print(f"\nSubscription payment result: {subscription_result}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>The <code>PaymentProcessor</code> class demonstrates the use of private methods:
+                    <ul>
+                        <li>The public <code>process_payment</code> method provides the external interface.</li>
+                        <li>Private methods like <code>__validate_card</code>, <code>__mask_card_number</code>, etc., handle internal implementation details.</li>
+                        <li>This separates the public interface from the implementation details, enhancing encapsulation.</li>
+                    </ul>
+                </li>
+                <li>The example shows how private methods affect inheritance:
+                    <ul>
+                        <li>The <code>EnhancedPaymentProcessor</code> subclass can access public methods of the parent.</li>
+                        <li>It cannot directly access private methods of the parent using their original names.</li>
+                        <li>It needs to either reimplement those methods or use the mangled names to access them.</li>
+                    </ul>
+                </li>
+                <li>We demonstrate the name mangling mechanism that Python uses to implement private methods.</li>
+            </ul>
+
+            <h4>Benefits of Private Methods</h4>
+            <p>Using private methods provides several benefits:</p>
+            <ol>
+                <li><strong>Implementation Hiding:</strong> Hide internal implementation details from users of the class.</li>
+                <li><strong>Preventing Direct Access:</strong> Discourage direct access to methods that are part of the internal implementation.</li>
+                <li><strong>Code Organization:</strong> Clearly separate the public interface from internal helper methods.</li>
+                <li><strong>Preventing Name Collisions:</strong> Avoid name collisions when subclassing (since private methods won't be directly inherited).</li>
+                <li><strong>Documentation:</strong> Signal to other developers which methods are not part of the public API.</li>
+            </ol>
+            
+            <p><strong>Real-world analogy:</strong> Private methods are like the back rooms in a store. Customers (users of the class) interact with the sales floor (public methods), while employees (the class itself) use back rooms (private methods) for inventory management, accounting, and other internal operations. Customers don't need access to these areas and might cause problems if they did.</p>
+        </section>
+
+        <section class="name_mangling">
+            <h3>Name Mangling in Detail</h3>
+            <p>We've seen that Python uses name mangling to implement private attributes and methods. Let's take a closer look at how this works. Create a file named <code>name_mangling.py</code> with the following code:</p>
+            
+            <pre>
+# File: encapsulation/name_mangling.py
+
+class Parent:
+    """A class demonstrating name mangling with private attributes and methods"""
+    
+    def __init__(self):
+        self.public_attr = "I'm public in Parent"
+        self._protected_attr = "I'm protected in Parent"
+        self.__private_attr = "I'm private in Parent"
+    
+    def public_method(self):
+        return "I'm a public method in Parent"
+    
+    def _protected_method(self):
+        return "I'm a protected method in Parent"
+    
+    def __private_method(self):
+        return "I'm a private method in Parent"
+    
+    def access_private(self):
+        """Access private members from within the class"""
+        return (
+            f"Accessing from Parent: "
+            f"private attribute = '{self.__private_attr}', "
+            f"private method = '{self.__private_method()}'"
+        )
+
+
+class Child(Parent):
+    """A subclass demonstrating how name mangling affects inheritance"""
+    
+    def __init__(self):
+        super().__init__()
+        self.public_attr = "I'm public in Child"
+        self._protected_attr = "I'm protected in Child"
+        self.__private_attr = "I'm private in Child"  # This is a new attribute, not overriding
+    
+    def public_method(self):
+        return "I'm a public method in Child"
+    
+    def _protected_method(self):
+        return "I'm a protected method in Child"
+    
+    def __private_method(self):
+        return "I'm a private method in Child"  # This is a new method, not overriding
+    
+    def access_members(self):
+        """Try to access members of different visibility"""
+        result = [
+            f"Public attribute: {self.public_attr}",
+            f"Protected attribute: {self._protected_attr}",
+            # Can't do: self.__private_attr (from Parent)
+            f"Private attribute (Child's): {self.__private_attr}",
+            f"Public method: {self.public_method()}",
+            f"Protected method: {self._protected_method()}",
+            # Can't do: self.__private_method() (from Parent)
+            f"Private method (Child's): {self.__private_method()}"
+        ]
+        return "\n".join(result)
+    
+    def access_parent_private(self):
+        """Try to access parent's private members using name mangling"""
+        try:
+            parent_private_attr = self._Parent__private_attr
+            parent_private_method = self._Parent__private_method()
+            return (
+                f"Accessing from Child using name mangling: "
+                f"parent's private attribute = '{parent_private_attr}', "
+                f"parent's private method = '{parent_private_method}'"
+            )
+        except AttributeError as e:
+            return f"Error: {e}"
+
+
+# Create instances
+parent = Parent()
+child = Child()
+
+# Examine the __dict__ to see how attributes are stored
+print("Parent.__dict__:")
+for attr, value in parent.__dict__.items():
+    print(f"  {attr} = {value}")
+
+print("\nChild.__dict__:")
+for attr, value in child.__dict__.items():
+    print(f"  {attr} = {value}")
+
+# Access members through methods
+print("\nAccessing private members from within Parent:")
+print(parent.access_private())
+
+print("\nAccessing members from within Child:")
+print(child.access_members())
+
+print("\nAccessing Parent's private members from Child:")
+print(child.access_parent_private())
+
+# Direct access attempts
+print("\nDirect access attempts:")
+
+# Public - works fine
+print(f"parent.public_attr = {parent.public_attr}")
+print(f"child.public_attr = {child.public_attr}")
+
+# Protected - works, but convention suggests you shouldn't
+print(f"parent._protected_attr = {parent._protected_attr}")
+print(f"child._protected_attr = {child._protected_attr}")
+
+# Private - raises AttributeError
+try:
+    print(f"parent.__private_attr = {parent.__private_attr}")
+except AttributeError as e:
+    print(f"Error accessing parent.__private_attr: {e}")
+
+try:
+    print(f"child.__private_attr = {child.__private_attr}")
+except AttributeError as e:
+    print(f"Error accessing child.__private_attr: {e}")
+
+# Access private attributes directly using mangled names
+print("\nAccessing private attributes using mangled names:")
+print(f"parent._Parent__private_attr = {parent._Parent__private_attr}")
+print(f"child._Child__private_attr = {child._Child__private_attr}")
+print(f"child._Parent__private_attr = {child._Parent__private_attr}")
+
+# Access private methods directly using mangled names
+print("\nAccessing private methods using mangled names:")
+print(f"parent._Parent__private_method() = {parent._Parent__private_method()}")
+print(f"child._Child__private_method() = {child._Child__private_method()}")
+print(f"child._Parent__private_method() = {child._Parent__private_method()}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>We define a <code>Parent</code> class and a <code>Child</code> class, each with public, protected, and private attributes and methods.</li>
+                <li>We examine the <code>__dict__</code> of instances to see how Python stores attributes:
+                    <ul>
+                        <li>Public attributes are stored as-is: <code>public_attr</code></li>
+                        <li>Protected attributes are stored as-is: <code>_protected_attr</code></li>
+                        <li>Private attributes are renamed: <code>_ClassName__private_attr</code></li>
+                    </ul>
+                </li>
+                <li>We demonstrate how name mangling affects inheritance:
+                    <ul>
+                        <li>Private attributes and methods in <code>Parent</code> are not directly accessible from <code>Child</code>.</li>
+                        <li>Private attributes and methods in <code>Child</code> with the same names as those in <code>Parent</code> are completely separate entities.</li>
+                        <li>The <code>Child</code> class can access <code>Parent</code>'s private members using the mangled names.</li>
+                    </ul>
+                </li>
+                <li>We show direct access attempts to attributes of different visibility levels and how to access private members using the mangled names.</li>
+            </ul>
+
+            <h4>How Name Mangling Works</h4>
+            <p>The name mangling process works as follows:</p>
+            <ol>
+                <li>When Python sees a name that starts with double underscores (__) and doesn't end with double underscores, it renames it.</li>
+                <li>The renaming follows the pattern: <code>_ClassName__name</code>.</li>
+                <li>This happens both for attribute names and method names.</li>
+                <li>The renaming happens at compile time, not at runtime.</li>
+                <li>Subclasses that define their own __name attributes get their own mangled names, separate from the parent's.</li>
+            </ol>
+            
+            <p><strong>Important Note:</strong> Name mangling is not a security feature; it's merely a way to avoid name collisions in inherited classes. Any code can still access private attributes if it knows (or computes) the mangled name.</p>
+            
+            <p><strong>Real-world analogy:</strong> Name mangling is like having separate filing systems for different departments in a company. Each department (class) has its own naming system for internal documents, preventing confusion when different departments use the same document names. But if you know the filing system (the mangling pattern), you can still find any document.</p>
+        </section>
+
+        <section class="real_world_examples">
+            <h3>Real-World Examples</h3>
+            <p>Let's explore some real-world examples of encapsulation in Python web development contexts. Create a file named <code>real_world_examples.py</code> with the following code:</p>
+            
+            <pre>
+# File: encapsulation/real_world_examples.py
+
+# Example 1: Database Connection Pool
+class DatabaseConnectionPool:
+    """A simplified database connection pool demonstrating encapsulation"""
+    
+    def __init__(self, host, port, user, password, database, max_connections=5):
+        # Store connection parameters as protected attributes
+        self._host = host
+        self._port = port
+        self._user = user
+        self._password = password  # In a real scenario, this would be more securely handled
+        self._database = database
+        self._max_connections = max_connections
+        
+        # Private attributes for internal state
+        self.__connections = []
+        self.__active_connections = 0
+    
+    def get_connection(self):
+        """Get a connection from the pool"""
+        if self.__active_connections >= self._max_connections:
+            raise Exception("Connection pool exhausted")
+        
+        # Create a new connection if needed
+        if len(self.__connections) == 0:
+            connection = self.__create_connection()
+        else:
+            connection = self.__connections.pop()
+        
+        self.__active_connections += 1
+        return connection
+    
+    def release_connection(self, connection):
+        """Return a connection to the pool"""
+        if connection is None:
+            return
+        
+        # In a real scenario, we would validate that the connection belongs to this pool
+        self.__connections.append(connection)
+        self.__active_connections -= 1
+    
+    def __create_connection(self):
+        """Private method to create a new database connection"""
+        print(f"Creating new connection to {self._host}:{self._port}/{self._database}")
+        # In a real scenario, this would use a database driver to create a connection
+        return {
+            "id": len(self.__connections) + self.__active_connections + 1,
+            "host": self._host,
+            "database": self._database
+        }
+    
+    @property
+    def available_connections(self):
+        """Get the number of available connections"""
+        return len(self.__connections)
+    
+    @property
+    def active_connections(self):
+        """Get the number of active connections"""
+        return self.__active_connections
+    
+    @property
+    def max_connections(self):
+        """Get the maximum number of connections"""
+        return self._max_connections
+    
+    @max_connections.setter
+    def max_connections(self, value):
+        """Set the maximum number of connections"""
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError("max_connections must be a positive integer")
+        self._max_connections = value
+
+
+# Example 2: HTTP Request Handler
+class HTTPRequest:
+    """A simple HTTP request class"""
+    
+    def __init__(self, method, url, headers=None, body=None):
+        self.method = method
+        self.url = url
+        self.headers = headers or {}
+        self.body = body
+
+
+class HTTPResponse:
+    """A simple HTTP response class"""
+    
+    def __init__(self, status_code, body=None, headers=None):
+        self.status_code = status_code
+        self.body = body
+        self.headers = headers or {}
+
+
+class RequestHandler:
+    """A class to handle HTTP requests"""
+    
+    def __init__(self, routes):
+        self._routes = routes
+        self.__middleware = []
+    
+    def handle_request(self, request):
+        """Handle an HTTP request"""
+        # Apply middleware
+        modified_request = self.__apply_middleware(request)
+        
+        # Find the appropriate route handler
+        handler = self._routes.get(modified_request.url)
+        if not handler:
+            return self.__create_not_found_response()
+        
+        # Call the handler with the request
+        try:
+            response = handler(modified_request)
+            return response
+        except Exception as e:
+            return self.__create_error_response(str(e))
+    
+    def add_middleware(self, middleware_func):
+        """Add a middleware function"""
+        self.__middleware.append(middleware_func)
+    
+    def __apply_middleware(self, request):
+        """Apply all middleware to the request"""
+        modified_request = request
+        for middleware in self.__middleware:
+            modified_request = middleware(modified_request)
+        return modified_request
+    
+    def __create_not_found_response(self):
+        """Create a 404 Not Found response"""
+        return HTTPResponse(
+            status_code=404,
+            body="Not Found",
+            headers={"Content-Type": "text/plain"}
+        )
+    
+    def __create_error_response(self, error_message):
+        """Create a 500 Internal Server Error response"""
+        return HTTPResponse(
+            status_code=500,
+            body=f"Internal Server Error: {error_message}",
+            headers={"Content-Type": "text/plain"}
+        )
+
+
+# Example 3: ORM Model
+class Model:
+    """A base model class for a simple ORM"""
+    
+    def __init__(self, **kwargs):
+        # Set initial attribute values
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        
+        # Private attributes for tracking state
+        self.__dirty = False
+        self.__deleted = False
+    
+    def save(self):
+        """Save the model to the database"""
+        if self.__deleted:
+            raise Exception("Cannot save a deleted model")
+        
+        if hasattr(self, 'id') and self.id:
+            self.__update()
+        else:
+            self.__insert()
+        
+        self.__dirty = False
+    
+    def delete(self):
+        """Delete the model from the database"""
+        if not hasattr(self, 'id') or not self.id:
+            raise Exception("Cannot delete a model that hasn't been saved")
+        
+        # Simulate database delete
+        print(f"DELETE FROM {self.__class__.__name__} WHERE id = {self.id}")
+        
+        self.__deleted = True
+    
+    def __insert(self):
+        """Insert a new record into the database"""
+        # In a real ORM, this would generate and execute an INSERT SQL statement
+        print(f"INSERT INTO {self.__class__.__name__} ({', '.join(self.__get_fields())}) VALUES (...)")
+        
+        # Simulate getting an ID from the database
+        if not hasattr(self, 'id') or not self.id:
+            self.id = 1  # In a real scenario, this would be the ID from the database
+    
+    def __update(self):
+        """Update an existing record in the database"""
+        # In a real ORM, this would generate and execute an UPDATE SQL statement
+        print(f"UPDATE {self.__class__.__name__} SET ... WHERE id = {self.id}")
+    
+    def __get_fields(self):
+        """Get the model's fields"""
+        return [key for key in self.__dict__ if not key.startswith('_')]
+    
+    @property
+    def is_dirty(self):
+        """Check if the model has unsaved changes"""
+        return self.__dirty
+    
+    @property
+    def is_deleted(self):
+        """Check if the model has been deleted"""
+        return self.__deleted
+    
+    def __setattr__(self, name, value):
+        """Override setattr to track when attributes change"""
+        # If this is an existing attribute, check if the value is changing
+        if not name.startswith('_') and hasattr(self, name) and getattr(self, name) != value:
+            self.__dirty = True
+        
+        # Set the attribute normally
+        super().__setattr__(name, value)
+
+
+# Create a specific model class
+class User(Model):
+    """User model for the ORM example"""
+    
+    def __init__(self, username, email, **kwargs):
+        super().__init__(**kwargs)
+        self.username = username
+        self.email = email
+    
+    def __str__(self):
+        if hasattr(self, 'id') and self.id:
+            return f"User({self.id}, {self.username}, {self.email})"
+        else:
+            return f"User(unsaved, {self.username}, {self.email})"
+
+
+# Test the examples
+print("Example 1: Database Connection Pool")
+pool = DatabaseConnectionPool(
+    host="localhost",
+    port=5432,
+    user="postgres",
+    password="secret",
+    database="myapp",
+    max_connections=3
+)
+
+# Get some connections
+conn1 = pool.get_connection()
+conn2 = pool.get_connection()
+print(f"Active connections: {pool.active_connections}")
+print(f"Available connections: {pool.available_connections}")
+
+# Release a connection
+pool.release_connection(conn1)
+print(f"After releasing - Active: {pool.active_connections}, Available: {pool.available_connections}")
+
+# Change max connections
+pool.max_connections = 5
+print(f"New max connections: {pool.max_connections}")
+
+print("\nExample 2: HTTP Request Handler")
+# Define some route handlers
+def home_handler(request):
+    return HTTPResponse(200, "Welcome to the home page", {"Content-Type": "text/html"})
+
+def about_handler(request):
+    return HTTPResponse(200, "About Us", {"Content-Type": "text/html"})
+
+# Create a request handler
+routes = {
+    "/": home_handler,
+    "/about": about_handler
+}
+handler = RequestHandler(routes)
+
+# Add a middleware to log requests
+def logging_middleware(request):
+    print(f"Request: {request.method} {request.url}")
+    return request
+
+handler.add_middleware(logging_middleware)
+
+# Handle some requests
+print("\nHandling requests:")
+response1 = handler.handle_request(HTTPRequest("GET", "/"))
+print(f"Response: {response1.status_code}, {response1.body}")
+
+response2 = handler.handle_request(HTTPRequest("GET", "/about"))
+print(f"Response: {response2.status_code}, {response2.body}")
+
+response3 = handler.handle_request(HTTPRequest("GET", "/nonexistent"))
+print(f"Response: {response3.status_code}, {response3.body}")
+
+print("\nExample 3: ORM Model")
+# Create a user
+user = User(username="john_doe", email="john@example.com")
+print(f"New user: {user}")
+print(f"Is dirty: {user.is_dirty}")
+
+# Save the user
+user.save()
+print(f"After save - User: {user}")
+print(f"Is dirty: {user.is_dirty}")
+
+# Modify the user
+user.email = "john.doe@example.com"
+print(f"After modification - Is dirty: {user.is_dirty}")
+
+# Save again
+user.save()
+print(f"After second save - Is dirty: {user.is_dirty}")
+
+# Delete the user
+user.delete()
+print(f"Is deleted: {user.is_deleted}")
+
+# Try to save a deleted user
+try:
+    user.save()
+except Exception as e:
+    print(f"Error: {e}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>Example 1: <code>DatabaseConnectionPool</code>
+                    <ul>
+                        <li>Demonstrates encapsulation in a connection pool implementation.</li>
+                        <li>Uses protected attributes for configuration and private attributes for internal state.</li>
+                        <li>Provides public methods for getting and releasing connections.</li>
+                        <li>Uses properties to provide read access to internal state.</li>
+                    </ul>
+                </li>
+                <li>Example 2: <code>RequestHandler</code>
+                    <ul>
+                        <li>Shows how encapsulation can be used in a web request handling context.</li>
+                        <li>Uses private methods for internal operations like error handling and middleware application.</li>
+                        <li>Provides a clean public interface for handling requests and adding middleware.</li>
+                    </ul>
+                </li>
+                <li>Example 3: <code>Model</code> and <code>User</code>
+                    <ul>
+                        <li>Illustrates encapsulation in an ORM (Object-Relational Mapping) context.</li>
+                        <li>Uses private attributes to track model state.</li>
+                        <li>Overrides <code>__setattr__</code> to track when attributes change.</li>
+                        <li>Provides properties for accessing internal state.</li>
+                        <li>Implements private methods for database operations.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <p>These examples show how encapsulation is applied in real-world web development scenarios to create maintainable, flexible, and robust code.</p>
+        </section>
+
+        <section class="best_practices">
+            <h3>Best Practices for Encapsulation in Python</h3>
+            
+            <h4>1. Follow Naming Conventions</h4>
+            <p>Adhere to Python's naming conventions for indicating visibility:</p>
+            <ul>
+                <li>No leading underscore for public attributes and methods.</li>
+                <li>Single leading underscore for protected attributes and methods.</li>
+                <li>Double leading underscore for private attributes and methods.</li>
+            </ul>
+            
+            <h4>2. Use Properties for Controlled Access</h4>
+            <p>Instead of direct attribute access, use properties to:</p>
+            <ul>
+                <li>Validate input data.</li>
+                <li>Compute values on-the-fly.</li>
+                <li>Trigger side effects when attributes are accessed or modified.</li>
+                <li>Provide read-only access when appropriate.</li>
+            </ul>
+            
+            <h4>3. Minimize Public Interface</h4>
+            <p>Keep the public interface focused and minimal:</p>
+            <ul>
+                <li>Expose only what's necessary for users of the class.</li>
+                <li>Mark implementation details as protected or private.</li>
+                <li>Avoid exposing internal state directly.</li>
+            </ul>
+            
+            <h4>4. Document Class Interfaces</h4>
+            <p>Document which attributes and methods are part of the public API:</p>
+            <ul>
+                <li>Use docstrings to explain the purpose and usage of public methods.</li>
+                <li>Explicitly mention if a method or attribute is intended to be private or protected.</li>
+                <li>Specify any constraints or expectations for inputs.</li>
+            </ul>
+            
+            <h4>5. Be Consistent</h4>
+            <p>Apply encapsulation principles consistently throughout your code:</p>
+            <ul>
+                <li>Don't expose private attributes in some places but hide them in others.</li>
+                <li>Use the same approach for similar classes and components.</li>
+                <li>Don't bypass encapsulation in your own code.</li>
+            </ul>
+            
+            <h4>6. Respect Encapsulation in Client Code</h4>
+            <p>When using a class, respect its encapsulation:</p>
+            <ul>
+                <li>Don't access protected or private attributes directly.</li>
+                <li>Use the provided public interface, even if you could access private attributes through name mangling.</li>
+                <li>If the public interface is insufficient, consider extending the class or requesting changes.</li>
+            </ul>
+            
+            <h4>7. Use Encapsulation to Support Evolution</h4>
+            <p>Leverage encapsulation to allow your code to evolve:</p>
+            <ul>
+                <li>Keep implementation details private so they can change without affecting client code.</li>
+                <li>Use abstraction to separate interface from implementation.</li>
+                <li>Consider future requirements when designing class interfaces.</li>
+            </ul>
+        </section>
+
+        <section class="key_takeaways">
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li><strong>Encapsulation</strong> is about bundling data and methods into a class while controlling access to that data, promoting information hiding and abstraction.</li>
+                <li><strong>Python's approach</strong> to encapsulation is based on conventions rather than strict enforcement, following the "We're all consenting adults" philosophy.</li>
+                <li><strong>Naming conventions</strong> use underscores to indicate visibility: no underscores for public, single underscore for protected, double underscores for private.</li>
+                <li><strong>Name mangling</strong> is how Python implements private attributes and methods, renaming them to <code>_ClassName__name</code> to avoid name collisions in subclasses.</li>
+                <li><strong>Properties</strong> provide a powerful way to control access to attributes, enabling validation, computation, and controlled attribute modification.</li>
+                <li><strong>Private methods</strong> help organize code by separating internal implementation details from the public interface.</li>
+                <li><strong>Real-world applications</strong> of encapsulation in web development include database connection pools, request handlers, and ORM models, among others.</li>
+                <li>Following <strong>best practices</strong> like adhering to naming conventions, using properties, minimizing public interfaces, and documenting class APIs leads to more maintainable and flexible code.</li>
+            </ul>
+        </section>
+
+        <section class="assignment">
+            <h3>Assignment: Implement a Blog Post System with Proper Encapsulation</h3>
+            <p>For today's assignment, you'll implement a simple blog post system that demonstrates proper encapsulation principles in Python.</p>
+            
+            <h4>Requirements:</h4>
+            <ol>
+                <li>Create a <code>BlogPost</code> class with the following features:
+                    <ul>
+                        <li>Private attributes for storing the post's title, content, author, and timestamp.</li>
+                        <li>Properties for controlled access to these attributes, with appropriate validation.</li>
+                        <li>Methods for publishing, unpublishing, and editing the post.</li>
+                        <li>Private helper methods for validation and formatting.</li>
+                    </ul>
+                </li>
+                <li>Create a <code>BlogUser</code> class with:
+                    <ul>
+                        <li>Private attributes for username, email, and password.</li>
+                        <li>Properties for controlled access with validation.</li>
+                        <li>Methods for authentication and profile management.</li>
+                        <li>A secure way to handle password storage (e.g., storing only a hash).</li>
+                    </ul>
+                </li>
+                <li>Create a <code>BlogSystem</code> class that manages posts and users:
+                    <ul>
+                        <li>Private collections for storing posts and users.</li>
+                        <li>Methods for creating, retrieving, updating, and deleting posts and users.</li>
+                        <li>Methods for searching and filtering posts.</li>
+                        <li>Proper access control (e.g., only authenticated users can create posts).</li>
+                    </ul>
+                </li>
+                <li>Create a simple command-line interface for interacting with the blog system.</li>
+                <li>Include proper error handling and validation throughout the system.</li>
+                <li>Use docstrings to document the public interface of your classes.</li>
+            </ol>
+            
+            <h4>Bonus Challenges:</h4>
+            <ol>
+                <li>Add a <code>Comment</code> class with appropriate encapsulation.</li>
+                <li>Implement different user roles (e.g., admin, author, reader) with appropriate access control.</li>
+                <li>Add a simple persistence mechanism to save posts and users to disk.</li>
+                <li>Implement a draft system where posts can be saved as drafts before publishing.</li>
+                <li>Add tags and categories for posts, with methods for filtering by these attributes.</li>
+            </ol>
+            
+            <p>Submit your work as a Python module with clear structure and organization. Be prepared to explain your design choices and how encapsulation enhances your system's security, maintainability, and flexibility.</p>
+        </section>
+
+        <section class="further_reading">
+            <h3>Further Reading and Resources</h3>
+            <ul>
+                <li><a href="https://docs.python.org/3/tutorial/classes.html" target="_blank">Python Official Documentation: Classes</a></li>
+                <li><a href="https://docs.python.org/3/library/functions.html#property" target="_blank">Python Official Documentation: property</a></li>
+                <li><a href="https://realpython.com/python-property/" target="_blank">Real Python: Python's property(): Add Manage Attributes to Your Classes</a></li>
+                <li><a href="https://realpython.com/python-getter-setter/" target="_blank">Real Python: Getters and Setters in Python</a></li>
+                <li><a href="https://www.python.org/dev/peps/pep-0008/#descriptive-naming-styles" target="_blank">PEP 8: Style Guide for Python Code - Naming Conventions</a></li>
+                <li><a href="https://en.wikipedia.org/wiki/Encapsulation_(computer_programming)" target="_blank">Wikipedia: Encapsulation (computer programming)</a></li>
+                <li>Clean Code: A Handbook of Agile Software Craftsmanship by Robert C. Martin (Chapter 6: Objects and Data Structures)</li>
+                <li>Fluent Python by Luciano Ramalho (Chapters on Data Model and Objects)</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

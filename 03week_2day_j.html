@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extending Inventory System with Inheritance</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Extending Inventory System with Inheritance</h1>
+        <h2>Advanced Object-Oriented Programming in Python</h2>
+    </header>
+
+    <main>
+        <section class="intro">
+            <h3>Introduction</h3>
+            <p>In this tutorial, we'll extend our previous inventory system by implementing inheritance and additional advanced features. Building on our existing Product and Inventory classes, we'll create specialized product types and enhance our system with more sophisticated capabilities.</p>
+            <p>By the end of this tutorial, you'll learn how to:</p>
+            <ul>
+                <li>Implement inheritance to create specialized product classes</li>
+                <li>Use method overriding to customize behavior</li>
+                <li>Apply polymorphism in your inventory system</li>
+                <li>Add abstract classes and methods</li>
+                <li>Implement advanced inventory management features</li>
+            </ul>
+        </section>
+
+        <section class="polya-step1">
+            <h3>Step 1: Understanding the Problem</h3>
+            <p>Let's understand what we need to build in this extension:</p>
+            <ul>
+                <li><strong>Goal:</strong> Extend our inventory system with inheritance and advanced features</li>
+                <li><strong>Requirements:</strong>
+                    <ul>
+                        <li>Create specialized product types (e.g., Perishable, Electronics, Clothing)</li>
+                        <li>Implement inheritance to avoid code duplication</li>
+                        <li>Add product-specific behaviors and attributes</li>
+                        <li>Enhance inventory management with advanced features</li>
+                        <li>Maintain compatibility with the existing system</li>
+                    </ul>
+                </li>
+                <li><strong>Expected Inputs:</strong> Product details with type-specific attributes</li>
+                <li><strong>Expected Outputs:</strong> Enhanced inventory reports, specialized product information</li>
+            </ul>
+        </section>
+
+        <section class="polya-step2">
+            <h3>Step 2: Devising a Plan</h3>
+            <p>We'll extend our system by creating a hierarchy of product classes and enhancing our inventory management capabilities.</p>
+
+            <h4>Whiteboard Plan:</h4>
+            <ol>
+                <li>Create a product class hierarchy:
+                    <ul>
+                        <li>Maintain the base Product class</li>
+                        <li>Create PerishableProduct for items with expiration dates</li>
+                        <li>Create ElectronicProduct for electronic items with warranties</li>
+                        <li>Create ClothingProduct for clothing items with sizes</li>
+                    </ul>
+                </li>
+                <li>Implement method overriding:
+                    <ul>
+                        <li>Override display_info() for each product type</li>
+                        <li>Add specialized methods for each product type</li>
+                    </ul>
+                </li>
+                <li>Enhance the Inventory class:
+                    <ul>
+                        <li>Add support for product hierarchies</li>
+                        <li>Implement inventory sorting and filtering</li>
+                        <li>Add advanced reporting capabilities</li>
+                    </ul>
+                </li>
+                <li>Create a test program to demonstrate the enhanced system</li>
+            </ol>
+
+            <h4>Pseudocode:</h4>
+            <pre>
+# Base Product class (from previous implementation)
+class Product:
+    # Initialize with name, price, quantity
+    # Calculate item's total value
+    # Display product information
+
+# PerishableProduct class (extends Product)
+class PerishableProduct(Product):
+    # Initialize with additional expiration_date
+    # Override display_info to include expiration
+    # Add is_expired method to check if expired
+
+# ElectronicProduct class (extends Product)
+class ElectronicProduct(Product):
+    # Initialize with additional warranty_period
+    # Override display_info to include warranty
+    # Add is_in_warranty method
+
+# ClothingProduct class (extends Product)
+class ClothingProduct(Product):
+    # Initialize with additional size and material
+    # Override display_info to include size and material
+    # Add available_sizes method
+
+# Enhanced Inventory class
+class AdvancedInventory(Inventory):
+    # Inherit methods from base Inventory class
+    # Add methods to filter by product type
+    # Add methods for advanced reporting
+    # Add method to identify expired products
+            </pre>
+        </section>
+
+        <section class="polya-step3">
+            <h3>Step 3: Implementing the Solution</h3>
+            <p>Let's implement our solution step by step:</p>
+
+            <h4>File: enhanced_inventory_system.py</h4>
+            <pre>
+import datetime
+from abc import ABC, abstractmethod
+
+class Product(ABC):
+    """
+    Abstract base class for all products.
+    """
+    def __init__(self, name, price, quantity):
+        """
+        Initialize a new Product.
+        
+        Args:
+            name (str): The name of the product
+            price (float): The price of a single unit
+            quantity (int): The quantity in stock
+        
+        Raises:
+            ValueError: If price or quantity is negative
+        """
+        if price < 0:
+            raise ValueError("Price cannot be negative")
+        if quantity < 0:
+            raise ValueError("Quantity cannot be negative")
+        
+        self.name = name
+        self.price = price
+        self.quantity = quantity
+    
+    def calculate_value(self):
+        """Calculate the total value of the product (price * quantity)."""
+        return self.price * self.quantity
+    
+    @abstractmethod
+    def display_info(self):
+        """
+        Display the product information. Abstract method to be implemented by subclasses.
+        """
+        pass
+    
+    def get_type(self):
+        """Get the type of product."""
+        return self.__class__.__name__
+
+
+class StandardProduct(Product):
+    """
+    Standard product with basic properties.
+    """
+    def __init__(self, name, price, quantity, category="General"):
+        """
+        Initialize a standard product.
+        
+        Args:
+            name (str): The name of the product
+            price (float): The price of a single unit
+            quantity (int): The quantity in stock
+            category (str, optional): The product category. Defaults to "General".
+        """
+        super().__init__(name, price, quantity)
+        self.category = category
+    
+    def display_info(self):
+        """Display the product information."""
+        return f"Product: {self.name}, Price: ${self.price:.2f}, Quantity: {self.quantity}, Category: {self.category}"
+
+
+class PerishableProduct(Product):
+    """
+    Perishable product with an expiration date.
+    """
+    def __init__(self, name, price, quantity, expiration_date, category="Food"):
+        """
+        Initialize a perishable product.
+        
+        Args:
+            name (str): The name of the product
+            price (float): The price of a single unit
+            quantity (int): The quantity in stock
+            expiration_date (datetime.date): The expiration date
+            category (str, optional): The product category. Defaults to "Food".
+        """
+        super().__init__(name, price, quantity)
+        self.expiration_date = expiration_date
+        self.category = category
+    
+    def display_info(self):
+        """Display the product information including expiration date."""
+        return (f"Perishable: {self.name}, Price: ${self.price:.2f}, "
+                f"Quantity: {self.quantity}, Expires: {self.expiration_date.strftime('%Y-%m-%d')}, "
+                f"Category: {self.category}")
+    
+    def is_expired(self, current_date=None):
+        """
+        Check if the product is expired.
+        
+        Args:
+            current_date (datetime.date, optional): The date to check against.
+                Defaults to today's date.
+        
+        Returns:
+            bool: True if expired, False otherwise
+        """
+        if current_date is None:
+            current_date = datetime.date.today()
+        
+        return current_date >= self.expiration_date
+    
+    def days_until_expiration(self, current_date=None):
+        """
+        Calculate days until expiration.
+        
+        Args:
+            current_date (datetime.date, optional): The date to check against.
+                Defaults to today's date.
+        
+        Returns:
+            int: Number of days until expiration, negative if already expired
+        """
+        if current_date is None:
+            current_date = datetime.date.today()
+        
+        delta = self.expiration_date - current_date
+        return delta.days
+    
+    def calculate_value(self):
+        """
+        Calculate value with discount for products approaching expiration.
+        Override the base method to apply discounts based on expiry date.
+        """
+        days_left = self.days_until_expiration()
+        
+        # Apply discount based on remaining shelf life
+        if days_left < 0:
+            return 0  # Expired products have no value
+        elif days_left < 3:
+            discount = 0.5  # 50% discount if expiring in less than 3 days
+        elif days_left < 7:
+            discount = 0.2  # 20% discount if expiring in less than a week
+        else:
+            discount = 0
+        
+        discounted_price = self.price * (1 - discount)
+        return discounted_price * self.quantity
+
+
+class ElectronicProduct(Product):
+    """
+    Electronic product with warranty information.
+    """
+    def __init__(self, name, price, quantity, warranty_months, brand, category="Electronics"):
+        """
+        Initialize an electronic product.
+        
+        Args:
+            name (str): The name of the product
+            price (float): The price of a single unit
+            quantity (int): The quantity in stock
+            warranty_months (int): Warranty period in months
+            brand (str): The brand of the product
+            category (str, optional): The product category. Defaults to "Electronics".
+        """
+        super().__init__(name, price, quantity)
+        self.warranty_months = warranty_months
+        self.brand = brand
+        self.category = category
+    
+    def display_info(self):
+        """Display the product information including warranty."""
+        return (f"Electronic: {self.name}, Brand: {self.brand}, Price: ${self.price:.2f}, "
+                f"Quantity: {self.quantity}, Warranty: {self.warranty_months} months, "
+                f"Category: {self.category}")
+    
+    def extend_warranty(self, additional_months):
+        """
+        Extend warranty period.
+        
+        Args:
+            additional_months (int): Additional warranty months
+        
+        Returns:
+            int: New warranty period
+        """
+        self.warranty_months += additional_months
+        return self.warranty_months
+
+
+class ClothingProduct(Product):
+    """
+    Clothing product with size and material information.
+    """
+    def __init__(self, name, price, quantity, size, material, brand, category="Clothing"):
+        """
+        Initialize a clothing product.
+        
+        Args:
+            name (str): The name of the product
+            price (float): The price of a single unit
+            quantity (int): The quantity in stock
+            size (str): The size of the clothing item
+            material (str): The material of the clothing item
+            brand (str): The brand of the product
+            category (str, optional): The product category. Defaults to "Clothing".
+        """
+        super().__init__(name, price, quantity)
+        self.size = size
+        self.material = material
+        self.brand = brand
+        self.category = category
+    
+    def display_info(self):
+        """Display the product information including size and material."""
+        return (f"Clothing: {self.name}, Brand: {self.brand}, Price: ${self.price:.2f}, "
+                f"Quantity: {self.quantity}, Size: {self.size}, Material: {self.material}, "
+                f"Category: {self.category}")
+
+
+class InventoryManagementSystem:
+    """
+    Enhanced inventory management system that supports the product hierarchy.
+    """
+    def __init__(self):
+        """Initialize an empty inventory with products dictionary and category tracking."""
+        self.products = {}  # Dictionary to store products with name as key
+        self.categories = {}  # Dictionary to track products by category
+        self.product_types = {}  # Dictionary to track products by type
+    
+    def add_product(self, product):
+        """
+        Add a product to the inventory.
+        
+        Args:
+            product (Product): The product to add
+            
+        Returns:
+            bool: True if added successfully, False if product already exists
+        """
+        if product.name in self.products:
+            return False  # Product already exists
+        
+        self.products[product.name] = product
+        
+        # Add to category tracking
+        if not hasattr(product, 'category'):
+            product.category = "Uncategorized"
+            
+        if product.category not in self.categories:
+            self.categories[product.category] = []
+        self.categories[product.category].append(product.name)
+        
+        # Add to product type tracking
+        product_type = product.get_type()
+        if product_type not in self.product_types:
+            self.product_types[product_type] = []
+        self.product_types[product_type].append(product.name)
+        
+        return True
+    
+    def update_quantity(self, product_name, quantity_change):
+        """
+        Update the quantity of a product by adding or subtracting.
+        
+        Args:
+            product_name (str): The name of the product
+            quantity_change (int): The amount to add (positive) or subtract (negative)
+            
+        Returns:
+            bool: True if updated successfully, False if product not found or would result in negative quantity
+        """
+        if product_name not in self.products:
+            return False  # Product not found
+        
+        new_quantity = self.products[product_name].quantity + quantity_change
+        if new_quantity < 0:
+            return False  # Cannot have negative inventory
+        
+        self.products[product_name].quantity = new_quantity
+        return True
+    
+    def remove_product(self, product_name):
+        """
+        Remove a product from the inventory.
+        
+        Args:
+            product_name (str): The name of the product
+            
+        Returns:
+            bool: True if removed successfully, False if product not found
+        """
+        if product_name not in self.products:
+            return False  # Product not found
+        
+        product = self.products[product_name]
+        
+        # Remove from category tracking
+        if hasattr(product, 'category'):
+            if product.category in self.categories and product_name in self.categories[product.category]:
+                self.categories[product.category].remove(product_name)
+                
+                # If category is now empty, remove it
+                if not self.categories[product.category]:
+                    del self.categories[product.category]
+        
+        # Remove from product type tracking
+        product_type = product.get_type()
+        if product_type in self.product_types and product_name in self.product_types[product_type]:
+            self.product_types[product_type].remove(product_name)
+            
+            # If product type is now empty, remove it
+            if not self.product_types[product_type]:
+                del self.product_types[product_type]
+        
+        # Remove the product
+        del self.products[product_name]
+        return True
+    
+    def get_product(self, product_name):
+        """
+        Get a product by name.
+        
+        Args:
+            product_name (str): The name of the product
+            
+        Returns:
+            Product: The product object, or None if not found
+        """
+        return self.products.get(product_name)
+    
+    def check_stock(self, product_name):
+        """
+        Check if a product is in stock.
+        
+        Args:
+            product_name (str): The name of the product
+            
+        Returns:
+            int: The quantity in stock, or -1 if product not found
+        """
+        product = self.get_product(product_name)
+        if product is None:
+            return -1
+        
+        return product.quantity
+    
+    def calculate_total_value(self):
+        """
+        Calculate the total value of the inventory.
+        
+        Returns:
+            float: The total value of all products
+        """
+        return sum(product.calculate_value() for product in self.products.values())
+    
+    def get_products_by_type(self, product_type):
+        """
+        Get all products of a specific type.
+        
+        Args:
+            product_type (str): The product type
+            
+        Returns:
+            list: List of products of the specified type
+        """
+        if product_type not in self.product_types:
+            return []
+        
+        return [self.products[name] for name in self.product_types[product_type]]
+    
+    def get_products_by_category(self, category):
+        """
+        Get all products in a specific category.
+        
+        Args:
+            category (str): The category name
+            
+        Returns:
+            list: List of products in the specified category
+        """
+        if category not in self.categories:
+            return []
+        
+        return [self.products[name] for name in self.categories[category]]
+    
+    def get_expired_products(self, current_date=None):
+        """
+        Get all expired perishable products.
+        
+        Args:
+            current_date (datetime.date, optional): The date to check against.
+                Defaults to today's date.
+        
+        Returns:
+            list: List of expired perishable products
+        """
+        if current_date is None:
+            current_date = datetime.date.today()
+        
+        perishable_products = self.get_products_by_type("PerishableProduct")
+        return [product for product in perishable_products if product.is_expired(current_date)]
+    
+    def get_expiring_soon_products(self, days=7, current_date=None):
+        """
+        Get all perishable products expiring within the specified number of days.
+        
+        Args:
+            days (int, optional): Number of days to check. Defaults to 7.
+            current_date (datetime.date, optional): The date to check against.
+                Defaults to today's date.
+        
+        Returns:
+            list: List of soon-to-expire perishable products
+        """
+        if current_date is None:
+            current_date = datetime.date.today()
+        
+        perishable_products = self.get_products_by_type("PerishableProduct")
+        return [product for product in perishable_products 
+                if 0 <= product.days_until_expiration(current_date) <= days]
+    
+    def get_low_stock_products(self, threshold=5):
+        """
+        Get all products with stock below the threshold.
+        
+        Args:
+            threshold (int, optional): The low stock threshold. Defaults to 5.
+            
+        Returns:
+            list: List of products with stock below the threshold
+        """
+        return [product for product in self.products.values() if product.quantity < threshold]
+    
+    def search_products(self, search_term):
+        """
+        Search for products by name.
+        
+        Args:
+            search_term (str): The term to search for
+            
+        Returns:
+            list: List of products that match the search term
+        """
+        search_term = search_term.lower()
+        return [product for product in self.products.values() 
+                if search_term in product.name.lower()]
+    
+    def sort_products_by_price(self, ascending=True):
+        """
+        Sort products by price.
+        
+        Args:
+            ascending (bool, optional): Sort in ascending order. Defaults to True.
+            
+        Returns:
+            list: Sorted list of products
+        """
+        products = list(self.products.values())
+        return sorted(products, key=lambda p: p.price, reverse=not ascending)
+    
+    def sort_products_by_quantity(self, ascending=True):
+        """
+        Sort products by quantity.
+        
+        Args:
+            ascending (bool, optional): Sort in ascending order. Defaults to True.
+            
+        Returns:
+            list: Sorted list of products
+        """
+        products = list(self.products.values())
+        return sorted(products, key=lambda p: p.quantity, reverse=not ascending)
+    
+    def sort_products_by_value(self, ascending=True):
+        """
+        Sort products by total value.
+        
+        Args:
+            ascending (bool, optional): Sort in ascending order. Defaults to True.
+            
+        Returns:
+            list: Sorted list of products
+        """
+        products = list(self.products.values())
+        return sorted(products, key=lambda p: p.calculate_value(), reverse=not ascending)
+    
+    def generate_report(self):
+        """
+        Generate a comprehensive report of all products in the inventory.
+        
+        Returns:
+            str: A formatted report of the inventory
+        """
+        if not self.products:
+            return "Inventory is empty."
+        
+        report = "INVENTORY MANAGEMENT SYSTEM REPORT\n" + "=" * 80 + "\n"
+        report += f"Total Products: {len(self.products)}\n"
+        report += f"Total Categories: {len(self.categories)}\n"
+        report += f"Total Product Types: {len(self.product_types)}\n"
+        report += f"Total Inventory Value: ${self.calculate_total_value():.2f}\n"
+        report += "=" * 80 + "\n\n"
+        
+        # Report by product type
+        report += "INVENTORY BY PRODUCT TYPE\n" + "-" * 80 + "\n"
+        for product_type, product_names in self.product_types.items():
+            report += f"Type: {product_type} | Products: {len(product_names)}\n"
+            for product_name in product_names:
+                product = self.products[product_name]
+                report += f"  - {product.display_info()}, Value: ${product.calculate_value():.2f}\n"
+            report += "\n"
+        
+        # Report by category
+        report += "INVENTORY BY CATEGORY\n" + "-" * 80 + "\n"
+        for category, product_names in self.categories.items():
+            category_products = [self.products[name] for name in product_names]
+            category_value = sum(product.calculate_value() for product in category_products)
+            report += f"Category: {category} | Products: {len(product_names)} | Value: ${category_value:.2f}\n"
+            for product_name in product_names:
+                product = self.products[product_name]
+                report += f"  - {product.name}, Quantity: {product.quantity}, Value: ${product.calculate_value():.2f}\n"
+            report += "\n"
+        
+        # Low stock alert
+        low_stock = self.get_low_stock_products()
+        if low_stock:
+            report += "LOW STOCK ALERT\n" + "-" * 80 + "\n"
+            for product in low_stock:
+                report += f"  ! {product.name}: Only {product.quantity} left in stock !\n"
+            report += "\n"
+        
+        # Expired products alert
+        expired_products = self.get_expired_products()
+        if expired_products:
+            report += "EXPIRED PRODUCTS ALERT\n" + "-" * 80 + "\n"
+            for product in expired_products:
+                report += f"  ! {product.name}: Expired on {product.expiration_date.strftime('%Y-%m-%d')} !\n"
+            report += "\n"
+        
+        # Expiring soon alert
+        expiring_soon = self.get_expiring_soon_products()
+        if expiring_soon:
+            report += "EXPIRING SOON ALERT\n" + "-" * 80 + "\n"
+            for product in expiring_soon:
+                days = product.days_until_expiration()
+                report += f"  ! {product.name}: Expires in {days} days ({product.expiration_date.strftime('%Y-%m-%d')}) !\n"
+            report += "\n"
+        
+        return report
+    
+    def generate_type_specific_report(self, product_type):
+        """
+        Generate a report for a specific product type.
+        
+        Args:
+            product_type (str): The product type
+            
+        Returns:
+            str: A formatted report for the specified product type
+        """
+        products = self.get_products_by_type(product_type)
+        
+        if not products:
+            return f"No products of type '{product_type}' found in inventory."
+        
+        type_value = sum(product.calculate_value() for product in products)
+        
+        report = f"{product_type.upper()} PRODUCTS REPORT\n" + "=" * 80 + "\n"
+        report += f"Total {product_type} Products: {len(products)}\n"
+        report += f"Total {product_type} Value: ${type_value:.2f}\n"
+        report += "=" * 80 + "\n\n"
+        
+        for product in products:
+            report += f"{product.display_info()}, Value: ${product.calculate_value():.2f}\n"
+            
+            # Add type-specific information
+            if product_type == "PerishableProduct":
+                days = product.days_until_expiration()
+                status = "EXPIRED" if days < 0 else f"Expires in {days} days"
+                report += f"  * Expiration Status: {status}\n"
+                
+            elif product_type == "ElectronicProduct":
+                report += f"  * Warranty: {product.warranty_months} months\n"
+                
+            elif product_type == "ClothingProduct":
+                report += f"  * Size: {product.size}, Material: {product.material}\n"
+            
+            report += "\n"
+        
+        return report
+    
+    def save_report_to_file(self, filename="inventory_report.txt"):
+        """
+        Save the inventory report to a file.
+        
+        Args:
+            filename (str, optional): The name of the file. Defaults to "inventory_report.txt".
+            
+        Returns:
+            bool: True if saved successfully, False otherwise
+        """
+        try:
+            with open(filename, "w") as file:
+                file.write(self.generate_report())
+            return True
+        except Exception as e:
+            print(f"Error saving report: {e}")
+            return False
+            </pre>
+
+            <h4>Testing Our Implementation:</h4>
+            <pre>
+# File: test_enhanced_inventory.py
+
+import datetime
+
+from enhanced_inventory_system import (
+    StandardProduct, PerishableProduct, 
+    ElectronicProduct, ClothingProduct,
+    InventoryManagementSystem
+)
+
+def main():
+    try:
+        # Create an inventory system
+        inventory = InventoryManagementSystem()
+        
+        # Create current date for testing
+        today = datetime.date.today()
+        
+        # Add Standard Products
+        inventory.add_product(StandardProduct("Notebook", 4.99, 100, "Stationery"))
+        inventory.add_product(StandardProduct("Pen Pack", 7.99, 50, "Stationery"))
+        
+        # Add Perishable Products
+        # Expired product
+        expired_date = today - datetime.timedelta(days=5)
+        inventory.add_product(PerishableProduct("Milk", 3.49, 10, expired_date, "Dairy"))
+        
+        # Expiring soon
+        expiring_soon_date = today + datetime.timedelta(days=3)
+        inventory.add_product(PerishableProduct("Yogurt", 1.99, 15, expiring_soon_date, "Dairy"))
+        
+        # Not expiring soon
+        not_expiring_date = today + datetime.timedelta(days=30)
+        inventory.add_product(PerishableProduct("Frozen Pizza", 8.99, 20, not_expiring_date, "Frozen Foods"))
+        
+        # Add Electronic Products
+        inventory.add_product(ElectronicProduct("Smartphone", 699.99, 5, 12, "TechCo", "Mobile Devices"))
+        inventory.add_product(ElectronicProduct("Laptop", 1299.99, 3, 24, "ComputeCo", "Computers"))
+        inventory.add_product(ElectronicProduct("Headphones", 89.99, 8, 6, "AudioTech", "Audio"))
+        
+        # Add Clothing Products
+        inventory.add_product(ClothingProduct("T-Shirt", 19.99, 25, "M", "Cotton", "FashionBrand", "Tops"))
+        inventory.add_product(ClothingProduct("Jeans", 49.99, 10, "32", "Denim", "DenimCo", "Bottoms"))
+        
+        # Generate and display the report
+        print("Full Inventory Report:")
+        print(inventory.generate_report())
+        
+        # Generate type-specific reports
+        print("\nPerishable Products Report:")
+        print(inventory.generate_type_specific_report("PerishableProduct"))
+        
+        print("\nElectronic Products Report:")
+        print(inventory.generate_type_specific_report("ElectronicProduct"))
+        
+        # Test sorting functionality
+        print("\nProducts sorted by price (ascending):")
+        for product in inventory.sort_products_by_price():
+            print(f"  {product.name}: ${product.price:.2f}")
+        
+        print("\nProducts sorted by value (descending):")
+        for product in inventory.sort_products_by_value(ascending=False):
+            print(f"  {product.name}: ${product.calculate_value():.2f}")
+        
+        # Test search functionality
+        search_term = "phone"
+        print(f"\nSearch results for '{search_term}':")
+        search_results = inventory.search_products(search_term)
+        for product in search_results:
+            print(f"  {product.display_info()}")
+        
+        # Update a product quantity
+        inventory.update_quantity("Laptop", -1)  # Sell one laptop
+        
+        # Test the updated value calculation for PerishableProduct
+        milk = inventory.get_product("Milk")
+        yogurt = inventory.get_product("Yogurt")
+        pizza = inventory.get_product("Frozen Pizza")
+        
+        print("\nPerishable Product Value Calculation:")
+        print(f"  Milk (expired): ${milk.calculate_value():.2f}")
+        print(f"  Yogurt (expiring soon): ${yogurt.calculate_value():.2f}")
+        print(f"  Frozen Pizza (not expiring soon): ${pizza.calculate_value():.2f}")
+        
+        # Save the report to a file
+        inventory.save_report_to_file()
+        print("\nInventory report saved to 'inventory_report.txt'")
+        
+    except ValueError as e:
+        print(f"Error: {e}")
+
+if __name__ == "__main__":
+    main()
+            </pre>
+
+            <h4>Expected Output:</h4>
+            <pre>
+Full Inventory Report:
+INVENTORY MANAGEMENT SYSTEM REPORT
+================================================================================
+Total Products: 10
+Total Categories: 8
+Total Product Types: 4
+Total Inventory Value: $31959.70
+================================================================================
+
+INVENTORY BY PRODUCT TYPE
+--------------------------------------------------------------------------------
+Type: StandardProduct | Products: 2
+  - Product: Notebook, Price: $4.99, Quantity: 100, Category: Stationery, Value: $499.00
+  - Product: Pen Pack, Price: $7.99, Quantity: 50, Category: Stationery, Value: $399.50
+
+Type: PerishableProduct | Products: 3
+  - Perishable: Milk, Price: $3.49, Quantity: 10, Expires: 2025-04-14, Category: Dairy, Value: $0.00
+  - Perishable: Yogurt, Price: $1.99, Quantity: 15, Expires: 2025-04-22, Category: Dairy, Value: $14.93
+  - Perishable: Frozen Pizza, Price: $8.99, Quantity: 20, Expires: 2025-05-19, Category: Frozen Foods, Value: $179.80
+
+Type: ElectronicProduct | Products: 3
+  - Electronic: Smartphone, Brand: TechCo, Price: $699.99, Quantity: 5, Warranty: 12 months, Category: Mobile Devices, Value: $3499.95
+  - Electronic: Laptop, Brand: ComputeCo, Price: $1299.99, Quantity: 3, Warranty: 24 months, Category: Computers, Value: $3899.97
+  - Electronic: Headphones, Brand: AudioTech, Price: $89.99, Quantity: 8, Warranty: 6 months, Category: Audio, Value: $719.92
+
+Type: ClothingProduct | Products: 2
+  - Clothing: T-Shirt, Brand: FashionBrand, Price: $19.99, Quantity: 25, Size: M, Material: Cotton, Category: Tops, Value: $499.75
+  - Clothing: Jeans, Brand: DenimCo, Price: $49.99, Quantity: 10, Size: 32, Material: Denim, Category: Bottoms, Value: $499.90
+
+...
+
+PerishableProduct Products Report:
+PERISHABLEPRODUCT PRODUCTS REPORT
+================================================================================
+Total PerishableProduct Products: 3
+Total PerishableProduct Value: $194.73
+================================================================================
+
+Perishable: Milk, Price: $3.49, Quantity: 10, Expires: 2025-04-14, Category: Dairy, Value: $0.00
+  * Expiration Status: EXPIRED
+
+Perishable: Yogurt, Price: $1.99, Quantity: 15, Expires: 2025-04-22, Category: Dairy, Value: $14.93
+  * Expiration Status: Expires in 3 days
+
+Perishable: Frozen Pizza, Price: $8.99, Quantity: 20, Expires: 2025-05-19, Category: Frozen Foods, Value: $179.80
+  * Expiration Status: Expires in 30 days
+
+...
+
+Products sorted by price (ascending):
+  Yogurt: $1.99
+  Milk: $3.49
+  Notebook: $4.99
+  Pen Pack: $7.99
+  Frozen Pizza: $8.99
+  Headphones: $89.99
+  T-Shirt: $19.99
+  Jeans: $49.99
+  Smartphone: $699.99
+  Laptop: $1299.99
+
+...
+
+Perrishable Product Value Calculation:
+  Milk (expired): $0.00
+  Yogurt (expiring soon): $14.93
+  Frozen Pizza (not expiring soon): $179.80
+
+Inventory report saved to 'inventory_report.txt'
+            </pre>
+        </section>
+
+        <section class="polya-step4">
+            <h3>Step 4: Reviewing the Solution</h3>
+            <p>Let's review our implementation to see if it meets our requirements:</p>
+            <ul>
+                <li><strong>Inheritance Implementation:</strong> We successfully implemented inheritance with a base Product class and specialized subclasses.</li>
+                <li><strong>Method Overriding:</strong> Each product type overrides display_info() to show type-specific information.</li>
+                <li><strong>Specialized Behavior:</strong> Each product type has specialized methods (e.g., is_expired(), extend_warranty()).</li>
+                <li><strong>Advanced Inventory Features:</strong> We added filtering, sorting, searching, and specialized reporting.</li>
+                <li><strong>Compatibility:</strong> Our solution maintains compatibility with the original inventory system structure.</li>
+            </ul>
+
+            <h4>Potential Improvements:</h4>
+            <ul>
+                <li>Add database integration for persistent storage</li>
+                <li>Create a graphical user interface</li>
+                <li>Implement authentication and multiple user roles</li>
+                <li>Add advanced analytics for inventory optimization</li>
+                <li>Implement automated reordering based on stock levels</li>
+            </ul>
+        </section>
+
+        <section class="understanding-reinforcement">
+            <h3>Reinforcing Understanding</h3>
+            <h4>Key Object-Oriented Programming Concepts Used:</h4>
+            <ul>
+                <li><strong>Inheritance:</strong> Creating specialized classes that inherit attributes and methods from a base class</li>
+                <li><strong>Method Overriding:</strong> Redefining methods in subclasses to customize behavior</li>
+                <li><strong>Polymorphism:</strong> Using objects of different types through a common interface</li>
+                <li><strong>Abstract Classes:</strong> Creating base classes that cannot be instantiated directly</li>
+                <li><strong>Encapsulation:</strong> Bundling data and methods together and controlling access</li>
+            </ul>
+
+            <h4>Analogies to Help Understanding:</h4>
+            <ul>
+                <li><strong>Inheritance as a Family Tree:</strong> The Product class is like a parent with various "child" product types that inherit its characteristics but have their own unique traits. Just as children inherit genes from parents but develop their own personalities, subclasses inherit attributes and methods from their parent class but can customize them.</li>
+                <li><strong>Method Overriding as Recipe Modifications:</strong> Think of a basic recipe (base method) that you modify based on specific variations. The core steps remain the same, but you add special ingredients or techniques for different versions.</li>
+                <li><strong>Abstract Classes as Blueprints:</strong> An abstract class is like an architectural blueprint that outlines what a building should have but doesn't specify all the details. You can't build directly from an abstract blueprint; you need a complete design that fills in all the specifics.</li>
+            </ul>
+
+            <h4>Real-World Applications:</h4>
+            <p>This enhanced inventory system can be applied in various real-world scenarios:</p>
+            <ul>
+                <li><strong>Grocery Stores:</strong> Manage perishable and non-perishable items, track expiration dates, and apply automatic discounts.</li>
+                <li><strong>Electronics Retailers:</strong> Track warranty information, manage different brands and categories, and handle specialized product attributes.</li>
+                <li><strong>Clothing Stores:</strong> Manage inventory by size, material, brand, and style, with specialized handling for seasonal items.</li>
+                <li><strong>Pharmacies:</strong> Track medication expiration dates, manage prescription vs. over-the-counter items, and ensure proper stock levels.</li>
+                <li><strong>Warehouses:</strong> Manage diverse product types with specialized storage and handling requirements, optimizing space and organization.</li>
+            </ul>
+
+            <h4>Common Challenges and Solutions:</h4>
+            <ul>
+                <li><strong>Challenge:</strong> Deciding when to use inheritance vs. composition<br>
+                    <strong>Solution:</strong> Use inheritance for "is-a" relationships and composition for "has-a" relationships</li>
+                <li><strong>Challenge:</strong> Managing complex class hierarchies<br>
+                    <strong>Solution:</strong> Keep the hierarchy shallow and focused, avoid deep inheritance chains</li>
+                <li><strong>Challenge:</strong> Handling common behaviors across different types<br>
+                    <strong>Solution:</strong> Use abstract base classes to define common interfaces</li>
+            </ul>
+        </section>
+
+        <section class="practice-exercises">
+            <h3>Practice Exercises</h3>
+            <p>To reinforce your understanding, try these exercises:</p>
+            <ol>
+                <li>Create a new BookProduct class that inherits from Product and includes author, ISBN, and page count attributes</li>
+                <li>Implement a discount system with different strategies for different product types</li>
+                <li>Add a notification system that alerts when products are expired or low in stock</li>
+                <li>Create a supplier management system that integrates with the inventory system</li>
+                <li>Implement a simple command-line interface for the enhanced inventory system</li>
+            </ol>
+        </section>
+
+        <section class="conclusion">
+            <h3>Conclusion</h3>
+            <p>In this tutorial, we've extended our inventory system by implementing inheritance and advanced features. We've created a hierarchy of product classes, each with specialized attributes and behaviors, and enhanced our inventory management capabilities with advanced filtering, sorting, and reporting.</p>
+            <p>This enhanced system demonstrates how inheritance and other OOP principles can help us create more flexible, maintainable, and powerful applications. By using these principles effectively, we can model complex real-world systems and create software that adapts to diverse requirements.</p>
+            <p>The concepts you've learned here—inheritance, method overriding, polymorphism, and abstract classes—are fundamental to object-oriented programming and will serve you well in many aspects of software development. As you continue your journey, look for opportunities to apply these principles to solve real-world problems and create more elegant, efficient solutions.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

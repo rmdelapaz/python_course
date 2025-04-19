@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polymorphism in Python</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 3: Object-Oriented Programming Advanced Concepts</h2>
+        <h3>Polymorphism</h3>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>Understanding Polymorphism in Python</h3>
+            <p>Polymorphism is one of the four fundamental pillars of object-oriented programming, alongside encapsulation, inheritance, and abstraction. The word "polymorphism" comes from Greek words meaning "many forms," and that's exactly what it allows in programming: the ability for a single interface to represent different underlying forms (data types or classes).</p>
+            
+            <p>At its core, polymorphism enables us to write more flexible, reusable code by allowing:</p>
+            <ul>
+                <li>Different classes to be treated through a common interface</li>
+                <li>Different objects to respond to the same method call in their own unique ways</li>
+                <li>Code to work with objects of multiple types without explicitly checking their types</li>
+            </ul>
+            
+            <p>In today's session, we'll explore polymorphism in Python, how it works, and how you can leverage it to create more elegant and maintainable software.</p>
+        </section>
+
+        <section class="folder_structure">
+            <h3>Today's File Structure</h3>
+            <p>For today's lesson, we'll create a new Python module in our project. Ensure you have the following directory structure:</p>
+            <pre>
+project_root/
+├── polymorphism/
+│   ├── __init__.py  (empty file to make the folder a package)
+│   ├── duck_typing.py
+│   ├── method_overriding.py
+│   ├── operator_overloading.py
+│   ├── function_polymorphism.py
+│   └── real_world_examples.py
+</pre>
+            <p>All code examples will be saved in these files, allowing you to organize and revisit these concepts easily.</p>
+        </section>
+
+        <section class="polymorphism_types">
+            <h3>Types of Polymorphism in Python</h3>
+            <p>Python supports several forms of polymorphism:</p>
+            
+            <ol>
+                <li><strong>Duck Typing:</strong> Objects are compatible with operations based on the methods and properties they define, not their actual types. "If it walks like a duck and quacks like a duck, then it probably is a duck."</li>
+                <li><strong>Method Overriding:</strong> Subclasses can provide specific implementations of methods defined in parent classes.</li>
+                <li><strong>Operator Overloading:</strong> Classes can define how operators like +, -, *, etc., behave when applied to instances of the class.</li>
+                <li><strong>Function Polymorphism:</strong> Built-in functions and methods that can operate on different types of objects.</li>
+            </ol>
+            
+            <p>Let's explore each of these in detail.</p>
+        </section>
+
+        <section class="duck_typing">
+            <h3>Duck Typing</h3>
+            <p>Duck typing is a programming concept where the type or class of an object is less important than the methods it defines or the operations it supports. This is a core principle in Python and enables a flexible form of polymorphism.</p>
+            
+            <p>Create a file named <code>duck_typing.py</code> with the following code:</p>
+            
+            <pre>
+# File: polymorphism/duck_typing.py
+
+class Duck:
+    def speak(self):
+        return "Quack!"
+    
+    def swim(self):
+        return "Duck swimming"
+    
+    def fly(self):
+        return "Duck flying"
+
+
+class Person:
+    def speak(self):
+        return "Hello!"
+    
+    def swim(self):
+        return "Person swimming"
+    
+    def fly(self):
+        return "Person flying in an airplane"
+
+
+class Robot:
+    def speak(self):
+        return "Beep boop!"
+    
+    def swim(self):
+        return "Robot swimming with waterproof components"
+    
+    def fly(self):
+        return "Robot activating jet propulsion"
+
+
+# Function that demonstrates duck typing
+def make_it_speak(entity):
+    """Any entity that can 'speak' will work here"""
+    return entity.speak()
+
+def make_it_swim(entity):
+    """Any entity that can 'swim' will work here"""
+    return entity.swim()
+
+def make_it_fly(entity):
+    """Any entity that can 'fly' will work here"""
+    return entity.fly()
+
+
+# Create instances of each class
+donald = Duck()
+john = Person()
+r2d2 = Robot()
+
+# Make them all speak, swim, and fly without checking their types
+for entity in [donald, john, r2d2]:
+    print(f"{entity.__class__.__name__} says: {make_it_speak(entity)}")
+    print(f"{entity.__class__.__name__} swims: {make_it_swim(entity)}")
+    print(f"{entity.__class__.__name__} flies: {make_it_fly(entity)}")
+    print()
+
+# This will raise an AttributeError because Fish doesn't have a 'fly' method
+class Fish:
+    def swim(self):
+        return "Fish swimming"
+
+nemo = Fish()
+print(f"{nemo.__class__.__name__} swims: {make_it_swim(nemo)}")
+try:
+    print(f"{nemo.__class__.__name__} flies: {make_it_fly(nemo)}")
+except AttributeError as e:
+    print(f"Error: {e}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>We define three completely different classes (<code>Duck</code>, <code>Person</code>, and <code>Robot</code>), each with <code>speak</code>, <code>swim</code>, and <code>fly</code> methods.</li>
+                <li>The functions <code>make_it_speak</code>, <code>make_it_swim</code>, and <code>make_it_fly</code> don't care about the type of object they receive; they only care that the object has the appropriate method.</li>
+                <li>We can pass instances of any of the three classes to these functions, and they work correctly without any type checking.</li>
+                <li>The <code>Fish</code> class demonstrates what happens when an object doesn't have the expected method—an <code>AttributeError</code> is raised.</li>
+            </ul>
+
+            <p><strong>Key Insights about Duck Typing:</strong></p>
+            <ul>
+                <li>No inheritance or interface implementation is required—just the presence of expected methods.</li>
+                <li>There's no formal type checking; Python simply attempts to call the method and raises an error if it doesn't exist.</li>
+                <li>This enables a very flexible form of polymorphism that doesn't require a formal class hierarchy.</li>
+                <li>The focus is on an object's behavior (what it can do) rather than its identity (what it is).</li>
+            </ul>
+            
+            <p><strong>Real-world analogy:</strong> Duck typing is like focusing on a person's skills rather than their formal qualifications. If someone can perform the required tasks (write code, design interfaces, etc.), it doesn't matter whether they have a computer science degree or are self-taught—they can do the job.</p>
+        </section>
+
+        <section class="method_overriding">
+            <h3>Method Overriding</h3>
+            <p>Method overriding is a form of polymorphism that occurs when a subclass provides a specific implementation for a method already defined in its parent class. This allows different classes in an inheritance hierarchy to respond differently to the same method call.</p>
+            
+            <p>Create a file named <code>method_overriding.py</code> with the following code:</p>
+            
+            <pre>
+# File: polymorphism/method_overriding.py
+
+class Animal:
+    def __init__(self, name):
+        self.name = name
+    
+    def make_sound(self):
+        """Base make_sound method"""
+        return "Some generic animal sound"
+    
+    def move(self):
+        """Base move method"""
+        return "Moving somehow"
+    
+    def describe(self):
+        """Method that uses the polymorphic methods"""
+        return f"{self.name} is a {self.__class__.__name__}. It says '{self.make_sound()}' and moves by {self.move()}"
+
+
+class Dog(Animal):
+    def make_sound(self):
+        """Override make_sound for dogs"""
+        return "Woof!"
+    
+    def move(self):
+        """Override move for dogs"""
+        return "running on four legs"
+
+
+class Bird(Animal):
+    def make_sound(self):
+        """Override make_sound for birds"""
+        return "Tweet!"
+    
+    def move(self):
+        """Override move for birds"""
+        return "flying with wings"
+
+
+class Fish(Animal):
+    def make_sound(self):
+        """Override make_sound for fish"""
+        return "Blub!"
+    
+    def move(self):
+        """Override move for fish"""
+        return "swimming with fins"
+
+
+# Create a list of animals and call the same methods on each
+animals = [
+    Animal("Generic Animal"),
+    Dog("Rufus"),
+    Bird("Tweety"),
+    Fish("Nemo")
+]
+
+# Demonstrate polymorphism through inheritance
+for animal in animals:
+    print(animal.describe())
+
+# Using isinstance() to check types (sometimes necessary)
+def pet_the_animal(animal):
+    """Pet the animal if it's a dog or a bird, but not a fish"""
+    if isinstance(animal, Fish):
+        return f"Not petting {animal.name} because it's a fish and lives in water."
+    else:
+        return f"Petting {animal.name}. It responds: '{animal.make_sound()}'"
+
+print("\nPetting animals:")
+for animal in animals:
+    print(pet_the_animal(animal))
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>We define a base <code>Animal</code> class with <code>make_sound</code> and <code>move</code> methods.</li>
+                <li>Subclasses (<code>Dog</code>, <code>Bird</code>, <code>Fish</code>) override these methods to provide specific implementations.</li>
+                <li>The <code>describe</code> method in the <code>Animal</code> class uses the overridden methods, demonstrating how the same method call (<code>make_sound()</code> and <code>move()</code>) produces different behavior depending on the actual object type.</li>
+                <li>We create a list of different animal types and iterate through it, calling the same method on each object.</li>
+                <li>The <code>pet_the_animal</code> function shows a case where we might need to check the actual type of an object using <code>isinstance()</code> to make decisions, although this is less common in Python than in some other languages.</li>
+            </ul>
+
+            <p><strong>Key Insights about Method Overriding:</strong></p>
+            <ul>
+                <li>Method overriding is based on inheritance relationships.</li>
+                <li>The overriding method in the subclass must have the same name, parameters, and return type as the overridden method in the parent class.</li>
+                <li>When a method is called on an object, Python first looks for the method in the object's class, then in its parent classes (following the Method Resolution Order).</li>
+                <li>Method overriding enables "is-a" polymorphism—each subclass "is a" type of the parent class but behaves in its own specific way.</li>
+            </ul>
+            
+            <p><strong>Real-world analogy:</strong> Method overriding is like different family members responding to the same request in different ways. If you ask family members to "make dinner," each might prepare a different meal based on their own skills and preferences, but they're all fulfilling the same basic request.</p>
+        </section>
+
+        <section class="operator_overloading">
+            <h3>Operator Overloading</h3>
+            <p>Operator overloading is a form of polymorphism that allows operators like +, -, *, etc., to behave differently depending on the types of the operands. Python provides special method names (often called "dunder" or "magic" methods) that you can implement to define how operators work with your custom classes.</p>
+            
+            <p>Create a file named <code>operator_overloading.py</code> with the following code:</p>
+            
+            <pre>
+# File: polymorphism/operator_overloading.py
+
+class Vector2D:
+    """A 2D vector class with operator overloading"""
+    
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    
+    def __str__(self):
+        """String representation of the vector"""
+        return f"Vector2D({self.x}, {self.y})"
+    
+    def __add__(self, other):
+        """Overload the + operator for vector addition"""
+        if isinstance(other, Vector2D):
+            # Vector + Vector
+            return Vector2D(self.x + other.x, self.y + other.y)
+        elif isinstance(other, (int, float)):
+            # Vector + scalar
+            return Vector2D(self.x + other, self.y + other)
+        else:
+            raise TypeError("Unsupported operand type")
+    
+    def __sub__(self, other):
+        """Overload the - operator for vector subtraction"""
+        if isinstance(other, Vector2D):
+            # Vector - Vector
+            return Vector2D(self.x - other.x, self.y - other.y)
+        elif isinstance(other, (int, float)):
+            # Vector - scalar
+            return Vector2D(self.x - other, self.y - other)
+        else:
+            raise TypeError("Unsupported operand type")
+    
+    def __mul__(self, other):
+        """Overload the * operator for vector scaling or dot product"""
+        if isinstance(other, Vector2D):
+            # Vector * Vector (dot product)
+            return self.x * other.x + self.y * other.y
+        elif isinstance(other, (int, float)):
+            # Vector * scalar (scaling)
+            return Vector2D(self.x * other, self.y * other)
+        else:
+            raise TypeError("Unsupported operand type")
+    
+    def __eq__(self, other):
+        """Overload the == operator for vector comparison"""
+        if not isinstance(other, Vector2D):
+            return False
+        return self.x == other.x and self.y == other.y
+    
+    def __lt__(self, other):
+        """Overload the < operator to compare vector magnitudes"""
+        if not isinstance(other, Vector2D):
+            raise TypeError("Unsupported operand type")
+        return self.magnitude() < other.magnitude()
+    
+    def magnitude(self):
+        """Calculate the magnitude (length) of the vector"""
+        return (self.x ** 2 + self.y ** 2) ** 0.5
+
+
+class ComplexNumber:
+    """A complex number class with operator overloading"""
+    
+    def __init__(self, real, imag):
+        self.real = real
+        self.imag = imag
+    
+    def __str__(self):
+        """String representation of the complex number"""
+        if self.imag >= 0:
+            return f"{self.real} + {self.imag}i"
+        else:
+            return f"{self.real} - {abs(self.imag)}i"
+    
+    def __add__(self, other):
+        """Overload the + operator for complex addition"""
+        if isinstance(other, ComplexNumber):
+            # Complex + Complex
+            return ComplexNumber(self.real + other.real, self.imag + other.imag)
+        elif isinstance(other, (int, float)):
+            # Complex + scalar
+            return ComplexNumber(self.real + other, self.imag)
+        else:
+            raise TypeError("Unsupported operand type")
+    
+    def __mul__(self, other):
+        """Overload the * operator for complex multiplication"""
+        if isinstance(other, ComplexNumber):
+            # Complex * Complex
+            # (a + bi) * (c + di) = (ac - bd) + (ad + bc)i
+            real = self.real * other.real - self.imag * other.imag
+            imag = self.real * other.imag + self.imag * other.real
+            return ComplexNumber(real, imag)
+        elif isinstance(other, (int, float)):
+            # Complex * scalar
+            return ComplexNumber(self.real * other, self.imag * other)
+        else:
+            raise TypeError("Unsupported operand type")
+
+
+# Test the Vector2D class
+v1 = Vector2D(3, 4)
+v2 = Vector2D(1, 2)
+
+print(f"v1 = {v1}")
+print(f"v2 = {v2}")
+print(f"v1 + v2 = {v1 + v2}")
+print(f"v1 - v2 = {v1 - v2}")
+print(f"v1 * v2 (dot product) = {v1 * v2}")
+print(f"v1 * 2 (scaling) = {v1 * 2}")
+print(f"v1 == Vector2D(3, 4): {v1 == Vector2D(3, 4)}")
+print(f"v1 < v2: {v1 < v2}")
+print(f"v1 magnitude: {v1.magnitude()}")
+print(f"v2 magnitude: {v2.magnitude()}")
+
+# Test the ComplexNumber class
+c1 = ComplexNumber(3, 4)
+c2 = ComplexNumber(1, -2)
+
+print(f"\nc1 = {c1}")
+print(f"c2 = {c2}")
+print(f"c1 + c2 = {c1 + c2}")
+print(f"c1 + 5 = {c1 + 5}")
+print(f"c1 * c2 = {c1 * c2}")
+print(f"c1 * 2 = {c1 * 2}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>We define two classes, <code>Vector2D</code> and <code>ComplexNumber</code>, each with several operator overloading methods.</li>
+                <li>These special methods have names like <code>__add__</code>, <code>__sub__</code>, <code>__mul__</code>, <code>__eq__</code>, and <code>__lt__</code>, which correspond to operators like +, -, *, ==, and <.</li>
+                <li>The implementation of each method depends on the class and what makes sense for that type of object. For example:
+                    <ul>
+                        <li>Vector addition is element-wise, while complex number addition has specific rules.</li>
+                        <li>Vector multiplication can be interpreted as a dot product or scaling, depending on the operand types.</li>
+                        <li>Complex number multiplication follows the formula (a + bi) * (c + di) = (ac - bd) + (ad + bc)i.</li>
+                    </ul>
+                </li>
+                <li>Each overloaded operator can behave differently based on the types of the operands, demonstrating polymorphism.</li>
+            </ul>
+
+            <h4>Common Operator Overloading Methods in Python</h4>
+            <table border="1">
+                <tr>
+                    <th>Method</th>
+                    <th>Operator</th>
+                    <th>Example</th>
+                </tr>
+                <tr>
+                    <td><code>__add__</code></td>
+                    <td>+</td>
+                    <td><code>a + b</code></td>
+                </tr>
+                <tr>
+                    <td><code>__sub__</code></td>
+                    <td>-</td>
+                    <td><code>a - b</code></td>
+                </tr>
+                <tr>
+                    <td><code>__mul__</code></td>
+                    <td>*</td>
+                    <td><code>a * b</code></td>
+                </tr>
+                <tr>
+                    <td><code>__truediv__</code></td>
+                    <td>/</td>
+                    <td><code>a / b</code></td>
+                </tr>
+                <tr>
+                    <td><code>__floordiv__</code></td>
+                    <td>//</td>
+                    <td><code>a // b</code></td>
+                </tr>
+                <tr>
+                    <td><code>__mod__</code></td>
+                    <td>%</td>
+                    <td><code>a % b</code></td>
+                </tr>
+                <tr>
+                    <td><code>__pow__</code></td>
+                    <td>**</td>
+                    <td><code>a ** b</code></td>
+                </tr>
+                <tr>
+                    <td><code>__eq__</code></td>
+                    <td>==</td>
+                    <td><code>a == b</code></td>
+                </tr>
+                <tr>
+                    <td><code>__lt__</code></td>
+                    <td><</td>
+                    <td><code>a < b</code></td>
+                </tr>
+                <tr>
+                    <td><code>__gt__</code></td>
+                    <td>></td>
+                    <td><code>a > b</code></td>
+                </tr>
+                <tr>
+                    <td><code>__le__</code></td>
+                    <td><=</td>
+                    <td><code>a <= b</code></td>
+                </tr>
+                <tr>
+                    <td><code>__ge__</code></td>
+                    <td>>=</td>
+                    <td><code>a >= b</code></td>
+                </tr>
+                <tr>
+                    <td><code>__str__</code></td>
+                    <td>str()</td>
+                    <td><code>print(a)</code></td>
+                </tr>
+                <tr>
+                    <td><code>__repr__</code></td>
+                    <td>repr()</td>
+                    <td><code>repr(a)</code></td>
+                </tr>
+                <tr>
+                    <td><code>__len__</code></td>
+                    <td>len()</td>
+                    <td><code>len(a)</code></td>
+                </tr>
+                <tr>
+                    <td><code>__getitem__</code></td>
+                    <td>[]</td>
+                    <td><code>a[key]</code></td>
+                </tr>
+                <tr>
+                    <td><code>__setitem__</code></td>
+                    <td>[] =</td>
+                    <td><code>a[key] = value</code></td>
+                </tr>
+                <tr>
+                    <td><code>__call__</code></td>
+                    <td>()</td>
+                    <td><code>a()</code></td>
+                </tr>
+            </table>
+            
+            <p><strong>Key Insights about Operator Overloading:</strong></p>
+            <ul>
+                <li>Operator overloading allows using standard Python operators with custom classes in ways that make sense for those classes.</li>
+                <li>The same operator can behave differently depending on the types of the operands, which is polymorphism in action.</li>
+                <li>You only need to implement the methods that make sense for your class—there's no requirement to implement all operators.</li>
+                <li>Operator overloading is a key feature that makes Python code read more naturally, especially for mathematical or container-like objects.</li>
+            </ul>
+            
+            <p><strong>Real-world analogy:</strong> Operator overloading is like how the + sign has different meanings in different contexts. In arithmetic, it means addition (2 + 3 = 5), but when working with strings, it means concatenation ("Hello" + "World" = "HelloWorld"). The operator behaves differently based on the types it's working with.</p>
+        </section>
+
+        <section class="function_polymorphism">
+            <h3>Function Polymorphism</h3>
+            <p>Function polymorphism refers to the ability of built-in functions and methods to work with objects of different types. Python's built-in functions like <code>len()</code>, <code>str()</code>, <code>print()</code>, etc., can operate on a wide variety of objects, adapting their behavior based on the object's type.</p>
+            
+            <p>Create a file named <code>function_polymorphism.py</code> with the following code:</p>
+            
+            <pre>
+# File: polymorphism/function_polymorphism.py
+
+# len() function works on different types of objects
+my_list = [1, 2, 3, 4, 5]
+my_tuple = (1, 2, 3)
+my_string = "Hello, World!"
+my_dict = {"a": 1, "b": 2, "c": 3}
+my_set = {1, 2, 3, 4, 5}
+
+print(f"len(my_list): {len(my_list)}")
+print(f"len(my_tuple): {len(my_tuple)}")
+print(f"len(my_string): {len(my_string)}")
+print(f"len(my_dict): {len(my_dict)}")
+print(f"len(my_set): {len(my_set)}")
+
+# print() function works with different types
+print("\nprint() with different types:")
+print(42)
+print(3.14)
+print("Hello")
+print([1, 2, 3])
+print({"name": "John", "age": 30})
+
+# + operator works differently with different types
+print("\n+ operator with different types:")
+print(f"5 + 3 = {5 + 3}")
+print(f'"Hello" + " World" = {"Hello" + " World"}')
+print(f"[1, 2] + [3, 4] = {[1, 2] + [3, 4]}")
+
+# Custom class supporting built-in functions
+class CustomContainer:
+    def __init__(self, items):
+        self.items = items
+    
+    def __len__(self):
+        return len(self.items)
+    
+    def __str__(self):
+        return f"CustomContainer with {len(self)} items: {self.items}"
+    
+    def __getitem__(self, index):
+        return self.items[index]
+    
+    def __iter__(self):
+        return iter(self.items)
+
+
+# Create a custom container and use built-in functions with it
+container = CustomContainer([10, 20, 30, 40, 50])
+print(f"\nlen(container): {len(container)}")
+print(f"str(container): {str(container)}")
+print(f"container[2]: {container[2]}")
+
+print("\nIterating over container:")
+for item in container:
+    print(item)
+
+# max(), min(), sum() with different collections
+numbers_list = [5, 2, 8, 1, 9]
+numbers_tuple = (5, 2, 8, 1, 9)
+numbers_set = {5, 2, 8, 1, 9}
+
+print(f"\nmax(numbers_list): {max(numbers_list)}")
+print(f"min(numbers_tuple): {min(numbers_tuple)}")
+print(f"sum(numbers_set): {sum(numbers_set)}")
+
+# sorted() with different collections
+print(f"\nsorted(numbers_list): {sorted(numbers_list)}")
+print(f"sorted(numbers_tuple): {sorted(numbers_tuple)}")
+print(f"sorted(numbers_set): {sorted(numbers_set)}")
+print(f"sorted('hello'): {sorted('hello')}")
+print(f"sorted(container): {sorted(container)}")  # Works with our custom container too!
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li>We demonstrate how various built-in functions like <code>len()</code>, <code>print()</code>, <code>max()</code>, <code>min()</code>, <code>sum()</code>, and <code>sorted()</code> work with different types of objects.</li>
+                <li>We also show how operators like + behave differently depending on the operand types.</li>
+                <li>We create a custom <code>CustomContainer</code> class that implements special methods like <code>__len__</code>, <code>__str__</code>, <code>__getitem__</code>, and <code>__iter__</code>, allowing it to work with built-in functions.</li>
+                <li>This demonstrates how Python's duck typing allows objects to work with built-in functions as long as they implement the required methods.</li>
+            </ul>
+
+            <p><strong>How Function Polymorphism Works:</strong></p>
+            <ol>
+                <li>Python's built-in functions often rely on specific special methods (dunder methods) being implemented by objects.</li>
+                <li>For example, <code>len(obj)</code> calls <code>obj.__len__()</code>, <code>str(obj)</code> calls <code>obj.__str__()</code>, and so on.</li>
+                <li>If an object implements these methods, it can work with the corresponding built-in functions, regardless of its actual type.</li>
+                <li>This is another expression of duck typing and polymorphism in Python: objects are judged by what they can do, not by what they are.</li>
+            </ol>
+            
+            <p><strong>Key Insights about Function Polymorphism:</strong></p>
+            <ul>
+                <li>Built-in functions often rely on special methods to work with custom objects.</li>
+                <li>By implementing these special methods, you can make your custom classes work seamlessly with Python's built-in functions.</li>
+                <li>This form of polymorphism is what makes Python's standard library so flexible and extensible.</li>
+                <li>It's another example of "programming to an interface, not an implementation" in Python.</li>
+            </ul>
+            
+            <p><strong>Real-world analogy:</strong> Function polymorphism is like how we use the word "size" in everyday language. We can talk about the size of a house (square footage), the size of a person (height/weight), the size of a file (bytes), or the size of a company (number of employees). The word "size" means something different in each context, but we understand what it means based on what we're talking about.</p>
+        </section>
+
+        <section class="real_world_examples">
+            <h3>Real-World Examples of Polymorphism in Python Web Development</h3>
+            <p>Let's create a file called <code>real_world_examples.py</code> that demonstrates how polymorphism is used in actual web development contexts:</p>
+            
+            <pre>
+# File: polymorphism/real_world_examples.py
+
+from abc import ABC, abstractmethod
+from datetime import datetime
+import json
+
+# Example 1: Database Adapters with Polymorphism
+class DatabaseAdapter(ABC):
+    """Abstract base class for database adapters"""
+    
+    @abstractmethod
+    def connect(self):
+        """Connect to the database"""
+        pass
+    
+    @abstractmethod
+    def execute(self, query, params=None):
+        """Execute a query"""
+        pass
+    
+    @abstractmethod
+    def fetch_one(self):
+        """Fetch a single result"""
+        pass
+    
+    @abstractmethod
+    def fetch_all(self):
+        """Fetch all results"""
+        pass
+    
+    @abstractmethod
+    def close(self):
+        """Close the connection"""
+        pass
+
+
+class PostgreSQLAdapter(DatabaseAdapter):
+    """PostgreSQL database adapter"""
+    
+    def connect(self):
+        print("Connecting to PostgreSQL database")
+        # In a real implementation, this would use psycopg2 or another PostgreSQL driver
+        return self
+    
+    def execute(self, query, params=None):
+        param_str = str(params) if params else "none"
+        print(f"Executing PostgreSQL query: {query} with params: {param_str}")
+        return self
+    
+    def fetch_one(self):
+        print("Fetching one result from PostgreSQL")
+        # Simulated result
+        return {"id": 1, "name": "John Doe"}
+    
+    def fetch_all(self):
+        print("Fetching all results from PostgreSQL")
+        # Simulated results
+        return [
+            {"id": 1, "name": "John Doe"},
+            {"id": 2, "name": "Jane Smith"}
+        ]
+    
+    def close(self):
+        print("Closing PostgreSQL connection")
+
+
+class MySQLAdapter(DatabaseAdapter):
+    """MySQL database adapter"""
+    
+    def connect(self):
+        print("Connecting to MySQL database")
+        # In a real implementation, this would use mysql-connector or another MySQL driver
+        return self
+    
+    def execute(self, query, params=None):
+        param_str = str(params) if params else "none"
+        print(f"Executing MySQL query: {query} with params: {param_str}")
+        return self
+    
+    def fetch_one(self):
+        print("Fetching one result from MySQL")
+        # Simulated result
+        return {"id": 1, "name": "John Doe"}
+    
+    def fetch_all(self):
+        print("Fetching all results from MySQL")
+        # Simulated results
+        return [
+            {"id": 1, "name": "John Doe"},
+            {"id": 2, "name": "Jane Smith"}
+        ]
+    
+    def close(self):
+        print("Closing MySQL connection")
+
+
+class SQLiteAdapter(DatabaseAdapter):
+    """SQLite database adapter"""
+    
+    def connect(self):
+        print("Connecting to SQLite database")
+        # In a real implementation, this would use sqlite3
+        return self
+    
+    def execute(self, query, params=None):
+        param_str = str(params) if params else "none"
+        print(f"Executing SQLite query: {query} with params: {param_str}")
+        return self
+    
+    def fetch_one(self):
+        print("Fetching one result from SQLite")
+        # Simulated result
+        return {"id": 1, "name": "John Doe"}
+    
+    def fetch_all(self):
+        print("Fetching all results from SQLite")
+        # Simulated results
+        return [
+            {"id": 1, "name": "John Doe"},
+            {"id": 2, "name": "Jane Smith"}
+        ]
+    
+    def close(self):
+        print("Closing SQLite connection")
+
+
+# Example 2: Form Validation
+class ValidationRule(ABC):
+    """Abstract base class for validation rules"""
+    
+    @abstractmethod
+    def validate(self, value):
+        """Validate a value against this rule"""
+        pass
+
+
+class RequiredRule(ValidationRule):
+    """Validation rule requiring a non-empty value"""
+    
+    def validate(self, value):
+        if not value:
+            return False, "This field is required"
+        return True, None
+
+
+class MinLengthRule(ValidationRule):
+    """Validation rule requiring a minimum length"""
+    
+    def __init__(self, min_length):
+        self.min_length = min_length
+    
+    def validate(self, value):
+        if len(str(value)) < self.min_length:
+            return False, f"Must be at least {self.min_length} characters"
+        return True, None
+
+
+class EmailRule(ValidationRule):
+    """Validation rule requiring an email format"""
+    
+    def validate(self, value):
+        if not isinstance(value, str) or '@' not in value or '.' not in value:
+            return False, "Must be a valid email address"
+        return True, None
+
+
+class NumericRule(ValidationRule):
+    """Validation rule requiring a numeric value"""
+    
+    def validate(self, value):
+        try:
+            float(value)
+            return True, None
+        except (ValueError, TypeError):
+            return False, "Must be a number"
+
+
+class FormValidator:
+    """Form validator that can use different validation rules"""
+    
+    def __init__(self, fields):
+        self.fields = fields  # Dictionary of field_name: [rules]
+    
+    def validate(self, data):
+        errors = {}
+        
+        for field_name, rules in self.fields.items():
+            field_value = data.get(field_name, '')
+            
+            for rule in rules:
+                is_valid, error_message = rule.validate(field_value)
+                if not is_valid:
+                    if field_name not in errors:
+                        errors[field_name] = []
+                    errors[field_name].append(error_message)
+                    break  # Stop checking this field once an error is found
+        
+        return len(errors) == 0, errors
+
+
+# Example 3: Template Rendering
+class TemplateRenderer(ABC):
+    """Abstract base class for template renderers"""
+    
+    @abstractmethod
+    def render(self, template_name, context):
+        """Render a template with the given context"""
+        pass
+
+
+class SimpleRenderer(TemplateRenderer):
+    """Simple string-replacement template renderer"""
+    
+    def render(self, template_name, context):
+        with open(template_name, 'r') as file:
+            template = file.read()
+        
+        # Simple string replacement
+        for key, value in context.items():
+            placeholder = f"{{{{ {key} }}}}"
+            template = template.replace(placeholder, str(value))
+        
+        return template
+
+
+class JinjaLikeRenderer(TemplateRenderer):
+    """Jinja-like template renderer with more features"""
+    
+    def render(self, template_name, context):
+        with open(template_name, 'r') as file:
+            template = file.read()
+        
+        # This is a very simplified version of Jinja-like rendering
+        # In a real implementation, this would use actual Jinja2
+        
+        # Replace variables
+        for key, value in context.items():
+            placeholder = f"{{{{ {key} }}}}"
+            template = template.replace(placeholder, str(value))
+        
+        # Handle simple conditionals (very simplified)
+        import re
+        pattern = r"{{% if (\w+) %}}(.*?){{% endif %}}"
+        matches = re.finditer(pattern, template, re.DOTALL)
+        
+        for match in matches:
+            var_name = match.group(1)
+            content = match.group(2)
+            
+            if context.get(var_name):
+                template = template.replace(match.group(0), content)
+            else:
+                template = template.replace(match.group(0), '')
+        
+        return template
+
+
+# Example 4: Serialization
+class Serializer(ABC):
+    """Abstract base class for serializers"""
+    
+    @abstractmethod
+    def serialize(self, obj):
+        """Serialize an object to a string"""
+        pass
+    
+    @abstractmethod
+    def deserialize(self, data):
+        """Deserialize a string to an object"""
+        pass
+
+
+class JSONSerializer(Serializer):
+    """JSON serializer"""
+    
+    def serialize(self, obj):
+        return json.dumps(obj)
+    
+    def deserialize(self, data):
+        return json.loads(data)
+
+
+class XMLSerializer(Serializer):
+    """Simplified XML serializer"""
+    
+    def serialize(self, obj):
+        if isinstance(obj, dict):
+            xml_parts = ['<root>']
+            for key, value in obj.items():
+                xml_parts.append(f'<{key}>{value}</{key}>')
+            xml_parts.append('</root>')
+            return '\n'.join(xml_parts)
+        elif isinstance(obj, list):
+            xml_parts = ['<root>']
+            for item in obj:
+                xml_parts.append(f'<item>{item}</item>')
+            xml_parts.append('</root>')
+            return '\n'.join(xml_parts)
+        else:
+            return f'<root>{obj}</root>'
+    
+    def deserialize(self, data):
+        # This is a very simplified XML parser, not for production use
+        import re
+        result = {}
+        
+        # Extract key-value pairs
+        pattern = r'<(\w+)>(.*?)</\1>'
+        matches = re.finditer(pattern, data)
+        
+        for match in matches:
+            key = match.group(1)
+            value = match.group(2)
+            
+            if key != 'root':
+                result[key] = value
+        
+        return result
+
+
+# Test the database adapters
+def fetch_user(adapter, user_id):
+    """Fetch a user using any database adapter"""
+    adapter.connect().execute("SELECT * FROM users WHERE id = %s", [user_id])
+    user = adapter.fetch_one()
+    adapter.close()
+    return user
+
+print("Database Adapters Example:")
+postgres_adapter = PostgreSQLAdapter()
+mysql_adapter = MySQLAdapter()
+sqlite_adapter = SQLiteAdapter()
+
+user1 = fetch_user(postgres_adapter, 1)
+user2 = fetch_user(mysql_adapter, 1)
+user3 = fetch_user(sqlite_adapter, 1)
+
+# Test the form validator
+print("\nForm Validation Example:")
+user_form_validator = FormValidator({
+    'username': [RequiredRule(), MinLengthRule(3)],
+    'email': [RequiredRule(), EmailRule()],
+    'age': [RequiredRule(), NumericRule()]
+})
+
+valid_data = {
+    'username': 'john_doe',
+    'email': 'john@example.com',
+    'age': '30'
+}
+
+invalid_data = {
+    'username': '',
+    'email': 'not-an-email',
+    'age': 'thirty'
+}
+
+is_valid, errors = user_form_validator.validate(valid_data)
+print(f"Valid data: {is_valid}, Errors: {errors}")
+
+is_valid, errors = user_form_validator.validate(invalid_data)
+print(f"Invalid data: {is_valid}, Errors: {errors}")
+
+# Test the template renderers (assuming template files exist)
+"""
+# Create test template files
+with open('simple_template.html', 'w') as f:
+    f.write("<html><body><h1>{{ title }}</h1><p>{{ content }}</p></body></html>")
+
+with open('conditional_template.html', 'w') as f:
+    f.write("<html><body><h1>{{ title }}</h1><p>{{ content }}</p>{% if show_footer %}<footer>{{ footer }}</footer>{% endif %}</body></html>")
+
+print("\nTemplate Rendering Example:")
+simple_renderer = SimpleRenderer()
+jinja_renderer = JinjaLikeRenderer()
+
+context = {
+    'title': 'Welcome',
+    'content': 'This is a test page',
+    'show_footer': True,
+    'footer': 'Copyright 2023'
+}
+
+simple_output = simple_renderer.render('simple_template.html', context)
+jinja_output = jinja_renderer.render('conditional_template.html', context)
+
+print(f"Simple renderer output: {simple_output[:50]}...")
+print(f"Jinja-like renderer output: {jinja_output[:50]}...")
+"""
+
+# Test the serializers
+print("\nSerialization Example:")
+json_serializer = JSONSerializer()
+xml_serializer = XMLSerializer()
+
+data = {
+    'name': 'John Doe',
+    'email': 'john@example.com',
+    'age': 30
+}
+
+json_data = json_serializer.serialize(data)
+xml_data = xml_serializer.serialize(data)
+
+print(f"JSON serialized data: {json_data}")
+print(f"XML serialized data: {xml_data}")
+
+json_obj = json_serializer.deserialize(json_data)
+xml_obj = xml_serializer.deserialize(xml_data)
+
+print(f"JSON deserialized object: {json_obj}")
+print(f"XML deserialized object: {xml_obj}")
+</pre>
+
+            <p><strong>Code Breakdown:</strong></p>
+            <ul>
+                <li><strong>Example 1: Database Adapters</strong>
+                    <ul>
+                        <li>We define an abstract <code>DatabaseAdapter</code> class with methods like <code>connect</code>, <code>execute</code>, <code>fetch_one</code>, etc.</li>
+                        <li>Concrete adapter classes (<code>PostgreSQLAdapter</code>, <code>MySQLAdapter</code>, <code>SQLiteAdapter</code>) implement these methods for specific database systems.</li>
+                        <li>The <code>fetch_user</code> function demonstrates polymorphism by working with any database adapter, regardless of the specific implementation.</li>
+                    </ul>
+                </li>
+                <li><strong>Example 2: Form Validation</strong>
+                    <ul>
+                        <li>We define a <code>ValidationRule</code> abstract class with a <code>validate</code> method.</li>
+                        <li>Concrete rule classes (<code>RequiredRule</code>, <code>MinLengthRule</code>, <code>EmailRule</code>, <code>NumericRule</code>) implement this method for specific validation requirements.</li>
+                        <li>The <code>FormValidator</code> class works with any validation rule, demonstrating polymorphism through composition.</li>
+                    </ul>
+                </li>
+                <li><strong>Example 3: Template Rendering</strong>
+                    <ul>
+                        <li>We define a <code>TemplateRenderer</code> abstract class with a <code>render</code> method.</li>
+                        <li>Concrete renderer classes (<code>SimpleRenderer</code>, <code>JinjaLikeRenderer</code>) implement this method with different template rendering strategies.</li>
+                        <li>The same template context can be used with different renderers, demonstrating polymorphism.</li>
+                    </ul>
+                </li>
+                <li><strong>Example 4: Serialization</strong>
+                    <ul>
+                        <li>We define a <code>Serializer</code> abstract class with <code>serialize</code> and <code>deserialize</code> methods.</li>
+                        <li>Concrete serializer classes (<code>JSONSerializer</code>, <code>XMLSerializer</code>) implement these methods for different serialization formats.</li>
+                        <li>The same data can be serialized in different formats using different serializers, demonstrating polymorphism.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <p>These examples show how polymorphism is fundamental to modern web development frameworks and libraries. It enables modular, extensible, and maintainable code by allowing components to be swapped or extended easily without changing the code that uses them.</p>
+        </section>
+
+        <section class="best_practices">
+            <h3>Best Practices for Using Polymorphism in Python</h3>
+            
+            <h4>1. Embrace Duck Typing</h4>
+            <p>Python's dynamic nature encourages duck typing. Don't check object types explicitly if you only need objects to support specific methods or operations.</p>
+            
+            <pre>
+# Good (duck typing)
+def process_data(data_provider):
+    return data_provider.get_data()
+
+# Less Pythonic (explicit type checking)
+def process_data(data_provider):
+    if not isinstance(data_provider, DataProvider):
+        raise TypeError("data_provider must be a DataProvider")
+    return data_provider.get_data()
+</pre>
+            
+            <h4>2. Use Abstract Base Classes for Complex Interfaces</h4>
+            <p>When defining complex interfaces with many methods, consider using abstract base classes to formalize the interface and ensure implementing classes provide all required methods.</p>
+            
+            <pre>
+from abc import ABC, abstractmethod
+
+class DataProvider(ABC):
+    @abstractmethod
+    def get_data(self):
+        pass
+    
+    @abstractmethod
+    def save_data(self, data):
+        pass
+</pre>
+            
+            <h4>3. Follow the SOLID Principles</h4>
+            <p>Especially the Liskov Substitution Principle (LSP), which states that objects of a superclass should be replaceable with objects of a subclass without affecting the correctness of the program.</p>
+            
+            <h4>4. Use Protocols for Structural Typing (Python 3.8+)</h4>
+            <p>For simple interfaces, prefer Protocol classes from the typing module to formalize structural typing without requiring explicit inheritance.</p>
+            
+            <pre>
+from typing import Protocol
+
+class Renderable(Protocol):
+    def render(self) -> str:
+        ...
+</pre>
+            
+            <h4>5. Keep Interfaces Small and Focused</h4>
+            <p>Following the Interface Segregation Principle, create smaller, more focused interfaces rather than large, monolithic ones. This makes it easier for classes to implement only what they need.</p>
+            
+            <h4>6. Provide Good Error Messages</h4>
+            <p>When duck typing fails (i.e., an object doesn't have an expected method), the default <code>AttributeError</code> might not be very informative. Consider adding more context to the error message.</p>
+            
+            <pre>
+def process_data(data_provider):
+    try:
+        return data_provider.get_data()
+    except AttributeError:
+        raise AttributeError(f"Object {data_provider} does not support the get_data() method required by process_data()")
+</pre>
+            
+            <h4>7. Use Method Overriding Judiciously</h4>
+            <p>When overriding methods from parent classes, make sure the overridden method adheres to the same contract as the parent method. Don't change the method's expected behavior drastically.</p>
+            
+            <h4>8. Document Expected Interfaces</h4>
+            <p>Clearly document what methods and properties your code expects objects to have, especially when using duck typing.</p>
+            
+            <pre>
+def save_to_file(data, file_like_object):
+    """
+    Save data to a file-like object.
+    
+    Args:
+        data: The data to save
+        file_like_object: Any object with a write() method that accepts a string
+    """
+    file_like_object.write(str(data))
+</pre>
+        </section>
+
+        <section class="key_takeaways">
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li><strong>Polymorphism</strong> allows different objects to respond to the same method call or operation in their own unique ways, enabling more flexible and reusable code.</li>
+                <li><strong>Duck Typing</strong> is Python's approach to polymorphism, focusing on what an object can do (its methods and properties) rather than what it is (its type).</li>
+                <li><strong>Method Overriding</strong> allows subclasses to provide specific implementations of methods defined in parent classes, enabling behavior customization within an inheritance hierarchy.</li>
+                <li><strong>Operator Overloading</strong> allows custom classes to define how operators like +, -, *, etc., behave when applied to instances of the class.</li>
+                <li><strong>Function Polymorphism</strong> refers to the ability of built-in functions and methods to work with objects of different types, adapting their behavior based on the object's type.</li>
+                <li><strong>Real-World Applications</strong> of polymorphism in web development include database adapters, form validation, template rendering, and serialization, among many others.</li>
+                <li>Following best practices like embracing duck typing, using abstract base classes for complex interfaces, and keeping interfaces small and focused will lead to more maintainable and flexible code.</li>
+            </ul>
+        </section>
+
+        <section class="assignment">
+            <h3>Assignment: Implement a Polymorphic Content Management System</h3>
+            <p>For today's assignment, you'll implement a simple content management system (CMS) that demonstrates various forms of polymorphism in Python.</p>
+            
+            <h4>Requirements:</h4>
+            <ol>
+                <li>Design a base <code>Content</code> class with common attributes and methods for different content types.</li>
+                <li>Implement at least three content type classes (e.g., <code>TextContent</code>, <code>ImageContent</code>, <code>VideoContent</code>) that inherit from <code>Content</code> and override methods as appropriate.</li>
+                <li>Create a <code>ContentRenderer</code> abstract base class with methods for rendering content in different formats.</li>
+                <li>Implement at least two renderer classes (e.g., <code>HTMLRenderer</code>, <code>MarkdownRenderer</code>) that inherit from <code>ContentRenderer</code>.</li>
+                <li>Design a <code>ContentStore</code> abstract base class with methods for storing and retrieving content.</li>
+                <li>Implement at least two store classes (e.g., <code>FileStore</code>, <code>DatabaseStore</code>) that inherit from <code>ContentStore</code>.</li>
+                <li>Create a <code>CMS</code> class that can work with any content types, renderers, and stores, demonstrating polymorphism through composition.</li>
+                <li>Implement operator overloading for at least one of your classes (e.g., allow combining content items with the + operator).</li>
+                <li>Include proper error handling and documentation.</li>
+            </ol>
+            
+            <h4>Bonus Challenges:</h4>
+            <ol>
+                <li>Implement a plugin system for the CMS where plugins must implement a specific interface to be loaded and used.</li>
+                <li>Create a command-line interface for interacting with your CMS that demonstrates polymorphism in action.</li>
+                <li>Implement a simple template system using duck typing that can render any object with specific attributes.</li>
+                <li>Use Protocol classes from <code>typing</code> to define interfaces and demonstrate static type checking with mypy.</li>
+            </ol>
+            
+            <p>Submit your work as a Python module with clear structure and organization. Be prepared to explain your design choices and how polymorphism enhances your system's flexibility and extensibility.</p>
+        </section>
+
+        <section class="further_reading">
+            <h3>Further Reading and Resources</h3>
+            <ul>
+                <li><a href="https://docs.python.org/3/reference/datamodel.html#special-method-names" target="_blank">Python Official Documentation: Special Method Names</a></li>
+                <li><a href="https://realpython.com/operator-function-overloading/" target="_blank">Real Python: Operator and Function Overloading in Python</a></li>
+                <li><a href="https://www.python.org/dev/peps/pep-0544/" target="_blank">PEP 544: Protocols - Structural subtyping (static duck typing)</a></li>
+                <li><a href="https://en.wikipedia.org/wiki/Duck_typing" target="_blank">Wikipedia: Duck Typing</a></li>
+                <li>Design Patterns: Elements of Reusable Object-Oriented Software (Gang of Four book)</li>
+                <li>Fluent Python by Luciano Ramalho (especially the chapters on data model, sequences, and object-oriented idioms)</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced OOP Patterns: Python vs JavaScript</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 3: Object-Oriented Programming Advanced Concepts</h2>
+        <h3>For JavaScript Developers: Advanced OOP Patterns Compared to JavaScript</h3>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>Bridging the Gap: Python OOP vs. JavaScript OOP</h3>
+            <p>
+                As a JavaScript developer transitioning to Python, understanding the differences and similarities in object-oriented programming (OOP) patterns between the two languages is crucial. While both languages support object-oriented programming, they approach it in fundamentally different ways.
+            </p>
+            
+            <p>
+                JavaScript uses a prototype-based object model, where objects can directly inherit from other objects. Python, on the other hand, uses a class-based object model more similar to languages like Java or C++. Despite these differences, many of the same OOP design patterns can be implemented in both languages, though the syntax and specific mechanisms might differ.
+            </p>
+            
+            <p>
+                In this session, we'll explore advanced OOP patterns in Python, comparing them with their JavaScript counterparts. By highlighting these similarities and differences, you'll be able to leverage your existing JavaScript knowledge while embracing Python's unique approach to object-oriented programming.
+            </p>
+        </section>
+
+        <section class="folder_structure">
+            <h3>Today's File Structure</h3>
+            <p>For today's lesson, we'll create a new Python module in our project. Ensure you have the following directory structure:</p>
+            <pre>
+project_root/
+├── python_vs_js/
+│   ├── __init__.py  (empty file to make the folder a package)
+│   ├── class_vs_prototype.py
+│   ├── inheritance_patterns.py
+│   ├── encapsulation.py
+│   ├── composition_mixins.py
+│   ├── static_class_methods.py
+│   └── design_patterns.py
+</pre>
+            <p>All code examples will be saved in these files, allowing you to organize and revisit these concepts easily.</p>
+        </section>
+
+        <section class="classes_vs_prototypes">
+            <h3>Classes vs. Prototypes: The Fundamental Difference</h3>
+            <p>JavaScript and Python represent the two primary approaches to object-oriented programming: prototype-based (JavaScript) and class-based (Python). Let's explore this fundamental difference with code examples in both languages. Create a file named <code>class_vs_prototype.py</code> for the Python code, and we'll compare it with equivalent JavaScript.</p>
+            
+            <h4>Creating Objects and Defining Methods</h4>
+            
+            <p><strong>JavaScript (Prototype-based):</strong></p>
+            <pre>
+// Traditional prototype-based approach in JavaScript
+function Person(name, age) {
+    this.name = name;
+    this.age = age;
+}
+
+Person.prototype.greet = function() {
+    return `Hello, my name is ${this.name} and I'm ${this.age} years old.`;
+};
+
+// ES6 class syntax (syntactic sugar over prototypes)
+class PersonES6 {
+    constructor(name, age) {
+        this.name = name;
+        this.age = age;
+    }
+    
+    greet() {
+        return `Hello, my name is ${this.name} and I'm ${this.age} years old.`;
+    }
+}
+
+// Creating instances
+const john = new Person("John", 30);
+const jane = new PersonES6("Jane", 25);
+
+console.log(john.greet());  // Hello, my name is John and I'm 30 years old.
+console.log(jane.greet());  // Hello, my name is Jane and I'm 25 years old.
+
+// Even with ES6 classes, JavaScript's prototype nature allows:
+// Adding methods to all existing instances
+Person.prototype.sayGoodbye = function() {
+    return `Goodbye from ${this.name}`;
+};
+
+console.log(john.sayGoodbye());  // Works even though defined after instantiation
+</pre>
+
+            <p><strong>Python (Class-based):</strong></p>
+            <pre>
+# File: python_vs_js/class_vs_prototype.py
+
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+    
+    def greet(self):
+        return f"Hello, my name is {self.name} and I'm {self.age} years old."
+
+
+# Creating instances
+john = Person("John", 30)
+jane = Person("Jane", 25)
+
+print(john.greet())  # Hello, my name is John and I'm 30 years old.
+print(jane.greet())  # Hello, my name is Jane and I'm 25 years old.
+
+# Python doesn't allow adding methods to existing instances directly.
+# Instead, you would need to define a new class or use other techniques
+# like monkey patching (not recommended in most cases)
+
+# This is a simplified form of monkey patching - use with caution!
+def say_goodbye(self):
+    return f"Goodbye from {self.name}"
+
+Person.say_goodbye = say_goodbye
+
+print(john.say_goodbye())  # Works because we modified the class, not the instance
+
+
+# A more 'Pythonic' approach would be to extend the class
+class EnhancedPerson(Person):
+    def say_goodbye(self):
+        return f"Goodbye from {self.name}"
+
+james = EnhancedPerson("James", 35)
+print(james.greet())        # Inherited from Person
+print(james.say_goodbye())  # Defined in EnhancedPerson
+</pre>
+
+            <h4>Key Differences:</h4>
+            <table border="1">
+                <tr>
+                    <th>Aspect</th>
+                    <th>JavaScript</th>
+                    <th>Python</th>
+                </tr>
+                <tr>
+                    <td>Object Creation</td>
+                    <td>Constructor function or ES6 class</td>
+                    <td>Class definition only</td>
+                </tr>
+                <tr>
+                    <td>Instance Creation</td>
+                    <td><code>new Person()</code></td>
+                    <td><code>Person()</code> (without <code>new</code>)</td>
+                </tr>
+                <tr>
+                    <td>Constructor</td>
+                    <td><code>constructor()</code> or function itself</td>
+                    <td><code>__init__()</code> method</td>
+                </tr>
+                <tr>
+                    <td>Method Definition</td>
+                    <td>On prototype or within class</td>
+                    <td>Within class definition</td>
+                </tr>
+                <tr>
+                    <td>Adding Methods at Runtime</td>
+                    <td>Easy via prototype (affects all instances)</td>
+                    <td>Possible but less idiomatic (monkey patching)</td>
+                </tr>
+                <tr>
+                    <td>Self Reference</td>
+                    <td>Implicit <code>this</code></td>
+                    <td>Explicit <code>self</code> parameter</td>
+                </tr>
+            </table>
+            
+            <h4>Dynamic Properties in Both Languages</h4>
+            
+            <p><strong>JavaScript:</strong></p>
+            <pre>
+// JavaScript objects can add properties dynamically
+const john = new Person("John", 30);
+john.location = "New York";  // Add a property only to this instance
+console.log(john.location);  // "New York"
+
+// Object property descriptors for advanced control
+Object.defineProperty(john, 'fullName', {
+    get: function() { return `${this.name} Doe`; },
+    set: function(value) {
+        const parts = value.split(' ');
+        this.name = parts[0];
+    },
+    enumerable: true,
+    configurable: true
+});
+
+console.log(john.fullName);  // "John Doe"
+john.fullName = "Jane";
+console.log(john.name);      // "Jane"
+</pre>
+
+            <p><strong>Python:</strong></p>
+            <pre>
+# Python objects can also add attributes dynamically
+john = Person("John", 30)
+john.location = "New York"  # Add an attribute only to this instance
+print(john.location)        # "New York"
+
+# Property decorators for getter/setter behavior
+class PersonWithProperties:
+    def __init__(self, name, age):
+        self._name = name
+        self._age = age
+    
+    @property
+    def name(self):
+        return self._name
+    
+    @name.setter
+    def name(self, value):
+        self._name = value
+    
+    @property
+    def full_name(self):
+        return f"{self._name} Doe"
+    
+    @full_name.setter
+    def full_name(self, value):
+        parts = value.split(' ')
+        self._name = parts[0]
+
+person = PersonWithProperties("John", 30)
+print(person.full_name)     # "John Doe"
+person.full_name = "Jane"
+print(person.name)          # "Jane"
+</pre>
+
+            <p><strong>Summary:</strong></p>
+            <ul>
+                <li>JavaScript's ES6 class syntax makes it look similar to Python classes, but the underlying mechanism is still prototype-based.</li>
+                <li>Python requires explicit definition of the <code>self</code> parameter in methods, while JavaScript's <code>this</code> is implicit.</li>
+                <li>Both languages allow dynamic addition of properties to instances, but Python's approach to modifying classes at runtime is less idiomatic.</li>
+                <li>JavaScript uses object property descriptors for getter/setter functionality, while Python uses the <code>@property</code> decorator system.</li>
+                <li>JavaScript allows modifying all existing instances by changing the prototype; Python doesn't have a direct equivalent without monkey patching.</li>
+            </ul>
+        </section>
+
+        <section class="inheritance_patterns">
+            <h3>Inheritance Patterns: Single, Multiple, and Mixin Inheritance</h3>
+            <p>Inheritance is a core concept in OOP that allows classes to derive properties and methods from other classes. JavaScript and Python handle inheritance differently, especially when it comes to multiple inheritance. Create a file named <code>inheritance_patterns.py</code> for the Python code.</p>
+            
+            <h4>Single Inheritance</h4>
+            
+            <p><strong>JavaScript:</strong></p>
+            <pre>
+// JavaScript single inheritance using ES6 classes
+class Animal {
+    constructor(name) {
+        this.name = name;
+    }
+    
+    speak() {
+        return `${this.name} makes a noise.`;
+    }
+}
+
+class Dog extends Animal {
+    constructor(name, breed) {
+        super(name);  // Call parent constructor
+        this.breed = breed;
+    }
+    
+    speak() {
+        return `${this.name} barks!`;  // Override method
+    }
+    
+    fetch() {
+        return `${this.name} is fetching.`;  // Add new method
+    }
+}
+
+const dog = new Dog("Rex", "German Shepherd");
+console.log(dog.speak());  // "Rex barks!"
+console.log(dog.fetch());  // "Rex is fetching."
+</pre>
+
+            <p><strong>Python:</strong></p>
+            <pre>
+# File: python_vs_js/inheritance_patterns.py
+
+class Animal:
+    def __init__(self, name):
+        self.name = name
+    
+    def speak(self):
+        return f"{self.name} makes a noise."
+
+
+class Dog(Animal):
+    def __init__(self, name, breed):
+        super().__init__(name)  # Call parent constructor
+        self.breed = breed
+    
+    def speak(self):
+        return f"{self.name} barks!"  # Override method
+    
+    def fetch(self):
+        return f"{self.name} is fetching."  # Add new method
+
+
+dog = Dog("Rex", "German Shepherd")
+print(dog.speak())  # "Rex barks!"
+print(dog.fetch())  # "Rex is fetching."
+</pre>
+
+            <h4>Multiple Inheritance (Python-specific)</h4>
+            
+            <p>JavaScript doesn't support true multiple inheritance, but Python does:</p>
+            
+            <pre>
+# Python multiple inheritance
+
+class Swimmer:
+    def swim(self):
+        return f"{self.name} is swimming."
+    
+    def speak(self):
+        return f"{self.name} says glub glub."
+
+
+class FlyingAnimal:
+    def fly(self):
+        return f"{self.name} is flying."
+    
+    def speak(self):
+        return f"{self.name} says whoosh."
+
+
+# Duck inherits from both Animal and Swimmer
+class Duck(Animal, Swimmer, FlyingAnimal):
+    def __init__(self, name):
+        super().__init__(name)  # This calls Animal.__init__
+
+
+duck = Duck("Daffy")
+print(duck.speak())  # "Daffy makes a noise." - From Animal (first in MRO)
+print(duck.swim())   # "Daffy is swimming." - From Swimmer
+print(duck.fly())    # "Daffy is flying." - From FlyingAnimal
+
+# Method Resolution Order (MRO) determines which method is called
+print(Duck.__mro__)  # Shows the method resolution order
+</pre>
+
+            <h4>JavaScript Approach to Multiple Inheritance-Like Patterns</h4>
+            
+            <p><strong>JavaScript - Using Composition:</strong></p>
+            <pre>
+// JavaScript doesn't have true multiple inheritance,
+// but you can use composition to achieve similar results
+
+class Animal {
+    constructor(name) {
+        this.name = name;
+    }
+    
+    speak() {
+        return `${this.name} makes a noise.`;
+    }
+}
+
+// Mixin functions
+const swimmerMixin = {
+    swim() {
+        return `${this.name} is swimming.`;
+    },
+    speak() {
+        return `${this.name} says glub glub.`;
+    }
+};
+
+const flyerMixin = {
+    fly() {
+        return `${this.name} is flying.`;
+    },
+    speak() {
+        return `${this.name} says whoosh.`;
+    }
+};
+
+// Create a Duck class with composition
+class Duck extends Animal {
+    constructor(name) {
+        super(name);
+        // Mixin the swimmer and flyer capabilities
+        Object.assign(this, swimmerMixin, flyerMixin);
+    }
+    
+    // Duck's own method overrides all mixins
+    speak() {
+        return `${this.name} quacks!`;
+    }
+}
+
+const duck = new Duck("Daffy");
+console.log(duck.speak());  // "Daffy quacks!" - From Duck's own method
+console.log(duck.swim());   // "Daffy is swimming." - From swimmerMixin
+console.log(duck.fly());    // "Daffy is flying." - From flyerMixin
+</pre>
+
+            <p><strong>Python - Using Mixins:</strong></p>
+            <pre>
+# Python's equivalent to JavaScript mixins is... well, just multiple inheritance
+# But we often use the term "mixin" for classes designed to be inherited from but not instantiated
+
+class SwimmerMixin:
+    """A mixin that provides swimming capabilities"""
+    def swim(self):
+        return f"{self.name} is swimming."
+
+
+class FlyerMixin:
+    """A mixin that provides flying capabilities"""
+    def fly(self):
+        return f"{self.name} is flying."
+
+
+class Duck(Animal, SwimmerMixin, FlyerMixin):
+    def __init__(self, name):
+        super().__init__(name)
+    
+    def speak(self):
+        return f"{self.name} quacks!"
+
+
+duck = Duck("Daffy")
+print(duck.speak())  # "Daffy quacks!" - From Duck's own method
+print(duck.swim())   # "Daffy is swimming." - From SwimmerMixin
+print(duck.fly())    # "Daffy is flying." - From FlyerMixin
+</pre>
+
+            <h4>The Diamond Problem and MRO</h4>
+            
+            <p>Python's Method Resolution Order (MRO) algorithm handles the "diamond problem" in multiple inheritance:</p>
+            
+            <pre>
+# The Diamond Problem in Python
+
+class Base:
+    def method(self):
+        return "Base method"
+
+
+class Left(Base):
+    def method(self):
+        return "Left method"
+
+
+class Right(Base):
+    def method(self):
+        return "Right method"
+
+
+class Diamond(Left, Right):
+    pass  # Inherits method from both Left and Right
+
+
+diamond = Diamond()
+print(diamond.method())  # Prints "Left method" - Left comes first in MRO
+print(Diamond.__mro__)   # Shows the method resolution order
+</pre>
+
+            <p><strong>Summary:</strong></p>
+            <ul>
+                <li>Both languages support single inheritance with similar syntax.</li>
+                <li>Python supports true multiple inheritance through the class definition.</li>
+                <li>JavaScript achieves multiple inheritance-like functionality through composition and mixins.</li>
+                <li>Python's Method Resolution Order (MRO) handles the "diamond problem" deterministically.</li>
+                <li>In Python, <code>super()</code> is more powerful as it respects the MRO in multiple inheritance scenarios.</li>
+                <li>JavaScript's native inheritance is always single, while its composition patterns are more explicit.</li>
+            </ul>
+        </section>
+
+        <section class="encapsulation">
+            <h3>Encapsulation: Private, Protected, and Public Members</h3>
+            <p>Encapsulation is the bundling of data and methods that operate on that data within a single unit (like a class), and restricting access to some of the object's components. JavaScript and Python have different approaches to encapsulation. Create a file named <code>encapsulation.py</code> for the Python code.</p>
+            
+            <h4>Access Modifiers</h4>
+            
+            <p><strong>JavaScript:</strong></p>
+            <pre>
+// JavaScript - ES6 and earlier had no built-in private fields
+class OldStylePerson {
+    constructor(name, age) {
+        this.name = name;          // Public
+        this._age = age;           // Convention: protected (but still accessible)
+        this._calculateBirthYear = function() {  // Convention: private method
+            const year = new Date().getFullYear();
+            return year - this._age;
+        };
+    }
+    
+    getAge() {
+        return this._age;
+    }
+    
+    getBirthYear() {
+        return this._calculateBirthYear();
+    }
+}
+
+// JavaScript - Modern private fields with # (ES2022)
+class ModernPerson {
+    #age;                          // Truly private field
+    #calculateBirthYear;           // Private method
+    
+    constructor(name, age) {
+        this.name = name;          // Public
+        this.#age = age;           // Private
+        this.#calculateBirthYear = function() {
+            const year = new Date().getFullYear();
+            return year - this.#age;
+        };
+    }
+    
+    getAge() {
+        return this.#age;
+    }
+    
+    getBirthYear() {
+        return this.#calculateBirthYear();
+    }
+}
+
+// Using the classes
+const oldPerson = new OldStylePerson("John", 30);
+console.log(oldPerson.name);          // "John" - accessible
+console.log(oldPerson._age);          // 30 - accessible, but convention says not to use directly
+console.log(oldPerson.getAge());      // 30 - proper access
+
+const modernPerson = new ModernPerson("Jane", 25);
+console.log(modernPerson.name);       // "Jane" - accessible
+// console.log(modernPerson.#age);    // SyntaxError - private field not accessible
+console.log(modernPerson.getAge());   // 25 - proper access
+</pre>
+
+            <p><strong>Python:</strong></p>
+            <pre>
+# File: python_vs_js/encapsulation.py
+
+class Person:
+    def __init__(self, name, age):
+        self.name = name         # Public
+        self._age = age          # Convention: protected (but still accessible)
+        self.__birth_year = None  # Name mangling: more private (but still accessible with _Person__birth_year)
+    
+    def get_age(self):
+        return self._age
+    
+    def __calculate_birth_year(self):  # Name mangling for methods too
+        import datetime
+        year = datetime.datetime.now().year
+        return year - self._age
+    
+    def get_birth_year(self):
+        if not self.__birth_year:
+            self.__birth_year = self.__calculate_birth_year()
+        return self.__birth_year
+
+
+# Using the class
+person = Person("John", 30)
+print(person.name)                 # "John" - accessible
+print(person._age)                 # 30 - accessible, but convention says not to use directly
+print(person.get_age())            # 30 - proper access
+
+# print(person.__birth_year)       # AttributeError - not directly accessible
+print(person._Person__birth_year)  # None - accessible through name mangling
+print(person.get_birth_year())     # 1993 (or current year - 30) - proper access
+</pre>
+
+            <h4>Property-Based Encapsulation</h4>
+            
+            <p><strong>JavaScript:</strong></p>
+            <pre>
+// JavaScript - Using getters and setters
+class PersonWithProperties {
+    #age;
+    
+    constructor(name, age) {
+        this._name = name;
+        this.#age = age;
+    }
+    
+    // Getter and setter for name
+    get name() {
+        return this._name;
+    }
+    
+    set name(value) {
+        if (typeof value !== 'string') {
+            throw new Error("Name must be a string");
+        }
+        this._name = value;
+    }
+    
+    // Getter and setter for age with validation
+    get age() {
+        return this.#age;
+    }
+    
+    set age(value) {
+        if (typeof value !== 'number' || value < 0 || value > 120) {
+            throw new Error("Age must be a number between 0 and 120");
+        }
+        this.#age = value;
+    }
+    
+    // Computed property
+    get birthYear() {
+        const year = new Date().getFullYear();
+        return year - this.#age;
+    }
+}
+
+// Using the class
+const personWithProps = new PersonWithProperties("John", 30);
+console.log(personWithProps.name);      // "John" - uses getter
+personWithProps.name = "Jane";          // Uses setter
+console.log(personWithProps.name);      // "Jane"
+console.log(personWithProps.birthYear); // Computed property
+</pre>
+
+            <p><strong>Python:</strong></p>
+            <pre>
+# Python - Using property decorators
+class PersonWithProperties:
+    def __init__(self, name, age):
+        self._name = name
+        self._age = age
+    
+    # Property for name
+    @property
+    def name(self):
+        return self._name
+    
+    @name.setter
+    def name(self, value):
+        if not isinstance(value, str):
+            raise TypeError("Name must be a string")
+        self._name = value
+    
+    # Property for age with validation
+    @property
+    def age(self):
+        return self._age
+    
+    @age.setter
+    def age(self, value):
+        if not isinstance(value, int) or value < 0 or value > 120:
+            raise ValueError("Age must be an integer between 0 and 120")
+        self._age = value
+    
+    # Computed property
+    @property
+    def birth_year(self):
+        import datetime
+        year = datetime.datetime.now().year
+        return year - self._age
+
+
+# Using the class
+person_with_props = PersonWithProperties("John", 30)
+print(person_with_props.name)       # "John" - uses getter
+person_with_props.name = "Jane"     # Uses setter
+print(person_with_props.name)       # "Jane"
+print(person_with_props.birth_year) # Computed property
+</pre>
+
+            <h4>Key Differences:</h4>
+            <table border="1">
+                <tr>
+                    <th>Aspect</th>
+                    <th>JavaScript</th>
+                    <th>Python</th>
+                </tr>
+                <tr>
+                    <td>Public Members</td>
+                    <td>Normal properties: <code>this.name</code></td>
+                    <td>Normal attributes: <code>self.name</code></td>
+                </tr>
+                <tr>
+                    <td>Protected Members</td>
+                    <td>Convention: <code>this._name</code> (still accessible)</td>
+                    <td>Convention: <code>self._name</code> (still accessible)</td>
+                </tr>
+                <tr>
+                    <td>Private Members</td>
+                    <td>Modern: <code>this.#name</code> (truly private)<br>
+                        Old: closure techniques or <code>Symbol</code></td>
+                    <td>Name mangling: <code>self.__name</code> (becomes <code>self._ClassName__name</code>)</td>
+                </tr>
+                <tr>
+                    <td>Properties (Getters/Setters)</td>
+                    <td><code>get name() {}</code> and <code>set name(v) {}</code></td>
+                    <td><code>@property</code> and <code>@name.setter</code> decorators</td>
+                </tr>
+                <tr>
+                    <td>Privacy Enforcement</td>
+                    <td>Strong with <code>#</code> private fields</td>
+                    <td>Weak ("we're all consenting adults" philosophy)</td>
+                </tr>
+            </table>
+            
+            <p><strong>Summary:</strong></p>
+            <ul>
+                <li>JavaScript introduced true private fields with the <code>#</code> prefix in ES2022.</li>
+                <li>Python uses naming conventions and name mangling but doesn't enforce true privacy.</li>
+                <li>Both languages have property mechanisms (getters/setters) but with different syntax.</li>
+                <li>Python's philosophy is "we're all consenting adults" - it doesn't prevent access but uses conventions to signal intent.</li>
+                <li>JavaScript's newer privacy features are more strict than Python's privacy by convention.</li>
+                <li>Both languages allow computed properties, but JavaScript uses getters while Python uses the <code>@property</code> decorator.</li>
+            </ul>
+        </section>
+
+        <section class="composition_mixins">
+            <h3>Composition vs. Inheritance and Mixin Patterns</h3>
+            <p>Both JavaScript and Python support inheritance, but composition ("has-a" rather than "is-a" relationships) is often preferred for more flexible designs. Create a file named <code>composition_mixins.py</code> for the Python code.</p>
+            
+            <h4>Composition Patterns</h4>
+            
+            <p><strong>JavaScript:</strong></p>
+            <pre>
+// JavaScript composition pattern
+class Engine {
+    constructor(type) {
+        this.type = type;
+    }
+    
+    start() {
+        return `${this.type} engine starting...`;
+    }
+    
+    stop() {
+        return `${this.type} engine stopping...`;
+    }
+}
+
+class Wheels {
+    constructor(count) {
+        this.count = count;
+    }
+    
+    rotate() {
+        return `${this.count} wheels rotating...`;
+    }
+}
+
+// Car composes Engine and Wheels rather than inheriting from them
+class Car {
+    constructor(engineType, wheelCount) {
+        this.engine = new Engine(engineType);
+        this.wheels = new Wheels(wheelCount);
+    }
+    
+    drive() {
+        return [
+            this.engine.start(),
+            this.wheels.rotate(),
+            "Car is moving!"
+        ].join(" ");
+    }
+    
+    park() {
+        return [
+            "Car is stopping.",
+            this.engine.stop()
+        ].join(" ");
+    }
+}
+
+const car = new Car("V8", 4);
+console.log(car.drive());  // "V8 engine starting... 4 wheels rotating... Car is moving!"
+console.log(car.park());   // "Car is stopping. V8 engine stopping..."
+</pre>
+
+            <p><strong>Python:</strong></p>
+            <pre>
+# File: python_vs_js/composition_mixins.py
+
+class Engine:
+    def __init__(self, type):
+        self.type = type
+    
+    def start(self):
+        return f"{self.type} engine starting..."
+    
+    def stop(self):
+        return f"{self.type} engine stopping..."
+
+
+class Wheels:
+    def __init__(self, count):
+        self.count = count
+    
+    def rotate(self):
+        return f"{self.count} wheels rotating..."
+
+
+# Car composes Engine and Wheels rather than inheriting from them
+class Car:
+    def __init__(self, engine_type, wheel_count):
+        self.engine = Engine(engine_type)
+        self.wheels = Wheels(wheel_count)
+    
+    def drive(self):
+        return " ".join([
+            self.engine.start(),
+            self.wheels.rotate(),
+            "Car is moving!"
+        ])
+    
+    def park(self):
+        return " ".join([
+            "Car is stopping.",
+            self.engine.stop()
+        ])
+
+
+car = Car("V8", 4)
+print(car.drive())  # "V8 engine starting... 4 wheels rotating... Car is moving!"
+print(car.park())   # "Car is stopping. V8 engine stopping..."
+</pre>
+
+            <h4>Mixin Patterns</h4>
+            
+            <p><strong>JavaScript:</strong></p>
+            <pre>
+// JavaScript mixin pattern
+// Define behaviors as plain objects
+const LoggerMixin = {
+    log(message) {
+        console.log(`[${this.constructor.name}] ${message}`);
+    },
+    
+    error(message) {
+        console.error(`[ERROR][${this.constructor.name}] ${message}`);
+    }
+};
+
+const SerializableMixin = {
+    serialize() {
+        return JSON.stringify(this);
+    },
+    
+    deserialize(json) {
+        const data = JSON.parse(json);
+        Object.assign(this, data);
+        return this;
+    }
+};
+
+// Apply mixins to a class
+function applyMixins(targetClass, ...mixins) {
+    mixins.forEach(mixin => {
+        Object.getOwnPropertyNames(mixin).forEach(prop => {
+            if (prop !== 'constructor') {
+                targetClass.prototype[prop] = mixin[prop];
+            }
+        });
+    });
+}
+
+// Use the mixins
+class User {
+    constructor(name, email) {
+        this.name = name;
+        this.email = email;
+    }
+}
+
+// Apply mixins to the User class
+applyMixins(User, LoggerMixin, SerializableMixin);
+
+const user = new User("John", "john@example.com");
+user.log("User created");  // [User] User created
+
+const serialized = user.serialize();
+console.log(serialized);   // {"name":"John","email":"john@example.com"}
+
+const newUser = new User().deserialize(serialized);
+console.log(newUser.name); // John
+</pre>
+
+            <p><strong>Python:</strong></p>
+            <pre>
+# Python mixin pattern
+class LoggerMixin:
+    def log(self, message):
+        print(f"[{self.__class__.__name__}] {message}")
+    
+    def error(self, message):
+        print(f"[ERROR][{self.__class__.__name__}] {message}")
+
+
+class SerializableMixin:
+    def serialize(self):
+        import json
+        return json.dumps(self.__dict__)
+    
+    def deserialize(self, json_str):
+        import json
+        data = json.loads(json_str)
+        self.__dict__.update(data)
+        return self
+
+
+# Use the mixins through multiple inheritance
+class User(LoggerMixin, SerializableMixin):
+    def __init__(self, name=None, email=None):
+        self.name = name
+        self.email = email
+
+
+user = User("John", "john@example.com")
+user.log("User created")  # [User] User created
+
+serialized = user.serialize()
+print(serialized)        # {"name": "John", "email": "john@example.com"}
+
+new_user = User().deserialize(serialized)
+print(new_user.name)     # John
+</pre>
+
+            <h4>Key Differences:</h4>
+            <table border="1">
+                <tr>
+                    <th>Aspect</th>
+                    <th>JavaScript</th>
+                    <th>Python</th>
+                </tr>
+                <tr>
+                    <td>Composition</td>
+                    <td>Explicit object creation and method delegation</td>
+                    <td>Similar explicit composition pattern</td>
+                </tr>
+                <tr>
+                    <td>Mixins</td>
+                    <td>Plain objects with methods, applied with <code>Object.assign</code> or custom functions</td>
+                    <td>Classes used in multiple inheritance</td>
+                </tr>
+                <tr>
+                    <td>Mixin Application</td>
+                    <td>Explicit application at runtime</td>
+                    <td>Part of class definition (inheritance list)</td>
+                </tr>
+                <tr>
+                    <td>Method Resolution</td>
+                    <td>Last mixin applied wins</td>
+                    <td>Follows Method Resolution Order (MRO)</td>
+                </tr>
+            </table>
+            
+            <p><strong>Summary:</strong></p>
+            <ul>
+                <li>Both languages support composition with similar patterns.</li>
+                <li>JavaScript implements mixins through object composition and property copying.</li>
+                <li>Python implements mixins through multiple inheritance.</li>
+                <li>JavaScript mixins are more explicit but require helper functions to apply.</li>
+                <li>Python mixins are more integrated with the language's class system.</li>
+                <li>Both approaches achieve the same goal: reusing code across multiple unrelated classes.</li>
+            </ul>
+        </section>
+
+        <section class="static_class_methods">
+            <h3>Static and Class Methods</h3>
+            <p>Both JavaScript and Python support static methods (associated with the class rather than instances), but Python also has the concept of class methods. Create a file named <code>static_class_methods.py</code> for the Python code.</p>
+            
+            <h4>Static Methods</h4>
+            
+            <p><strong>JavaScript:</strong></p>
+            <pre>
+// JavaScript static methods
+class MathUtils {
+    constructor() {
+        throw new Error("This class cannot be instantiated");
+    }
+    
+    static add(a, b) {
+        return a + b;
+    }
+    
+    static subtract(a, b) {
+        return a - b;
+    }
+    
+    static multiply(a, b) {
+        return a * b;
+    }
+    
+    static divide(a, b) {
+        if (b === 0) throw new Error("Division by zero");
+        return a / b;
+    }
+}
+
+// Using static methods
+console.log(MathUtils.add(5, 3));       // 8
+console.log(MathUtils.multiply(4, 2));  // 8
+
+// JavaScript static fields (ES2022)
+class Counter {
+    static count = 0;
+    
+    constructor() {
+        Counter.count++;
+    }
+    
+    static getCount() {
+        return Counter.count;
+    }
+}
+
+const c1 = new Counter();
+const c2 = new Counter();
+console.log(Counter.getCount());  // 2
+</pre>
+
+            <p><strong>Python:</strong></p>
+            <pre>
+# File: python_vs_js/static_class_methods.py
+
+class MathUtils:
+    def __init__(self):
+        raise NotImplementedError("This class cannot be instantiated")
+    
+    @staticmethod
+    def add(a, b):
+        return a + b
+    
+    @staticmethod
+    def subtract(a, b):
+        return a - b
+    
+    @staticmethod
+    def multiply(a, b):
+        return a * b
+    
+    @staticmethod
+    def divide(a, b):
+        if b == 0:
+            raise ZeroDivisionError("Division by zero")
+        return a / b
+
+
+# Using static methods
+print(MathUtils.add(5, 3))       # 8
+print(MathUtils.multiply(4, 2))  # 8
+
+# Python class variables and methods
+class Counter:
+    count = 0  # Class variable
+    
+    def __init__(self):
+        Counter.count += 1
+    
+    @classmethod
+    def get_count(cls):  # cls refers to the class
+        return cls.count
+
+
+c1 = Counter()
+c2 = Counter()
+print(Counter.get_count())  # 2
+</pre>
+
+            <h4>Class Methods in Python (Factory Pattern)</h4>
+            
+            <p>Python's class methods provide unique capabilities not directly available in JavaScript:</p>
+            
+            <pre>
+# Python class methods as factory methods
+class Person:
+    def __init__(self, first_name, last_name, age):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.age = age
+    
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+    
+    @staticmethod
+    def is_adult(age):
+        return age >= 18
+    
+    @classmethod
+    def from_full_name(cls, full_name, age):
+        """Factory method to create a Person from a full name"""
+        first_name, last_name = full_name.split(" ", 1)
+        return cls(first_name, last_name, age)
+    
+    @classmethod
+    def create_anonymous(cls, age):
+        """Factory method to create an anonymous Person"""
+        return cls("Anonymous", "User", age)
+
+
+# Using regular constructor
+person1 = Person("John", "Doe", 30)
+print(person1.full_name)  # John Doe
+
+# Using factory methods
+person2 = Person.from_full_name("Jane Smith", 25)
+print(person2.full_name)  # Jane Smith
+
+person3 = Person.create_anonymous(40)
+print(person3.full_name)  # Anonymous User
+
+# Static method
+print(Person.is_adult(16))  # False
+print(Person.is_adult(21))  # True
+
+# Inheritance with class methods
+class Employee(Person):
+    def __init__(self, first_name, last_name, age, employee_id):
+        super().__init__(first_name, last_name, age)
+        self.employee_id = employee_id
+    
+    @classmethod
+    def create_anonymous(cls, age):
+        """Override the factory to create anonymous employees"""
+        anonymous = super().create_anonymous(age)
+        # Create a new instance with the added employee_id
+        return cls(anonymous.first_name, anonymous.last_name, age, "A-0000")
+
+
+# The factory method is inherited and respects the derived class
+employee = Employee.create_anonymous(35)
+print(employee.full_name)     # Anonymous User
+print(employee.employee_id)   # A-0000
+</pre>
+
+            <p><strong>JavaScript Equivalent (Factory Pattern):</strong></p>
+            <pre>
+// JavaScript factory methods (similar to Python's class methods)
+class Person {
+    constructor(firstName, lastName, age) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.age = age;
+    }
+    
+    get fullName() {
+        return `${this.firstName} ${this.lastName}`;
+    }
+    
+    static isAdult(age) {
+        return age >= 18;
+    }
+    
+    // Factory method to create a Person from a full name
+    static fromFullName(fullName, age) {
+        const [firstName, ...lastNameParts] = fullName.split(" ");
+        const lastName = lastNameParts.join(" ");
+        return new this(firstName, lastName, age);  // 'this' refers to the class
+    }
+    
+    // Factory method to create an anonymous Person
+    static createAnonymous(age) {
+        return new this("Anonymous", "User", age);
+    }
+}
+
+// Using regular constructor
+const person1 = new Person("John", "Doe", 30);
+console.log(person1.fullName);  // John Doe
+
+// Using factory methods
+const person2 = Person.fromFullName("Jane Smith", 25);
+console.log(person2.fullName);  // Jane Smith
+
+const person3 = Person.createAnonymous(40);
+console.log(person3.fullName);  // Anonymous User
+
+// Static method
+console.log(Person.isAdult(16));  // false
+console.log(Person.isAdult(21));  // true
+
+// Inheritance with factory methods
+class Employee extends Person {
+    constructor(firstName, lastName, age, employeeId) {
+        super(firstName, lastName, age);
+        this.employeeId = employeeId;
+    }
+    
+    // Override the factory to create anonymous employees
+    static createAnonymous(age) {
+        const anonymous = new Person("Anonymous", "User", age);
+        return new this(anonymous.firstName, anonymous.lastName, age, "A-0000");
+    }
+}
+
+// The factory method works with the derived class
+const employee = Employee.createAnonymous(35);
+console.log(employee.fullName);     // Anonymous User
+console.log(employee.employeeId);   // A-0000
+</pre>
+
+            <h4>Key Differences:</h4>
+            <table border="1">
+                <tr>
+                    <th>Aspect</th>
+                    <th>JavaScript</th>
+                    <th>Python</th>
+                </tr>
+                <tr>
+                    <td>Static Methods</td>
+                    <td><code>static methodName() {}</code></td>
+                    <td><code>@staticmethod</code> decorator</td>
+                </tr>
+                <tr>
+                    <td>Static Variables</td>
+                    <td><code>static variableName = value</code> (ES2022)</td>
+                    <td>Class variables defined at class level</td>
+                </tr>
+                <tr>
+                    <td>Class Methods</td>
+                    <td>No direct equivalent, but can use <code>this</code> in static methods</td>
+                    <td><code>@classmethod</code> decorator with <code>cls</code> parameter</td>
+                </tr>
+                <tr>
+                    <td>Factory Pattern</td>
+                    <td>Static methods with <code>new this()</code></td>
+                    <td>Class methods with <code>cls()</code></td>
+                </tr>
+                <tr>
+                    <td>Inheritance</td>
+                    <td>Static methods inherited but not bound to subclass</td>
+                    <td>Class methods inherited and properly bound to subclass</td>
+                </tr>
+            </table>
+            
+            <p><strong>Summary:</strong></p>
+            <ul>
+                <li>Both languages support static methods that belong to the class rather than instances.</li>
+                <li>Python distinguishes between static methods (<code>@staticmethod</code>) and class methods (<code>@classmethod</code>).</li>
+                <li>Python class methods receive the class as their first parameter (<code>cls</code>), which is particularly useful for inheritance and factory methods.</li>
+                <li>JavaScript can achieve similar factory patterns using static methods, but without the automatic binding to the subclass that Python provides.</li>
+                <li>Python's class methods are more powerful for creating factory methods in inheritance hierarchies.</li>
+                <li>JavaScript static fields (ES2022) are similar to Python class variables.</li>
+            </ul>
+        </section>
+
+        <section class="design_patterns">
+            <h3>Common Design Patterns in Both Languages</h3>
+            <p>Many classic design patterns can be implemented in both JavaScript and Python, though the implementation details may differ. Create a file named <code>design_patterns.py</code> for the Python code.</p>
+            
+            <h4>Singleton Pattern</h4>
+            
+            <p><strong>JavaScript:</strong></p>
+            <pre>
+// JavaScript Singleton pattern
+class Singleton {
+    static instance;
+    
+    constructor() {
+        if (Singleton.instance) {
+            return Singleton.instance;
+        }
+        
+        // Initialize the singleton instance
+        this.timestamp = new Date();
+        this.config = {
+            apiUrl: "https://api.example.com",
+            timeout: 5000
+        };
+        
+        Singleton.instance = this;
+    }
+    
+    getConfig() {
+        return this.config;
+    }
+    
+    setConfig(key, value) {
+        this.config[key] = value;
+    }
+}
+
+// Usage
+const instance1 = new Singleton();
+const instance2 = new Singleton();
+
+console.log(instance1 === instance2);  // true, they are the same instance
+
+instance1.setConfig("timeout", 10000);
+console.log(instance2.getConfig().timeout);  // 10000, change reflects in all instances
+</pre>
+
+            <p><strong>Python:</strong></p>
+            <pre>
+# File: python_vs_js/design_patterns.py
+
+class Singleton:
+    _instance = None
+    
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            # Initialize the singleton instance
+            cls._instance.timestamp = __import__("datetime").datetime.now()
+            cls._instance.config = {
+                "api_url": "https://api.example.com",
+                "timeout": 5000
+            }
+        return cls._instance
+    
+    def get_config(self):
+        return self.config
+    
+    def set_config(self, key, value):
+        self.config[key] = value
+
+
+# Usage
+instance1 = Singleton()
+instance2 = Singleton()
+
+print(instance1 is instance2)  # True, they are the same instance
+
+instance1.set_config("timeout", 10000)
+print(instance2.get_config()["timeout"])  # 10000, change reflects in all instances
+</pre>
+
+            <h4>Observer Pattern</h4>
+            
+            <p><strong>JavaScript:</strong></p>
+            <pre>
+// JavaScript Observer pattern
+class Subject {
+    constructor() {
+        this.observers = [];
+    }
+    
+    addObserver(observer) {
+        this.observers.push(observer);
+    }
+    
+    removeObserver(observer) {
+        const index = this.observers.indexOf(observer);
+        if (index !== -1) {
+            this.observers.splice(index, 1);
+        }
+    }
+    
+    notify(data) {
+        this.observers.forEach(observer => observer.update(data));
+    }
+}
+
+class Observer {
+    constructor(name) {
+        this.name = name;
+    }
+    
+    update(data) {
+        console.log(`${this.name} received: ${data}`);
+    }
+}
+
+// Usage
+const subject = new Subject();
+
+const observer1 = new Observer("Observer 1");
+const observer2 = new Observer("Observer 2");
+
+subject.addObserver(observer1);
+subject.addObserver(observer2);
+
+subject.notify("Hello, observers!");
+// Observer 1 received: Hello, observers!
+// Observer 2 received: Hello, observers!
+
+subject.removeObserver(observer1);
+subject.notify("Hello again!");
+// Observer 2 received: Hello again!
+</pre>
+
+            <p><strong>Python:</strong></p>
+            <pre>
+# Python Observer pattern
+class Subject:
+    def __init__(self):
+        self.observers = []
+    
+    def add_observer(self, observer):
+        self.observers.append(observer)
+    
+    def remove_observer(self, observer):
+        if observer in self.observers:
+            self.observers.remove(observer)
+    
+    def notify(self, data):
+        for observer in self.observers:
+            observer.update(data)
+
+
+class Observer:
+    def __init__(self, name):
+        self.name = name
+    
+    def update(self, data):
+        print(f"{self.name} received: {data}")
+
+
+# Usage
+subject = Subject()
+
+observer1 = Observer("Observer 1")
+observer2 = Observer("Observer 2")
+
+subject.add_observer(observer1)
+subject.add_observer(observer2)
+
+subject.notify("Hello, observers!")
+# Observer 1 received: Hello, observers!
+# Observer 2 received: Hello, observers!
+
+subject.remove_observer(observer1)
+subject.notify("Hello again!")
+# Observer 2 received: Hello again!
+</pre>
+
+            <h4>Factory Method Pattern</h4>
+            
+            <p><strong>JavaScript:</strong></p>
+            <pre>
+// JavaScript Factory Method pattern
+class Vehicle {
+    constructor(make, model) {
+        this.make = make;
+        this.model = model;
+    }
+    
+    getInfo() {
+        return `${this.make} ${this.model}`;
+    }
+}
+
+class Car extends Vehicle {
+    constructor(make, model, doors) {
+        super(make, model);
+        this.doors = doors;
+        this.type = "Car";
+    }
+    
+    getInfo() {
+        return `${super.getInfo()}, ${this.doors} doors, type: ${this.type}`;
+    }
+}
+
+class Truck extends Vehicle {
+    constructor(make, model, payload) {
+        super(make, model);
+        this.payload = payload;
+        this.type = "Truck";
+    }
+    
+    getInfo() {
+        return `${super.getInfo()}, payload: ${this.payload}kg, type: ${this.type}`;
+    }
+}
+
+// Factory class
+class VehicleFactory {
+    static createVehicle(type, make, model, option) {
+        switch (type.toLowerCase()) {
+            case "car":
+                return new Car(make, model, option);  // option is doors
+            case "truck":
+                return new Truck(make, model, option);  // option is payload
+            default:
+                throw new Error(`Vehicle type not supported: ${type}`);
+        }
+    }
+}
+
+// Usage
+const car = VehicleFactory.createVehicle("car", "Toyota", "Corolla", 4);
+const truck = VehicleFactory.createVehicle("truck", "Ford", "F-150", 1500);
+
+console.log(car.getInfo());   // Toyota Corolla, 4 doors, type: Car
+console.log(truck.getInfo()); // Ford F-150, payload: 1500kg, type: Truck
+</pre>
+
+            <p><strong>Python:</strong></p>
+            <pre>
+# Python Factory Method pattern
+class Vehicle:
+    def __init__(self, make, model):
+        self.make = make
+        self.model = model
+    
+    def get_info(self):
+        return f"{self.make} {self.model}"
+
+
+class Car(Vehicle):
+    def __init__(self, make, model, doors):
+        super().__init__(make, model)
+        self.doors = doors
+        self.type = "Car"
+    
+    def get_info(self):
+        return f"{super().get_info()}, {self.doors} doors, type: {self.type}"
+
+
+class Truck(Vehicle):
+    def __init__(self, make, model, payload):
+        super().__init__(make, model)
+        self.payload = payload
+        self.type = "Truck"
+    
+    def get_info(self):
+        return f"{super().get_info()}, payload: {self.payload}kg, type: {self.type}"
+
+
+# Factory class
+class VehicleFactory:
+    @staticmethod
+    def create_vehicle(type, make, model, option):
+        if type.lower() == "car":
+            return Car(make, model, option)  # option is doors
+        elif type.lower() == "truck":
+            return Truck(make, model, option)  # option is payload
+        else:
+            raise ValueError(f"Vehicle type not supported: {type}")
+
+
+# Usage
+car = VehicleFactory.create_vehicle("car", "Toyota", "Corolla", 4)
+truck = VehicleFactory.create_vehicle("truck", "Ford", "F-150", 1500)
+
+print(car.get_info())   # Toyota Corolla, 4 doors, type: Car
+print(truck.get_info()) # Ford F-150, payload: 1500kg, type: Truck
+</pre>
+
+            <p><strong>Summary:</strong></p>
+            <ul>
+                <li>Both languages can implement common design patterns with similar structures.</li>
+                <li>The Singleton pattern works differently: JavaScript uses a static instance, while Python overrides <code>__new__</code>.</li>
+                <li>The Observer pattern is nearly identical in both languages.</li>
+                <li>The Factory Method pattern leverages class hierarchies and polymorphism in both languages.</li>
+                <li>JavaScript's prototypal nature sometimes allows for more flexible patterns than Python's class-based approach.</li>
+                <li>Python's multiple inheritance and more powerful class methods can simplify some patterns.</li>
+            </ul>
+        </section>
+
+        <section class="key_takeaways">
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li><strong>Class vs. Prototype:</strong> JavaScript uses prototype-based inheritance (even with ES6 classes), while Python uses traditional class-based inheritance.</li>
+                <li><strong>Multiple Inheritance:</strong> Python supports true multiple inheritance with a well-defined Method Resolution Order (MRO), while JavaScript simulates it through composition and mixins.</li>
+                <li><strong>Encapsulation:</strong> JavaScript has true private fields with the <code>#</code> prefix (ES2022), while Python uses conventions and name mangling.</li>
+                <li><strong>Properties:</strong> JavaScript uses getters/setters with <code>get</code>/<code>set</code> keywords, while Python uses the <code>@property</code> decorator system.</li>
+                <li><strong>Static vs. Class Methods:</strong> Both languages support static methods, but Python's class methods provide unique capabilities for inheritance and factory patterns.</li>
+                <li><strong>Design Patterns:</strong> Most OOP design patterns can be implemented in both languages with similar structures, though the specifics may differ.</li>
+                <li><strong>Philosophy:</strong> JavaScript's approach is more flexible and dynamic (reflecting its prototypal nature), while Python's approach is more structured and explicit (reflecting its "explicit is better than implicit" philosophy).</li>
+            </ul>
+        </section>
+
+        <section class="best_practices">
+            <h3>Best Practices When Transitioning from JavaScript to Python</h3>
+            
+            <ol>
+                <li><strong>Embrace Python's Class Syntax:</strong> While JavaScript's ES6 classes might look familiar, understand that Python's classes operate on different principles. Embrace Python's approach rather than trying to force JavaScript patterns.</li>
+                <li><strong>Use Multiple Inheritance Judiciously:</strong> Python allows multiple inheritance, but use it thoughtfully. Prefer composition and mixins for reusable behavior.</li>
+                <li><strong>Follow Python's Naming Conventions:</strong> Use snake_case for methods and attributes rather than camelCase as in JavaScript. Follow Python's conventions for indicating private/protected members.</li>
+                <li><strong>Leverage Properties for Clean APIs:</strong> Use Python's property decorators instead of explicit getter/setter methods for a cleaner API that feels more Pythonic.</li>
+                <li><strong>Understand Method Resolution Order:</strong> When using multiple inheritance in Python, understand how the MRO works to avoid unexpected behavior.</li>
+                <li><strong>Use Class Methods for Factory Patterns:</strong> Take advantage of Python's class methods for creating factory methods that work well with inheritance.</li>
+                <li><strong>Respect Python's "We're All Consenting Adults" Philosophy:</strong> Python doesn't enforce strict privacy; it relies on conventions. Respect these conventions but understand that true encapsulation is a matter of documentation and convention, not enforcement.</li>
+                <li><strong>Prefer Explicit Self:</strong> Unlike JavaScript's implicit <code>this</code>, Python requires explicit <code>self</code> as the first parameter in instance methods. This can be confusing at first but leads to clearer code.</li>
+                <li><strong>Understand the Global Object Difference:</strong> JavaScript has a global object (<code>window</code> in browsers, <code>global</code> in Node.js), while Python uses modules as namespaces. This changes how you structure your code.</li>
+                <li><strong>Use Docstrings:</strong> Python uses docstrings for documentation rather than JSDoc-style comments. Follow this convention for better integration with Python tools.</li>
+            </ol>
+        </section>
+
+        <section class="assignment">
+            <h3>Assignment: Convert a JavaScript Application to Python</h3>
+            <p>For this assignment, you'll convert a small JavaScript application to Python, applying the OOP patterns you've learned.</p>
+            
+            <h4>Requirements:</h4>
+            <ol>
+                <li>Start with the following JavaScript code:</li>
+                <pre>
+// Task Management System
+
+// Task class
+class Task {
+    constructor(title, description, dueDate, priority = "medium") {
+        this.title = title;
+        this.description = description;
+        this.dueDate = dueDate;
+        this.priority = priority;
+        this.completed = false;
+        this.createdAt = new Date();
+    }
+    
+    complete() {
+        this.completed = true;
+    }
+    
+    updatePriority(newPriority) {
+        this.priority = newPriority;
+    }
+    
+    isOverdue() {
+        return new Date() > new Date(this.dueDate) && !this.completed;
+    }
+}
+
+// TaskList class
+class TaskList {
+    constructor(name) {
+        this.name = name;
+        this.tasks = [];
+    }
+    
+    addTask(task) {
+        this.tasks.push(task);
+    }
+    
+    removeTask(taskIndex) {
+        if (taskIndex >= 0 && taskIndex < this.tasks.length) {
+            this.tasks.splice(taskIndex, 1);
+            return true;
+        }
+        return false;
+    }
+    
+    getCompletedTasks() {
+        return this.tasks.filter(task => task.completed);
+    }
+    
+    getIncompleteTasks() {
+        return this.tasks.filter(task => !task.completed);
+    }
+    
+    getOverdueTasks() {
+        return this.tasks.filter(task => task.isOverdue());
+    }
+}
+
+// TaskManager singleton
+class TaskManager {
+    static instance;
+    
+    constructor() {
+        if (TaskManager.instance) {
+            return TaskManager.instance;
+        }
+        
+        this.taskLists = [];
+        TaskManager.instance = this;
+    }
+    
+    createTaskList(name) {
+        const newList = new TaskList(name);
+        this.taskLists.push(newList);
+        return newList;
+    }
+    
+    getTaskList(name) {
+        return this.taskLists.find(list => list.name === name);
+    }
+    
+    getAllTaskLists() {
+        return this.taskLists;
+    }
+}
+
+// Usage example
+const manager = new TaskManager();
+const personalTasks = manager.createTaskList("Personal");
+const workTasks = manager.createTaskList("Work");
+
+personalTasks.addTask(new Task("Buy groceries", "Get milk, eggs, and bread", "2023-12-20", "high"));
+personalTasks.addTask(new Task("Call mom", "Weekly check-in", "2023-12-22"));
+workTasks.addTask(new Task("Finish report", "Complete quarterly report", "2023-12-15", "high"));
+
+console.log(`Incomplete personal tasks: ${personalTasks.getIncompleteTasks().length}`);
+console.log(`Overdue work tasks: ${workTasks.getOverdueTasks().length}`);
+</pre>
+                <li>Convert this JavaScript code to Python, applying Pythonic OOP patterns:</li>
+                <ul>
+                    <li>Use proper Python naming conventions (snake_case)</li>
+                    <li>Implement the Singleton pattern using Python's approach</li>
+                    <li>Use property decorators for appropriate attributes</li>
+                    <li>Use class methods where they make sense</li>
+                    <li>Add type hints for better readability</li>
+                    <li>Add proper docstrings</li>
+                    <li>Implement any additional features that would make the code more Pythonic</li>
+                </ul>
+                <li>Extend the Python version with at least two of the following features:</li>
+                <ul>
+                    <li>Task categories with filtering capabilities</li>
+                    <li>Subtasks that can be nested within tasks</li>
+                    <li>User assignment for tasks with a User class</li>
+                    <li>Task search functionality</li>
+                    <li>Task export/import to JSON</li>
+                </ul>
+                <li>Write a simple command-line interface to demonstrate the functionality</li>
+                <li>Include comments explaining your design decisions, especially where they differ from the JavaScript version</li>
+            </ol>
+            
+            <h4>Bonus Challenges:</h4>
+            <ol>
+                <li>Implement a notification system using the Observer pattern</li>
+                <li>Add a decorator pattern for task logging or validation</li>
+                <li>Create a factory method for different types of tasks</li>
+                <li>Implement a simple persistence layer to save/load tasks from a file</li>
+                <li>Add unit tests for your Python implementation</li>
+            </ol>
+            
+            <p>Submit your work as a Python module with clear organization. Be prepared to explain how you applied Pythonic OOP patterns and how they compare to the JavaScript original.</p>
+        </section>
+
+        <section class="further_reading">
+            <h3>Further Reading and Resources</h3>
+            <ul>
+                <li><a href="https://docs.python.org/3/tutorial/classes.html" target="_blank">Python Official Documentation: Classes</a></li>
+                <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes" target="_blank">MDN Web Docs: JavaScript Classes</a></li>
+                <li><a href="https://realpython.com/python-multiple-inheritance/" target="_blank">Real Python: Multiple Inheritance in Python</a></li>
+                <li><a href="https://realpython.com/python-property/" target="_blank">Real Python: Python's property()</a></li>
+                <li><a href="https://javascript.info/private-protected-properties-methods" target="_blank">JavaScript.info: Private and Protected Properties and Methods</a></li>
+                <li><a href="https://addyosmani.com/resources/essentialjsdesignpatterns/book/" target="_blank">Learning JavaScript Design Patterns by Addy Osmani</a></li>
+                <li>Fluent Python by Luciano Ramalho (especially for Python's OOP patterns)</li>
+                <li>Effective JavaScript by David Herman (for JavaScript patterns)</li>
+                <li>Design Patterns: Elements of Reusable Object-Oriented Software by the Gang of Four</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Python vs JavaScript OOP Patterns</p>
+        </footer> 
+        </body>
+        </html>
+        

@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekend Project: Creating a Command-Line Tool</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Weekend Project: Create a Command-Line Tool</h1>
+        <p>Applying Python Fundamentals from Week 2</p>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h2>Project Overview</h2>
+            <p>For this weekend project, you'll create a command-line tool that incorporates multiple Python concepts covered during Week 2. Your tool will be a File Organizer that helps users organize files in a directory based on their extensions and other properties. This project will strengthen your understanding of Python fundamentals while creating something practical that you might actually use.</p>
+            
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Apply control structures (conditionals and loops) in a real-world context</li>
+                <li>Work with file operations and the Python standard library</li>
+                <li>Design and implement modular code using functions and modules</li>
+                <li>Parse command-line arguments for user interaction</li>
+                <li>Handle errors gracefully with exception handling</li>
+                <li>Process data using appropriate data structures (lists, dictionaries)</li>
+            </ul>
+            
+            <h3>Project Requirements</h3>
+            <ul>
+                <li>Create a command-line tool that organizes files in a directory</li>
+                <li>Allow users to specify the target directory via command-line arguments</li>
+                <li>Group files by type (images, documents, videos, etc.)</li>
+                <li>Provide statistics about the organization process</li>
+                <li>Include proper error handling</li>
+                <li>Document the code with appropriate comments and docstrings</li>
+                <li>Structure the project using modules</li>
+            </ul>
+        </section>
+
+        <section class="problemsolving">
+            <h2>Problem-Solving Approach</h2>
+            <p>We'll use George Polya's 4-step problem-solving method to tackle this project:</p>
+            
+            <h3>Step 1: Understand the Problem</h3>
+            <p>Before writing any code, let's clarify what our file organizer needs to do:</p>
+            <ul>
+                <li><strong>Input:</strong> A directory path provided by the user through command-line arguments</li>
+                <li><strong>Process:</strong> Scan all files in the directory, determine their types based on extensions, and move them to appropriate subdirectories</li>
+                <li><strong>Output:</strong> Organized files in subdirectories and a summary of what was done</li>
+            </ul>
+            
+            <p>Additional considerations:</p>
+            <ul>
+                <li>How should we handle existing files with the same name in destination folders?</li>
+                <li>What if the destination directories already exist?</li>
+                <li>Should we process files in subdirectories (recursively) or just the top level?</li>
+                <li>How should we handle files without extensions or with unknown extensions?</li>
+            </ul>
+            
+            <h3>Step 2: Devise a Plan</h3>
+            <p>Let's break down the solution into manageable steps:</p>
+            <ol>
+                <li>Parse command-line arguments to get the target directory and options</li>
+                <li>Validate that the directory exists and is accessible</li>
+                <li>Scan the directory to get a list of files</li>
+                <li>Define file categories based on extensions (images, documents, etc.)</li>
+                <li>For each file:
+                    <ul>
+                        <li>Determine its category based on extension</li>
+                        <li>Create the destination directory if it doesn't exist</li>
+                        <li>Move the file to the appropriate directory</li>
+                        <li>Keep track of files moved for reporting</li>
+                    </ul>
+                </li>
+                <li>Generate and display a summary report</li>
+                <li>Handle errors gracefully throughout the process</li>
+            </ol>
+            
+            <h3>Step 3: Carry Out the Plan</h3>
+            <p>Now we'll implement our solution step by step (shown in the next section).</p>
+            
+            <h3>Step 4: Look Back</h3>
+            <p>After implementing our solution, we'll review the code, test it with different scenarios, and consider possible improvements (covered at the end of this tutorial).</p>
+        </section>
+
+        <section class="implementation">
+            <h2>Project Implementation</h2>
+            
+            <h3>Project Structure</h3>
+            <p>We'll organize our code into multiple modules for better maintainability:</p>
+            <pre><code>file_organizer/
+├── file_organizer.py     # Main script
+├── organizer/
+│   ├── __init__.py       # Makes organizer a package
+│   ├── classifier.py     # File type classification logic
+│   ├── operations.py     # File operations (moving, etc.)
+│   └── reporter.py       # Generates reports and statistics
+└── README.md             # Project documentation</code></pre>
+            
+            <h3>Setting Up the Project</h3>
+            <p>First, create the directory structure and files:</p>
+            <pre><code>mkdir -p file_organizer/organizer
+touch file_organizer/file_organizer.py
+touch file_organizer/organizer/__init__.py
+touch file_organizer/organizer/classifier.py
+touch file_organizer/organizer/operations.py
+touch file_organizer/organizer/reporter.py
+touch file_organizer/README.md</code></pre>
+            
+            <h3>Implementation: classifier.py</h3>
+            <p>Let's start with the file classifier module that will determine the category of each file based on its extension.</p>
+            <p><strong>File:</strong> file_organizer/organizer/classifier.py</p>
+            <pre><code>"""
+File classifier module for categorizing files based on their extensions.
+"""
+
+# Dictionary mapping file extensions to categories
+# This serves as a lookup table for quick categorization
+FILE_CATEGORIES = {
+    # Images
+    'jpg': 'images',
+    'jpeg': 'images',
+    'png': 'images',
+    'gif': 'images',
+    'bmp': 'images',
+    'svg': 'images',
+    'tiff': 'images',
+    
+    # Documents
+    'doc': 'documents',
+    'docx': 'documents',
+    'pdf': 'documents',
+    'txt': 'documents',
+    'rtf': 'documents',
+    'odt': 'documents',
+    'tex': 'documents',
+    'md': 'documents',
+    
+    # Spreadsheets
+    'xls': 'spreadsheets',
+    'xlsx': 'spreadsheets',
+    'csv': 'spreadsheets',
+    'ods': 'spreadsheets',
+    
+    # Audio
+    'mp3': 'audio',
+    'wav': 'audio',
+    'ogg': 'audio',
+    'flac': 'audio',
+    'm4a': 'audio',
+    
+    # Video
+    'mp4': 'videos',
+    'avi': 'videos',
+    'mov': 'videos',
+    'mkv': 'videos',
+    'wmv': 'videos',
+    
+    # Archives
+    'zip': 'archives',
+    'rar': 'archives',
+    'tar': 'archives',
+    'gz': 'archives',
+    '7z': 'archives',
+    
+    # Code
+    'py': 'code',
+    'js': 'code',
+    'html': 'code',
+    'css': 'code',
+    'java': 'code',
+    'cpp': 'code',
+    'c': 'code',
+    'php': 'code',
+}
+
+def get_file_category(filename):
+    """
+    Determine the category of a file based on its extension.
+    
+    Args:
+        filename (str): The name of the file to categorize
+    
+    Returns:
+        str: The category of the file, or 'other' if unknown
+    """
+    # Extract the extension from the filename
+    # Split by dot and take the last part, converted to lowercase
+    if '.' in filename:
+        extension = filename.split('.')[-1].lower()
+        # Look up the extension in our categories dictionary
+        return FILE_CATEGORIES.get(extension, 'other')
+    else:
+        # Files without extensions go to 'other'
+        return 'other'
+
+def get_all_categories():
+    """
+    Get a list of all possible file categories.
+    
+    Returns:
+        list: List of all unique categories
+    """
+    # Use a set to avoid duplicates, then convert to list
+    return list(set(FILE_CATEGORIES.values())) + ['other']</code></pre>
+            
+            <h3>Implementation: operations.py</h3>
+            <p>Next, let's create the module that handles file operations like moving files and creating directories.</p>
+            <p><strong>File:</strong> file_organizer/organizer/operations.py</p>
+            <pre><code>"""
+Operations module for handling file system operations.
+"""
+
+import os
+import shutil
+from pathlib import Path
+
+def create_directory(directory_path):
+    """
+    Create a directory if it doesn't exist.
+    
+    Args:
+        directory_path (str): Path of the directory to create
+    
+    Returns:
+        bool: True if created or already exists, False on error
+    """
+    try:
+        # Create the directory and parents if they don't exist
+        Path(directory_path).mkdir(parents=True, exist_ok=True)
+        return True
+    except Exception as e:
+        print(f"Error creating directory {directory_path}: {e}")
+        return False
+
+def move_file(source_path, destination_directory, handle_duplicates=True):
+    """
+    Move a file to the specified directory.
+    
+    Args:
+        source_path (str): Path of the file to move
+        destination_directory (str): Directory to move the file to
+        handle_duplicates (bool): If True, append a number to filename if it already exists
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        # Ensure the destination directory exists
+        if not create_directory(destination_directory):
+            return False
+        
+        # Get the filename from the source path
+        filename = os.path.basename(source_path)
+        destination_path = os.path.join(destination_directory, filename)
+        
+        # Handle duplicate filenames if requested
+        if handle_duplicates and os.path.exists(destination_path):
+            base_name, extension = os.path.splitext(filename)
+            counter = 1
+            
+            # Keep incrementing counter until we find an unused filename
+            while os.path.exists(destination_path):
+                new_filename = f"{base_name}_{counter}{extension}"
+                destination_path = os.path.join(destination_directory, new_filename)
+                counter += 1
+        
+        # Move the file
+        shutil.move(source_path, destination_path)
+        return True
+    except Exception as e:
+        print(f"Error moving file {source_path}: {e}")
+        return False
+
+def scan_directory(directory_path, recursive=False):
+    """
+    Scan a directory and return a list of all files.
+    
+    Args:
+        directory_path (str): Path of the directory to scan
+        recursive (bool): If True, include files in subdirectories
+    
+    Returns:
+        list: List of file paths
+    """
+    file_list = []
+    
+    try:
+        # If recursive, use os.walk to get all files including subdirectories
+        if recursive:
+            for root, _, files in os.walk(directory_path):
+                for file in files:
+                    file_list.append(os.path.join(root, file))
+        # Otherwise, just get files in the top directory
+        else:
+            directory = Path(directory_path)
+            for item in directory.iterdir():
+                if item.is_file():
+                    file_list.append(str(item))
+        
+        return file_list
+    except Exception as e:
+        print(f"Error scanning directory {directory_path}: {e}")
+        return []</code></pre>
+            
+            <h3>Implementation: reporter.py</h3>
+            <p>This module will handle generating reports and statistics about the organization process.</p>
+            <p><strong>File:</strong> file_organizer/organizer/reporter.py</p>
+            <pre><code>"""
+Reporter module for generating reports and statistics.
+"""
+
+def generate_report(results):
+    """
+    Generate a report of the file organization process.
+    
+    Args:
+        results (dict): Dictionary with categories as keys and lists of moved files as values
+    
+    Returns:
+        str: Formatted report string
+    """
+    # Count total files and files per category
+    total_files = sum(len(files) for files in results.values())
+    
+    # Start building the report
+    report = "\n" + "="*60 + "\n"
+    report += f"FILE ORGANIZATION SUMMARY\n"
+    report += "="*60 + "\n\n"
+    
+    report += f"Total files processed: {total_files}\n\n"
+    
+    if total_files > 0:
+        report += "Files by category:\n"
+        
+        # Go through each category and add its statistics
+        for category, files in sorted(results.items()):
+            if files:  # Only include categories with files
+                file_count = len(files)
+                percentage = (file_count / total_files) * 100
+                report += f"  {category.upper()}: {file_count} files ({percentage:.1f}%)\n"
+        
+        report += "\nDetailed file list:\n"
+        
+        # For each category, list the files that were moved
+        for category, files in sorted(results.items()):
+            if files:  # Only include categories with files
+                report += f"\n  {category.upper()}:\n"
+                for file in sorted(files):
+                    report += f"    - {file}\n"
+    else:
+        report += "No files were processed.\n"
+    
+    report += "\n" + "="*60 + "\n"
+    return report
+
+def print_progress(current, total, category="", filename=""):
+    """
+    Print a progress update during file organization.
+    
+    Args:
+        current (int): Current file number
+        total (int): Total number of files
+        category (str): Category of the current file
+        filename (str): Name of the current file
+    """
+    percentage = (current / total) * 100 if total > 0 else 0
+    print(f"Processing file {current}/{total} ({percentage:.1f}%): [{category}] {filename}")
+</code></pre>
+            
+            <h3>Implementation: __init__.py</h3>
+            <p>The __init__.py file makes our organizer directory a proper Python package. We'll use it to expose key functions.</p>
+            <p><strong>File:</strong> file_organizer/organizer/__init__.py</p>
+            <pre><code>"""
+File organizer package for organizing files by type.
+"""
+
+from .classifier import get_file_category, get_all_categories
+from .operations import create_directory, move_file, scan_directory
+from .reporter import generate_report, print_progress
+
+# Version info
+__version__ = '1.0.0'
+</code></pre>
+            
+            <h3>Implementation: Main Script</h3>
+            <p>Finally, let's create the main script that ties everything together.</p>
+            <p><strong>File:</strong> file_organizer/file_organizer.py</p>
+            <pre><code>#!/usr/bin/env python3
+"""
+File Organizer - A command-line tool to organize files by type.
+
+This script organizes files in a directory by moving them into subdirectories
+based on their file types (images, documents, etc.)
+"""
+
+import os
+import sys
+import argparse
+from pathlib import Path
+
+# Import our custom package
+from organizer import (
+    get_file_category,
+    get_all_categories,
+    create_directory,
+    move_file,
+    scan_directory,
+    generate_report,
+    print_progress
+)
+
+def parse_arguments():
+    """
+    Parse command-line arguments.
+    
+    Returns:
+        argparse.Namespace: Parsed arguments
+    """
+    parser = argparse.ArgumentParser(
+        description="Organize files in a directory by moving them into type-based subdirectories."
+    )
+    
+    # Required argument: directory to organize
+    parser.add_argument(
+        "directory",
+        help="Directory containing files to organize"
+    )
+    
+    # Optional arguments
+    parser.add_argument(
+        "-r", "--recursive",
+        action="store_true",
+        help="Process files in subdirectories recursively"
+    )
+    
+    parser.add_argument(
+        "-d", "--dry-run",
+        action="store_true",
+        help="Show what would be done without actually moving files"
+    )
+    
+    parser.add_argument(
+        "-o", "--output-dir",
+        help="Parent directory where organized folders will be created (defaults to input directory)"
+    )
+    
+    return parser.parse_args()
+
+def organize_files(directory, output_dir=None, recursive=False, dry_run=False):
+    """
+    Organize files in the specified directory by moving them into type-based subdirectories.
+    
+    Args:
+        directory (str): Directory containing files to organize
+        output_dir (str, optional): Parent directory where organized folders will be created
+        recursive (bool): Whether to process files in subdirectories
+        dry_run (bool): If True, show what would be done without actually moving files
+    
+    Returns:
+        dict: Results of the organization process
+    """
+    # Use the input directory as output directory if not specified
+    if not output_dir:
+        output_dir = directory
+    
+    # Dictionary to store results: category -> list of filenames
+    results = {category: [] for category in get_all_categories()}
+    
+    # Get list of files to organize
+    files = scan_directory(directory, recursive)
+    total_files = len(files)
+    
+    if total_files == 0:
+        print(f"No files found in {directory}")
+        return results
+    
+    print(f"Found {total_files} files to organize.")
+    
+    # Process each file
+    for i, file_path in enumerate(files, 1):
+        # Skip directories - we only want to process files
+        if os.path.isdir(file_path):
+            continue
+        
+        # Get the file's category based on its extension
+        filename = os.path.basename(file_path)
+        category = get_file_category(filename)
+        
+        # Print progress
+        print_progress(i, total_files, category, filename)
+        
+        # Create the category subdirectory in the output directory
+        category_dir = os.path.join(output_dir, category)
+        
+        # If this is a dry run, don't actually move files
+        if dry_run:
+            print(f"  Would move {file_path} to {category_dir}")
+            results[category].append(filename)
+            continue
+        
+        # Actually move the file
+        success = move_file(file_path, category_dir)
+        if success:
+            results[category].append(filename)
+    
+    return results
+
+def main():
+    """Main function to run the file organizer."""
+    try:
+        # Parse command-line arguments
+        args = parse_arguments()
+        
+        # Convert paths to absolute paths for clarity
+        input_dir = os.path.abspath(args.directory)
+        output_dir = os.path.abspath(args.output_dir) if args.output_dir else input_dir
+        
+        # Check if the input directory exists
+        if not os.path.isdir(input_dir):
+            print(f"Error: {input_dir} is not a valid directory.")
+            sys.exit(1)
+        
+        # Print what we're about to do
+        print(f"Organizing files in: {input_dir}")
+        if input_dir != output_dir:
+            print(f"Output directory: {output_dir}")
+        print(f"Recursive mode: {'On' if args.recursive else 'Off'}")
+        print(f"Dry run mode: {'On' if args.dry_run else 'Off'}")
+        
+        # Organize the files
+        results = organize_files(
+            input_dir,
+            output_dir,
+            args.recursive,
+            args.dry_run
+        )
+        
+        # Generate and print the report
+        report = generate_report(results)
+        print(report)
+        
+        # Done!
+        mode = "would be" if args.dry_run else "were"
+        print(f"Files {mode} organized successfully!")
+        
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user.")
+        sys.exit(1)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+</code></pre>
+            
+            <h3>Creating README.md</h3>
+            <p>Let's add a README file to document our tool.</p>
+            <p><strong>File:</strong> file_organizer/README.md</p>
+            <pre><code># File Organizer
+
+A command-line tool to organize files by moving them into subdirectories based on their types.
+
+## Features
+
+- Organizes files based on their extensions into categories (images, documents, videos, etc.)
+- Handles duplicate filenames by appending numbers
+- Provides detailed reports about the organization process
+- Supports recursive mode to process files in subdirectories
+- Offers a dry-run option to preview changes without moving files
+
+## Installation
+
+No installation is required. Simply clone this repository or download the files to your computer.
+
+```
+git clone https://github.com/yourusername/file-organizer.git
+cd file-organizer
+```
+
+## Usage
+
+```
+python file_organizer.py [directory] [options]
+```
+
+### Required Arguments
+
+- `directory`: Path to the directory containing files to organize
+
+### Options
+
+- `-r, --recursive`: Process files in subdirectories recursively
+- `-d, --dry-run`: Show what would be done without actually moving files
+- `-o, --output-dir`: Parent directory where organized folders will be created (defaults to input directory)
+
+### Examples
+
+Organize files in the current directory:
+```
+python file_organizer.py .
+```
+
+Preview organization without moving files:
+```
+python file_organizer.py ~/Downloads --dry-run
+```
+
+Organize files recursively and place them in a different directory:
+```
+python file_organizer.py ~/Documents --recursive --output-dir ~/Organized
+```
+
+## Project Structure
+
+- `file_organizer.py`: Main script
+- `organizer/`: Package containing core functionality
+  - `classifier.py`: File type classification logic
+  - `operations.py`: File operations (moving, etc.)
+  - `reporter.py`: Generates reports and statistics
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+</code></pre>
+        </section>
+
+        <section class="testing">
+            <h2>Testing the Project</h2>
+            
+            <h3>Basic Testing</h3>
+            <p>Let's test our file organizer with some basic commands:</p>
+            
+            <pre><code># Run with the --help flag to see available options
+python file_organizer.py --help
+
+# Test with dry-run mode first to preview changes
+python file_organizer.py ~/Downloads --dry-run
+
+# Organize files in the Downloads directory
+python file_organizer.py ~/Downloads
+
+# Organize files recursively
+python file_organizer.py ~/Documents --recursive
+
+# Organize files and put them in a separate output directory
+python file_organizer.py ~/Pictures --output-dir ~/Organized
+</code></pre>
+            
+            <h3>Test Cases</h3>
+            <p>Here are some specific test cases to try:</p>
+            <ul>
+                <li><strong>Empty directory:</strong> Does it handle empty directories gracefully?</li>
+                <li><strong>Duplicate filenames:</strong> What happens if the destination already has a file with the same name?</li>
+                <li><strong>Files without extensions:</strong> How are these handled?</li>
+                <li><strong>Very large directories:</strong> How does it perform with thousands of files?</li>
+                <li><strong>Permission errors:</strong> Does it handle cases where it doesn't have permission to move files?</li>
+            </ul>
+        </section>
+
+        <section class="lookback">
+            <h2>Looking Back</h2>
+            
+            <h3>Code Review</h3>
+            <p>Let's examine what we've accomplished and how it relates to the Python concepts from Week 2:</p>
+            
+            <ul>
+                <li><strong>Control Structures:</strong> We used loops to iterate through files and conditionals to handle different file types and edge cases.</li>
+                <li><strong>Data Structures:</strong> We used dictionaries to map file extensions to categories and to track the organization results.</li>
+                <li><strong>Functions:</strong> We modularized our code by creating functions with clear responsibilities.</li>
+                <li><strong>Modules:</strong> We organized our code into separate modules for better maintainability.</li>
+                <li><strong>Error Handling:</strong> We implemented try-except blocks to handle potential errors gracefully.</li>
+                <li><strong>File I/O:</strong> We worked with file operations like moving files and creating directories.</li>
+                <li><strong>Command-line Arguments:</strong> We used the argparse module to handle user input.</li>
+            </ul>
+            
+            <h3>Potential Improvements</h3>
+            <p>There are several ways we could enhance this project:</p>
+            
+            <ul>
+                <li><strong>Custom Categories:</strong> Allow users to define their own file categories and extensions.</li>
+                <li><strong>Undo Functionality:</strong> Implement a way to undo the organization if needed.</li>
+                <li><strong>Advanced Filters:</strong> Organize files based on other criteria like file size or date.</li>
+                <li><strong>GUI Interface:</strong> Create a graphical interface for non-technical users.</li>
+                <li><strong>Performance Optimization:</strong> Use multiprocessing to handle large directories more efficiently.</li>
+                <li><strong>Logging:</strong> Add more detailed logging for better debugging.</li>
+                <li><strong>Unit Tests:</strong> Implement proper unit tests for each component.</li>
+            </ul>
+        </section>
+
+        <section class="advanced">
+            <h2>Advanced Solution</h2>
+            
+            <p>For those interested in a more advanced solution, here are some modifications you could make:</p>
+            
+            <h3>Using Click for Better CLI Experience</h3>
+            <p>Instead of argparse, you could use the Click library for a more elegant command-line interface:</p>
+            
+            <pre><code>import click
+
+@click.command()
+@click.argument('directory', type=click.Path(exists=True, file_okay=False, readable=True))
+@click.option('-r', '--recursive', is_flag=True, help='Process files in subdirectories recursively')
+@click.option('-d', '--dry-run', is_flag=True, help='Show what would be done without actually moving files')
+@click.option('-o', '--output-dir', type=click.Path(file_okay=False), help='Parent directory for organized folders')
+def main(directory, recursive, dry_run, output_dir):
+    """Organize files in DIRECTORY by moving them into type-based subdirectories."""
+    # Implementation here...
+</code></pre>
+            
+            <h3>Using Pathlib Throughout</h3>
+            <p>For more modern Python code, you could use pathlib consistently throughout the project instead of mixing os.path and pathlib:</p>
+            
+            <pre><code>from pathlib import Path
+
+def scan_directory(directory_path, recursive=False):
+    """Scan a directory and return a list of all files."""
+    directory = Path(directory_path)
+    file_list = []
+    
+    try:
+        if recursive:
+            # Get all files recursively
+            file_list = [str(f) for f in directory.glob('**/*') if f.is_file()]
+        else:
+            # Get only files in the top directory
+            file_list = [str(f) for f in directory.iterdir() if f.is_file()]
+        
+        return file_list
+    except Exception as e:
+        print(f"Error scanning directory {directory_path}: {e}")
+        return []
+</code></pre>
+            
+            <h3>Support for Additional Organization Criteria</h3>
+            <p>You could extend the organizer to support organizing by criteria other than extensions:</p>
+            
+            <pre><code>def organize_by_date(files, output_dir):
+    """Organize files by creation date (year/month)."""
+    results = {}
+    
+    for file_path in files:
+        path = Path(file_path)
+        # Get file creation time
+        created = path.stat().st_ctime
+        date = datetime.datetime.fromtimestamp(created)
+        
+        # Create year/month directory
+        date_dir = Path(output_dir) / f"{date.year}" / f"{date.month:02d}"
+        date_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Move file
+        destination = date_dir / path.name
+        # ... handle moving logic ...
+    
+    return results
+
+def organize_by_size(files, output_dir):
+    """Organize files by size (small, medium, large)."""
+    # Implementation here...
+</code></pre>
+        </section>
+
+        <section class="realworld">
+            <h2>Real-World Applications</h2>
+            
+            <h3>Practical Uses</h3>
+            <p>The file organizer tool you've created has several practical applications:</p>
+            
+            <ul>
+                <li><strong>Download Folder Management:</strong> Keep your Downloads folder tidy by automatically organizing files.</li>
+                <li><strong>Photo Management:</strong> Organize large collections of photos by type or date.</li>
+                <li><strong>Document Management:</strong> Sort documents by type for easier retrieval.</li>
+                <li><strong>Project Cleanup:</strong> Organize project files before archiving them.</li>
+                <li><strong>Server Maintenance:</strong> Automate organization of log files or user uploads.</li>
+            </ul>
+            
+            <h3>Similar Tools in the Wild</h3>
+            <p>Your file organizer is similar to several real-world applications:</p>
+            
+            <ul>
+                <li><strong>Hazel (Mac):</strong> An automated file organization tool that moves and renames files based on rules.</li>
+                <li><strong>Belvedere (Windows):</strong> A file management tool that automates organization tasks.</li>
+                <li><strong>DropIt (Windows):</strong> A flexible tool that can organize files based on various rules.</li>
+                <li><strong>Digital Asset Management (DAM) systems:</strong> Enterprise solutions for organizing media files.</li>
+            </ul>
+            
+            <h3>Integration Possibilities</h3>
+            <p>Your tool could be integrated into larger systems:</p>
+            
+            <ul>
+                <li><strong>Scheduled Tasks:</strong> Run it automatically on a schedule using cron jobs or Task Scheduler.</li>
+                <li><strong>File Synchronization:</strong> Combine with tools like rsync to organize files before backing them up.</li>
+                <li><strong>Media Servers:</strong> Use it to organize media files for Plex, Jellyfin, or similar systems.</li>
+                <li><strong>Web Applications:</strong> Integrate it into a web app that manages file uploads.</li>
+            </ul>
+        </section>
+
+        <section class="conclusion">
+            <h2>Conclusion</h2>
+            
+            <p>In this weekend project, you've created a practical command-line tool that demonstrates your understanding of Python fundamentals. Through this process, you've:</p>
+            
+            <ul>
+                <li>Applied Python concepts in a real-world context</li>
+                <li>Worked with the file system using Python's standard library</li>
+                <li>Created a modular, maintainable project structure</li>
+                <li>Built a useful tool that you can actually use in your daily life</li>
+                <li>Practiced problem-solving using George Polya's 4-step method</li>
+            </ul>
+            
+            <p>This project provides a solid foundation that you can build upon. As you learn more advanced Python concepts in the coming weeks, consider revisiting this project to add new features and improvements.</p>
+            
+            <h3>Next Steps</h3>
+            <p>To continue your learning journey:</p>
+            
+            <ul>
+                <li>Add unit tests to ensure your code works correctly</li>
+                <li>Implement one or more of the advanced features mentioned earlier</li>
+                <li>Create a simple installation script using setuptools</li>
+                <li>Share your project on GitHub and get feedback from others</li>
+                <li>Consider turning it into a proper Python package that can be installed with pip</li>
+            </ul>
+            
+            <p>Happy coding!</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>Python Full Stack Web Developer Course - Week 2</p>
+        <p>File location: /week2/weekend_project.html</p>
+    </footer>
+</body>
+</html>

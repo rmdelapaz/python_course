@@ -1494,3 +1494,3258 @@ def index():
                 <li><strong>Extract business logic to services</strong>
                     <pre><code># Create app/services/item_service.py
 """Item service module for business
+import matplotlib.pyplot as plt
+import seaborn as sns
+from .helpers import validate_data
+from .exceptions import PlotTypeError
+
+def plot_data(data, plot_type='scatter', title=None, xlabel=None, ylabel=None, **kwargs):
+    """
+    Create a visualization from the provided data.
+    
+    Args:
+        data: Pandas DataFrame with the data to plot
+        plot_type: Type of plot to create (scatter, line, bar, histogram)
+        title: Title for the plot
+        xlabel: Label for x-axis
+        ylabel: Label for y-axis
+        **kwargs: Additional arguments for the plot
+        
+    Returns:
+        matplotlib.Figure: The created figure
+    
+    Raises:
+        PlotTypeError: If the plot type is not supported
+        ValueError: If data doesn't contain required columns
+    """
+    # Validate data has required columns
+    validate_data(data)
+    
+    # Set up the figure and axes
+    fig, ax = plt.subplots(figsize=kwargs.pop('figsize', (10, 6)))
+    
+    # Create the plot based on type
+    if plot_type == 'scatter':
+        ax.scatter(data['x'], data['y'], **kwargs)
+    elif plot_type == 'line':
+        ax.plot(data['x'], data['y'], **kwargs)
+    elif plot_type == 'bar':
+        ax.bar(data['x'], data['y'], **kwargs)
+    elif plot_type == 'histogram':
+        ax.hist(data['x'], bins=kwargs.pop('bins', 10), **kwargs)
+    else:
+        raise PlotTypeError(f"Unsupported plot type: {plot_type}")
+    
+    # Add labels and title if provided
+    if xlabel:
+        ax.set_xlabel(xlabel)
+    if ylabel:
+        ax.set_ylabel(ylabel)
+    if title:
+        ax.set_title(title)
+    
+    # Apply styling
+    sns.set_style("whitegrid")
+    fig.tight_layout()
+    
+    return fig
+
+def save_figure(fig, filename, dpi=300, transparent=False):
+    """
+    Save a figure to a file.
+    
+    Args:
+        fig: Matplotlib figure to save
+        filename: Output filename
+        dpi: Resolution in dots per inch
+        transparent: Whether to use a transparent background
+    """
+    fig.savefig(filename, dpi=dpi, transparent=transparent)
+    return filename</code></pre>
+            
+            <p><strong>datavis/helpers.py</strong> - Helper functions:</p>
+            <pre><code>"""Helper functions for data handling and preprocessing."""
+import pandas as pd
+import numpy as np
+import os
+from .exceptions import FileFormatError, DataValidationError
+
+def load_data(filename):
+    """
+    Load data from a file into a DataFrame.
+    
+    Args:
+        filename: Path to the data file
+        
+    Returns:
+        pandas.DataFrame: Loaded data
+        
+    Raises:
+        FileFormatError: If the file format is not supported
+        FileNotFoundError: If the file doesn't exist
+    """
+    if not os.path.exists(filename):
+        raise FileNotFoundError(f"File not found: {filename}")
+        
+    # Determine file type from extension
+    if filename.endswith('.csv'):
+        return pd.read_csv(filename)
+    elif filename.endswith('.xlsx') or filename.endswith('.xls'):
+        return pd.read_excel(filename)
+    elif filename.endswith('.json'):
+        return pd.read_json(filename)
+    elif filename.endswith('.pickle') or filename.endswith('.pkl'):
+        return pd.read_pickle(filename)
+    else:
+        raise FileFormatError(f"Unsupported file format: {filename}")
+
+def preprocess_data(data, normalize=True, handle_missing=True):
+    """
+    Clean and prepare data for visualization.
+    
+    Args:
+        data: pandas DataFrame to process
+        normalize: Whether to normalize numeric columns
+        handle_missing: Whether to handle missing values
+        
+    Returns:
+        pandas.DataFrame: Processed data
+    """
+    # Work on a copy to avoid modifying the original
+    df = data.copy()
+    
+    # Handle missing values if requested
+    if handle_missing:
+        # Drop rows with any missing values
+        df = df.dropna()
+    
+    # Normalize numeric columns if requested
+    if normalize:
+        numeric_cols = df.select_dtypes(include=[np.number]).columns
+        for col in numeric_cols:
+            # Skip columns with zero standard deviation
+            if df[col].std() > 0:
+                df[col] = (df[col] - df[col].mean()) / df[col].std()
+    
+    return df
+
+def validate_data(data):
+    """
+    Ensure data meets requirements for visualization.
+    
+    Args:
+        data: pandas DataFrame to validate
+        
+    Raises:
+        DataValidationError: If data doesn't meet requirements
+    """
+    required_columns = ['x', 'y']
+    
+    # Check if data is a DataFrame
+    if not isinstance(data, pd.DataFrame):
+        raise DataValidationError("Data must be a pandas DataFrame")
+    
+    # Check if required columns exist
+    if not all(col in data.columns for col in required_columns):
+        raise DataValidationError(f"Data must contain columns: {required_columns}")
+    
+    # Check if data has any rows
+    if len(data) == 0:
+        raise DataValidationError("Data contains no rows")
+        
+    return True</code></pre>
+
+            <p><strong>datavis/exceptions.py</strong> - Custom exceptions:</p>
+            <pre><code>"""Custom exceptions for the DataVis package."""
+
+class DataVisError(Exception):
+    """Base exception for all DataVis errors."""
+    pass
+
+class PlotTypeError(DataVisError):
+    """Raised when an unsupported plot type is requested."""
+    pass
+
+class FileFormatError(DataVisError):
+    """Raised when an unsupported file format is encountered."""
+    pass
+
+class DataValidationError(DataVisError):
+    """Raised when data fails validation checks."""
+    pass</code></pre>
+            
+            <p><strong>datavis/advanced/__init__.py</strong> - Advanced subpackage initialization:</p>
+            <pre><code>"""Advanced visualization components for interactive and animated plots."""
+from .interactive import create_interactive_plot
+from .animations import create_animation
+
+__all__ = ['create_interactive_plot', 'create_animation']</code></pre>
+            
+            <p><strong>datavis/advanced/interactive.py</strong> - Interactive visualization:</p>
+            <pre><code>"""Interactive visualization module."""
+import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider, Button
+from ..core import plot_data
+
+def create_interactive_plot(data, x_column='x', y_column='y', **kwargs):
+    """
+    Create an interactive plot with sliders to control display parameters.
+    
+    Args:
+        data: DataFrame with the data to plot
+        x_column: Column to use for x-axis
+        y_column: Column to use for y-axis
+        **kwargs: Additional arguments for the plot
+        
+    Returns:
+        matplotlib.Figure: The interactive figure
+    """
+    # Create the initial plot
+    fig, ax = plt.subplots(figsize=kwargs.pop('figsize', (10, 8)))
+    plt.subplots_adjust(bottom=0.25)  # Make room for sliders
+    
+    # Initial plotting
+    scatter = ax.scatter(
+        data[x_column], 
+        data[y_column],
+        alpha=0.5,
+        s=50  # Size of points
+    )
+    
+    # Add sliders
+    ax_alpha = plt.axes([0.25, 0.15, 0.65, 0.03])
+    alpha_slider = Slider(ax_alpha, 'Alpha', 0.1, 1.0, valinit=0.5)
+    
+    ax_size = plt.axes([0.25, 0.1, 0.65, 0.03])
+    size_slider = Slider(ax_size, 'Size', 10, 200, valinit=50)
+    
+    # Update function for sliders
+    def update(val):
+        scatter.set_alpha(alpha_slider.val)
+        scatter.set_sizes([size_slider.val])
+        fig.canvas.draw_idle()
+    
+    # Connect the sliders to the update function
+    alpha_slider.on_changed(update)
+    size_slider.on_changed(update)
+    
+    # Add a reset button
+    ax_reset = plt.axes([0.8, 0.025, 0.1, 0.04])
+    reset_button = Button(ax_reset, 'Reset')
+    
+    def reset(event):
+        alpha_slider.reset()
+        size_slider.reset()
+    
+    reset_button.on_clicked(reset)
+    
+    # Set labels and title
+    ax.set_xlabel(x_column)
+    ax.set_ylabel(y_column)
+    ax.set_title(kwargs.pop('title', 'Interactive Plot'))
+    
+    return fig</code></pre>
+            
+            <p><strong>setup.py</strong> - Installation script:</p>
+            <pre><code>from setuptools import setup, find_packages
+
+# Read long description from README
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
+setup(
+    name="datavis",
+    version="0.2.1",
+    packages=find_packages(),
+    install_requires=[
+        "matplotlib>=3.4.0",
+        "seaborn>=0.11.0",
+        "pandas>=1.3.0",
+        "numpy>=1.20.0",
+    ],
+    author="Your Name",
+    author_email="your.email@example.com",
+    description="A data visualization library for scientific data",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    keywords="visualization, data, science, matplotlib",
+    url="https://github.com/yourusername/datavis",
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Science/Research",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "License :: OSI Approved :: MIT License",
+        "Topic :: Scientific/Engineering :: Visualization",
+    ],
+    python_requires=">=3.7",
+)</code></pre>
+            
+            <p><strong>tests/test_core.py</strong> - Core functionality tests:</p>
+            <pre><code>"""Tests for core visualization functions."""
+import pytest
+import pandas as pd
+import matplotlib.pyplot as plt
+from datavis.core import plot_data, save_figure
+from datavis.exceptions import PlotTypeError
+import os
+import tempfile
+
+@pytest.fixture
+def sample_data():
+    """Create sample data for testing."""
+    return pd.DataFrame({
+        'x': [1, 2, 3, 4, 5],
+        'y': [10, 15, 13, 17, 20]
+    })
+
+def test_plot_data_scatter(sample_data):
+    """Test scatter plot creation."""
+    fig = plot_data(sample_data, plot_type='scatter')
+    assert isinstance(fig, plt.Figure)
+    
+    # Check that figure has expected components
+    assert len(fig.axes) == 1
+    ax = fig.axes[0]
+    assert len(ax.collections) == 1  # One scatter plot
+    
+    # Cleanup
+    plt.close(fig)
+
+def test_plot_data_line(sample_data):
+    """Test line plot creation."""
+    fig = plot_data(sample_data, plot_type='line')
+    assert isinstance(fig, plt.Figure)
+    
+    # Check that figure has expected components
+    assert len(fig.axes) == 1
+    ax = fig.axes[0]
+    assert len(ax.lines) == 1  # One line
+    
+    # Cleanup
+    plt.close(fig)
+
+def test_plot_data_with_labels(sample_data):
+    """Test plot creation with labels and title."""
+    title = "Test Plot"
+    xlabel = "X Values"
+    ylabel = "Y Values"
+    
+    fig = plot_data(sample_data, title=title, xlabel=xlabel, ylabel=ylabel)
+    ax = fig.axes[0]
+    
+    assert ax.get_title() == title
+    assert ax.get_xlabel() == xlabel
+    assert ax.get_ylabel() == ylabel
+    
+    # Cleanup
+    plt.close(fig)
+
+def test_plot_data_invalid_type(sample_data):
+    """Test error handling for invalid plot types."""
+    with pytest.raises(PlotTypeError):
+        plot_data(sample_data, plot_type='invalid_type')
+
+def test_save_figure(sample_data):
+    """Test saving a figure to a file."""
+    fig = plot_data(sample_data)
+    
+    # Create a temporary file
+    with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+        filename = tmp.name
+    
+    try:
+        # Save the figure
+        saved_path = save_figure(fig, filename)
+        
+        # Check that the file exists and has content
+        assert os.path.exists(saved_path)
+        assert os.path.getsize(saved_path) > 0
+        
+    finally:
+        # Cleanup
+        plt.close(fig)
+        if os.path.exists(filename):
+            os.unlink(filename)</code></pre>
+            
+            <p><strong>scripts/generate_report.py</strong> - Command-line script:</p>
+            <pre><code>#!/usr/bin/env python3
+"""
+Script to generate a data visualization report.
+"""
+import argparse
+import pandas as pd
+import os
+import sys
+from pathlib import Path
+
+# Add parent directory to path for importing datavis package
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from datavis import load_data, preprocess_data, plot_data, save_figure
+from datavis.advanced import create_interactive_plot
+
+def main():
+    """Main entry point for the script."""
+    parser = argparse.ArgumentParser(description='Generate a data visualization report.')
+    parser.add_argument('input_file', help='Input data file (CSV, Excel, JSON)')
+    parser.add_argument('output_dir', help='Output directory for report files')
+    parser.add_argument('--x-col', default='x', help='Column to use for x-axis')
+    parser.add_argument('--y-col', default='y', help='Column to use for y-axis')
+    parser.add_argument('--title', default='Data Visualization', help='Plot title')
+    parser.add_argument('--types', default='scatter,line,bar', help='Comma-separated list of plot types to generate')
+    args = parser.parse_args()
+    
+    # Ensure output directory exists
+    os.makedirs(args.output_dir, exist_ok=True)
+    
+    try:
+        # Load and process data
+        print(f"Loading data from {args.input_file}...")
+        raw_data = load_data(args.input_file)
+        
+        # Rename columns if needed
+        if args.x_col != 'x' or args.y_col != 'y':
+            raw_data = raw_data.rename(columns={args.x_col: 'x', args.y_col: 'y'})
+        
+        print(f"Processing data ({len(raw_data)} rows)...")
+        data = preprocess_data(raw_data)
+        print(f"Data processed. {len(data)} rows after preprocessing.")
+        
+        # Generate plots
+        plot_types = args.types.split(',')
+        for plot_type in plot_types:
+            plot_type = plot_type.strip()
+            print(f"Generating {plot_type} plot...")
+            
+            fig = plot_data(
+                data, 
+                plot_type=plot_type,
+                title=f"{args.title} - {plot_type.capitalize()}",
+                xlabel=args.x_col,
+                ylabel=args.y_col
+            )
+            
+            # Save the figure
+            output_file = os.path.join(args.output_dir, f"{plot_type}_plot.png")
+            save_figure(fig, output_file)
+            print(f"Saved to {output_file}")
+        
+        print("Report generation complete!")
+        
+    except Exception as e:
+        print(f"Error generating report: {str(e)}")
+        return 1
+        
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())</code></pre>
+            
+            <p>This medium-sized structure provides several advantages:</p>
+            <ul>
+                <li>Clear separation of concerns between core functionality, helpers, and advanced features</li>
+                <li>Well-defined API with proper error handling</li>
+                <li>Comprehensive testing of functionality</li>
+                <li>Proper packaging for distribution</li>
+                <li>Command-line interface for common operations</li>
+                <li>Structured documentation and examples</li>
+            </ul>
+            
+            <p><strong>When to use this structure:</strong></p>
+            <ul>
+                <li>For libraries that will be shared across projects</li>
+                <li>When developing tools with a clear API</li>
+                <li>For projects that will grow over time but maintain a focused purpose</li>
+                <li>When testing is important for maintaining reliability</li>
+            </ul>
+            
+            <p><strong>When to graduate from this structure:</strong> As your project continues to grow in complexity, you might notice:</p>
+            <ul>
+                <li>The package becoming too large to understand as a whole</li>
+                <li>Different components evolving at different rates</li>
+                <li>Need for more formalized boundaries between components</li>
+                <li>Multiple teams working on different aspects of the project</li>
+            </ul>
+            
+            <p>At this point, consider moving to a large-scale application structure or domain-driven design approach.</p>
+        </section>
+
+        <section class="large_structure">
+            <h3>Large-Scale Application Structure</h3>
+            
+            <p>For large applications, especially web applications or complex systems, a more sophisticated structure helps manage the inherent complexity. This approach is like organizing a large factory with multiple production lines, specialized departments, and clear workflows. Here's a typical layout for a Flask web application:</p>
+            
+            <pre><code>flask_ecommerce/
+├── app/                    # Application package
+│   ├── __init__.py         # App initialization
+│   ├── config.py           # Configuration classes
+│   ├── models/             # Database models
+│   │   ├── __init__.py
+│   │   ├── user.py
+│   │   ├── product.py
+│   │   └── order.py
+│   ├── routes/             # Route handlers
+│   │   ├── __init__.py
+│   │   ├── auth.py
+│   │   ├── main.py
+│   │   ├── products.py
+│   │   └── api.py
+│   ├── templates/          # Jinja2 templates
+│   │   ├── base.html
+│   │   ├── index.html
+│   │   ├── auth/
+│   │   └── products/
+│   ├── static/             # Static assets
+│   │   ├── css/
+│   │   ├── js/
+│   │   └── img/
+│   ├── services/           # Business logic
+│   │   ├── __init__.py
+│   │   ├── auth_service.py
+│   │   ├── product_service.py
+│   │   └── email_service.py
+│   └── utils/              # Utility functions
+│       ├── __init__.py
+│       ├── validators.py
+│       └── formatters.py
+├── migrations/             # Database migrations
+├── tests/                  # Test suite
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_models/
+│   ├── test_routes/
+│   └── test_services/
+├── logs/                   # Application logs
+├── scripts/                # Utility scripts
+│   ├── deploy.sh
+│   └── seed_db.py
+├── docs/                   # Documentation
+│   ├── index.md
+│   ├── api.md
+│   └── deployment.md
+├── .env.example            # Environment variables template
+├── .flaskenv               # Flask configurations
+├── .gitignore              # Git ignore rules
+├── requirements/
+│   ├── base.txt            # Shared dependencies
+│   ├── dev.txt             # Development dependencies
+│   └── prod.txt            # Production dependencies
+├── setup.py                # Package installation
+├── wsgi.py                 # WSGI entry point
+├── manage.py               # Command-line interface
+├── README.md               # Project documentation
+├── LICENSE                 # License information
+└── docker-compose.yml      # Docker configuration</code></pre>
+            
+            <p>Key features of this structure:</p>
+            <ul>
+                <li>Highly modular organization by functionality</li>
+                <li>Clear separation between presentation, business logic, and data access</li>
+                <li>Support for multiple environments (development, testing, production)</li>
+                <li>Advanced configuration management</li>
+                <li>Comprehensive testing structure</li>
+                <li>DevOps integration</li>
+                <li>Database migration support</li>
+            </ul>
+            
+            <p>This structure works well for:</p>
+            <ul>
+                <li>Web applications with multiple features</li>
+                <li>Projects with 10,000+ lines of code</li>
+                <li>Teams with 5+ developers</li>
+                <li>Applications that will be deployed to multiple environments</li>
+                <li>Projects with complex business logic</li>
+            </ul>
+            
+            <h4>Example Files in a Large Application</h4>
+            <p>Let's explore some key files from this large-scale structure:</p>
+            
+            <p><strong>app/__init__.py</strong> - Application factory:</p>
+            <pre><code>"""Flask application factory module."""
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_login import LoginManager
+from flask_mail import Mail
+import logging
+from logging.handlers import RotatingFileHandler
+import os
+
+# Initialize extensions
+db = SQLAlchemy()
+migrate = Migrate()
+login_manager = LoginManager()
+mail = Mail()
+
+def create_app(config_name='development'):
+    """Create and configure the Flask application."""
+    app = Flask(__name__)
+    
+    # Load configuration
+    from app.config import config
+    app.config.from_object(config[config_name])
+    
+    # Initialize extensions
+    db.init_app(app)
+    migrate.init_app(app, db)
+    login_manager.init_app(app)
+    mail.init_app(app)
+    
+    # Set up login manager
+    from app.models.user import User
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Please log in to access this page.'
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+    
+    # Register blueprints
+    from app.routes.main import main_bp
+    from app.routes.auth import auth_bp
+    from app.routes.products import products_bp
+    from app.routes.api import api_bp
+    
+    app.register_blueprint(main_bp)
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(products_bp, url_prefix='/products')
+    app.register_blueprint(api_bp, url_prefix='/api/v1')
+    
+    # Set up logging
+    if not app.debug and not app.testing:
+        if not os.path.exists('logs'):
+            os.mkdir('logs')
+        file_handler = RotatingFileHandler(
+            'logs/flask_ecommerce.log',
+            maxBytes=10240,
+            backupCount=10
+        )
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+        ))
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+        
+        app.logger.setLevel(logging.INFO)
+        app.logger.info('Flask E-commerce startup')
+    
+    # Register error handlers
+    from app.routes import errors
+    errors.register_handlers(app)
+    
+    return app</code></pre>
+            
+            <p><strong>app/config.py</strong> - Configuration classes:</p>
+            <pre><code>"""Application configuration module."""
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(os.path.dirname(basedir), '.env'))
+
+class Config:
+    """Base configuration class."""
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-key-please-change')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///' + os.path.join(basedir, 'app.db'))
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Mail settings
+    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.example.com')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@example.com')
+    
+    # Application settings
+    PRODUCTS_PER_PAGE = 12
+    ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@example.com')
+    UPLOAD_FOLDER = os.path.join(basedir, 'static', 'uploads')
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+class DevelopmentConfig(Config):
+    """Development configuration."""
+    DEBUG = True
+    SQLALCHEMY_ECHO = True
+    TEMPLATES_AUTO_RELOAD = True
+
+class TestingConfig(Config):
+    """Testing configuration."""
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    WTF_CSRF_ENABLED = False
+    MAIL_SUPPRESS_SEND = True
+
+class ProductionConfig(Config):
+    """Production configuration."""
+    DEBUG = False
+    
+    @classmethod
+    def init_app(cls, app):
+        # Log to stderr
+        import logging
+        from logging import StreamHandler
+        file_handler = StreamHandler()
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+        
+        # Production-specific middleware, etc.
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app)
+
+# Configuration dictionary
+config = {
+    'development': DevelopmentConfig,
+    'testing': TestingConfig,
+    'production': ProductionConfig,
+    'default': DevelopmentConfig
+}</code></pre>
+            
+            <p><strong>app/models/user.py</strong> - User model:</p>
+            <pre><code>"""User model module."""
+from datetime import datetime
+from flask import current_app
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+import jwt
+from time import time
+from app import db
+
+class User(db.Model, UserMixin):
+    """User model for authentication and profile information."""
+    
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), unique=True, index=True)
+    email = db.Column(db.String(120), unique=True, index=True)
+    password_hash = db.Column(db.String(128))
+    first_name = db.Column(db.String(64))
+    last_name = db.Column(db.String(64))
+    is_active = db.Column(db.Boolean, default=True)
+    is_admin = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login = db.Column(db.DateTime, nullable=True)
+    
+    # Relationships
+    orders = db.relationship('Order', backref='customer', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<User {self.username}>'
+    
+    def set_password(self, password):
+        """Set the user's password hash."""
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        """Check if the provided password matches the hash."""
+        return check_password_hash(self.password_hash, password)
+    
+    def get_reset_password_token(self, expires_in=600):
+        """Generate a token for password reset."""
+        return jwt.encode(
+            {'reset_password': self.id, 'exp': time() + expires_in},
+            current_app.config['SECRET_KEY'],
+            algorithm='HS256'
+        )
+        
+    @staticmethod
+    def verify_reset_password_token(token):
+        """Verify a password reset token."""
+        try:
+            id = jwt.decode(
+                token,
+                current_app.config['SECRET_KEY'],
+                algorithms=['HS256']
+            )['reset_password']
+        except:
+            return None
+        return User.query.get(id)
+        
+    def to_dict(self):
+        """Convert user to dictionary for API responses."""
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'is_admin': self.is_admin,
+            'created_at': self.created_at.isoformat() + 'Z',
+            'last_login': self.last_login.isoformat() + 'Z' if self.last_login else None
+        }</code></pre>
+            
+            <p><strong>app/services/auth_service.py</strong> - Authentication service:</p>
+            <pre><code>"""Authentication service module."""
+from datetime import datetime
+from flask import current_app
+from app import db
+from app.models.user import User
+from app.services.email_service import send_email
+import jwt
+from time import time
+
+def register_user(username, email, password, first_name=None, last_name=None):
+    """
+    Register a new user.
+    
+    Args:
+        username: User's username
+        email: User's email address
+        password: User's password
+        first_name: User's first name (optional)
+        last_name: User's last name (optional)
+    
+    Returns:
+        User: The created user object
+    
+    Raises:
+        ValueError: If username or email already exists
+    """
+    # Check if username or email already exists
+    if User.query.filter_by(username=username).first():
+        raise ValueError(f"Username '{username}' is already taken")
+        
+    if User.query.filter_by(email=email).first():
+        raise ValueError(f"Email '{email}' is already registered")
+    
+    # Create the user
+    user = User(
+        username=username, 
+        email=email,
+        first_name=first_name,
+        last_name=last_name
+    )
+    user.set_password(password)
+    
+    # Make first user an admin
+    if User.query.count() == 0:
+        user.is_admin = True
+    
+    # Save to database
+    db.session.add(user)
+    db.session.commit()
+    
+    # Send welcome email
+    send_welcome_email(user)
+    
+    return user
+
+def login_user_service(user):
+    """
+    Update user login information.
+    
+    Args:
+        user: User object
+    """
+    user.last_login = datetime.utcnow()
+    db.session.commit()
+
+def send_welcome_email(user):
+    """
+    Send a welcome email to a new user.
+    
+    Args:
+        user: User object
+    """
+    subject = "Welcome to Flask E-commerce!"
+    text_body = f"""
+    Hi {user.first_name or user.username},
+    
+    Thank you for registering with Flask E-commerce!
+    
+    Your account has been created successfully. You can now log in at:
+    {current_app.config['SITE_URL']}/auth/login
+    
+    Best regards,
+    The Flask E-commerce Team
+    """
+    html_body = f"""
+    <p>Hi {user.first_name or user.username},</p>
+    <p>Thank you for registering with Flask E-commerce!</p>
+    <p>Your account has been created successfully. You can now 
+    <a href="{current_app.config['SITE_URL']}/auth/login">log in</a>.</p>
+    <p>Best regards,<br>The Flask E-commerce Team</p>
+    """
+    
+    send_email(user.email, subject, text_body, html_body)
+
+def generate_password_reset_token(email):
+    """
+    Generate a password reset token for the given email.
+    
+    Args:
+        email: User's email address
+        
+    Returns:
+        tuple: (user, token) or (None, None) if user not found
+    """
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return None, None
+        
+    token = user.get_reset_password_token()
+    return user, token
+
+def reset_password(token, new_password):
+    """
+    Reset a user's password using a token.
+    
+    Args:
+        token: Password reset token
+        new_password: New password
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    user = User.verify_reset_password_token(token)
+    if not user:
+        return False
+        
+    user.set_password(new_password)
+    db.session.commit()
+    return True</code></pre>
+            
+            <p><strong>app/routes/auth.py</strong> - Authentication routes:</p>
+            <pre><code>"""Authentication routes."""
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
+from flask_login import login_user, logout_user, current_user, login_required
+from app.models.user import User
+from app.services.auth_service import (
+    register_user, login_user_service, generate_password_reset_token,
+    reset_password as service_reset_password
+)
+from app.services.email_service import send_email
+from app.forms.auth import LoginForm, RegistrationForm, ResetPasswordRequestForm, ResetPasswordForm
+import jwt
+
+auth_bp = Blueprint('auth', __name__)
+
+@auth_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    """User login view."""
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid username or password')
+            current_app.logger.info(f"Failed login attempt for username: {form.username.data}")
+            return redirect(url_for('auth.login'))
+        
+        login_user(user, remember=form.remember_me.data)
+        login_user_service(user)
+        current_app.logger.info(f"User logged in: {user.username}")
+        
+        next_page = request.args.get('next')
+        if not next_page or not next_page.startswith('/'):
+            next_page = url_for('main.index')
+        return redirect(next_page)
+    
+    return render_template('auth/login.html', title='Sign In', form=form)
+
+@auth_bp.route('/logout')
+def logout():
+    """User logout view."""
+    logout_user()
+    flash('You have been logged out')
+    return redirect(url_for('main.index'))
+
+@auth_bp.route('/register', methods=['GET', 'POST'])
+def register():
+    """User registration view."""
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        try:
+            user = register_user(
+                username=form.username.data,
+                email=form.email.data,
+                password=form.password.data,
+                first_name=form.first_name.data,
+                last_name=form.last_name.data
+            )
+            current_app.logger.info(f"New user registered: {user.username}")
+            flash('Congratulations, you are now a registered user! Please check your email for confirmation.')
+            return redirect(url_for('auth.login'))
+        except ValueError as e:
+            flash(str(e))
+            return redirect(url_for('auth.register'))
+    
+    return render_template('auth/register.html', title='Register', form=form)
+
+@auth_bp.route('/reset_password_request', methods=['GET', 'POST'])
+def reset_password_request():
+    """Request password reset view."""
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+        
+    form = ResetPasswordRequestForm()
+    if form.validate_on_submit():
+        user, token = generate_password_reset_token(form.email.data)
+        if user:
+            send_password_reset_email(user, token)
+            flash('Check your email for instructions to reset your password')
+        else:
+            flash('Check your email for instructions to reset your password')
+        return redirect(url_for('auth.login'))
+        
+    return render_template('auth/reset_password_request.html', title='Reset Password', form=form)
+
+@auth_bp.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    """Reset password view."""
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+        
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        if service_reset_password(token, form.password.data):
+            flash('Your password has been reset')
+            return redirect(url_for('auth.login'))
+        else:
+            flash('Invalid or expired token')
+            return redirect(url_for('auth.reset_password_request'))
+            
+    return render_template('auth/reset_password.html', title='Reset Password', form=form)
+
+def send_password_reset_email(user, token):
+    """Send password reset email."""
+    reset_url = url_for('auth.reset_password', token=token, _external=True)
+    subject = "Reset Your Password"
+    text_body = f"""
+    Dear {user.first_name or user.username},
+    
+    To reset your password, please visit the following link:
+    {reset_url}
+    
+    If you did not request a password reset, please ignore this email.
+    
+    Sincerely,
+    The Flask E-commerce Team
+    """
+    html_body = f"""
+    <p>Dear {user.first_name or user.username},</p>
+    <p>To reset your password, please <a href="{reset_url}">click here</a>.</p>
+    <p>If you did not request a password reset, please ignore this email.</p>
+    <p>Sincerely,<br>The Flask E-commerce Team</p>
+    """
+    
+    send_email(user.email, subject, text_body, html_body)</code></pre>
+            
+            <p><strong>wsgi.py</strong> - WSGI entry point:</p>
+            <pre><code>"""WSGI entry point for the application."""
+from app import create_app
+
+app = create_app('production')
+
+if __name__ == '__main__':
+    app.run()</code></pre>
+            
+            <p><strong>manage.py</strong> - Command-line interface:</p>
+            <pre><code>#!/usr/bin/env python
+"""Management script for the application."""
+import os
+import click
+from flask.cli import FlaskGroup
+from app import create_app, db
+from app.models.user import User
+from app.models.product import Product, Category
+from app.models.order import Order, OrderItem
+import random
+from datetime import datetime, timedelta
+from faker import Faker
+
+app = create_app(os.getenv('FLASK_ENV', 'development'))
+cli = FlaskGroup(app)
+fake = Faker()
+
+@cli.command('create_admin')
+@click.argument('username')
+@click.argument('email')
+@click.password_option()
+def create_admin(username, email, password):
+    """Create an admin user."""
+    user = User(username=username, email=email, is_admin=True)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+    click.echo(f'Admin user {username} created.')
+
+@cli.command('reset_db')
+@click.confirmation_option(prompt='Are you sure you want to reset the database?')
+def reset_db():
+    """Reset the database."""
+    db.drop_all()
+    db.create_all()
+    click.echo('Database has been reset.')
+
+@cli.command('seed_db')
+@click.option('--users', default=10, help='Number of users to create')
+@click.option('--products', default=50, help='Number of products to create')
+@click.option('--categories', default=5, help='Number of categories to create')
+@click.option('--orders', default=20, help='Number of orders to create')
+def seed_db(users, products, categories, orders):
+    """Seed the database with sample data."""
+    # Create users
+    click.echo('Creating users...')
+    for i in range(users):
+        user = User(
+            username=fake.user_name(),
+            email=fake.email(),
+            first_name=fake.first_name(),
+            last_name=fake.last_name(),
+            is_active=True,
+            created_at=fake.date_time_this_year()
+        )
+        user.set_password('password')
+        db.session.add(user)
+    
+    # Create admin user
+    admin = User(
+        username='admin',
+        email='admin@example.com',
+        first_name='Admin',
+        last_name='User',
+        is_active=True,
+        is_admin=True,
+        created_at=fake.date_time_this_year()
+    )
+    admin.set_password('adminpass')
+    db.session.add(admin)
+    
+    db.session.commit()
+    
+    # Create categories
+    click.echo('Creating categories...')
+    category_names = ['Electronics', 'Clothing', 'Books', 'Home & Kitchen', 'Toys', 'Sports', 'Beauty', 'Automotive']
+    created_categories = []
+    for i in range(min(categories, len(category_names))):
+        category = Category(
+            name=category_names[i],
+            description=fake.paragraph()
+        )
+        db.session.add(category)
+        created_categories.append(category)
+    
+    db.session.commit()
+    
+    # Create products
+    click.echo('Creating products...')
+    for i in range(products):
+        product = Product(
+            name=fake.catch_phrase(),
+            description=fake.paragraphs(nb=3),
+            price=round(random.uniform(10, 500), 2),
+            stock=random.randint(0, 100),
+            category=random.choice(created_categories),
+            created_at=fake.date_time_this_year()
+        )
+        db.session.add(product)
+    
+    db.session.commit()
+    
+    # Create orders
+    click.echo('Creating orders...')
+    users_list = User.query.all()
+    products_list = Product.query.all()
+    
+    for i in range(orders):
+        user = random.choice(users_list)
+        order_date = fake.date_time_this_year()
+        
+        order = Order(
+            customer=user,
+            created_at=order_date,
+            status=random.choice(['pending', 'paid', 'shipped', 'delivered', 'cancelled']),
+            shipping_address=fake.address(),
+            total_amount=0
+        )
+        db.session.add(order)
+        db.session.flush()  # To get the order ID
+        
+        # Add 1-5 items to the order
+        total_amount = 0
+        for j in range(random.randint(1, 5)):
+            product = random.choice(products_list)
+            quantity = random.randint(1, 3)
+            item_price = product.price
+            item_total = quantity * item_price
+            
+            order_item = OrderItem(
+                order=order,
+                product=product,
+                quantity=quantity,
+                unit_price=item_price
+            )
+            db.session.add(order_item)
+            total_amount += item_total
+        
+        order.total_amount = total_amount
+    
+    db.session.commit()
+    click.echo('Database has been seeded!')
+
+if __name__ == '__main__':
+    cli()</code></pre>
+            
+            <p>The large-scale structure provides significant advantages for complex applications:</p>
+            <ul>
+                <li>Highly modular with clear separation of concerns</li>
+                <li>Each component (models, routes, services) has a specific responsibility</li>
+                <li>The application factory pattern enables testing and different deployment configurations</li>
+                <li>Business logic is isolated in service modules, making it reusable and testable</li>
+                <li>Multiple entry points (web interface, API, command-line) share the same core code</li>
+                <li>Advanced error handling and logging capabilities</li>
+                <li>Support for database migrations and data seeding</li>
+            </ul>
+            
+            <p><strong>When to use this structure:</strong></p>
+            <ul>
+                <li>For web applications with multiple features and user types</li>
+                <li>When developing systems that will be deployed across different environments</li>
+                <li>For projects with complex business logic</li>
+                <li>When multiple developers or teams are working on the same codebase</li>
+                <li>For applications that will evolve and grow over time</li>
+            </ul>
+            
+            <p>As your application continues to grow, you might find that even this structure becomes challenging to manage. At that point, consider domain-driven design or microservices architectures.</p>
+        </section>
+
+        <section class="domain_driven">
+            <h3>Advanced Structure: Domain-Driven Design</h3>
+            
+            <p>For very large and complex applications, especially those with multiple teams or complex business domains, Domain-Driven Design (DDD) offers a powerful organizing principle. DDD is like organizing a conglomerate with multiple businesses—each domain operates somewhat independently but shares corporate resources and standards.</p>
+            
+            <p>In DDD, the codebase is organized around business domains rather than technical layers:</p>
+            
+            <pre><code>ecommerce_platform/
+├── src/
+│   ├── users/                  # User domain
+│   │   ├── __init__.py
+│   │   ├── models.py           # User domain models
+│   │   ├── repositories.py     # User data access
+│   │   ├── services.py         # User business logic
+│   │   ├── routes.py           # User API endpoints
+│   │   └── exceptions.py       # User domain exceptions
+│   ├── products/               # Product domain
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── repositories.py
+│   │   ├── services.py
+│   │   ├── routes.py
+│   │   └── exceptions.py
+│   ├── orders/                 # Order domain
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── repositories.py
+│   │   ├── services.py
+│   │   ├── routes.py
+│   │   └── exceptions.py
+│   ├── payments/               # Payment domain
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── repositories.py
+│   │   ├── services.py
+│   │   ├── routes.py
+│   │   └── gateways/           # External payment provider integrations
+│   │       ├── __init__.py
+│   │       ├── stripe.py
+│   │       └── paypal.py
+│   └── shared/                 # Shared components
+│       ├── __init__.py
+│       ├── database.py         # Database connection
+│       ├── security.py         # Security utilities
+│       ├── events.py           # Event bus
+│       └── utils.py            # Common utilities
+├── app/                        # Application assembly
+│   ├── __init__.py
+│   ├── config.py               # Configuration
+│   ├── api.py                  # API initialization
+│   ├── web.py                  # Web interface initialization
+│   └── cli.py                  # CLI commands
+├── web/                        # Web interface
+│   ├── __init__.py
+│   ├── templates/
+│   └── static/
+├── tests/                      # Tests by domain
+│   ├── users/
+│   ├── products/
+│   ├── orders/
+│   └── payments/
+├── infrastructure/             # Infrastructure concerns
+│   ├── database/               # Database migration scripts
+│   ├── logging/                # Logging configuration
+│   ├── messaging/              # Message queue setup
+│   └── monitoring/             # Application monitoring
+└── scripts/                    # Operational scripts
+    ├── deploy.sh
+    ├── backup.sh
+    └── monitor.sh</code></pre>
+            
+            <p>Key features of this structure:</p>
+            <ul>
+                <li>Organization by business domain rather than technical function</li>
+                <li>Each domain module contains all related code regardless of type</li>
+                <li>Shared module for cross-domain functionality</li>
+                <li>Clear boundaries between domains</li>
+                <li>Infrastructure concerns separated from business logic</li>
+            </ul>
+            
+            <h4>DDD Concepts and Benefits</h4>
+            <p>Domain-Driven Design is more than just a folder structure—it's a methodology for tackling complex domains:</p>
+            
+            <h5>Ubiquitous Language</h5>
+            <p>DDD emphasizes creating a shared language between developers and domain experts. This language is reflected in the code, making it more intuitive and aligned with business concepts.</p>
+            
+            <p><strong>Example:</strong> Instead of generic terms like "User" and "Item", the code uses domain-specific terms like "Customer", "Product", and "ShippingAddress".</p>
+            
+            <h5>Bounded Contexts</h5>
+            <p>A bounded context defines the boundaries within which a particular model or concept has a specific meaning. Different contexts might have different interpretations of the same term.</p>
+            
+            <p><strong>Example:</strong> In the "Orders" context, a "Product" might just have an ID, name, and price, while in the "Inventory" context, a "Product" might include detailed specifications, supplier information, and stock levels.</p>
+            
+            <h5>Aggregates and Entities</h5>
+            <p>Aggregates are clusters of domain objects that are treated as a single unit, with one entity serving as the aggregate root. This helps maintain consistency boundaries.</p>
+            
+            <p><strong>Example:</strong> An "Order" aggregate might include the order entity itself plus associated line items, with rules that items can only be added or removed through the order.</p>
+            
+            <h5>Domain Events</h5>
+            <p>Domain events capture significant occurrences within the domain. They enable loose coupling between components and support event-driven architectures.</p>
+            
+            <p><strong>Example:</strong> When an order is placed, an "OrderPlaced" event is published, which can trigger actions in other domains such as inventory updates, payment processing, and notification sending.</p>
+            
+            <h4>When to Use Domain-Driven Design</h4>
+            <p>DDD is particularly valuable in these scenarios:</p>
+            <ul>
+                <li>Complex business domains with rich processes and rules</li>
+                <li>Large applications where different components evolve at different rates</li>
+                <li>Projects with multiple teams working on different aspects</li>
+                <li>Systems where business logic is the core value proposition</li>
+                <li>Applications with long expected lifespans that need to adapt to changing requirements</li>
+            </ul>
+            
+            <p><strong>Real-World Applications:</strong> DDD is commonly used in enterprise systems like:</p>
+            <ul>
+                <li>E-commerce platforms</li>
+                <li>Financial systems</li>
+                <li>Healthcare applications</li>
+                <li>Supply chain management</li>
+                <li>Insurance systems</li>
+            </ul>
+            
+            <p><strong>Implementation Considerations:</strong></p>
+            <ul>
+                <li>DDD introduces higher initial complexity that pays off for complex domains</li>
+                <li>It requires close collaboration with domain experts</li>
+                <li>It may be overkill for simpler applications</li>
+                <li>The structure should evolve as understanding of the domain deepens</li>
+                <li>Teams need to invest in shared understanding of DDD principles</li>
+            </ul>
+            
+            <p>Domain-Driven Design provides a framework for managing complexity in large systems by aligning the code structure with business domains. This approach leads to more maintainable, evolvable applications that better serve business needs.</p>
+        </section>
+
+        <section class="structure_selection">
+            <h3>Choosing the Right Structure for Your Project</h3>
+            
+            <p>Selecting the appropriate project structure is a critical decision that will impact your project's maintainability, scalability, and developer experience. Use these guidelines to make an informed choice:</p>
+            
+            <h4>Project Size and Complexity Assessment</h4>
+            <p>The scale of your project is a primary factor in structure selection:</p>
+            
+            <table>
+                <tr>
+                    <th>Size</th>
+                    <th>Characteristics</th>
+                    <th>Recommended Structure</th>
+                </tr>
+                <tr>
+                    <td>Small</td>
+                    <td>
+                        <ul>
+                            <li>&lt; 1,000 lines of code</li>
+                            <li>Single purpose</li>
+                            <li>1-2 developers</li>
+                            <li>Short development timeline</li>
+                        </ul>
+                    </td>
+                    <td>Simple script structure</td>
+                </tr>
+                <tr>
+                    <td>Medium</td>
+                    <td>
+                        <ul>
+                            <li>1,000 - 10,000 lines of code</li>
+                            <li>Multiple features</li>
+                            <li>Small team</li>
+                            <li>Longer development timeline</li>
+                        </ul>
+                    </td>
+                    <td>Package-based structure</td>
+                </tr>
+                <tr>
+                    <td>Large</td>
+                    <td>
+                        <ul>
+                            <li>10,000+ lines of code</li>
+                            <li>Many features</li>
+                            <li>Multiple developers</li>
+                            <li>Complex requirements</li>
+                        </ul>
+                    </td>
+                    <td>Application structure or DDD</td>
+                </tr>
+            </table>
+            
+            <h4>Project Type Considerations</h4>
+            <p>Different types of projects have different structural needs:</p>
+            
+            <table>
+                <tr>
+                    <th>Type</th>
+                    <th>Recommended Structure</th>
+                    <th>Rationale</th>
+                </tr>
+                <tr>
+                    <td>Command-line tool</td>
+                    <td>Simple or medium structure with scripts/ directory</td>
+                    <td>Command-line tools typically have simpler interfaces and focused functionality</td>
+                </tr>
+                <tr>
+                    <td>Library/package</td>
+                    <td>Medium structure with clear API boundaries</td>
+                    <td>Libraries need well-defined interfaces and comprehensive tests</td>
+                </tr>
+                <tr>
+                    <td>Web application</td>
+                    <td>Large application structure with MVC-like organization</td>
+                    <td>Web apps have multiple layers (presentation, business logic, data) that benefit from separation</td>
+                </tr>
+                <tr>
+                    <td>Microservice</td>
+                    <td>Domain-focused structure with clear boundaries</td>
+                    <td>Microservices should be organized around business capabilities</td>
+                </tr>
+                <tr>
+                    <td>Enterprise application</td>
+                    <td>Domain-driven design</td>
+                    <td>Complex business rules and multiple teams need domain-centered organization</td>
+                </tr>
+            </table>
+            
+            <h4>Team Considerations</h4>
+            <p>Your team's characteristics also influence structure choice:</p>
+            <ul>
+                <li><strong>Team Size:</strong> Larger teams need more structure to coordinate effectively. Small teams can work with simpler structures.</li>
+                <li><strong>Team Experience:</strong> Less experienced teams may benefit from more prescriptive structures with clear conventions. Experienced teams might prefer more flexibility.</li>
+                <li><strong>Team Organization:</strong> If teams are organized by feature or domain, a DDD approach may align better with your organizational structure.</li>
+                <li><strong>Distributed Teams:</strong> Geographically distributed teams benefit from clearer boundaries and interfaces between components.</li>
+            </ul>
+            
+            <h4>Future Growth Expectations</h4>
+            <p>Consider how your project might evolve:</p>
+            <ul>
+                <li><strong>Short-term project:</strong> Simpler structure may be sufficient</li>
+                <li><strong>Long-term product:</strong> More sophisticated structure will pay off</li>
+                <li><strong>Expected feature growth:</strong> Choose a structure that accommodates expansion</li>
+                <li><strong>Team growth:</strong> Plan for onboarding new developers with clear organization</li>
+            </ul>
+            
+            <h4>Evolution Strategy</h4>
+            <p>Remember that project structure can evolve over time:</p>
+            <ol>
+                <li>Start with a structure suitable for your current needs</li>
+                <li>Plan for incremental refactoring as the project grows</li>
+                <li>Watch for signs that your structure is becoming insufficient:
+                    <ul>
+                        <li>Files becoming too large</li>
+                        <li>Difficulty finding specific code</li>
+                        <li>Increasing merge conflicts</li>
+                        <li>New features requiring changes across many files</li>
+                    </ul>
+                </li>
+                <li>Refactor toward a more sophisticated structure when needed</li>
+            </ol>
+            
+            <p><strong>Tip:</strong> For new projects, choose a structure that's slightly more sophisticated than what you think you need right now. This provides room to grow without requiring immediate restructuring. It's easier to start with a bit more structure than to add it later.</p>
+            
+            <h4>A Practical Decision Framework</h4>
+            <p>When choosing a structure, ask yourself these questions:</p>
+            <ol>
+                <li><strong>Purpose:</strong> What is the primary purpose of this project? (Library, application, utility)</li>
+                <li><strong>Lifespan:</strong> How long will this project be maintained? (Days, months, years)</li>
+                <li><strong>Team:</strong> Who will work on this project? (Solo, small team, multiple teams)</li>
+                <li><strong>Complexity:</strong> How complex is the business domain? (Simple, moderate, complex)</li>
+                <li><strong>Growth:</strong> How much will this project grow? (Fixed scope, moderate growth, significant expansion)</li>
+            </ol>
+            
+            <p>The answers to these questions will guide you toward the most appropriate structure for your specific context.</p>
+        </section>
+
+        <section class="best_practices">
+            <h3>Universal Project Structure Best Practices</h3>
+            
+            <p>Regardless of the specific structure you choose, these best practices will help keep your project organized and maintainable:</p>
+            
+            <h4>Follow the Single Responsibility Principle</h4>
+            <p>Each module, class, or function should have one clear purpose. This principle applies at all levels of your project, from the highest-level packages down to individual functions.</p>
+            
+            <p>Think of each component as a specialist rather than a generalist. Just as you wouldn't expect a cardiologist to also be an orthopedic surgeon, each module in your code should focus on doing one thing well.</p>
+            
+            <p><strong>Good:</strong> Separate <code>auth_service.py</code>, <code>email_service.py</code>, and <code>payment_service.py</code></p>
+            <p><strong>Bad:</strong> A single <code>services.py</code> with functions for authentication, email sending, and payment processing</p>
+            
+            <h4>Keep Related Files Together</h4>
+            <p>Files that change together should be located near each other in the directory structure. This reduces the mental overhead of navigation and minimizes merge conflicts.</p>
+            
+            <p>Think of your codebase like a kitchen—ingredients for a specific dish should be stored together for easy access. Similarly, all the code related to a specific feature or domain should be readily accessible without jumping around the codebase.</p>
+            
+            <p><strong>Good:</strong> Organizing user-related code (model, service, routes) in a <code>users/</code> package</p>
+            <p><strong>Bad:</strong> Spreading user-related code across many different directories based on technical type</p>
+            
+            <h4>Create Clear API Boundaries</h4>
+            <p>Make it obvious what parts of your code are public interfaces vs. internal implementation details. This helps other developers use your code correctly and allows you to change implementations without breaking dependent code.</p>
+            
+            <p>Think of this like the dashboard of a car—it presents a clean interface hiding the complex engine underneath. The driver doesn't need to understand the internal combustion process to operate the vehicle.</p>
+            
+            <p><strong>Good:</strong> Using <code>__init__.py</code> to expose only the public interface, using underscore prefixes for internal functions</p>
+            <p><strong>Bad:</strong> No clear distinction between public API and private implementation details</p>
+            
+            <h4>Separate Configuration from Code</h4>
+            <p>Configuration settings should be separated from application logic. This enables deploying the same code to different environments (development, testing, production) with environment-specific settings.</p>
+            
+            <p>This is like having adjustable settings on a machine—the core mechanics stay the same, but the behavior can be modified through external controls without changing the internal design.</p>
+            
+            <p><strong>Good:</strong> Using environment variables, config files, or a dedicated <code>config.py</code> module</p>
+            <p><strong>Bad:</strong> Hardcoding configuration values throughout the codebase</p>
+            
+            <h4>Keep the Root Directory Clean</h4>
+            <p>The project root should contain only high-level files and directories. Implementation details should be pushed into subdirectories.</p>
+            
+            <p>Think of your project root as the front page of a newspaper—it should provide an overview of what's important without overwhelming detail. The details come in the inner pages (subdirectories).</p>
+            
+            <p><strong>Good:</strong> Moving implementation details into subdirectories, keeping only essential files at the root</p>
+            <p><strong>Bad:</strong> Dozens of Python files in the root directory</p>
+            
+            <h4>Use Common Conventions</h4>
+            <p>Follow established naming and organization conventions to
+              make your project more approachable to newcomers and maintain consistency.</p>
+            
+              <p>This is like standardized road signs—once you learn them, you can navigate any highway system. Similarly, using standard conventions helps developers familiar with Python navigate your codebase.</p>
+              
+              <p><strong>Good:</strong> Using standard names like <code>tests/</code>, <code>docs/</code>, and <code>README.md</code></p>
+              <p><strong>Bad:</strong> Inventing unique naming schemes that deviate from community standards</p>
+              
+              <h4>Include Essential Project Files</h4>
+              <p>Every project should include certain standard files that help users and developers understand and use your code.</p>
+              
+              <p><strong>Essential files:</strong></p>
+              <ul>
+                  <li><code>README.md</code> - Project overview, installation instructions, basic usage examples</li>
+                  <li><code>LICENSE</code> - The project's license terms</li>
+                  <li><code>requirements.txt</code> or equivalent - Project dependencies</li>
+                  <li><code>.gitignore</code> - Files for Git to ignore</li>
+                  <li>Setup or build script (<code>setup.py</code>, <code>pyproject.toml</code>, etc.)</li>
+              </ul>
+              
+              <h4>Document Your Structure</h4>
+              <p>Make sure new team members can understand your project organization. Documentation is like a map that guides people through unfamiliar territory.</p>
+              
+              <p><strong>Good:</strong> Including a "Project Structure" section in your README or documentation that explains the organization and rationale</p>
+              <p><strong>Bad:</strong> Assuming others will intuitively understand your organization without explanation</p>
+              
+              <h4>Test Directory Structure Should Mirror Source</h4>
+              <p>Organize tests to reflect the structure of the code they test. This makes it easier to find tests for specific functionality and maintain test coverage as the codebase evolves.</p>
+              
+              <p>Think of tests as shadows of your code—they should follow the same shape and organization.</p>
+              
+              <p><strong>Good:</strong> If you have <code>app/models/user.py</code>, create <code>tests/test_models/test_user.py</code></p>
+              <p><strong>Bad:</strong> Test organization that doesn't correspond to the source structure</p>
+              
+              <h4>Use Consistent Import Style</h4>
+              <p>Establish and follow consistent rules for imports within your project. This reduces confusion and makes the codebase more predictable.</p>
+              
+              <p><strong>Good:</strong> Using absolute imports from the project root for clarity and consistency</p>
+              <p><strong>Bad:</strong> Mixing absolute and relative imports inconsistently throughout the project</p>
+              
+              <h4>Plan for Error Handling</h4>
+              <p>Design your project structure to facilitate consistent, comprehensive error handling. This includes defining custom exceptions and establishing error reporting mechanisms.</p>
+              
+              <p><strong>Good:</strong> Creating an <code>exceptions.py</code> module in each package with domain-specific error classes</p>
+              <p><strong>Bad:</strong> Inconsistent error handling approaches across different modules</p>
+              
+              <h4>Balance Flexibility and Convention</h4>
+              <p>Create enough structure to guide development without being overly restrictive. Your structure should support the workflow, not impede it.</p>
+              
+              <p>Think of project structure as a garden trellis—it provides support and guidance for growth without constraining the plant's natural development.</p>
+              
+              <p><strong>Good:</strong> Establishing conventions while allowing for exceptions when they make sense</p>
+              <p><strong>Bad:</strong> Extremely rigid rules that require workarounds for legitimate use cases</p>
+              
+              <p>By following these universal best practices, you can create a project structure that enhances productivity, encourages collaboration, and remains maintainable as your project grows and evolves.</p>
+          </section>
+  
+          <section class="common_patterns">
+              <h3>Common Structure Patterns in Python Projects</h3>
+              
+              <p>Several structural patterns appear across many Python projects. Understanding these can help you recognize and apply common organizational strategies:</p>
+              
+              <h4>Application Factory Pattern</h4>
+              <p>Creating the application object via a factory function rather than globally. This pattern is especially common in Flask applications but can be applied to other frameworks as well.</p>
+              
+              <p>Think of this like a car factory that can produce different models of cars based on specifications. Similarly, the application factory can create different instances of your application with varying configurations.</p>
+              
+              <pre><code># app/__init__.py
+  def create_app(config_name='development'):
+      app = Flask(__name__)
+      # Configure the app based on config_name
+      app.config.from_object(config[config_name])
+      
+      # Initialize extensions
+      db.init_app(app)
+      
+      # Register components
+      register_blueprints(app)
+      register_error_handlers(app)
+      
+      return app</code></pre>
+              
+              <p><strong>Benefits:</strong></p>
+              <ul>
+                  <li>Enables different configurations for different environments</li>
+                  <li>Simplifies testing by allowing test-specific configurations</li>
+                  <li>Avoids circular import issues common in large applications</li>
+                  <li>Provides a clear initialization sequence</li>
+              </ul>
+              
+              <h4>Blueprint Pattern</h4>
+              <p>Organizing routes into modular components, often by feature area. Common in Flask and similar frameworks, this pattern helps manage routes in larger applications.</p>
+              
+              <p>This is like organizing a large department store into sections—each blueprint manages a distinct area of functionality, making the whole system more navigable.</p>
+              
+              <pre><code># app/routes/auth.py
+  auth_bp = Blueprint('auth', __name__)
+  
+  @auth_bp.route('/login')
+  def login():
+      # Login logic
+  
+  @auth_bp.route('/logout')
+  def logout():
+      # Logout logic
+  
+  # app/__init__.py
+  from app.routes.auth import auth_bp
+  app.register_blueprint(auth_bp, url_prefix='/auth')</code></pre>
+              
+              <p><strong>Benefits:</strong></p>
+              <ul>
+                  <li>Modular organization of routes by feature or domain</li>
+                  <li>Separate URL prefixes for different areas</li>
+                  <li>Enables parallel development by different team members</li>
+                  <li>Routes can be conditionally registered based on configuration</li>
+              </ul>
+              
+              <h4>Repository Pattern</h4>
+              <p>Abstracting data access behind repository interfaces. This pattern separates business logic from data storage details, making the application more flexible and testable.</p>
+              
+              <p>Like a library reference desk that handles book retrieval for you—you don't need to know where the books are physically stored, just what you're looking for.</p>
+              
+              <pre><code># app/repositories/user_repository.py
+  class UserRepository:
+      def get_by_id(self, user_id):
+          # Query the database
+          return User.query.get(user_id)
+      
+      def get_by_email(self, email):
+          # Query the database
+          return User.query.filter_by(email=email).first()
+      
+      def create(self, user_data):
+          # Create a new user
+          user = User(**user_data)
+          db.session.add(user)
+          db.session.commit()
+          return user
+          
+      def update(self, user_id, user_data):
+          # Update an existing user
+          user = self.get_by_id(user_id)
+          if not user:
+              return None
+              
+          for key, value in user_data.items():
+              setattr(user, key, value)
+              
+          db.session.commit()
+          return user
+          
+      def delete(self, user_id):
+          # Delete a user
+          user = self.get_by_id(user_id)
+          if user:
+              db.session.delete(user)
+              db.session.commit()
+              return True
+          return False</code></pre>
+              
+              <p><strong>Benefits:</strong></p>
+              <ul>
+                  <li>Abstracts data access details from business logic</li>
+                  <li>Makes testing easier through mocking</li>
+                  <li>Allows changing the data storage mechanism without affecting other code</li>
+                  <li>Centralizes data access logic</li>
+                  <li>Provides a consistent API for data operations</li>
+              </ul>
+              
+              <h4>Service Layer Pattern</h4>
+              <p>Encapsulating business logic in service modules separate from routes and models. This pattern creates a clear separation between your application's interface and its core functionality.</p>
+              
+              <p>Similar to how a restaurant separates the dining room (interface) from the kitchen (business logic)—the waitstaff takes orders and delivers food without needing to know how to cook.</p>
+              
+              <pre><code># app/services/auth_service.py
+  def authenticate_user(username, password):
+      """Authenticate a user with username and password."""
+      user = user_repository.get_by_username(username)
+      if user and user.check_password(password):
+          # Update last login time
+          user.last_login = datetime.utcnow()
+          user_repository.update(user)
+          
+          # Log successful login
+          logger.info(f"User {username} logged in successfully")
+          
+          return user
+      
+      # Log failed attempt
+      logger.warning(f"Failed login attempt for username: {username}")
+      return None
+  
+  def register_user(username, email, password, **kwargs):
+      """Register a new user."""
+      # Validate input
+      if user_repository.get_by_username(username):
+          raise ValueError(f"Username '{username}' is already taken")
+          
+      if user_repository.get_by_email(email):
+          raise ValueError(f"Email '{email}' is already registered")
+      
+      # Create user object
+      user_data = {
+          'username': username,
+          'email': email,
+          **kwargs
+      }
+      user = User(**user_data)
+      user.set_password(password)
+      
+      # Save to database
+      user_repository.create(user)
+      
+      # Send welcome email asynchronously
+      email_service.send_welcome_email(user)
+      
+      # Log registration
+      logger.info(f"New user registered: {username}")
+      
+      return user</code></pre>
+              
+              <p><strong>Benefits:</strong></p>
+              <ul>
+                  <li>Separates business logic from HTTP/presentation concerns</li>
+                  <li>Makes business logic more testable and reusable</li>
+                  <li>Can be accessed from different entry points (web, API, CLI)</li>
+                  <li>Centralizes validation and business rules</li>
+                  <li>Promotes cleaner, more focused components</li>
+              </ul>
+              
+              <h4>Command Pattern</h4>
+              <p>Encapsulating operations as command objects. This pattern is common in CLI-heavy applications and task queues, where operations need to be serialized, queued, or logged.</p>
+              
+              <p>Like writing down instructions for someone to follow later—commands encapsulate all the information needed to perform an action at a later time.</p>
+              
+              <pre><code># app/commands/user_commands.py
+  class CreateUserCommand:
+      def __init__(self, username, email, password, **kwargs):
+          self.username = username
+          self.email = email
+          self.password = password
+          self.additional_data = kwargs
+      
+      def execute(self):
+          # Check if user already exists
+          if User.query.filter_by(username=self.username).first():
+              raise ValueError(f"Username '{self.username}' is already taken")
+              
+          if User.query.filter_by(email=self.email).first():
+              raise ValueError(f"Email '{self.email}' is already registered")
+          
+          # Create and save the user
+          user = User(
+              username=self.username,
+              email=self.email,
+              **self.additional_data
+          )
+          user.set_password(self.password)
+          
+          db.session.add(user)
+          db.session.commit()
+          
+          return user</code></pre>
+              
+              <p><strong>Benefits:</strong></p>
+              <ul>
+                  <li>Encapsulates operations in a clean, self-contained way</li>
+                  <li>Enables features like command queuing, logging, and undo operations</li>
+                  <li>Simplifies complex operation sequences</li>
+                  <li>Can be stored for later execution (asynchronous processing)</li>
+                  <li>Supports operation history and audit trails</li>
+              </ul>
+              
+              <h4>Settings Module Pattern</h4>
+              <p>Centralizing configuration in a dedicated module, often with environment-specific subclasses. This pattern provides a clean way to manage different configurations for different environments.</p>
+              
+              <p>Like having different presets on a complex machine—each preset configures the machine for a specific use case.</p>
+              
+              <pre><code># app/config.py
+  class Config:
+      """Base configuration applicable to all environments."""
+      DEBUG = False
+      TESTING = False
+      SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-key')
+      SQLALCHEMY_TRACK_MODIFICATIONS = False
+      
+      # Common settings
+      PAGINATION_PER_PAGE = 25
+      UPLOAD_FOLDER = os.path.join(basedir, 'uploads')
+      
+  class DevelopmentConfig(Config):
+      """Development environment configuration."""
+      DEBUG = True
+      SQLALCHEMY_DATABASE_URI = 'sqlite:///dev.db'
+      SQLALCHEMY_ECHO = True
+      
+  class TestingConfig(Config):
+      """Testing environment configuration."""
+      TESTING = True
+      SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+      WTF_CSRF_ENABLED = False
+      
+  class ProductionConfig(Config):
+      """Production environment configuration."""
+      SQLALCHEMY_DATABASE_URI = os.environ.get(
+          'DATABASE_URL', 
+          'postgresql://user:pass@localhost/dbname'
+      )
+      # Production-specific settings
+      SERVER_NAME = os.environ.get('SERVER_NAME')
+      
+  # Configuration dictionary
+  config = {
+      'development': DevelopmentConfig,
+      'testing': TestingConfig,
+      'production': ProductionConfig,
+      'default': DevelopmentConfig
+  }</code></pre>
+              
+              <p><strong>Benefits:</strong></p>
+              <ul>
+                  <li>Centralizes all configuration options</li>
+                  <li>Supports different environments with inheritance</li>
+                  <li>Makes configuration explicit and documented</li>
+                  <li>Separates sensitive values from code (via environment variables)</li>
+                  <li>Simplifies testing and deployment</li>
+              </ul>
+              
+              <h4>Event-Driven Architecture Pattern</h4>
+              <p>Using events to communicate between components. This pattern reduces coupling and enables more flexible, extensible systems.</p>
+              
+              <p>Like a newspaper publishing news—the newspaper doesn't need to know who's reading; subscribers decide what to do with the information.</p>
+              
+              <pre><code># app/events/event_bus.py
+  class EventBus:
+      def __init__(self):
+          self.subscribers = {}
+          
+      def subscribe(self, event_type, callback):
+          if event_type not in self.subscribers:
+              self.subscribers[event_type] = []
+          self.subscribers[event_type].append(callback)
+          
+      def publish(self, event):
+          event_type = event.__class__.__name__
+          if event_type in self.subscribers:
+              for callback in self.subscribers[event_type]:
+                  callback(event)
+  
+  # Creating the global event bus
+  event_bus = EventBus()
+  
+  # app/events/user_events.py
+  class UserCreated:
+      def __init__(self, user_id, username, email):
+          self.user_id = user_id
+          self.username = username
+          self.email = email
+          self.timestamp = datetime.utcnow()
+  
+  # app/services/user_service.py
+  def create_user(username, email, password):
+      # Create the user
+      user = User(username=username, email=email)
+      user.set_password(password)
+      db.session.add(user)
+      db.session.commit()
+      
+      # Publish event
+      event = UserCreated(user.id, user.username, user.email)
+      event_bus.publish(event)
+      
+      return user
+  
+  # app/listeners/email_listener.py
+  def send_welcome_email(event):
+      """Send welcome email when a user is created."""
+      user_id = event.user_id
+      email = event.email
+      
+      # Generate email content
+      subject = "Welcome to Our Application!"
+      body = f"Hi {event.username},\n\nWelcome to our application!"
+      
+      # Send the email
+      email_service.send_email(email, subject, body)
+      
+  # Register the listener
+  event_bus.subscribe(UserCreated, send_welcome_email)</code></pre>
+              
+              <p><strong>Benefits:</strong></p>
+              <ul>
+                  <li>Reduces coupling between components</li>
+                  <li>Enables adding new behaviors without modifying existing code</li>
+                  <li>Supports asynchronous processing</li>
+                  <li>Facilitates audit logging and event sourcing</li>
+                  <li>Creates more extensible, maintainable systems</li>
+              </ul>
+              
+              <p>These patterns are not mutually exclusive—most mature Python applications combine several of these patterns to create a cohesive, maintainable architecture. By understanding these common patterns, you can leverage tried-and-tested approaches rather than reinventing the wheel.</p>
+          </section>
+  
+          <section class="tools">
+              <h3>Tools for Project Structure Management</h3>
+              
+              <p>Several tools can help you create and maintain good project structures. These tools automate common tasks, enforce conventions, and provide scaffolding for new projects:</p>
+              
+              <h4>Project Templates and Generators</h4>
+              <p>These tools provide pre-defined project structures and can generate boilerplate code, saving time and ensuring consistency:</p>
+              
+              <ul>
+                  <li><strong>cookiecutter</strong>: A versatile project template engine that creates projects from templates
+                      <pre><code># Install cookiecutter
+  pip install cookiecutter
+  
+  # Generate a Python package project
+  cookiecutter https://github.com/audreyfeldroy/cookiecutter-pypackage
+  
+  # Generate a Flask application
+  cookiecutter https://github.com/cookiecutter-flask/cookiecutter-flask</code></pre>
+                      <p>Cookiecutter prompts you for project-specific information and then creates a complete directory structure with appropriate files.</p>
+                  </li>
+                  <li><strong>Framework CLI tools</strong>: Most major frameworks have their own tools to generate project structures
+                      <pre><code># Django project creation
+  django-admin startproject myproject
+  django-admin startapp myapp
+  
+  # Flask application with Flask-CLI
+  pip install flask-cli
+  flask create-app --name myapp
+  
+  # FastAPI project with FastAPI CLI
+  pip install fastapi-cli
+  fastapi startproject myproject</code></pre>
+                      <p>These tools create structures optimized for their respective frameworks.</p>
+                  </li>
+              </ul>
+              
+              <h4>Code Quality and Structure Enforcement Tools</h4>
+              <p>These tools help maintain code quality and structural consistency in your projects:</p>
+              
+              <ul>
+                  <li><strong>pylint</strong>: A comprehensive linter that checks code quality and enforces structure conventions
+                      <pre><code>pip install pylint
+  pylint mypackage</code></pre>
+                      <p>Pylint can detect issues like improper imports, inconsistent naming, and module organization problems.</p>
+                  </li>
+                  <li><strong>flake8</strong>: A code linter that combines several tools (PyFlakes, pycodestyle, etc.)
+                      <pre><code>pip install flake8
+  flake8 mypackage</code></pre>
+                      <p>Flake8 focuses on style issues and common errors but is less opinionated than pylint.</p>
+                  </li>
+                  <li><strong>black</strong>: An uncompromising code formatter that ensures consistent style
+                      <pre><code>pip install black
+  black mypackage</code></pre>
+                      <p>Black automatically formats your code to a consistent style, eliminating debates about formatting.</p>
+                  </li>
+                  <li><strong>isort</strong>: A utility to sort and organize imports
+                      <pre><code>pip install isort
+  isort mypackage</code></pre>
+                      <p>Isort groups and sorts imports according to conventions, improving readability and consistency.</p>
+                  </li>
+                  <li><strong>pre-commit</strong>: A framework for managing git pre-commit hooks
+                      <pre><code>pip install pre-commit
+  pre-commit install</code></pre>
+                      <p>Pre-commit can run linters, formatters, and other tools before each commit, ensuring code quality.</p>
+                  </li>
+              </ul>
+              
+              <h4>Documentation Tools</h4>
+              <p>Documenting your project structure helps others understand and navigate it:</p>
+              
+              <ul>
+                  <li><strong>Sphinx</strong>: Generate comprehensive documentation from docstrings and separate documentation files
+                      <pre><code>pip install sphinx
+  sphinx-quickstart</code></pre>
+                      <p>Sphinx can create HTML, PDF, and other formats from your documentation, including API references.</p>
+                  </li>
+                  <li><strong>mkdocs</strong>: A simpler, Markdown-based documentation generator
+                      <pre><code>pip install mkdocs
+  mkdocs new myproject</code></pre>
+                      <p>MkDocs creates clean, searchable documentation sites from Markdown files.</p>
+                  </li>
+                  <li><strong>pdoc</strong>: Automatic API documentation for Python projects
+                      <pre><code>pip install pdoc
+  pdoc --html mypackage</code></pre>
+                      <p>Pdoc generates API documentation directly from your Python modules, with minimal configuration required.</p>
+                  </li>
+              </ul>
+              
+              <h4>Project Structure Analysis</h4>
+              <p>These tools help visualize and analyze your project structure:</p>
+              
+              <ul>
+                  <li><strong>pyan3</strong>: Analyze and visualize dependencies between Python objects
+                      <pre><code>pip install pyan3
+  pyan3 mypackage/*.py --dot > deps.dot
+  dot -Tpng deps.dot -o deps.png</code></pre>
+                      <p>Pyan creates visual graphs of dependencies, helping you understand and refactor your codebase.</p>
+                  </li>
+                  <li><strong>pyreverse</strong>: Generate UML diagrams from Python code (part of pylint)
+                      <pre><code>pip install pylint
+  pyreverse -o png mypackage</code></pre>
+                      <p>Pyreverse creates class and package diagrams that visualize your project's structure.</p>
+                  </li>
+                  <li><strong>pipdeptree</strong>: Visualize pip dependency trees
+                      <pre><code>pip install pipdeptree
+  pipdeptree</code></pre>
+                      <p>Pipdeptree shows the relationships between installed packages, helping manage dependencies.</p>
+                  </li>
+              </ul>
+              
+              <h4>Virtual Environment and Dependency Management</h4>
+              <p>These tools help manage the environment in which your project runs:</p>
+              
+              <ul>
+                  <li><strong>venv/virtualenv</strong>: Create isolated Python environments
+                      <pre><code># Using venv (built into Python 3)
+  python -m venv myenv
+  
+  # Using virtualenv
+  pip install virtualenv
+  virtualenv myenv</code></pre>
+                      <p>Virtual environments isolate dependencies for different projects, preventing conflicts.</p>
+                  </li>
+                  <li><strong>pipenv</strong>: Combines pip and virtualenv with dependency locking
+                      <pre><code>pip install pipenv
+  pipenv install requests</code></pre>
+                      <p>Pipenv creates a Pipfile and Pipfile.lock for deterministic builds.</p>
+                  </li>
+                  <li><strong>poetry</strong>: Modern Python packaging and dependency management
+                      <pre><code>pip install poetry
+  poetry new myproject
+  poetry add requests</code></pre>
+                      <p>Poetry handles dependencies, building, and publishing in a more integrated way.</p>
+                  </li>
+              </ul>
+              
+              <h4>Building and Packaging Tools</h4>
+              <p>These tools help prepare your project for distribution:</p>
+              
+              <ul>
+                  <li><strong>setuptools</strong>: Standard tool for packaging Python projects
+                      <pre><code>python setup.py sdist bdist_wheel</code></pre>
+                      <p>Setuptools builds source and binary distributions of your package.</p>
+                  </li>
+                  <li><strong>build</strong>: PEP 517 compatible build frontend
+                      <pre><code>pip install build
+  python -m build</code></pre>
+                      <p>Build creates standardized packages using the new Python packaging standards.</p>
+                  </li>
+                  <li><strong>twine</strong>: Utility for publishing packages to PyPI
+                      <pre><code>pip install twine
+  twine upload dist/*</code></pre>
+                      <p>Twine securely uploads your packages to the Python Package Index.</p>
+                  </li>
+              </ul>
+              
+              <p>Using these tools effectively can significantly improve your project structure management workflow. They automate repetitive tasks, enforce best practices, and help you create more maintainable, professional Python projects.</p>
+          </section>
+  
+          <section class="real_world">
+              <h3>Learning from Real-World Examples</h3>
+              
+              <p>Examining popular open-source projects can provide valuable insights into effective project structures. Let's analyze some notable examples:</p>
+              
+              <h4>Flask (Web Framework)</h4>
+              <p>Flask uses a simple, package-based structure that's easy to understand:</p>
+              <pre><code>flask/
+  ├── docs/                 # Comprehensive documentation
+  ├── examples/             # Example applications
+  ├── src/
+  │   └── flask/            # Main package
+  │       ├── __init__.py   # Public API
+  │       ├── app.py        # Application object
+  │       ├── blueprints.py # Blueprint support
+  │       ├── cli.py        # Command-line interface
+  │       ├── config.py     # Configuration handling
+  │       ├── ctx.py        # Context locals
+  │       ├── globals.py    # Global objects
+  │       ├── sessions.py   # Session handling
+  │       ├── templating.py # Template support
+  │       └── ...           # Other modules
+  ├── tests/                # Test suite
+  ├── setup.py              # Package setup
+  └── pyproject.toml        # Project metadata</code></pre>
+              
+              <p><strong>Key Insights:</strong></p>
+              <ul>
+                  <li>Flask uses a flat module structure under the main package, with each module having a clear responsibility.</li>
+                  <li>The <code>__init__.py</code> file carefully exposes the public API, controlling what users can import directly.</li>
+                  <li>Tests are kept separate from the source code but mirror its organization.</li>
+                  <li>Examples help users understand how to use the framework in different contexts.</li>
+                  <li>Documentation is comprehensive and treated as a first-class citizen of the project.</li>
+              </ul>
+              
+              <p><strong>Takeaway:</strong> Even for smaller projects, a clean separation of concerns and well-defined API boundaries can create maintainable, user-friendly packages.</p>
+              
+              <h4>Django (Web Framework)</h4>
+              <p>Django uses a more complex structure reflecting its larger scope:</p>
+              <pre><code>django/
+  ├── django/              # Main package
+  │   ├── __init__.py
+  │   ├── apps/            # Application registry
+  │   ├── conf/            # Settings and configuration
+  │   ├── contrib/         # Bundled apps (admin, auth, etc.)
+  │   ├── core/            # Core functionality
+  │   ├── db/              # Database layer
+  │   │   ├── __init__.py
+  │   │   ├── backends/    # Database engine backends
+  │   │   ├── migrations/  # Migration system
+  │   │   ├── models/      # ORM components
+  │   │   └── ...
+  │   ├── http/            # HTTP handling
+  │   ├── template/        # Template system
+  │   ├── urls/            # URL routing
+  │   ├── utils/           # Utilities
+  │   └── views/           # View functions
+  ├── docs/                # Documentation
+  ├── tests/               # Test suite
+  ├── scripts/             # Utility scripts
+  └── setup.py             # Package setup</code></pre>
+              
+              <p><strong>Key Insights:</strong></p>
+              <ul>
+                  <li>Django uses a hierarchical package structure, with subpackages for different areas of functionality.</li>
+                  <li>The <code>contrib</code> package contains optional, self-contained applications that extend Django's functionality.</li>
+                  <li>The <code>utils</code> package provides shared utilities used across different parts of the framework.</li>
+                  <li>Each major subsystem (db, http, template) is a separate package with clear boundaries.</li>
+                  <li>Tests are comprehensive and organized in a way that reflects the package structure.</li>
+              </ul>
+              
+              <p><strong>Takeaway:</strong> For large, feature-rich applications, a hierarchical structure with clear component boundaries helps manage complexity and allows different parts to evolve independently.</p>
+              
+              <h4>Requests (HTTP Library)</h4>
+              <p>Requests uses a simpler structure appropriate for its focused purpose:</p>
+              <pre><code>requests/
+  ├── requests/            # Main package
+  │   ├── __init__.py      # Public API
+  │   ├── api.py           # API functionality
+  │   ├── auth.py          # Authentication handlers
+  │   ├── cookies.py       # Cookie handling
+  │   ├── exceptions.py    # Custom exceptions
+  │   ├── models.py        # Data models
+  │   ├── sessions.py      # Session handling
+  │   ├── structures.py    # Data structures
+  │   └── utils.py         # Utilities
+  ├── docs/                # Documentation
+  ├── tests/               # Test suite
+  └── setup.py             # Package setup</code></pre>
+              
+              <p><strong>Key Insights:</strong></p>
+              <ul>
+                  <li>Requests uses a flat module structure, reflecting its focused purpose and cohesive functionality.</li>
+                  <li>The <code>__init__.py</code> file exposes a clean, user-friendly API, hiding implementation details.</li>
+                  <li>Each module has a clear, single responsibility (auth, cookies, sessions, etc.).</li>
+                  <li>Custom exceptions are centralized in <code>exceptions.py</code>, creating a cohesive error handling system.</li>
+                  <li>The project prioritizes simplicity and a great user experience over complex architecture.</li>
+              </ul>
+              
+              <p><strong>Takeaway:</strong> For libraries with a focused purpose, a simple, flat structure with clear module responsibilities can be more maintainable than a complex hierarchy.</p>
+              
+              <h4>SQLAlchemy (ORM Library)</h4>
+              <p>SQLAlchemy uses a more complex structure suitable for its comprehensive nature:</p>
+              <pre><code>sqlalchemy/
+  ├── lib/
+  │   └── sqlalchemy/     # Main package
+  │       ├── __init__.py
+  │       ├── engine/     # Database engine
+  │       ├── event/      # Event system
+  │       ├── ext/        # Extensions
+  │       ├── orm/        # Object-relational mapping
+  │       ├── pool/       # Connection pooling
+  │       ├── sql/        # SQL expression language
+  │       └── ...         # Other modules
+  ├── doc/                # Documentation
+  ├── test/               # Test suite
+  ├── examples/           # Example applications
+  └── setup.py            # Package setup</code></pre>
+              
+              <p><strong>Key Insights:</strong></p>
+              <ul>
+                  <li>SQLAlchemy uses a hierarchical structure with subpackages for major components.</li>
+                  <li>The <code>ext</code> package contains extensions that are useful but not core to the library's functionality.</li>
+                  <li>The structure reflects the library's layered architecture, with clear separation between the SQL expression language, database engine, and ORM.</li>
+                  <li>Examples demonstrate different usage patterns and help users understand the library's capabilities.</li>
+                  <li>The documentation is extensive, reflecting the library's power and flexibility.</li>
+              </ul>
+              
+              <p><strong>Takeaway:</strong> For complex libraries with multiple layers of functionality, a hierarchical structure with clear separation between layers helps users understand and use the library effectively.</p>
+              
+              <h4>FastAPI (Web Framework)</h4>
+              <p>FastAPI uses a modern, focused structure:</p>
+              <pre><code>fastapi/
+  ├── fastapi/            # Main package
+  │   ├── __init__.py     # Version and main imports
+  │   ├── applications.py # FastAPI application class
+  │   ├── background.py   # Background tasks
+  │   ├── concurrency.py  # Async utilities
+  │   ├── datastructures.py # Data structures
+  │   ├── dependencies.py # Dependency injection
+  │   ├── encoders.py     # JSON encoders
+  │   ├── exception_handlers.py # Exception handling
+  │   ├── exceptions.py   # Custom exceptions
+  │   ├── middleware.py   # Middleware components
+  │   ├── openapi/        # OpenAPI schema generation
+  │   ├── params.py       # Parameter models
+  │   ├── responses.py    # Response models
+  │   ├── routing.py      # URL routing
+  │   ├── security/       # Security utilities
+  │   └── templating.py   # Template rendering
+  ├── docs/               # Documentation
+  ├── tests/              # Test suite
+  └── setup.py            # Package setup</code></pre>
+              
+              <p><strong>Key Insights:</strong></p>
+              <ul>
+                  <li>FastAPI uses a mostly flat structure with a few subpackages for complex subsystems.</li>
+                  <li>Each module has a clear, focused responsibility, making the codebase easy to navigate.</li>
+                  <li>The structure reflects modern Python practices, with type hints and clear interfaces.</li>
+                  <li>The project leverages Pydantic for data validation, showing how external dependencies can influence structure.</li>
+                  <li>Documentation is treated as a first-class citizen, with extensive examples and explanations.</li>
+              </ul>
+              
+              <p><strong>Takeaway:</strong> Modern Python projects can benefit from a clean, focused structure that leverages the ecosystem of powerful libraries to reduce internal complexity.</p>
+              
+              <p><strong>Common Patterns Across Successful Projects:</strong></p>
+              <ul>
+                  <li><strong>Clear Responsibilities:</strong> Each module or package has a well-defined purpose.</li>
+                  <li><strong>Thoughtful API Design:</strong> Public interfaces are carefully designed and exposed.</li>
+                  <li><strong>Comprehensive Testing:</strong> Tests are extensive and organized to mirror the code structure.</li>
+                  <li><strong>Excellent Documentation:</strong> Documentation is treated as an essential part of the project.</li>
+                  <li><strong>Examples:</strong> Real-world examples help users understand how to use the code.</li>
+                  <li><strong>Separation of Concerns:</strong> Different aspects of functionality are cleanly separated.</li>
+                  <li><strong>Utility Packages:</strong> Common utilities are organized in dedicated modules or packages.</li>
+              </ul>
+              
+              <p>By studying these successful open-source projects, you can gain insights into effective organizational patterns and apply them to your own projects, regardless of size or complexity.</p>
+          </section>
+  
+          <section class="refactoring_exercise">
+              <h3>Practical Exercise: Refactoring a Project Structure</h3>
+              
+              <p>Let's practice by refactoring a poorly structured project into a well-organized one. This exercise will help solidify the concepts we've discussed and demonstrate the process of improving an existing codebase.</p>
+              
+              <h4>The Starting Point: A Messy Flask Application</h4>
+              <p>Here's our initial project structure—a typical example of a Flask application that has grown organically without much thought to organization:</p>
+              
+              <pre><code>messy_flask_app/
+  ├── app.py               # Contains everything: models, routes, business logic (2,000+ lines)
+  ├── utils.py             # Miscellaneous utilities
+  ├── templates/           # HTML templates
+  │   ├── base.html
+  │   ├── index.html
+  │   ├── login.html
+  │   ├── register.html
+  │   ├── product_list.html
+  │   └── product_detail.html
+  ├── static/              # Static assets
+  │   ├── css/
+  │   ├── js/
+  │   └── img/
+  ├── test.py              # All tests in one file
+  └── requirements.txt     # Dependencies</code></pre>
+              
+              <p>The main issue is the monolithic <code>app.py</code> file that contains:</p>
+              <ul>
+                  <li>Flask application setup and configuration</li>
+                  <li>Database models (User, Product, Order)</li>
+                  <li>Route handlers for all features</li>
+                  <li>Business logic for user authentication, product management, etc.</li>
+                  <li>Form validation</li>
+                  <li>Helper functions and utilities</li>
+                  <li>Hardcoded configuration values</li>
+              </ul>
+              
+              <p>This structure makes the application difficult to maintain, test, and extend. Let's refactor it into a well-organized Flask application.</p>
+              
+              <h4>Our Target: A Well-Structured Flask Application</h4>
+              <p>We'll reorganize the code into this cleaner structure:</p>
+              
+              <pre><code>organized_flask_app/
+  ├── app/                  # Application package
+  │   ├── __init__.py       # Application factory
+  │   ├── config.py         # Configuration
+  │   ├── models/           # Database models
+  │   │   ├── __init__.py
+  │   │   ├── user.py
+  │   │   ├── product.py
+  │   │   └── order.py
+  │   ├── routes/           # Route handlers
+  │   │   ├── __init__.py
+  │   │   ├── auth.py
+  │   │   ├── main.py
+  │   │   └── products.py
+  │   ├── services/         # Business logic
+  │   │   ├── __init__.py
+  │   │   ├── auth_service.py
+  │   │   └── product_service.py
+  │   ├── forms/            # Form definitions and validation
+  │   │   ├── __init__.py
+  │   │   ├── auth_forms.py
+  │   │   └── product_forms.py
+  │   ├── templates/        # HTML templates
+  │   │   ├── base.html
+  │   │   ├── index.html
+  │   │   ├── auth/
+  │   │   │   ├── login.html
+  │   │   │   └── register.html
+  │   │   └── products/
+  │   │       ├── list.html
+  │   │       └── detail.html
+  │   ├── static/           # Static assets
+  │   │   ├── css/
+  │   │   ├── js/
+  │   │   └── img/
+  │   └── utils/            # Utilities
+  │       ├── __init__.py
+  │       └── helpers.py
+  ├── tests/                # Test suite
+  │   ├── __init__.py
+  │   ├── conftest.py       # Test fixtures
+  │   ├── test_models/
+  │   │   ├── test_user.py
+  │   │   └── test_product.py
+  │   ├── test_routes/
+  │   │   ├── test_auth.py
+  │   │   └── test_products.py
+  │   └── test_services/
+  │       ├── test_auth_service.py
+  │       └── test_product_service.py
+  ├── migrations/           # Database migrations
+  ├── .env.example          # Environment variables template
+  ├── .gitignore            # Git ignore rules
+  ├── README.md             # Project documentation
+  ├── requirements.txt      # Dependencies
+  └── wsgi.py               # WSGI entry point</code></pre>
+              
+              <h4>Step-by-Step Refactoring Process</h4>
+              <p>Let's walk through the process of transforming our messy project into this clean, organized structure:</p>
+              
+              <h5>Step 1: Create the Directory Structure</h5>
+              <p>First, we'll create the necessary directories and files:</p>
+              
+              <pre><code># Create directories
+  mkdir -p organized_flask_app/app/{models,routes,services,forms,utils}
+  mkdir -p organized_flask_app/app/templates/{auth,products}
+  mkdir -p organized_flask_app/app/static/{css,js,img}
+  mkdir -p organized_flask_app/tests/{test_models,test_routes,test_services}
+  
+  # Create necessary __init__.py files
+  touch organized_flask_app/app/__init__.py
+  touch organized_flask_app/app/{models,routes,services,forms,utils}/__init__.py
+  touch organized_flask_app/tests/__init__.py
+  
+  # Create other essential files
+  touch organized_flask_app/app/config.py
+  touch organized_flask_app/.env.example
+  touch organized_flask_app/.gitignore
+  touch organized_flask_app/README.md
+  touch organized_flask_app/wsgi.py</code></pre>
+              
+              <h5>Step 2: Extract Database Models</h5>
+              <p>Next, we'll extract the models from the monolithic app.py file:</p>
+              
+              <p><strong>app/models/user.py</strong></p>
+              <pre><code>"""User model module."""
+  from flask_login import UserMixin
+  from werkzeug.security import generate_password_hash, check_password_hash
+  from datetime import datetime
+  from app import db
+  
+  class User(db.Model, UserMixin):
+      """User model for authentication and profile information."""
+      
+      id = db.Column(db.Integer, primary_key=True)
+      username = db.Column(db.String(64), unique=True, index=True)
+      email = db.Column(db.String(120), unique=True, index=True)
+      password_hash = db.Column(db.String(128))
+      created_at = db.Column(db.DateTime, default=datetime.utcnow)
+      
+      # Relationships
+      orders = db.relationship('Order', backref='customer', lazy='dynamic')
+      
+      def __repr__(self):
+          return f'<User {self.username}>'
+      
+      def set_password(self, password):
+          """Set the user's password hash."""
+          self.password_hash = generate_password_hash(password)
+      
+      def check_password(self, password):
+          """Check if the provided password matches the hash."""
+          return check_password_hash(self.password_hash, password)</code></pre>
+              
+              <p><strong>app/models/product.py</strong></p>
+              <pre><code>"""Product model module."""
+  from datetime import datetime
+  from app import db
+  
+  class Product(db.Model):
+      """Product model representing items for sale."""
+      
+      id = db.Column(db.Integer, primary_key=True)
+      name = db.Column(db.String(100), nullable=False)
+      description = db.Column(db.Text)
+      price = db.Column(db.Float, nullable=False)
+      stock = db.Column(db.Integer, default=0)
+      created_at = db.Column(db.DateTime, default=datetime.utcnow)
+      
+      # Relationships
+      order_items = db.relationship('OrderItem', backref='product')
+      
+      def __repr__(self):
+          return f'<Product {self.name}>'</code></pre>
+              
+              <p><strong>app/models/order.py</strong></p>
+              <pre><code>"""Order model module."""
+  from datetime import datetime
+  from app import db
+  
+  class Order(db.Model):
+      """Order model representing customer purchases."""
+      
+      id = db.Column(db.Integer, primary_key=True)
+      user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+      status = db.Column(db.String(20), default='pending')
+      created_at = db.Column(db.DateTime, default=datetime.utcnow)
+      
+      # Relationships
+      items = db.relationship('OrderItem', backref='order', lazy='dynamic')
+      
+      def __repr__(self):
+          return f'<Order {self.id}>'
+      
+      @property
+      def total(self):
+          """Calculate the total cost of the order."""
+          return sum(item.price * item.quantity for item in self.items)
+  
+  class OrderItem(db.Model):
+      """OrderItem model representing individual items in an order."""
+      
+      id = db.Column(db.Integer, primary_key=True)
+      order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=False)
+      product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+      quantity = db.Column(db.Integer, default=1)
+      price = db.Column(db.Float, nullable=False)
+      
+      def __repr__(self):
+          return f'<OrderItem {self.id}>'</code></pre>
+              
+              <p><strong>app/models/__init__.py</strong></p>
+              <pre><code>"""Models package initialization."""
+  # Import models for easy access
+  from app.models.user import User
+  from app.models.product import Product
+  from app.models.order import Order, OrderItem</code></pre>
+              
+              <h5>Step 3: Extract Route Handlers</h5>
+              <p>Now we'll extract the route handlers into separate modules:</p>
+              
+              <p><strong>app/routes/main.py</strong></p>
+              <pre><code>"""Main application routes."""
+  from flask import Blueprint, render_template, current_app
+  from app.models.product import Product
+  from app.services.product_service import get_featured_products
+  
+  main_bp = Blueprint('main', __name__)
+  
+  @main_bp.route('/')
+  def index():
+      """Home page view."""
+      featured_products = get_featured_products(limit=4)
+      return render_template('index.html', products=featured_products)
+  
+  @main_bp.route('/about')
+  def about():
+      """About page view."""
+      return render_template('about.html')
+  
+  @main_bp.route('/contact')
+  def contact():
+      """Contact page view."""
+      return render_template('contact.html')</code></pre>
+              
+              <p><strong>app/routes/auth.py</strong></p>
+              <pre><code>"""Authentication routes."""
+  from flask import Blueprint, render_template, redirect, url_for, flash, request
+  from flask_login import login_user, logout_user, current_user, login_required
+  from app.forms.auth_forms import LoginForm, RegistrationForm
+  from app.services.auth_service import register_user, authenticate_user
+  
+  auth_bp = Blueprint('auth', __name__)
+  
+  @auth_bp.route('/login', methods=['GET', 'POST'])
+  def login():
+      """User login view."""
+      if current_user.is_authenticated:
+          return redirect(url_for('main.index'))
+      
+      form = LoginForm()
+      if form.validate_on_submit():
+          user = authenticate_user(form.username.data, form.password.data)
+          if user:
+              login_user(user, remember=form.remember_me.data)
+              next_page = request.args.get('next')
+              if not next_page or not next_page.startswith('/'):
+                  next_page = url_for('main.index')
+              return redirect(next_page)
+          else:
+              flash('Invalid username or password')
+      
+      return render_template('auth/login.html', title='Sign In', form=form)
+  
+  @auth_bp.route('/logout')
+  def logout():
+      """User logout view."""
+      logout_user()
+      flash('You have been logged out')
+      return redirect(url_for('main.index'))
+  
+  @auth_bp.route('/register', methods=['GET', 'POST'])
+  def register():
+      """User registration view."""
+      if current_user.is_authenticated:
+          return redirect(url_for('main.index'))
+      
+      form = RegistrationForm()
+      if form.validate_on_submit():
+          try:
+              user = register_user(
+                  username=form.username.data,
+                  email=form.email.data,
+                  password=form.password.data
+              )
+              flash('Congratulations, you are now a registered user!')
+              return redirect(url_for('auth.login'))
+          except ValueError as e:
+              flash(str(e))
+      
+      return render_template('auth/register.html', title='Register', form=form)</code></pre>
+              
+              <p><strong>app/routes/products.py</strong></p>
+              <pre><code>"""Product management routes."""
+  from flask import Blueprint, render_template, redirect, url_for, request, flash
+  from flask_login import login_required, current_user
+  from app.models.product import Product
+  from app.forms.product_forms import ProductSearchForm
+  from app.services.product_service import get_products, get_product_by_id
+  
+  products_bp = Blueprint('products', __name__)
+  
+  @products_bp.route('/products', methods=['GET'])
+  def product_list():
+      """Product listing view with optional search."""
+      form = ProductSearchForm(request.args)
+      page = request.args.get('page', 1, type=int)
+      
+      filters = {}
+      if form.validate():
+          if form.search.data:
+              filters['search'] = form.search.data
+          if form.min_price.data:
+              filters['min_price'] = form.min_price.data
+          if form.max_price.data:
+              filters['max_price'] = form.max_price.data
+      
+      products, total = get_products(page=page, **filters)
+      
+      return render_template(
+          'products/list.html',
+          title='Products',
+          products=products,
+          form=form,
+          page=page,
+          total=total
+      )
+  
+  @products_bp.route('/products/<int:product_id>')
+  def product_detail(product_id):
+      """Product detail view."""
+      product = get_product_by_id(product_id)
+      if not product:
+          flash('Product not found')
+          return redirect(url_for('products.product_list'))
+      
+      return render_template(
+          'products/detail.html',
+          title=product.name,
+          product=product
+      )</code></pre>
+              
+              <p><strong>app/routes/__init__.py</strong></p>
+              <pre><code>"""Routes package initialization."""
+  from app.routes.auth import auth_bp
+  from app.routes.main import main_bp
+  from app.routes.products import products_bp
+  
+  def register_blueprints(app):
+      """Register all blueprints with the application."""
+      app.register_blueprint(main_bp)
+      app.register_blueprint(auth_bp, url_prefix='/auth')
+      app.register_blueprint(products_bp)</code></pre>
+              
+              <h5>Step 4: Extract Business Logic into Services</h5>
+              <p>Next, let's move business logic into dedicated service modules:</p>
+              
+              <p><strong>app/services/auth_service.py</strong></p>
+              <pre><code>"""Authentication service module."""
+  from app import db
+  from app.models.user import User
+  
+  def register_user(username, email, password):
+      """
+      Register a new user.
+      
+      Args:
+          username: User's username
+          email: User's email address
+          password: User's password
+      
+      Returns:
+          User: The created user object
+          
+      Raises:
+          ValueError: If username or email already exists
+      """
+      # Check if username or email already exists
+      if User.query.filter_by(username=username).first():
+          raise ValueError(f"Username '{username}' is already taken")
+          
+      if User.query.filter_by(email=email).first():
+          raise ValueError(f"Email '{email}' is already registered")
+      
+      # Create the user
+      user = User(username=username, email=email)
+      user.set_password(password)
+      
+      # Save to database
+      db.session.add(user)
+      db.session.commit()
+      
+      return user
+  
+  def authenticate_user(username, password):
+      """
+      Authenticate a user with username and password.
+      
+      Args:
+          username: User's username
+          password: User's password
+          
+      Returns:
+          User: The user object if authentication is successful, None otherwise
+      """
+      user = User.query.filter_by(username=username).first()
+      if user and user.check_password(password):
+          return user
+      return None</code></pre>
+              
+              <p><strong>app/services/product_service.py</strong></p>
+              <pre><code>"""Product service module."""
+  from app import db
+  from app.models.product import Product
+  from sqlalchemy import or_
+  from flask import current_app
+  
+  def get_products(page=1, per_page=None, search=None, min_price=None, max_price=None):
+      """
+      Get products with optional filtering.
+      
+      Args:
+          page: Page number (default: 1)
+          per_page: Items per page (default: from config)
+          search: Search term for name/description
+          min_price: Minimum price
+          max_price: Maximum price
+          
+      Returns:
+          tuple: (list of products, total count)
+      """
+      per_page = per_page or current_app.config.get('PRODUCTS_PER_PAGE', 10)
+      
+      # Start with base query
+      query = Product.query
+      
+      # Apply filters
+      if search:
+          search_term = f"%{search}%"
+          query = query.filter(
+              or_(
+                  Product.name.ilike(search_term),
+                  Product.description.ilike(search_term)
+              )
+          )
+      
+      if min_price is not None:
+          query = query.filter(Product.price >= min_price)
+          
+      if max_price is not None:
+          query = query.filter(Product.price <= max_price)
+      
+      # Get paginated results
+      pagination = query.order_by(Product.name).paginate(
+          page=page, 
+          per_page=per_page,
+          error_out=False
+      )
+      
+      return pagination.items, pagination.total
+  
+  def get_product_by_id(product_id):
+      """
+      Get a product by ID.
+      
+      Args:
+          product_id: Product ID
+          
+      Returns:
+          Product: The product object or None if not found
+      """
+      return Product.query.get(product_id)
+  
+  def get_featured_products(limit=4):
+      """
+      Get a list of featured products.
+      
+      Args:
+          limit: Maximum number of products to return
+          
+      Returns:
+          list: Featured products
+      """
+      # In a real app, you might have a 'featured' flag or use another logic
+      # For this example, we'll just get the newest products
+      return Product.query.order_by(Product.created_at.desc()).limit(limit).all()</code></pre>
+              
+              <h5>Step 5: Create Form Classes</h5>
+              <p>Let's extract form handling into dedicated modules:</p>
+              
+              <p><strong>app/forms/auth_forms.py</strong></p>
+              <pre><code>"""Authentication form classes."""
+  from flask_wtf import FlaskForm
+  from wtforms import StringField, PasswordField, BooleanField, SubmitField
+  from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
+  from app.models.user import User
+  
+  class LoginForm(FlaskForm):
+      """User login form."""
+      username = StringField('Username', validators=[DataRequired()])
+      password = PasswordField('Password', validators=[DataRequired()])
+      remember_me = BooleanField('Remember Me')
+      submit = SubmitField('Sign In')
+  
+  class RegistrationForm(FlaskForm):
+      """User registration form."""
+      username = StringField('Username', validators=[
+          DataRequired(),
+          Length(min=3, max=64)
+      ])
+      email = StringField('Email', validators=[
+          DataRequired(),
+          Email(),
+          Length(max=120)
+      ])
+      password = PasswordField('Password', validators=[
+          DataRequired(),
+          Length(min=8)
+      ])
+      password2 = PasswordField('Confirm Password', validators=[
+          DataRequired(),
+          EqualTo('password')
+      ])
+      submit = SubmitField('Register')
+      
+      def validate_username(self, username):
+          """Validate that username is not already taken."""
+          user = User.query.filter_by(username=username.data).first()
+          if user:
+              raise ValidationError('Username already taken.')
+              
+      def validate_email(self, email):
+          """Validate that email is not already registered."""
+          user = User.query.filter_by(email=email.data).first()
+          if user:
+              raise ValidationError('Email already registered.')</code></pre>
+              
+              <p><strong>app/forms/product_forms.py</strong></p>
+              <pre><code>"""Product-related form classes."""
+  from flask_wtf import FlaskForm
+  from wtforms import StringField, FloatField, SubmitField
+  from wtforms.validators import Optional, NumberRange
+  
+  class ProductSearchForm(FlaskForm):
+      """Product search and filter form."""
+      search = StringField('Search')
+      min_price = FloatField('Min Price', validators=[
+          Optional(),
+          NumberRange(min=0)
+      ])
+      max_price = FloatField('Max Price', validators=[Optional()])
+      submit = SubmitField('Search')
+      
+      def validate_max_price(self, max_price):
+          """Validate max_price is greater than min_price if both are provided."""
+          if self.min_price.data and max_price.data:
+              if max_price.data < self.min_price.data:
+                  raise ValidationError('Max price must be greater than min price.')</code></pre>
+              
+              <h5>Step 6: Create Configuration Module</h5>
+              <p>Let's set up a proper configuration system:</p>
+              
+              <p><strong>app/config.py</strong></p>
+              <pre><code>"""Application configuration module."""
+  import os
+  from dotenv import load_dotenv
+  
+  # Load environment variables from .env file
+  basedir = os.path.abspath(os.path.dirname(__file__))
+  load_dotenv(os.path.join(os.path.dirname(basedir), '.env'))
+  
+  class Config:
+      """Base configuration class."""
+      # Flask settings
+      SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-key-please-change')
+      
+      # Database settings
+      SQLALCHEMY_DATABASE_URI = os.environ.get(
+          'DATABASE_URL', 
+          f"sqlite:///{os.path.join(basedir, 'app.db')}"
+      )
+      SQLALCHEMY_TRACK_MODIFICATIONS = False
+      
+      # Application settings
+      PRODUCTS_PER_PAGE = 10
+  
+  class DevelopmentConfig(Config):
+      """Development environment configuration."""
+      DEBUG = True
+      SQLALCHEMY_ECHO = True
+  
+  class TestingConfig(Config):
+      """Testing environment configuration."""
+      TESTING = True
+      SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+      WTF_CSRF_ENABLED = False
+  
+  class ProductionConfig(Config):
+      """Production environment configuration."""
+      DEBUG = False
+      
+      @classmethod
+      def init_app(cls, app):
+          # Log to stderr
+          import logging
+          from logging import StreamHandler
+          file_handler = StreamHandler()
+          file_handler.setLevel(logging.INFO)
+          app.logger.addHandler(file_handler)
+  
+  # Configuration dictionary
+  config = {
+      'development': DevelopmentConfig,
+      'testing': TestingConfig,
+      'production': ProductionConfig,
+      'default': DevelopmentConfig
+  }</code></pre>
+              
+              <h5>Step 7: Create Application Factory</h5>
+              <p>Now let's create the application factory in __init__.py:</p>
+              
+              <p><strong>app/__init__.py</strong></p>
+              <pre><code>"""Application factory module."""
+  from flask import Flask
+  from flask_sqlalchemy import SQLAlchemy
+  from flask_migrate import Migrate
+  from flask_login import LoginManager
+  import logging
+  from logging.handlers import RotatingFileHandler
+  import os
+  
+  # Initialize extensions
+  db = SQLAlchemy()
+  migrate = Migrate()
+  login_manager = LoginManager()
+  
+  def create_app(config_name='development'):
+      """Create and configure the Flask application."""
+      app = Flask(__name__)
+      
+      # Load configuration
+      from app.config import config
+      app.config.from_object(config[config_name])
+      
+      # Initialize extensions
+      db.init_app(app)
+      migrate.init_app(app, db)
+      login_manager.init_app(app)
+      
+      # Set up login manager
+      from app.models.user import User
+      login_manager.login_view = 'auth.login'
+      
+      @login_manager.user_loader
+      def load_user(user_id):
+          return User.query.get(int(user_id))
+      
+      # Register blueprints
+      from app.routes import register_blueprints
+      register_blueprints(app)
+      
+      # Set up logging
+      if not app.debug and not app.testing:
+          if not os.path.exists('logs'):
+              os.mkdir('logs')
+          file_handler = RotatingFileHandler(
+              'logs/app.log',
+              maxBytes=10240,
+              backupCount=10
+          )
+          file_handler.setFormatter(logging.Formatter(
+              '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+          ))
+          file_handler.setLevel(logging.INFO)
+          app.logger.addHandler(file_handler)
+          
+          app.logger.setLevel(logging.INFO)
+          app.logger.info('Application startup')
+      
+      return app</code></pre>
+              
+              <h5>Step 8: Create WSGI Entry Point</h5>
+              <p>Let's create the WSGI entry point for production:</p>
+              
+              <p><strong>wsgi.py</strong></p>
+              <pre><code>"""WSGI entry point for the application."""
+  from app import create_app
+  
+  app = create_app('production')
+  
+  if __name__ == '__main__':
+      app.run()</code></pre>
+              
+              <h5>Step 9: Create Basic Tests</h5>
+              <p>Finally, let's set up some basic tests:</p>
+              
+              <p><strong>tests/conftest.py</strong></p>
+              <pre><code>"""Test fixtures and configuration."""
+  import pytest
+  from app import create_app, db
+  from app.models import User, Product
+  
+  @pytest.fixture
+  def app():
+      """Create and configure a Flask app for testing."""
+      app = create_app('testing')
+      
+      # Create tables
+      with app.app_context():
+          db.create_all()
+          
+      yield app
+      
+      # Clean up
+      with app.app_context():
+          db.drop_all()
+  
+  @pytest.fixture
+  def client(app):
+      """A test client for the app."""
+      return app.test_client()
+  
+  @pytest.fixture
+  def runner(app):
+      """A test CLI runner for the app."""
+      return app.test_cli_runner()
+  
+  @pytest.fixture
+  def init_database(app):
+      """Initialize the database with test data."""
+      with app.app_context():
+          # Create a test user
+          user = User(username='test_user', email='test@example.com')
+          user.set_password('password')
+          db.session.add(user)
+          
+          # Create some test products
+          products = [
+              Product(name='Test Product 1', description='Description 1', price=10.99, stock=10),
+              Product(name='Test Product 2', description='Description 2', price=20.99, stock=5),
+          ]
+          db.session.add_all(products)
+          
+          db.session.commit()
+          
+          yield</code></pre>
+              
+              <p><strong>tests/test_models/test_user.py</strong></p>
+              <pre><code>
+                <pre><code>"""User model tests."""
+                  import pytest
+                  from app.models.user import User
+                  
+                  def test_new_user(app):
+                     """Test user creation."""
+                     with app.app_context():
+                         user = User(username='test_user', email='test@example.com')
+                         user.set_password('password')
+                         assert user.username == 'test_user'
+                         assert user.email == 'test@example.com'
+                         assert user.password_hash is not None
+                         assert user.check_password('password')
+                         assert not user.check_password('wrong_password')
+                  
+                  def test_user_representation(app):
+                     """Test user string representation."""
+                     with app.app_context():
+                         user = User(username='test_user', email='test@example.com')
+                         assert str(user) == '<User test_user>'</code></pre>
+                             
+                             <p><strong>tests/test_routes/test_auth.py</strong></p>
+                             <pre><code>"""Authentication route tests."""
+                  import pytest
+                  from flask import url_for
+                  from app.models.user import User
+                  
+                  def test_login_page(client):
+                     """Test login page loads correctly."""
+                     response = client.get('/auth/login')
+                     assert response.status_code == 200
+                     assert b'Sign In' in response.data
+                  
+                  def test_register_page(client):
+                     """Test registration page loads correctly."""
+                     response = client.get('/auth/register')
+                     assert response.status_code == 200
+                     assert b'Register' in response.data
+                  
+                  def test_successful_registration(client, app):
+                     """Test user registration works."""
+                     response = client.post('/auth/register', data={
+                         'username': 'new_user',
+                         'email': 'new@example.com',
+                         'password': 'password123',
+                         'password2': 'password123'
+                     }, follow_redirects=True)
+                     
+                     assert response.status_code == 200
+                     assert b'Congratulations, you are now a registered user!' in response.data
+                     
+                     # Verify user was created in database
+                     with app.app_context():
+                         user = User.query.filter_by(username='new_user').first()
+                         assert user is not None
+                         assert user.email == 'new@example.com'
+                  
+                  def test_successful_login_logout(client, init_database):
+                     """Test login and logout functionality."""
+                     # Login
+                     response = client.post('/auth/login', data={
+                         'username': 'test_user',
+                         'password': 'password'
+                     }, follow_redirects=True)
+                     
+                     assert response.status_code == 200
+                     
+                     # Check if user is logged in
+                     response = client.get('/')
+                     assert b'Log Out' in response.data
+                     
+                     # Logout
+                     response = client.get('/auth/logout', follow_redirects=True)
+                     assert response.status_code == 200
+                     assert b'You have been logged out' in response.data
+                     
+                     # Check if user is logged out
+                     response = client.get('/')
+                     assert b'Sign In' in response.data</code></pre>
+                             
+                             <h5>Step 10: Add Documentation</h5>
+                             <p>Let's create a comprehensive README.md file:</p>
+                             
+                             <p><strong>README.md</strong></p>
+                             <pre><code># Flask E-Commerce Application
+                  
+                  A simple e-commerce application built with Flask.
+                  
+                  ## Features
+                  
+                  - User authentication (register, login, logout)
+                  - Product catalog with search and filtering
+                  - Shopping cart functionality
+                  - Order management
+                  - Admin interface
+                  
+                  ## Project Structure
+
+                  organized_flask_app/
+                  ├── app/                  # Application package
+                  │   ├── init.py       # Application factory
+                  │   ├── config.py         # Configuration
+                  │   ├── models/           # Database models
+                  │   ├── routes/           # Route handlers
+                  │   ├── services/         # Business logic
+                  │   ├── forms/            # Form definitions
+                  │   ├── templates/        # HTML templates
+                  │   ├── static/           # Static assets
+                  │   └── utils/            # Utilities
+                  ├── tests/                # Test suite
+                  ├── migrations/           # Database migrations
+                  ├── .env.example          # Environment variables template
+                  ├── .gitignore            # Git ignore rules
+                  ├── README.md             # Project documentation
+                  ├── requirements.txt      # Dependencies
+                  └── wsgi.py               # WSGI entry point
+                  ## Installation
+
+                  1. Clone the repository:
+                  git clone https://github.com/yourusername/flask-ecommerce.git
+cd flask-ecommerce
+2. Create a virtual environment:
+
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+3. Install dependencies:
+
+pip install -r requirements.txt
+
+4. Create a `.env` file:
+
+cp .env.example .env
+
+Then edit the `.env` file with your settings.
+
+5. Initialize the database:
+
+flask db init
+flask db migrate
+flask db upgrade
+
+6. Run the development server:
+
+flask run
+
+## Testing
+
+Run the test suite:
+
+pytest
+
+## Deployment
+
+The application can be deployed using Gunicorn:
+
+gunicorn wsgi
+              ## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.</code></pre>
+        
+        <h4>Benefits of the Refactored Structure</h4>
+        <p>Our refactored project now has these advantages over the original structure:</p>
+        
+        <ul>
+            <li><strong>Separation of Concerns:</strong> Each part of the application has a clear, focused responsibility</li>
+            <li><strong>Modularity:</strong> Components can be developed, tested, and maintained independently</li>
+            <li><strong>Scalability:</strong> The structure can accommodate growth as new features are added</li>
+            <li><strong>Testability:</strong> The modular design makes it easier to write focused tests</li>
+            <li><strong>Configuration:</strong> Settings are centralized and environment-specific</li>
+            <li><strong>Maintainability:</strong> New developers can quickly understand the project organization</li>
+            <li><strong>Deployment:</strong> The application is ready for different deployment scenarios</li>
+        </ul>
+        
+        <p>This exercise demonstrates how a poorly structured project can be transformed into a well-organized, maintainable codebase by applying the principles and patterns we've discussed throughout this guide.</p>
+    </section>
+
+    <section class="conclusion">
+        <h3>Building Better Python Projects</h3>
+        
+        <p>Throughout this guide, we've explored the art and science of structuring Python projects. From simple scripts to complex enterprise applications, good structure is the foundation of maintainable, scalable, and collaborative code.</p>
+        
+        <p>Let's recap some key takeaways:</p>
+        
+        <ul>
+            <li><strong>Structure Matters:</strong> Project organization affects maintainability, scalability, collaboration, onboarding, testing, and deployment.</li>
+            <li><strong>Choose Appropriate Complexity:</strong> Your project structure should match the size and complexity of your application. Don't overengineer simple projects, but don't understructure complex ones.</li>
+            <li><strong>Follow the Single Responsibility Principle:</strong> Each component should have one clear purpose.</li>
+            <li><strong>Keep Related Files Together:</strong> Files that change together should be located near each other.</li>
+            <li><strong>Create Clear API Boundaries:</strong> Make it obvious what's public interface and what's implementation detail.</li>
+            <li><strong>Separate Configuration from Code:</strong> Allow your application to adapt to different environments without code changes.</li>
+            <li><strong>Learn from Successful Projects:</strong> Study well-established open-source projects for inspiration and patterns.</li>
+            <li><strong>Use Available Tools:</strong> Leverage project templates, linters, formatters, and other tools to maintain good structure.</li>
+            <li><strong>Be Consistent:</strong> Whatever structure you choose, apply it consistently throughout the project.</li>
+            <li><strong>Document Your Structure:</strong> Make sure new team members can understand your project organization.</li>
+            <li><strong>Evolve Gradually:</strong> Allow your structure to evolve as your project grows and requirements change.</li>
+        </ul>
+        
+        <p>Remember that project structure is not an end in itself but a means to create better software. The best structure is one that makes your development process more efficient, your code more maintainable, and your team more productive.</p>
+        
+        <p>As you design and build your next Python project, take the time to thoughtfully consider its structure. The investment will pay dividends throughout the life of your application, making it easier to add features, fix bugs, onboard new developers, and deliver value to users.</p>
+        
+        <p>In the words of Phil Karlton: "There are only two hard things in Computer Science: cache invalidation and naming things." We might add a third: structuring your code well. But with the principles and patterns we've explored in this guide, you're now better equipped to tackle this challenge.</p>
+        
+        <p>Happy coding, and may your projects be well-structured!</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Web Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

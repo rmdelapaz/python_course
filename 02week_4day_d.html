@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Functions: Default Parameters</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Functions: Default Parameters</h1>
+        <h2>Creating Flexible and Powerful Functions with Sensible Defaults</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h2>Understanding Default Parameters</h2>
+            <p>
+                Imagine you're ordering a cup of coffee at your favorite café. The barista might ask, "How would you like your coffee?" If you specify "with milk and sugar," they'll make it that way. But if you simply say "I'll have a coffee," they'll prepare it according to some standard recipe—perhaps black, or with a default amount of milk and sugar.
+            </p>
+            <p>
+                Default parameters in Python work in a similar way. They allow function designers to specify default values for parameters, which are used automatically when the caller doesn't provide those values.
+            </p>
+            <p>
+                This powerful feature enables you to create functions that are both flexible (they can be customized when needed) and convenient (they work "out of the box" with sensible defaults). It's one of the key techniques for writing user-friendly, adaptable code.
+            </p>
+        </section>
+
+        <section class="default_parameters_basics">
+            <h2>Basic Syntax and Behavior</h2>
+            <p>
+                Let's start by examining the basic syntax for defining functions with default parameters:
+            </p>
+            <pre><code>
+# File: basic_default_params.py
+# Location: /python_projects/functions_tutorial/
+
+def greet(name, greeting="Hello"):
+    """
+    Greet a person with a customizable greeting.
+    
+    Args:
+        name (str): The name of the person to greet
+        greeting (str, optional): The greeting to use (default: "Hello")
+    
+    Returns:
+        str: The complete greeting
+    """
+    return f"{greeting}, {name}!"
+
+# Using the function with both parameters
+print(greet("Alice", "Good morning"))  # Good morning, Alice!
+
+# Using the function with only the required parameter
+print(greet("Bob"))  # Hello, Bob!
+</code></pre>
+            <p>
+                In this example, the <code>greeting</code> parameter has a default value of <code>"Hello"</code>. When we call <code>greet("Bob")</code>, Python automatically uses this default value for the <code>greeting</code> parameter.
+            </p>
+            <p>
+                It's like a form with some fields pre-filled for your convenience—you can keep the default values or override them with your own choices.
+            </p>
+        </section>
+
+        <section class="default_parameters_rules">
+            <h2>Rules and Considerations</h2>
+            <p>
+                When working with default parameters, there are some important rules to keep in mind:
+            </p>
+
+            <h3>Required Parameters Before Default Parameters</h3>
+            <p>
+                In Python, parameters with default values must come after parameters without default values in the function definition.
+            </p>
+            <pre><code>
+# File: parameter_order.py
+# Location: /python_projects/functions_tutorial/
+
+# Correct: Required parameters before default parameters
+def create_profile(name, age, occupation="Developer", location="Unknown"):
+    profile = {
+        "name": name,
+        "age": age,
+        "occupation": occupation,
+        "location": location
+    }
+    return profile
+
+# This would be incorrect and cause a SyntaxError:
+# def create_profile(name, occupation="Developer", age, location="Unknown"):
+#     ...
+
+# Using the function
+alice_profile = create_profile("Alice", 30, "Designer", "New York")
+bob_profile = create_profile("Bob", 25)  # Uses default occupation and location
+
+print(alice_profile)
+print(bob_profile)
+</code></pre>
+            <p>
+                This rule exists because Python matches arguments to parameters by position. If a parameter with a default value came before a required parameter, it would be ambiguous whether an argument was meant for the optional parameter (overriding its default) or for the required parameter.
+            </p>
+
+            <h3>Default Values Are Evaluated Once</h3>
+            <p>
+                One of the most important things to understand about default parameters is that their default values are evaluated only once—when the function is defined, not each time the function is called. This can lead to surprising behavior with mutable default values.
+            </p>
+            <pre><code>
+# File: mutable_defaults.py
+# Location: /python_projects/functions_tutorial/
+
+# WARNING: Problematic use of mutable default value
+def add_item_problematic(item, shopping_list=[]):
+    """
+    Add an item to a shopping list.
+    
+    CAUTION: This function has a problematic implementation.
+    """
+    shopping_list.append(item)
+    return shopping_list
+
+# First call
+list1 = add_item_problematic("apples")
+print(f"First call: {list1}")  # ['apples']
+
+# Second call - might expect a new, empty list
+list2 = add_item_problematic("bananas")
+print(f"Second call: {list2}")  # ['apples', 'bananas']
+
+# The lists are actually the same object!
+print(f"Are they the same object? {list1 is list2}")  # True
+</code></pre>
+            <p>
+                The issue here is that the empty list <code>[]</code> is created once when the function is defined, and the same list is used for every call to the function. This means that modifications to the list in one call will affect subsequent calls.
+            </p>
+            <p>
+                Think of it like a restaurant that has one menu they keep adding to—every customer sees the additions made by previous customers, rather than getting a fresh menu.
+            </p>
+
+            <h3>The Mutable Default Value Solution</h3>
+            <p>
+                To fix the mutable default value issue, the standard practice is to use <code>None</code> as the default value and then create a new mutable object inside the function:
+            </p>
+            <pre><code>
+# File: mutable_defaults_solution.py
+# Location: /python_projects/functions_tutorial/
+
+# Correct pattern for mutable defaults
+def add_item(item, shopping_list=None):
+    """
+    Add an item to a shopping list.
+    
+    Args:
+        item: The item to add
+        shopping_list (list, optional): The list to add to (default: new empty list)
+    
+    Returns:
+        list: The updated shopping list
+    """
+    # Create a new list if none was provided
+    if shopping_list is None:
+        shopping_list = []
+    
+    shopping_list.append(item)
+    return shopping_list
+
+# First call
+list1 = add_item("apples")
+print(f"First call: {list1}")  # ['apples']
+
+# Second call
+list2 = add_item("bananas")
+print(f"Second call: {list2}")  # ['bananas']
+
+# Now they're different objects
+print(f"Are they the same object? {list1 is list2}")  # False
+
+# We can still use an existing list if we want
+my_list = ["cherries", "dates"]
+list3 = add_item("elderberries", my_list)
+print(f"Using an existing list: {list3}")  # ['cherries', 'dates', 'elderberries']
+</code></pre>
+            <p>
+                With this pattern, each call to the function with the default parameter gets a fresh, new list. It's like making sure each customer gets a clean, blank menu to write their own order on.
+            </p>
+        </section>
+
+        <section class="practical_examples">
+            <h2>Practical Examples of Default Parameters</h2>
+            <p>
+                Let's explore some practical examples of how default parameters can be used in different scenarios:
+            </p>
+
+            <h3>Configuration Functions</h3>
+            <pre><code>
+# File: configuration_function.py
+# Location: /python_projects/functions_tutorial/
+
+def configure_app(
+    debug=False,
+    log_level="INFO",
+    max_connections=100,
+    timeout=30,
+    data_dir="./data"
+):
+    """
+    Configure application settings with sensible defaults.
+    
+    Args:
+        debug (bool): Enable debug mode
+        log_level (str): Logging level (DEBUG, INFO, WARNING, ERROR)
+        max_connections (int): Maximum number of simultaneous connections
+        timeout (int): Connection timeout in seconds
+        data_dir (str): Directory for data files
+    
+    Returns:
+        dict: Configuration dictionary
+    """
+    config = {
+        "debug": debug,
+        "log_level": log_level,
+        "max_connections": max_connections,
+        "timeout": timeout,
+        "data_dir": data_dir
+    }
+    
+    # Print the configuration (in a real app, you might log this instead)
+    print("Application configured with the following settings:")
+    for key, value in config.items():
+        print(f"  {key}: {value}")
+    
+    return config
+
+# Default configuration (using all defaults)
+default_config = configure_app()
+
+# Development configuration (overriding some defaults)
+dev_config = configure_app(
+    debug=True,
+    log_level="DEBUG",
+    data_dir="./test_data"
+)
+
+# Production configuration
+prod_config = configure_app(
+    debug=False,
+    log_level="WARNING",
+    max_connections=500,
+    timeout=60
+)
+</code></pre>
+            <p>
+                In this example, the <code>configure_app</code> function has sensible defaults for all parameters, making it easy to create a standard configuration while allowing customization where needed. This pattern is common in libraries and frameworks, where most users can rely on the defaults, but advanced users can tweak settings as required.
+            </p>
+
+            <h3>API Request Functions</h3>
+            <pre><code>
+# File: api_request.py
+# Location: /python_projects/functions_tutorial/
+
+def make_api_request(
+    endpoint,
+    method="GET",
+    params=None,
+    headers=None,
+    timeout=30,
+    retry_count=3,
+    retry_delay=1
+):
+    """
+    Make an API request with configurable parameters.
+    
+    Args:
+        endpoint (str): The API endpoint to request
+        method (str): HTTP method (GET, POST, PUT, DELETE)
+        params (dict, optional): Query parameters or request body
+        headers (dict, optional): HTTP headers
+        timeout (int): Request timeout in seconds
+        retry_count (int): Number of retry attempts for failed requests
+        retry_delay (int): Delay between retries in seconds
+    
+    Returns:
+        dict: Simulated API response
+    """
+    # Set default values for mutable parameters
+    if params is None:
+        params = {}
+    
+    if headers is None:
+        headers = {"Content-Type": "application/json"}
+    
+    # In a real function, this would make an actual HTTP request
+    # For this example, we'll just print the request details and return a dummy response
+    
+    print(f"Making {method} request to {endpoint}")
+    print(f"  Parameters: {params}")
+    print(f"  Headers: {headers}")
+    print(f"  Timeout: {timeout}s, Retries: {retry_count}, Delay: {retry_delay}s")
+    
+    # Simulate a response
+    response = {
+        "status": 200,
+        "message": "Success",
+        "data": {"result": "Simulated API response"}
+    }
+    
+    return response
+
+# Simple GET request with default parameters
+response1 = make_api_request("https://api.example.com/users")
+
+# POST request with custom parameters and headers
+response2 = make_api_request(
+    "https://api.example.com/orders",
+    method="POST",
+    params={"product_id": 123, "quantity": 2},
+    headers={"Content-Type": "application/json", "Authorization": "Bearer token123"},
+    timeout=60
+)
+</code></pre>
+            <p>
+                API request functions often have many configurable parameters, but sensible defaults mean you only need to specify the essential ones for basic usage. This makes the API client more user-friendly while still providing power users with the flexibility they need.
+            </p>
+
+            <h3>Factory Functions for Objects</h3>
+            <pre><code>
+# File: user_factory.py
+# Location: /python_projects/functions_tutorial/
+
+def create_user(
+    username,
+    email,
+    first_name="",
+    last_name="",
+    role="user",
+    is_active=True,
+    preferences=None
+):
+    """
+    Create a user object with default values for optional fields.
+    
+    Args:
+        username (str): User's username
+        email (str): User's email
+        first_name (str, optional): User's first name
+        last_name (str, optional): User's last name
+        role (str, optional): User's role (default: "user")
+        is_active (bool, optional): Whether the user is active
+        preferences (dict, optional): User preferences
+        
+    Returns:
+        dict: User object
+    """
+    # Set default values for mutable parameters
+    if preferences is None:
+        preferences = {"theme": "light", "language": "en"}
+    
+    # Create the user object
+    user = {
+        "username": username,
+        "email": email,
+        "first_name": first_name,
+        "last_name": last_name,
+        "role": role,
+        "is_active": is_active,
+        "preferences": preferences,
+        "created_at": "2023-11-18T12:00:00Z"  # In a real app, use datetime.now()
+    }
+    
+    return user
+
+# Create a minimal user with mostly default values
+basic_user = create_user("johndoe", "john@example.com")
+print("Basic user:")
+for key, value in basic_user.items():
+    print(f"  {key}: {value}")
+
+# Create a more detailed user
+admin_user = create_user(
+    "admin",
+    "admin@example.com",
+    first_name="Admin",
+    last_name="User",
+    role="admin",
+    preferences={"theme": "dark", "language": "en", "notifications": "all"}
+)
+print("\nAdmin user:")
+for key, value in admin_user.items():
+    print(f"  {key}: {value}")
+</code></pre>
+            <p>
+                Factory functions use default parameters to create objects with standard initial values, while allowing customization of specific attributes. This pattern is useful for creating test fixtures, sample data, and standard configurations.
+            </p>
+        </section>
+
+        <section class="default_args_in_practice">
+            <h2>Default Parameters in Real-World Applications</h2>
+            <p>
+                Now let's look at how default parameters are used in various real-world applications:
+            </p>
+
+            <h3>Web Development with Flask</h3>
+            <pre><code>
+# File: flask_example.py
+# Location: /python_projects/functions_tutorial/
+
+from flask import Flask, render_template, request, jsonify
+
+app = Flask(__name__)
+
+def validate_user_data(
+    form_data,
+    required_fields=None,
+    max_lengths=None,
+    min_age=13,
+    allowed_countries=None
+):
+    """
+    Validate user form data with configurable validation rules.
+    
+    Args:
+        form_data (dict): Form data to validate
+        required_fields (list, optional): Fields that must be present and non-empty
+        max_lengths (dict, optional): Maximum lengths for specific fields
+        min_age (int, optional): Minimum allowed age
+        allowed_countries (list, optional): List of allowed country codes
+        
+    Returns:
+        tuple: (is_valid, errors)
+    """
+    # Set default values for mutable parameters
+    if required_fields is None:
+        required_fields = ["name", "email", "password"]
+    
+    if max_lengths is None:
+        max_lengths = {"name": 100, "password": 50, "bio": 500}
+    
+    if allowed_countries is None:
+        allowed_countries = ["US", "CA", "UK", "AU", "NZ"]
+    
+    errors = {}
+    
+    # Check required fields
+    for field in required_fields:
+        if field not in form_data or not form_data[field]:
+            errors[field] = f"{field} is required"
+    
+    # Check field lengths
+    for field, max_length in max_lengths.items():
+        if field in form_data and len(form_data[field]) > max_length:
+            errors[field] = f"{field} must be less than {max_length} characters"
+    
+    # Check age if provided
+    if "age" in form_data and form_data["age"]:
+        try:
+            age = int(form_data["age"])
+            if age < min_age:
+                errors["age"] = f"Must be at least {min_age} years old"
+        except ValueError:
+            errors["age"] = "Age must be a number"
+    
+    # Check country if provided
+    if "country" in form_data and form_data["country"]:
+        if form_data["country"] not in allowed_countries:
+            errors["country"] = "Country not supported"
+    
+    is_valid = len(errors) == 0
+    return is_valid, errors
+
+@app.route("/register", methods=["POST"])
+def register_user():
+    """Handle user registration."""
+    # Get form data
+    form_data = request.form.to_dict()
+    
+    # Basic validation for a registration form
+    is_valid, errors = validate_user_data(
+        form_data,
+        required_fields=["username", "email", "password", "confirm_password"],
+        max_lengths={"username": 30, "password": 100}
+    )
+    
+    if not is_valid:
+        return jsonify({"success": False, "errors": errors}), 400
+    
+    # In a real app, you would create the user in a database here
+    
+    return jsonify({"success": True, "message": "Registration successful"})
+
+@app.route("/update_profile", methods=["POST"])
+def update_profile():
+    """Handle profile updates."""
+    # Get form data
+    form_data = request.form.to_dict()
+    
+    # Different validation rules for profile updates
+    is_valid, errors = validate_user_data(
+        form_data,
+        required_fields=["user_id"],  # Only user_id is required
+        max_lengths={"bio": 1000, "website": 200},
+        allowed_countries=None  # Allow any country
+    )
+    
+    if not is_valid:
+        return jsonify({"success": False, "errors": errors}), 400
+    
+    # In a real app, you would update the user in a database here
+    
+    return jsonify({"success": True, "message": "Profile updated"})
+
+# In a real app, you would add: app.run()
+</code></pre>
+            <p>
+                In web development, default parameters allow you to create flexible validation functions that can be reused across different routes with different requirements. This avoids code duplication while allowing customization for specific use cases.
+            </p>
+
+            <h3>Data Processing Pipeline</h3>
+            <pre><code>
+# File: data_processing.py
+# Location: /python_projects/functions_tutorial/
+
+def process_data(
+    data,
+    normalize=True,
+    remove_outliers=False,
+    outlier_threshold=3.0,
+    fill_missing=True,
+    missing_strategy="mean",
+    transform=None
+):
+    """
+    Process a dataset with configurable steps.
+    
+    Args:
+        data (list): The data to process
+        normalize (bool): Whether to normalize the data
+        remove_outliers (bool): Whether to remove outliers
+        outlier_threshold (float): Z-score threshold for outlier removal
+        fill_missing (bool): Whether to fill missing values
+        missing_strategy (str): Strategy for filling missing values ('mean', 'median', 'zero')
+        transform (function, optional): Optional transformation function to apply
+        
+    Returns:
+        list: Processed data
+    """
+    # Copy the data to avoid modifying the input
+    processed = data.copy()
+    
+    print(f"Processing dataset with {len(data)} items")
+    
+    # Fill missing values (in a real function, you'd check for None/NaN)
+    if fill_missing:
+        print(f"Filling missing values using {missing_strategy} strategy")
+        # Simplified example - in reality, this would be more complex
+        if missing_strategy == "mean":
+            mean_value = sum(x for x in processed if x is not None) / sum(1 for x in processed if x is not None)
+            processed = [x if x is not None else mean_value for x in processed]
+        elif missing_strategy == "zero":
+            processed = [x if x is not None else 0 for x in processed]
+    
+    # Remove outliers
+    if remove_outliers:
+        print(f"Removing outliers with threshold {outlier_threshold}")
+        # Simplified outlier removal using z-score
+        mean = sum(processed) / len(processed)
+        std_dev = (sum((x - mean) ** 2 for x in processed) / len(processed)) ** 0.5
+        
+        processed = [x for x in processed if abs((x - mean) / std_dev) <= outlier_threshold]
+        print(f"After outlier removal: {len(processed)} items")
+    
+    # Normalize the data
+    if normalize:
+        print("Normalizing data")
+        min_val = min(processed)
+        max_val = max(processed)
+        processed = [(x - min_val) / (max_val - min_val) for x in processed]
+    
+    # Apply custom transformation
+    if transform:
+        print("Applying custom transformation")
+        processed = [transform(x) for x in processed]
+    
+    return processed
+
+# Example usage with different parameter combinations
+
+# Sample data with some outliers
+data = [2, 3, 3, 4, 4, 5, 5, 5, 6, 6, 20]
+
+# Basic processing with defaults
+result1 = process_data(data)
+
+# Custom processing for a different use case
+result2 = process_data(
+    data,
+    normalize=False,
+    remove_outliers=True,
+    outlier_threshold=2.0
+)
+
+# Processing with a custom transformation
+result3 = process_data(
+    data,
+    missing_strategy="zero",
+    transform=lambda x: x ** 2
+)
+
+print("\nResults:")
+print(f"Original data: {data}")
+print(f"Basic processing: {result1}")
+print(f"With outlier removal: {result2}")
+print(f"With transformation: {result3}")
+</code></pre>
+            <p>
+                Data processing pipelines often have many configurable steps. Default parameters allow data scientists to create flexible functions that can be adjusted for different datasets and requirements. This is similar to having presets on a camera that work for most situations, but can be overridden for specific needs.
+            </p>
+
+            <h3>User Interface Components</h3>
+            <pre><code>
+# File: ui_components.py
+# Location: /python_projects/functions_tutorial/
+
+def create_button(
+    text,
+    size="medium",
+    color="blue",
+    icon=None,
+    disabled=False,
+    on_click=None,
+    tooltip=None,
+    css_class=None
+):
+    """
+    Create a button element with various customization options.
+    
+    Args:
+        text (str): Button text
+        size (str): Button size ('small', 'medium', 'large')
+        color (str): Button color
+        icon (str, optional): Icon name
+        disabled (bool): Whether the button is disabled
+        on_click (function, optional): Click event handler
+        tooltip (str, optional): Tooltip text
+        css_class (str, optional): Additional CSS class
+        
+    Returns:
+        str: HTML button element
+    """
+    # Build the CSS classes
+    classes = [f"btn btn-{size} btn-{color}"]
+    if css_class:
+        classes.append(css_class)
+    if disabled:
+        classes.append("disabled")
+    
+    class_str = " ".join(classes)
+    
+    # Build attributes
+    attributes = [f'class="{class_str}"']
+    
+    if disabled:
+        attributes.append('disabled')
+    
+    if tooltip:
+        attributes.append(f'title="{tooltip}"')
+    
+    if on_click:
+        # In a real component, this would be a proper event handler
+        attributes.append('onclick="handleClick()"')
+    
+    attrs_str = " ".join(attributes)
+    
+    # Build the button HTML
+    button = f'&lt;button {attrs_str}&gt;'
+    
+    if icon:
+        button += f'&lt;i class="icon-{icon}"&gt;&lt;/i&gt; '
+    
+    button += f'{text}&lt;/button&gt;'
+    
+    return button
+
+# Create buttons with different configurations
+default_button = create_button("Submit")
+print(f"Default button: {default_button}")
+
+save_button = create_button(
+    "Save",
+    color="green",
+    icon="save",
+    tooltip="Save your changes"
+)
+print(f"Save button: {save_button}")
+
+cancel_button = create_button(
+    "Cancel",
+    size="small",
+    color="red",
+    disabled=True
+)
+print(f"Cancel button: {cancel_button}")
+
+custom_button = create_button(
+    "Download",
+    size="large",
+    icon="download",
+    css_class="premium-btn"
+)
+print(f"Custom button: {custom_button}")
+</code></pre>
+            <p>
+                UI component functions use default parameters to create a standard look and feel, while allowing customization for specific use cases. This is similar to how design systems work in the real world, with standard components that can be customized for specific needs.
+            </p>
+        </section>
+
+        <section class="common_patterns">
+            <h2>Common Patterns and Best Practices</h2>
+            <p>
+                Based on the examples we've seen, let's explore some common patterns and best practices for working with default parameters:
+            </p>
+
+            <h3>Choosing Good Default Values</h3>
+            <pre><code>
+# File: good_defaults.py
+# Location: /python_projects/functions_tutorial/
+
+# GOOD: Sensible, safe defaults that work for most cases
+def connect_to_database(
+    host="localhost",
+    port=5432,
+    username="app_user",
+    password=None,
+    database="main",
+    ssl=True,
+    timeout=30
+):
+    """
+    Connect to a database with sensible defaults.
+    
+    Args:
+        host (str): Database host
+        port (int): Database port
+        username (str): Database username
+        password (str, optional): Database password
+        database (str): Database name
+        ssl (bool): Whether to use SSL
+        timeout (int): Connection timeout in seconds
+    """
+    # Implementation details...
+    connection_string = f"{username}@{host}:{port}/{database}"
+    print(f"Connecting to: {connection_string}")
+    print(f"SSL: {'Enabled' if ssl else 'Disabled'}")
+    print(f"Timeout: {timeout} seconds")
+    
+    # Note: password is intentionally not printed for security
+    
+    if password is None:
+        print("Warning: No password provided, using environment variable or config file")
+
+# POOR: Defaults that might cause problems or be inappropriate for most cases
+def connect_to_database_poor(
+    host="production-db.example.com",  # Bad default - should not default to production
+    port=5432,
+    username="admin",  # Bad default - should not use admin by default
+    password="default_password",  # Bad default - should never hardcode passwords
+    database="main",
+    ssl=False,  # Bad default - connections should be secure by default
+    timeout=0  # Bad default - no timeout could lead to hanging connections
+):
+    """An example of poor default parameter choices."""
+    # Implementation details...
+    pass
+</code></pre>
+            <p>
+                Good default values should be:
+            </p>
+            <ul>
+                <li><strong>Safe:</strong> They should not cause security risks or data loss.</li>
+                <li><strong>Conservative:</strong> They should work for the majority of use cases.</li>
+                <li><strong>Explicit:</strong> They should make it clear what the function will do.</li>
+                <li><strong>Performant:</strong> They should not unnecessarily degrade performance.</li>
+            </ul>
+
+            <h3>Default Parameter Documentation</h3>
+            <pre><code>
+# File: documented_defaults.py
+# Location: /python_projects/functions_tutorial/
+
+def resize_image(
+    image,
+    width=None,
+    height=None,
+    keep_aspect_ratio=True,
+    quality=85,
+    format=None
+):
+    """
+    Resize an image with various options.
+    
+    Args:
+        image: The image to resize
+        width (int, optional): New width in pixels. If None, calculated from height
+            and aspect ratio if possible.
+        height (int, optional): New height in pixels. If None, calculated from width
+            and aspect ratio if possible.
+        keep_aspect_ratio (bool): Whether to maintain the original aspect ratio.
+            If True, the image will be resized to fit within the width/height bounds
+            while maintaining its aspect ratio.
+        quality (int): JPEG quality (1-100) if saving as JPEG. Higher values mean
+            better quality but larger file size. Default is 85, which provides a good
+            balance between quality and size.
+        format (str, optional): Output format (e.g., 'JPEG', 'PNG'). If None, the
+            original format is maintained.
+    
+    Returns:
+        The resized image object
+    
+    Raises:
+        ValueError: If both width and height are None, or if quality is outside 1-100.
+    
+    Examples:
+        # Resize to a specific width, maintaining aspect ratio
+        resize_image(img, width=800)
+        
+        # Resize to fit within 800x600, maintaining aspect ratio
+        resize_image(img, width=800, height=600)
+        
+        # Resize to exactly 800x600, ignoring aspect ratio
+        resize_image(img, width=800, height=600, keep_aspect_ratio=False)
+    """
+    # We'll just simulate the functionality for this example
+    
+    # Validate inputs
+    if width is None and height is None:
+        raise ValueError("At least one of width or height must be specified")
+    
+    if quality < 1 or quality > 100:
+        raise ValueError("Quality must be between 1 and 100")
+    
+    # Simulate image dimensions (in a real function, we'd get these from the image)
+    original_width, original_height = 1920, 1080
+    aspect_ratio = original_width / original_height
+    
+    # Calculate target dimensions
+    target_width = width
+    target_height = height
+    
+    if keep_aspect_ratio:
+        if width is None:
+            target_width = int(height * aspect_ratio)
+        elif height is None:
+            target_height = int(width / aspect_ratio)
+        else:
+            # Fit within the specified bounds
+            proposed_height = int(width / aspect_ratio)
+            if proposed_height <= height:
+                target_height = proposed_height
+            else:
+                target_width = int(height * aspect_ratio)
+    
+    # Use defaults for any remaining None values
+    if target_width is None:
+        target_width = original_width
+    if target_height is None:
+        target_height = original_height
+    
+    output_format = format if format else "original format"
+    
+    # Print what we'd be doing (in a real function, we'd actually resize the image)
+    print(f"Resizing image from {original_width}x{original_height} to {target_width}x{target_height}")
+    print(f"Quality: {quality}, Format: {output_format}")
+    
+    # Return a placeholder result (in a real function, this would be the resized image)
+    return f"Resized image ({target_width}x{target_height})"
+
+# Example usage
+try:
+    # Resize to a specific width
+    result1 = resize_image("vacation.jpg", width=800)
+    print(f"Result 1: {result1}")
+    
+    # Resize to fit within dimensions
+    result2 = resize_image("profile.png", width=400, height=300)
+    print(f"Result 2: {result2}")
+    
+    # Resize with custom format and quality
+    result3 = resize_image("photo.jpg", width=1200, quality=95, format="PNG")
+    print(f"Result 3: {result3}")
+    
+    # This would raise an error
+    # resize_image("error.jpg")
+    
+except ValueError as e:
+    print(f"Error: {e}")
+</code></pre>
+            <p>
+                Well-documented default parameters help users understand:
+            </p>
+            <ul>
+                <li>What each parameter does</li>
+                <li>Why certain defaults were chosen</li>
+                <li>How parameters interact with each other</li>
+                <li>Common usage patterns and examples</li>
+            </ul>
+            <p>
+                Good documentation makes functions more accessible to new users while still providing all the information that advanced users need.
+            </p>
+
+            <h3>Building Functions with Increasing Complexity</h3>
+            <p>
+                Default parameters allow you to design functions that are simple to use for basic cases but can be extended for more complex scenarios:
+            </p>
+            <pre><code>
+# File: progressive_complexity.py
+# Location: /python_projects/functions_tutorial/
+
+def send_email(
+    to,
+    subject,
+    body,
+    from_email=None,  # Level 1: Basic customization
+    cc=None,
+    bcc=None,
+    reply_to=None,
+    attachments=None,  # Level 2: Additional features
+    html=False,
+    priority=3,
+    tracking=False,  # Level 3: Advanced features
+    template_id=None,
+    template_vars=None,
+    scheduled_time=None,
+    custom_headers=None  # Level 4: Expert features
+):
+    """
+    Send an email with various configuration options.
+    
+    This function demonstrates progressive complexity - users can start with
+    just the required parameters and gradually add more as needed.
+    """
+    # Set default for from_email if not provided
+    if from_email is None:
+        from_email = "noreply@example.com"
+    
+    # Set defaults for mutable parameters
+    if cc is None:
+        cc = []
+    if bcc is None:
+        bcc = []
+    if attachments is None:
+        attachments = []
+    if template_vars is None:
+        template_vars = {}
+    if custom_headers is None:
+        custom_headers = {}
+    
+    # Build the email details (in a real function, we'd actually send the email)
+    email_details = {
+        "to": to,
+        "from": from_email,
+        "subject": subject,
+        "body": body,
+        "cc": cc,
+        "bcc": bcc
+    }
+    
+    # Include additional parameters if they're set
+    if reply_to:
+        email_details["reply_to"] = reply_to
+    
+    if attachments:
+        email_details["attachments"] = attachments
+    
+    if html:
+        email_details["format"] = "html"
+    else:
+        email_details["format"] = "text"
+    
+    if priority != 3:
+        email_details["priority"] = priority
+    
+    if tracking:
+        email_details["tracking"] = True
+    
+    if template_id:
+        email_details["template_id"] = template_id
+        email_details["template_vars"] = template_vars
+    
+    if scheduled_time:
+        email_details["scheduled_time"] = scheduled_time
+    
+    if custom_headers:
+        email_details["headers"] = custom_headers
+    
+    # Print what we'd be doing (in a real function, we'd actually send the email)
+    print("Sending email with the following details:")
+    for key, value in email_details.items():
+        print(f"  {key}: {value}")
+    
+    return "Email sent successfully"
+
+# Level 1: Simple email (just the required parameters)
+send_email(
+    "user@example.com",
+    "Hello",
+    "This is a simple email."
+)
+
+print("\n---\n")
+
+# Level 2: Email with CC and attachments
+send_email(
+    "user@example.com",
+    "Project Update",
+    "Please see the attached report.",
+    from_email="project@example.com",
+    cc=["manager@example.com"],
+    attachments=["report.pdf"]
+)
+
+print("\n---\n")
+
+# Level 3: HTML email with tracking
+send_email(
+    "customer@example.com",
+    "Your Order Confirmation",
+    "&lt;h1&gt;Thank you for your order!&lt;/h1&gt;&lt;p&gt;Your order #12345 has been confirmed.&lt;/p&gt;",
+    from_email="orders@example.com",
+    html=True,
+    tracking=True
+)
+
+print("\n---\n")
+
+# Level 4: Advanced email with templates and scheduling
+send_email(
+    "subscriber@example.com",
+    "Weekly Newsletter",
+    "This will be replaced by the template content.",
+    template_id="newsletter-template",
+    template_vars={"user_name": "John", "content_id": "weekly-123"},
+    scheduled_time="2023-12-01T10:00:00Z",
+    custom_headers={"X-Campaign-ID": "winter-2023"}
+)
+</code></pre>
+            <p>
+                This pattern allows users to start with the simplest version of the function and gradually add more complexity as they need it. It's like having a basic version of a product with optional add-ons that users can select as they become more experienced.
+            </p>
+        </section>
+
+        <section class="common_gotchas">
+            <h2>Common Mistakes and How to Avoid Them</h2>
+            <p>
+                Let's look at some common mistakes when working with default parameters and how to avoid them:
+            </p>
+
+            <h3>Mutable Default Values (Revisited)</h3>
+            <p>
+                We've already seen how mutable default values can cause unexpected behavior. Let's look at a few more examples to reinforce this important concept:
+            </p>
+            <pre><code>
+# File: mutable_defaults_expanded.py
+# Location: /python_projects/functions_tutorial/
+
+# Problem: Mutable default accumulating values
+def add_user_problematic(user, users_list=[]):
+    users_list.append(user)
+    return users_list
+
+# Solution 1: Use None and create a new list inside
+def add_user_solution1(user, users_list=None):
+    if users_list is None:
+        users_list = []
+    users_list.append(user)
+    return users_list
+
+# Solution 2: Use a factory function to create fresh defaults
+def get_empty_list():
+    return []
+
+def add_user_solution2(user, users_list=None):
+    users_list = users_list if users_list is not None else get_empty_list()
+    users_list.append(user)
+    return users_list
+
+# Testing the problematic function
+print("Problematic function:")
+print(add_user_problematic("Alice"))  # ['Alice']
+print(add_user_problematic("Bob"))    # ['Alice', 'Bob']
+print(add_user_problematic("Charlie"))  # ['Alice', 'Bob', 'Charlie']
+
+# Testing Solution 1
+print("\nSolution 1:")
+print(add_user_solution1("Alice"))  # ['Alice']
+print(add_user_solution1("Bob"))    # ['Bob']
+print(add_user_solution1("Charlie"))  # ['Charlie']
+
+# Testing Solution 2
+print("\nSolution 2:")
+print(add_user_solution2("Alice"))  # ['Alice']
+print(add_user_solution2("Bob"))    # ['Bob']
+print(add_user_solution2("Charlie"))  # ['Charlie']
+</code></pre>
+            <p>
+                Remember: The default value is evaluated only once, when the function is defined. For mutable objects like lists, dictionaries, and sets, always use <code>None</code> as the default value and create a new instance inside the function.
+            </p>
+
+            <h3>Order-Dependent Parameters</h3>
+            <pre><code>
+# File: parameter_order_issues.py
+# Location: /python_projects/functions_tutorial/
+
+# Problem: Confusing parameter order
+def create_user_problematic(name, admin=False, email=None, active=True):
+    """
+    Create a user with hard-to-remember parameter order.
+    
+    This can lead to confusion when trying to use specific defaults while
+    overriding others.
+    """
+    user = {
+        "name": name,
+        "admin": admin,
+        "email": email,
+        "active": active
+    }
+    return user
+
+# Solution: Group related parameters together
+def create_user_better(
+    name,
+    email=None,
+    # Account status parameters
+    active=True,
+    verified=False,
+    # Permission parameters
+    admin=False,
+    role="user"
+):
+    """
+    Create a user with a more logical parameter order.
+    
+    Parameters are grouped by their purpose, making it easier to remember
+    which comes first.
+    """
+    user = {
+        "name": name,
+        "email": email,
+        "active": active,
+        "verified": verified,
+        "admin": admin,
+        "role": role
+    }
+    return user
+
+# Problem demonstration
+user1 = create_user_problematic("Alice", True)  # Is this True for admin or email?
+print(f"User 1: {user1}")
+
+# Was the intent to make an inactive admin or an active admin with an email?
+user2 = create_user_problematic("Bob", True, "bob@example.com", False)
+print(f"User 2: {user2}")
+
+# Better approach demonstration
+user3 = create_user_better("Charlie", admin=True)  # Clearly an admin
+print(f"User 3: {user3}")
+
+user4 = create_user_better(
+    "Dave",
+    email="dave@example.com",
+    active=False,
+    role="editor"
+)  # Clear parameter purposes
+print(f"User 4: {user4}")
+</code></pre>
+            <p>
+                To avoid confusion with parameter order:
+            </p>
+            <ul>
+                <li>Group related parameters together</li>
+                <li>Use descriptive parameter names</li>
+                <li>Encourage the use of keyword arguments for clarity</li>
+                <li>Consider breaking complex functions into smaller, more focused functions</li>
+            </ul>
+
+            <h3>Overusing Default Parameters</h3>
+            <pre><code>
+# File: overusing_defaults.py
+# Location: /python_projects/functions_tutorial/
+
+# Problem: Too many default parameters
+def configure_application_problematic(
+    app_name="MyApp",
+    version="1.0",
+    log_level="INFO",
+    log_file="app.log",
+    log_format="[%(levelname)s] %(asctime)s - %(message)s",
+    max_log_size=10485760,
+    log_backups=5,
+    database_host="localhost",
+    database_port=5432,
+    database_name="app_db",
+    database_user="app_user",
+    database_password=None,
+    database_pool_size=10,
+    database_timeout=30,
+    cache_enabled=True,
+    cache_type="memory",
+    cache_location="/tmp/cache",
+    cache_max_size=1073741824,
+    http_port=8080,
+    https_port=8443,
+    ssl_cert=None,
+    ssl_key=None,
+    # ... and many more parameters
+):
+    """
+    An example of a function with too many default parameters.
+    This becomes hard to use and maintain.
+    """
+    config = {
+        "app": {
+            "name": app_name,
+            "version": version
+        },
+        "logging": {
+            "level": log_level,
+            "file": log_file,
+            "format": log_format,
+            "max_size": max_log_size,
+            "backups": log_backups
+        },
+        "database": {
+            "host": database_host,
+            "port": database_port,
+            "name": database_name,
+            "user": database_user,
+            "password": database_password,
+            "pool_size": database_pool_size,
+            "timeout": database_timeout
+        },
+        "cache": {
+            "enabled": cache_enabled,
+            "type": cache_type,
+            "location": cache_location,
+            "max_size": cache_max_size
+        },
+        "http": {
+            "port": http_port,
+            "https_port": https_port,
+            "ssl_cert": ssl_cert,
+            "ssl_key": ssl_key
+        }
+    }
+    return config
+
+# Solution: Use configuration objects and builder pattern
+class LoggingConfig:
+    def __init__(
+        self,
+        level="INFO",
+        file="app.log",
+        format="[%(levelname)s] %(asctime)s - %(message)s",
+        max_size=10485760,
+        backups=5
+    ):
+        self.level = level
+        self.file = file
+        self.format = format
+        self.max_size = max_size
+        self.backups = backups
+    
+    def to_dict(self):
+        return {
+            "level": self.level,
+            "file": self.file,
+            "format": self.format,
+            "max_size": self.max_size,
+            "backups": self.backups
+        }
+
+class DatabaseConfig:
+    def __init__(
+        self,
+        host="localhost",
+        port=5432,
+        name="app_db",
+        user="app_user",
+        password=None,
+        pool_size=10,
+        timeout=30
+    ):
+        self.host = host
+        self.port = port
+        self.name = name
+        self.user = user
+        self.password = password
+        self.pool_size = pool_size
+        self.timeout = timeout
+    
+    def to_dict(self):
+        return {
+            "host": self.host,
+            "port": self.port,
+            "name": self.name,
+            "user": self.user,
+            "password": self.password,
+            "pool_size": self.pool_size,
+            "timeout": self.timeout
+        }
+
+def configure_application_better(
+    app_name="MyApp",
+    version="1.0",
+    logging_config=None,
+    database_config=None,
+    cache_enabled=True,
+    http_port=8080
+):
+    """
+    A better approach using configuration objects.
+    """
+    if logging_config is None:
+        logging_config = LoggingConfig()
+    
+    if database_config is None:
+        database_config = DatabaseConfig()
+    
+    config = {
+        "app": {
+            "name": app_name,
+            "version": version
+        },
+        "logging": logging_config.to_dict(),
+        "database": database_config.to_dict(),
+        "cache": {
+            "enabled": cache_enabled
+        },
+        "http": {
+            "port": http_port
+        }
+    }
+    return config
+
+# Using the problematic function
+config1 = configure_application_problematic(
+    app_name="MyService",
+    database_host="db.example.com",
+    log_level="DEBUG"
+)
+# This call is hard to read and prone to errors
+
+# Using the better approach
+config2 = configure_application_better(
+    app_name="MyService",
+    logging_config=LoggingConfig(level="DEBUG"),
+    database_config=DatabaseConfig(host="db.example.com")
+)
+# This call is more structured and readable
+
+print("Using too many parameters can lead to confusing function calls and maintenance issues.")
+print("Instead, group related parameters into configuration objects.")
+</code></pre>
+            <p>
+                When a function has too many parameters:
+            </p>
+            <ul>
+                <li>Consider grouping related parameters into configuration objects</li>
+                <li>Break the function into smaller, more focused functions</li>
+                <li>Use the builder pattern to construct complex objects</li>
+                <li>Consider using a configuration file or environment variables for rarely changed settings</li>
+            </ul>
+        </section>
+
+        <section class="keyboard_arguments">
+            <h2>Default Parameters and Keyword Arguments</h2>
+            <p>
+                Default parameters work particularly well with keyword arguments, which allow you to specify parameter names explicitly when calling a function:
+            </p>
+            <pre><code>
+# File: keyword_arguments.py
+# Location: /python_projects/functions_tutorial/
+
+def format_address(
+    street,
+    city,
+    state,
+    postal_code,
+    country="USA",
+    apartment=None,
+    is_residential=True
+):
+    """Format an address with default country and optional apartment."""
+    address_parts = [street]
+    
+    if apartment:
+        address_parts[0] += f", Apt {apartment}"
+    
+    address_parts.append(f"{city}, {state} {postal_code}")
+    address_parts.append(country)
+    
+    formatted = "\n".join(address_parts)
+    
+    if is_residential:
+        return formatted
+    else:
+        return f"Commercial Address:\n{formatted}"
+
+# Using positional arguments only (must provide all required parameters in order)
+address1 = format_address(
+    "123 Main St",
+    "Springfield",
+    "IL",
+    "62701"
+)
+
+# Using keyword arguments (can specify in any order and skip defaults)
+address2 = format_address(
+    city="New York",
+    postal_code="10001",
+    street="456 Park Ave",
+    state="NY",
+    apartment="3B"
+)
+
+# Mix of positional and keyword arguments
+address3 = format_address(
+    "789 Oak Dr",
+    "Los Angeles",
+    "CA",
+    "90001",
+    country="USA",
+    is_residential=False
+)
+
+print("Address 1:")
+print(address1)
+print("\nAddress 2:")
+print(address2)
+print("\nAddress 3:")
+print(address3)
+</code></pre>
+            <p>
+                Keyword arguments are particularly useful when:
+            </p>
+            <ul>
+                <li>A function has many parameters</li>
+                <li>You want to override some default values but keep others</li>
+                <li>The order of parameters is hard to remember</li>
+                <li>You want to make your code more self-documenting</li>
+            </ul>
+            <p>
+                It's a common convention to use positional arguments for required parameters and keyword arguments for optional parameters with defaults.
+            </p>
+        </section>
+
+        <section class="python_versions">
+            <h2>Default Parameters Across Python Versions</h2>
+            <p>
+                Default parameters have been a core feature of Python since the beginning, but there have been some improvements in how they work in newer Python versions:
+            </p>
+
+            <h3>Python 3.8+: The Walrus Operator and Default Values</h3>
+            <pre><code>
+# File: walrus_defaults.py
+# Location: /python_projects/functions_tutorial/
+
+# Python 3.8+ allows the walrus operator (:=) in default expressions
+def connect_database(
+    config=None,
+    conn_str=None,
+    timeout=(default_timeout := 30)
+):
+    """
+    Connect to a database, demonstrating the walrus operator for defaults.
+    
+    This is a Python 3.8+ feature.
+    """
+    print(f"Default timeout is: {default_timeout}")
+    
+    if config is None and conn_str is None:
+        raise ValueError("Must provide either config or conn_str")
+    
+    # Function implementation would go here
+    
+    # The walrus operator allows us to reference the default value
+    # both inside and outside the function
+    if timeout != default_timeout:
+        print(f"Using custom timeout: {timeout}")
+    else:
+        print(f"Using default timeout: {timeout}")
+
+# Using the function
+connect_database(conn_str="postgresql://localhost/mydb")
+connect_database(conn_str="postgresql://localhost/mydb", timeout=60)
+</code></pre>
+            <p>
+                The walrus operator (<code>:=</code>) allows you to assign a value to a variable as part of an expression. In the context of default parameters, it lets you define a default value that can be referenced elsewhere in the function or in other functions.
+            </p>
+
+            <h3>Type Hints with Default Values</h3>
+            <pre><code>
+# File: typed_defaults.py
+# Location: /python_projects/functions_tutorial/
+
+from typing import List, Dict, Optional, Union, Any
+
+def process_data(
+    data: List[Any],
+    fields: Optional[List[str]] = None,
+    normalize: bool = True,
+    output_format: str = "json"
+) -> Dict[str, Any]:
+    """
+    Process data with typed parameters and defaults.
+    
+    Args:
+        data: The data to process
+        fields: Fields to include in the output (None for all)
+        normalize: Whether to normalize the data
+        output_format: Format for the output ("json", "xml", "csv")
+    
+    Returns:
+        Processed data as a dictionary
+    """
+    if fields is None:
+        fields = []
+    
+    result = {
+        "processed": True,
+        "item_count": len(data),
+        "normalized": normalize,
+        "format": output_format
+    }
+    
+    # Function implementation would go here
+    
+    return result
+
+# The function can be called the same way,
+# but now editors and type checkers can provide better hints and checks
+result = process_data([1, 2, 3], normalize=False)
+print(result)
+</code></pre>
+            <p>
+                Type hints, introduced in Python 3.5 and enhanced in later versions, allow you to specify the expected types of parameters and return values. They're particularly useful with default parameters, as they make it clear what type of value should be provided when overriding the default.
+            </p>
+        </section>
+
+        <section class="conclusion">
+            <h2>Conclusion: Mastering Default Parameters</h2>
+            <p>
+                Default parameters are a powerful feature that can make your Python functions more flexible, user-friendly, and robust. Here's a summary of what we've learned:
+            </p>
+            <ul>
+                <li><strong>Default parameters make functions more convenient</strong> by allowing parameters to be optional with sensible fallback values.</li>
+                <li><strong>Required parameters must come before default parameters</strong> in the function definition.</li>
+                <li><strong>Default values are evaluated once at function definition time</strong>, which can cause issues with mutable default values.</li>
+                <li><strong>Use <code>None</code> as the default for mutable parameters</strong> and create a new instance inside the function.</li>
+                <li><strong>Default parameters work well with keyword arguments</strong>, making function calls more readable and flexible.</li>
+                <li><strong>Good default values are safe, conservative, explicit, and performant.</strong></li>
+                <li><strong>Default parameters enable progressive complexity</strong>, allowing functions to grow in capabilities while remaining simple for basic use cases.</li>
+            </ul>
+            <p>
+                By mastering default parameters, you'll be able to create functions that are both powerful and easy to use, accommodating both novice users who want simplicity and advanced users who need flexibility.
+            </p>
+            <p>
+                Remember, the goal of good function design is to make common cases easy and uncommon cases possible. Default parameters are a key tool for achieving this balance.
+            </p>
+        </section>
+
+        <section class="practice_exercises">
+            <h2>Practice Exercises</h2>
+            <p>
+                To solidify your understanding of default parameters, try these exercises:
+            </p>
+            <ol>
+                <li>Create a function <code>format_name</code> that takes first name, last name, and optional parameters for title, middle name, and suffix, returning a properly formatted full name.</li>
+                <li>Write a <code>create_rectangle</code> function that takes width and height parameters with sensible defaults, and returns the area and perimeter.</li>
+                <li>Implement a <code>filter_list</code> function that filters items from a list based on various criteria (e.g., min/max values, specific types) with default values for the criteria.</li>
+                <li>Create a <code>send_notification</code> function with parameters for recipient, message, and optional parameters for notification type, priority, and expiration.</li>
+                <li>Implement a function to generate a random password with parameters for length, and whether to include lowercase, uppercase, digits, and special characters, all with sensible defaults.</li>
+            </ol>
+        </section>
+
+        <section class="further_reading">
+            <h2>Further Reading</h2>
+            <ul>
+                <li>Python Documentation: <a href="https://docs.python.org/3/tutorial/controlflow.html#default-argument-values" target="_blank">Default Argument Values</a></li>
+                <li>Python Documentation: <a href="https://docs.python.org/3/reference/compound_stmts.html#function-definitions" target="_blank">Function Definitions</a></li>
+                <li>Python Documentation: <a href="https://docs.python.org/3/reference/expressions.html#calls" target="_blank">Calls</a></li>
+                <li>Article: <a href="https://realpython.com/python-kwargs-and-args/" target="_blank">Packing and Unpacking Arguments in Python</a></li>
+                <li>Book: "Fluent Python" by Luciano Ramalho (Chapters on Functions)</li>
+                <li>Book: "Clean Code" by Robert C. Martin (Chapter on Functions)</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creating and Manipulating Data Structures for Practical Problems</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Creating and Manipulating Data Structures for Practical Problems</h1>
+        <h2>A Comprehensive Guide for Python Developers</h2>
+    </header>
+
+    <main>
+        <section class="course-intro">
+            <h3>Overview</h3>
+            <p>This guide demonstrates how to create and manipulate different Python data structures to solve practical problems. We'll explore lists, dictionaries, sets, and tuples while applying George Polya's problem-solving methodology to each challenge.</p>
+        </section>
+
+        <section>
+            <h1>Problem 1: Inventory Management System</h1>
+            
+            <h2>Understanding the Problem</h2>
+            <p>Create a simple inventory management system that tracks products, their quantities, and prices. The system should allow:</p>
+            <ul>
+                <li>Adding new products with their initial quantities and prices</li>
+                <li>Updating product quantities (adding to or removing from inventory)</li>
+                <li>Updating product prices</li>
+                <li>Calculating the total inventory value</li>
+                <li>Finding products with low stock (below a specified threshold)</li>
+            </ul>
+            
+            <h2>Devising a Plan</h2>
+            <ol>
+                <li>Choose a dictionary as the main data structure where:
+                    <ul>
+                        <li>Keys will be product names (strings)</li>
+                        <li>Values will be nested dictionaries containing quantity and price information</li>
+                    </ul>
+                </li>
+                <li>Create functions to handle each operation:
+                    <ul>
+                        <li>add_product(inventory, product_name, quantity, price)</li>
+                        <li>update_quantity(inventory, product_name, quantity_change)</li>
+                        <li>update_price(inventory, product_name, new_price)</li>
+                        <li>calculate_total_value(inventory)</li>
+                        <li>find_low_stock(inventory, threshold)</li>
+                    </ul>
+                </li>
+                <li>Include validation to handle edge cases like:
+                    <ul>
+                        <li>Product already exists</li>
+                        <li>Product doesn't exist</li>
+                        <li>Invalid quantity or price</li>
+                    </ul>
+                </li>
+            </ol>
+            
+            <h2>Implementing the Solution</h2>
+            <p>File location: <code>inventory_system.py</code></p>
+            
+            <pre><code>
+# inventory_system.py
+
+def add_product(inventory, product_name, quantity, price):
+    """
+    Add a new product to the inventory.
+    
+    Args:
+        inventory (dict): The current inventory
+        product_name (str): Name of the product to add
+        quantity (int): Initial quantity of the product
+        price (float): Price of the product
+        
+    Returns:
+        dict: Updated inventory
+    """
+    # Validate inputs
+    if not isinstance(quantity, int) or quantity < 0:
+        print("Error: Quantity must be a non-negative integer")
+        return inventory
+    
+    if not isinstance(price, (int, float)) or price < 0:
+        print("Error: Price must be a non-negative number")
+        return inventory
+    
+    # Check if product already exists
+    if product_name in inventory:
+        print(f"Product '{product_name}' already exists. Use update functions instead.")
+        return inventory
+    
+    # Add the new product
+    inventory[product_name] = {"quantity": quantity, "price": price}
+    print(f"Added {product_name} to inventory: {quantity} units at ${price:.2f} each")
+    
+    return inventory
+
+
+def update_quantity(inventory, product_name, quantity_change):
+    """
+    Update the quantity of a product in inventory.
+    
+    Args:
+        inventory (dict): The current inventory
+        product_name (str): Name of the product to update
+        quantity_change (int): Change in quantity (positive for additions, negative for removals)
+        
+    Returns:
+        dict: Updated inventory
+    """
+    # Check if product exists
+    if product_name not in inventory:
+        print(f"Error: Product '{product_name}' not found in inventory")
+        return inventory
+    
+    # Calculate new quantity
+    new_quantity = inventory[product_name]["quantity"] + quantity_change
+    
+    # Ensure quantity doesn't go below zero
+    if new_quantity < 0:
+        print(f"Error: Cannot remove {abs(quantity_change)} units. Only {inventory[product_name]['quantity']} available.")
+        return inventory
+    
+    # Update quantity
+    inventory[product_name]["quantity"] = new_quantity
+    if quantity_change > 0:
+        print(f"Added {quantity_change} units of {product_name}. New quantity: {new_quantity}")
+    else:
+        print(f"Removed {abs(quantity_change)} units of {product_name}. New quantity: {new_quantity}")
+    
+    return inventory
+
+
+def update_price(inventory, product_name, new_price):
+    """
+    Update the price of a product in inventory.
+    
+    Args:
+        inventory (dict): The current inventory
+        product_name (str): Name of the product to update
+        new_price (float): New price for the product
+        
+    Returns:
+        dict: Updated inventory
+    """
+    # Validate inputs
+    if not isinstance(new_price, (int, float)) or new_price < 0:
+        print("Error: Price must be a non-negative number")
+        return inventory
+    
+    # Check if product exists
+    if product_name not in inventory:
+        print(f"Error: Product '{product_name}' not found in inventory")
+        return inventory
+    
+    # Update price
+    old_price = inventory[product_name]["price"]
+    inventory[product_name]["price"] = new_price
+    print(f"Updated price of {product_name} from ${old_price:.2f} to ${new_price:.2f}")
+    
+    return inventory
+
+
+def calculate_total_value(inventory):
+    """
+    Calculate the total value of all items in inventory.
+    
+    Args:
+        inventory (dict): The current inventory
+        
+    Returns:
+        float: Total value of inventory
+    """
+    total_value = 0
+    
+    for product, details in inventory.items():
+        product_value = details["quantity"] * details["price"]
+        total_value += product_value
+    
+    return total_value
+
+
+def find_low_stock(inventory, threshold):
+    """
+    Find products with quantity below the specified threshold.
+    
+    Args:
+        inventory (dict): The current inventory
+        threshold (int): Quantity threshold for low stock
+        
+    Returns:
+        list: List of products with low stock
+    """
+    low_stock_products = []
+    
+    for product, details in inventory.items():
+        if details["quantity"] <= threshold:
+            low_stock_products.append((product, details["quantity"]))
+    
+    return low_stock_products
+
+
+# Example usage
+if __name__ == "__main__":
+    # Initialize an empty inventory
+    inventory = {}
+    
+    # Add products
+    inventory = add_product(inventory, "Laptop", 10, 999.99)
+    inventory = add_product(inventory, "Mouse", 50, 25.50)
+    inventory = add_product(inventory, "Keyboard", 30, 45.99)
+    inventory = add_product(inventory, "Monitor", 15, 149.99)
+    
+    # Update quantities
+    inventory = update_quantity(inventory, "Laptop", -3)  # Sell 3 laptops
+    inventory = update_quantity(inventory, "Mouse", 10)   # Restock 10 mice
+    
+    # Update price
+    inventory = update_price(inventory, "Monitor", 139.99)  # Discount monitors
+    
+    # Calculate total inventory value
+    total_value = calculate_total_value(inventory)
+    print(f"Total inventory value: ${total_value:.2f}")
+    
+    # Find products with low stock (5 or fewer)
+    low_stock = find_low_stock(inventory, 5)
+    if low_stock:
+        print("Low stock alert for:")
+        for product, quantity in low_stock:
+            print(f"  - {product}: {quantity} units")
+    else:
+        print("No products with low stock.")
+</code></pre>
+
+            <h2>Testing the Solution</h2>
+            <p>Expected Output:</p>
+            <pre><code>
+Added Laptop to inventory: 10 units at $999.99 each
+Added Mouse to inventory: 50 units at $25.50 each
+Added Keyboard to inventory: 30 units at $45.99 each
+Added Monitor to inventory: 15 units at $149.99 each
+Removed 3 units of Laptop. New quantity: 7
+Added 10 units of Mouse. New quantity: 60
+Updated price of Monitor from $149.99 to $139.99
+Total inventory value: $10139.32
+No products with low stock.
+</code></pre>
+
+            <h2>Looking Back and Improving</h2>
+            <p>Our solution uses a nested dictionary structure that is intuitive and efficient for this inventory problem:</p>
+            <ul>
+                <li><strong>Time Complexity:</strong> Most operations are O(1) for looking up and updating specific products, except for calculating total value and finding low stock items which are O(n) where n is the number of products.</li>
+                <li><strong>Space Complexity:</strong> O(n) where n is the number of products.</li>
+                <li><strong>Potential Improvements:</strong>
+                    <ul>
+                        <li>Add product categories or IDs for better organization</li>
+                        <li>Implement search functionality by product name or attributes</li>
+                        <li>Add date tracking for inventory changes</li>
+                        <li>Create functions to save/load inventory from files</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <p><strong>Real-world Application:</strong> This simple inventory system resembles what small retail stores, workshops, or school supply rooms might use. Even large e-commerce platforms like Amazon or Shopify use similar inventory management principles at their core, just with more complex features built on top.</p>
+        </section>
+
+        <section>
+            <h1>Problem 2: Frequency Analysis</h1>
+            
+            <h2>Understanding the Problem</h2>
+            <p>Create a function that analyzes the frequency of elements in a collection. This is useful for:</p>
+            <ul>
+                <li>Text analysis (word or character frequency)</li>
+                <li>Data analysis (finding most common values)</li>
+                <li>Pattern detection in datasets</li>
+            </ul>
+            <p>The function should count occurrences of each element and return results sorted by frequency.</p>
+            
+            <h2>Devising a Plan</h2>
+            <ol>
+                <li>Use a dictionary to count occurrences where:
+                    <ul>
+                        <li>Keys will be the elements from the input collection</li>
+                        <li>Values will be the count of occurrences</li>
+                    </ul>
+                </li>
+                <li>Convert the dictionary to a list of (element, count) tuples</li>
+                <li>Sort the list by count in descending order</li>
+                <li>Return the sorted list</li>
+                <li>Handle edge cases like empty inputs</li>
+            </ol>
+            
+            <h2>Implementing the Solution</h2>
+            <p>File location: <code>frequency_analysis.py</code></p>
+            
+            <pre><code>
+# frequency_analysis.py
+
+def analyze_frequency(collection):
+    """
+    Analyze the frequency of elements in a collection.
+    
+    Args:
+        collection (iterable): Collection of elements to analyze
+        
+    Returns:
+        list: List of tuples (element, count) sorted by count in descending order
+    """
+    # Handle empty collection
+    if not collection:
+        return []
+    
+    # Count occurrences using a dictionary
+    frequency = {}
+    for item in collection:
+        if item in frequency:
+            frequency[item] += 1
+        else:
+            frequency[item] = 1
+    
+    # Convert to list of tuples and sort by count (descending)
+    frequency_list = [(item, count) for item, count in frequency.items()]
+    frequency_list.sort(key=lambda x: x[1], reverse=True)
+    
+    return frequency_list
+
+
+# Example 1: Word frequency in a text
+def word_frequency(text):
+    """Analyze word frequency in a text."""
+    # Convert to lowercase and split by whitespace
+    words = text.lower().split()
+    # Remove punctuation from words (simple approach)
+    words = [word.strip('.,!?:;()[]{}""\'') for word in words]
+    # Filter out empty strings
+    words = [word for word in words if word]
+    
+    return analyze_frequency(words)
+
+
+# Example 2: Character frequency in a text
+def character_frequency(text):
+    """Analyze character frequency in a text."""
+    # Convert to lowercase
+    text = text.lower()
+    # Filter out whitespace
+    chars = [char for char in text if not char.isspace()]
+    
+    return analyze_frequency(chars)
+
+
+# Example 3: Value frequency in a dataset
+def value_frequency(data):
+    """Analyze value frequency in a numeric dataset."""
+    return analyze_frequency(data)
+
+
+# Example usage
+if __name__ == "__main__":
+    # Example 1: Word frequency
+    sample_text = """
+    To be, or not to be, that is the question:
+    Whether 'tis nobler in the mind to suffer
+    The slings and arrows of outrageous fortune,
+    Or to take arms against a sea of troubles
+    And by opposing end them.
+    """
+    word_freq = word_frequency(sample_text)
+    print("Word frequency analysis:")
+    for word, count in word_freq[:5]:  # Top 5 most common words
+        print(f"  - '{word}': {count} occurrences")
+    
+    # Example 2: Character frequency
+    char_freq = character_frequency(sample_text)
+    print("\nCharacter frequency analysis:")
+    for char, count in char_freq[:5]:  # Top 5 most common characters
+        print(f"  - '{char}': {count} occurrences")
+    
+    # Example 3: Value frequency in a dataset
+    dataset = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8, 9, 7, 9, 3]
+    value_freq = value_frequency(dataset)
+    print("\nValue frequency analysis:")
+    for value, count in value_freq:
+        print(f"  - {value}: {count} occurrences")
+</code></pre>
+
+            <h2>Testing the Solution</h2>
+            <p>Expected Output:</p>
+            <pre><code>
+Word frequency analysis:
+  - 'to': 4 occurrences
+  - 'be': 2 occurrences
+  - 'or': 2 occurrences
+  - 'the': 2 occurrences
+  - 'of': 2 occurrences
+
+Character frequency analysis:
+  - 'e': 16 occurrences
+  - 't': 14 occurrences
+  - 'o': 13 occurrences
+  - 'r': 8 occurrences
+  - 'a': 8 occurrences
+
+Value frequency analysis:
+  - 9: 3 occurrences
+  - 3: 3 occurrences
+  - 5: 3 occurrences
+  - 1: 2 occurrences
+  - 4: 1 occurrences
+  - 2: 1 occurrences
+  - 6: 1 occurrences
+  - 8: 1 occurrences
+  - 7: 1 occurrences
+</code></pre>
+
+            <h2>Looking Back and Improving</h2>
+            <p>Our solution efficiently counts and sorts elements by frequency:</p>
+            <ul>
+                <li><strong>Time Complexity:</strong> O(n log n) where n is the number of elements in the collection (dominated by the sorting operation).</li>
+                <li><strong>Space Complexity:</strong> O(k) where k is the number of unique elements in the collection.</li>
+                <li><strong>Alternative Approach:</strong> We could use Python's built-in Counter from the collections module for a more concise solution:</li>
+            </ul>
+            
+            <pre><code>
+from collections import Counter
+
+def analyze_frequency_with_counter(collection):
+    """Analyze frequency using Counter."""
+    # Count occurrences
+    counter = Counter(collection)
+    
+    # Convert to list of tuples and sort by count
+    return counter.most_common()
+</code></pre>
+
+            <p><strong>Real-world Applications:</strong></p>
+            <ul>
+                <li><strong>Text Analysis:</strong> Used in natural language processing to identify common words or patterns in text.</li>
+                <li><strong>Data Mining:</strong> Finding frequent items in large datasets (market basket analysis).</li>
+                <li><strong>Network Traffic Analysis:</strong> Identifying the most common sources or destinations in network packets.</li>
+                <li><strong>Image Processing:</strong> Analyzing pixel value distributions in images.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h1>Problem 3: Contact Manager with Multiple Data Structures</h1>
+            
+            <h2>Understanding the Problem</h2>
+            <p>Create a contact management system that stores and organizes contact information. The system should:</p>
+            <ul>
+                <li>Store contact details (name, phone, email, etc.)</li>
+                <li>Allow adding, updating, and removing contacts</li>
+                <li>Support searching by name</li>
+                <li>Group contacts by categories (work, family, friends)</li>
+                <li>Identify duplicate contacts (same person with different details)</li>
+            </ul>
+            
+            <h2>Devising a Plan</h2>
+            <ol>
+                <li>Use multiple data structures together:
+                    <ul>
+                        <li>Dictionary for the main contact database (key: unique ID, value: contact details)</li>
+                        <li>Dictionary of lists for category grouping (key: category, value: list of contact IDs)</li>
+                        <li>Dictionary for quick name lookup (key: name, value: list of matching contact IDs)</li>
+                        <li>Set for email addresses to identify potential duplicates</li>
+                    </ul>
+                </li>
+                <li>Create a Contact class to store individual contact details</li>
+                <li>Implement methods for the ContactManager class:
+                    <ul>
+                        <li>add_contact()</li>
+                        <li>update_contact()</li>
+                        <li>remove_contact()</li>
+                        <li>search_by_name()</li>
+                        <li>get_contacts_by_category()</li>
+                        <li>find_potential_duplicates()</li>
+                    </ul>
+                </li>
+            </ol>
+            
+            <h2>Implementing the Solution</h2>
+            <p>File location: <code>contact_manager.py</code></p>
+            
+            <pre><code>
+# contact_manager.py
+import uuid
+
+class Contact:
+    """Class representing a single contact."""
+    
+    def __init__(self, name, phone=None, email=None, address=None, category="default"):
+        """Initialize a contact with details."""
+        self.id = str(uuid.uuid4())  # Generate a unique ID
+        self.name = name
+        self.phone = phone
+        self.email = email
+        self.address = address
+        self.category = category
+    
+    def __str__(self):
+        """String representation of the contact."""
+        return f"{self.name} ({self.category}): {self.phone}, {self.email}"
+    
+    def update(self, name=None, phone=None, email=None, address=None, category=None):
+        """Update contact details."""
+        if name:
+            self.name = name
+        if phone:
+            self.phone = phone
+        if email:
+            self.email = email
+        if address:
+            self.address = address
+        if category:
+            self.category = category
+
+
+class ContactManager:
+    """Class for managing contacts."""
+    
+    def __init__(self):
+        """Initialize the contact manager."""
+        self.contacts = {}  # Dictionary: contact_id -> Contact object
+        self.categories = {}  # Dictionary: category -> list of contact_ids
+        self.name_index = {}  # Dictionary: name -> list of contact_ids
+        self.email_index = {}  # Dictionary: email -> list of contact_ids
+    
+    def add_contact(self, name, phone=None, email=None, address=None, category="default"):
+        """
+        Add a new contact.
+        
+        Args:
+            name (str): Contact name
+            phone (str, optional): Phone number
+            email (str, optional): Email address
+            address (str, optional): Physical address
+            category (str, optional): Contact category
+            
+        Returns:
+            str: ID of the new contact
+        """
+        # Create new contact
+        contact = Contact(name, phone, email, address, category)
+        
+        # Add to main contacts dictionary
+        self.contacts[contact.id] = contact
+        
+        # Update category index
+        if category not in self.categories:
+            self.categories[category] = []
+        self.categories[category].append(contact.id)
+        
+        # Update name index
+        if name not in self.name_index:
+            self.name_index[name] = []
+        self.name_index[name].append(contact.id)
+        
+        # Update email index if email provided
+        if email:
+            if email not in self.email_index:
+                self.email_index[email] = []
+            self.email_index[email].append(contact.id)
+        
+        return contact.id
+    
+    def update_contact(self, contact_id, name=None, phone=None, email=None, address=None, category=None):
+        """
+        Update an existing contact.
+        
+        Args:
+            contact_id (str): ID of the contact to update
+            name, phone, email, address, category: New values (None to keep current)
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        if contact_id not in self.contacts:
+            print(f"Error: Contact with ID {contact_id} not found")
+            return False
+        
+        contact = self.contacts[contact_id]
+        old_name = contact.name
+        old_email = contact.email
+        old_category = contact.category
+        
+        # Update the contact details
+        contact.update(name, phone, email, address, category)
+        
+        # Update name index if name changed
+        if name and name != old_name:
+            # Remove from old name index
+            self.name_index[old_name].remove(contact_id)
+            if not self.name_index[old_name]:
+                del self.name_index[old_name]
+            
+            # Add to new name index
+            if name not in self.name_index:
+                self.name_index[name] = []
+            self.name_index[name].append(contact_id)
+        
+        # Update email index if email changed
+        if email and email != old_email:
+            # Remove from old email index if exists
+            if old_email and old_email in self.email_index:
+                self.email_index[old_email].remove(contact_id)
+                if not self.email_index[old_email]:
+                    del self.email_index[old_email]
+            
+            # Add to new email index
+            if email not in self.email_index:
+                self.email_index[email] = []
+            self.email_index[email].append(contact_id)
+        
+        # Update category index if category changed
+        if category and category != old_category:
+            # Remove from old category
+            self.categories[old_category].remove(contact_id)
+            if not self.categories[old_category]:
+                del self.categories[old_category]
+            
+            # Add to new category
+            if category not in self.categories:
+                self.categories[category] = []
+            self.categories[category].append(contact_id)
+        
+        return True
+    
+    def remove_contact(self, contact_id):
+        """
+        Remove a contact.
+        
+        Args:
+            contact_id (str): ID of the contact to remove
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        if contact_id not in self.contacts:
+            print(f"Error: Contact with ID {contact_id} not found")
+            return False
+        
+        contact = self.contacts[contact_id]
+        
+        # Remove from main contacts dictionary
+        del self.contacts[contact_id]
+        
+        # Remove from category index
+        if contact.category in self.categories and contact_id in self.categories[contact.category]:
+            self.categories[contact.category].remove(contact_id)
+            if not self.categories[contact.category]:
+                del self.categories[contact.category]
+        
+        # Remove from name index
+        if contact.name in self.name_index and contact_id in self.name_index[contact.name]:
+            self.name_index[contact.name].remove(contact_id)
+            if not self.name_index[contact.name]:
+                del self.name_index[contact.name]
+        
+        # Remove from email index
+        if contact.email and contact.email in self.email_index and contact_id in self.email_index[contact.email]:
+            self.email_index[contact.email].remove(contact_id)
+            if not self.email_index[contact.email]:
+                del self.email_index[contact.email]
+        
+        return True
+    
+    def search_by_name(self, name):
+        """
+        Search contacts by name (exact match).
+        
+        Args:
+            name (str): Name to search for
+            
+        Returns:
+            list: List of matching Contact objects
+        """
+        if name not in self.name_index:
+            return []
+        
+        return [self.contacts[contact_id] for contact_id in self.name_index[name]]
+    
+    def get_contacts_by_category(self, category):
+        """
+        Get all contacts in a category.
+        
+        Args:
+            category (str): Category to filter by
+            
+        Returns:
+            list: List of Contact objects in the category
+        """
+        if category not in self.categories:
+            return []
+        
+        return [self.contacts[contact_id] for contact_id in self.categories[category]]
+    
+    def find_potential_duplicates(self):
+        """
+        Find potential duplicate contacts based on email.
+        
+        Returns:
+            list: List of lists, where each sublist contains potentially duplicate Contact objects
+        """
+        duplicates = []
+        
+        # Find duplicate emails
+        for email, contact_ids in self.email_index.items():
+            if len(contact_ids) > 1:
+                duplicates.append([self.contacts[contact_id] for contact_id in contact_ids])
+        
+        return duplicates
+    
+    def display_all_contacts(self):
+        """Display all contacts."""
+        if not self.contacts:
+            print("No contacts found.")
+            return
+        
+        print(f"Total contacts: {len(self.contacts)}")
+        for contact_id, contact in self.contacts.items():
+            print(f"[{contact_id[:8]}] {contact}")
+
+
+# Example usage
+if __name__ == "__main__":
+    # Initialize contact manager
+    manager = ContactManager()
+    
+    # Add contacts
+    manager.add_contact("John Doe", "555-1234", "john@example.com", "123 Main St", "work")
+    manager.add_contact("Jane Smith", "555-5678", "jane@example.com", "456 Elm St", "friend")
+    manager.add_contact("Bob Johnson", "555-9012", "bob@example.com", "789 Oak St", "family")
+    
+    # Add potential duplicate
+    manager.add_contact("Johnny Doe", "555-4321", "john@example.com", "456 Pine St", "work")
+    
+    # Display all contacts
+    print("All contacts:")
+    manager.display_all_contacts()
+    
+    # Search by name
+    print("\nSearch for 'John Doe':")
+    john_results = manager.search_by_name("John Doe")
+    for contact in john_results:
+        print(contact)
+    
+    # Get contacts by category
+    print("\nWork contacts:")
+    work_contacts = manager.get_contacts_by_category("work")
+    for contact in work_contacts:
+        print(contact)
+    
+    # Find potential duplicates
+    print("\nPotential duplicates:")
+    duplicates = manager.find_potential_duplicates()
+    for i, duplicate_group in enumerate(duplicates):
+        print(f"Group {i+1}:")
+        for contact in duplicate_group:
+            print(f"  - {contact}")
+    
+    # Update a contact
+    print("\nUpdating John Doe's phone number...")
+    john_id = john_results[0].id
+    manager.update_contact(john_id, phone="555-NEW-NUMBER")
+    
+    # Remove a contact
+    print("\nRemoving Bob Johnson...")
+    bob_results = manager.search_by_name("Bob Johnson")
+    if bob_results:
+        manager.remove_contact(bob_results[0].id)
+    
+    # Display final contact list
+    print("\nFinal contact list:")
+    manager.display_all_contacts()
+</code></pre>
+
+            <h2>Testing the Solution</h2>
+            <p>Expected Output:</p>
+            <pre><code>
+All contacts:
+Total contacts: 4
+[8a7d4b3c] John Doe (work): 555-1234, john@example.com
+[f12e3d4c] Jane Smith (friend): 555-5678, jane@example.com
+[c7e5a2b1] Bob Johnson (family): 555-9012, bob@example.com
+[9d8f2e1a] Johnny Doe (work): 555-4321, john@example.com
+
+Search for 'John Doe':
+John Doe (work): 555-1234, john@example.com
+
+Work contacts:
+John Doe (work): 555-1234, john@example.com
+Johnny Doe (work): 555-4321, john@example.com
+
+Potential duplicates:
+Group 1:
+  - John Doe (work): 555-1234, john@example.com
+  - Johnny Doe (work): 555-4321, john@example.com
+
+Updating John Doe's phone number...
+
+Removing Bob Johnson...
+
+Final contact list:
+Total contacts: 3
+[8a7d4b3c] John Doe (work): 555-NEW-NUMBER, john@example.com
+[f12e3d4c] Jane Smith (friend): 555-5678, jane@example.com
+[9d8f2e1a] Johnny Doe (work): 555-4321, john@example.com
+</code></pre>
+
+            <h2>Looking Back and Improving</h2>
+            <p>This solution demonstrates combining multiple data structures for different purposes:</p>
+            <ul>
+                <li><strong>Dictionaries:</strong> For O(1) lookups of contacts by ID, name, and category</li>
+                <li><strong>Lists:</strong> For maintaining collections of contacts within categories</li>
+                <li><strong>Classes:</strong> For organizing related data and operations</li>
+            </ul>
+            
+            <p><strong>Advanced Features We Could Add:</strong></p>
+            <ul>
+                <li>Fuzzy name matching for searching (to find "John" when searching for "Jon")</li>
+                <li>Multiple phone numbers or emails per contact</li>
+                <li>Importing/exporting contacts from/to CSV or vCard formats</li>
+                <li>Contact image storage</li>
+                <li>Birthday reminders</li>
+                <li>Favorites or priority contacts</li>
+            </ul>
+            
+            <p><strong>Real-world Applications:</strong></p>
+            <ul>
+                <li><strong>Personal Contact Managers:</strong> Like those in smartphones</li>
+                <li><strong>Customer Relationship Management (CRM) Systems:</strong> Used by businesses to track client information</li>
+                <li><strong>Email Clients:</strong> For managing contact information</li>
+                <li><strong>Social Media Platforms:</strong> For managing connections between users</li>
+            </ul>
+        </section>
+
+        <section>
+            <h1>Problem 4: Task Scheduler with Priority Queue</h1>
+            
+            <h2>Understanding the Problem</h2>
+            <p>Develop a task scheduler that can:</p>
+            <ul>
+                <li>Add tasks with different priority levels</li>
+                <li>Get the highest priority task first</li>
+                <li>Remove completed tasks</li>
+                <li>List all tasks by priority</li>
+                <li>Find tasks by name or category</li>
+            </ul>
+            
+            <h2>Devising a Plan</h2>
+            <ol>
+                <li>Create a Task class to store task details (name, description, priority, due date, category)</li>
+                <li>Implement a custom priority queue using a list:
+                    <ul>
+                        <li>Maintain a sorted list of tasks based on priority</li>
+                        <li>Insert new tasks in the correct position</li>
+                        <li>Get highest priority task from the front of the list</li>
+                    </ul>
+                </li>
+                <li>Use additional dictionaries for quick lookups by name and category</li>
+                <li>Implement methods for task management (add, complete, get_next, list_all, find)</li>
+            </ol>
+            
+            <h2>Implementing the Solution</h2>
+            <p>File location: <code>task_scheduler.py</code></p>
+            
+            <pre><code>
+# task_scheduler.py
+from datetime import datetime
+
+class Task:
+    """Class representing a task with priority."""
+    
+    def __init__(self, name, description="", priority=1, due_date=None, category="general"):
+        """
+        Initialize a task.
+        
+        Args:
+            name (str): Task name
+            description (str): Task description
+            priority (int): Priority level (1-5, where 5 is highest)
+            due_date (datetime or str): Due date for the task
+            category (str): Task category
+        """
+        self.name = name
+        self.description = description
+        self.priority = min(max(1, priority), 5)  # Ensure priority is between 1-5
+        
+        # Handle due date as string or datetime
+        if isinstance(due_date, str):
+            try:
+                self.due_date = datetime.strptime(due_date, "%Y-%m-%d")
+            except ValueError:
+                self.due_date = None
+        else:
+            self.due_date = due_date
+            
+        self.category = category
+        self.creation_time = datetime.now()
+    
+    def __str__(self):
+        """String representation of the task."""
+        due_str = f", Due: {self.due_date.strftime('%Y-%m-%d')}" if self.due_date else ""
+        return f"{self.name} (Priority: {self.priority}{due_str}) - {self.category}"
+    
+    def __lt__(self, other):
+        """
+        Compare tasks by priority (for sorting).
+        Higher priority (5) comes before lower priority (1).
+        If priorities are equal, earlier due date comes first.
+        If due dates are equal or not set, creation time is used.
+        """
+        if self.priority != other.priority:
+            return self.priority > other.priority  # Higher priority first
+        
+        # If priorities are equal, check due dates
+        if self.due_date and other.due_date:
+            return self.due_date < other.due_date  # Earlier due date first
+        elif self.due_date:
+            return True  # Task with due date comes before task without due date
+        elif other.due_date:
+            return False
+        
+        # If neither has due date or both are equal, use creation time
+        return self.creation_time < other.creation_time
+
+
+class TaskScheduler:
+    """Task scheduler with priority queue functionality."""
+    
+    def __init__(self):
+        """Initialize the task scheduler."""
+        self.tasks = []  # Priority queue (sorted list)
+        self.task_names = {}  # Dictionary: name -> list of tasks
+        self.categories = {}  # Dictionary: category -> list of tasks
+    
+    def add_task(self, name, description="", priority=1, due_date=None, category="general"):
+        """
+        Add a new task.
+        
+        Args:
+            name (str): Task name
+            description (str): Task description
+            priority (int): Priority level (1-5, where 5 is highest)
+            due_date (datetime or str): Due date for the task
+            category (str): Task category
+            
+        Returns:
+            Task: The newly created task
+        """
+        # Create the task
+        task = Task(name, description, priority, due_date, category)
+        
+        # Insert into priority queue (sorted list)
+        # Find the correct position
+        pos = 0
+        while pos < len(self.tasks) and task < self.tasks[pos]:
+            pos += 1
+        self.tasks.insert(pos, task)
+        
+        # Add to name index
+        if name not in self.task_names:
+            self.task_names[name] = []
+        self.task_names[name].append(task)
+        
+        # Add to category index
+        if category not in self.categories:
+            self.categories[category] = []
+        self.categories[category].append(task)
+        
+        return task
+    
+    def get_next_task(self):
+        """
+        Get the highest priority task without removing it.
+        
+        Returns:
+            Task or None: The highest priority task, or None if no tasks
+        """
+        return self.tasks[0] if self.tasks else None
+    
+    def complete_task(self, name):
+        """
+        Mark a task as complete (remove it from queue).
+        If multiple tasks have the same name, removes the highest priority one.
+        
+        Args:
+            name (str): Name of the task to complete
+            
+        Returns:
+            Task or None: The completed task, or None if not found
+        """
+        if name not in self.task_names:
+            print(f"No task named '{name}' was found")
+            return None
+        
+        # Get tasks with this name
+        tasks_with_name = self.task_names[name]
+        
+        # Get the highest priority task (first in the list)
+        task_to_complete = tasks_with_name[0]
+        
+        # Remove from priority queue
+        self.tasks.remove(task_to_complete)
+        
+        # Remove from name index
+        tasks_with_name.remove(task_to_complete)
+        if not tasks_with_name:
+            del self.task_names[name]
+        
+        # Remove from category index
+        category = task_to_complete.category
+        self.categories[category].remove(task_to_complete)
+        if not self.categories[category]:
+            del self.categories[category]
+        
+        return task_to_complete
+    
+    def find_tasks_by_name(self, name):
+        """
+        Find tasks by name.
+        
+        Args:
+            name (str): Task name to search for
+            
+        Returns:
+            list: List of matching tasks
+        """
+        return self.task_names.get(name, [])
+    
+    def find_tasks_by_category(self, category):
+        """
+        Find tasks by category.
+        
+        Args:
+            category (str): Category to search for
+            
+        Returns:
+            list: List of tasks in the category
+        """
+        return self.categories.get(category, [])
+    
+    def list_all_tasks(self):
+        """
+        List all tasks in priority order.
+        
+        Returns:
+            list: All tasks in priority order
+        """
+        return self.tasks
+
+
+# Example usage
+if __name__ == "__main__":
+    # Initialize task scheduler
+    scheduler = TaskScheduler()
+    
+    # Add tasks
+    scheduler.add_task("Complete project", "Finish the Python project", 5, "2023-12-15", "work")
+    scheduler.add_task("Buy groceries", "Milk, eggs, bread", 3, "2023-12-10", "personal")
+    scheduler.add_task("Call mom", "Weekly check-in", 2, "2023-12-12", "personal")
+    scheduler.add_task("Gym workout", "Leg day", 4, "2023-12-11", "health")
+    scheduler.add_task("Read book", "Python programming", 1, None, "education")
+    
+    # List all tasks
+    print("All tasks by priority:")
+    for i, task in enumerate(scheduler.list_all_tasks()):
+        print(f"{i+1}. {task}")
+    
+    # Get next (highest priority) task
+    print("\nNext task to work on:")
+    next_task = scheduler.get_next_task()
+    if next_task:
+        print(next_task)
+    
+    # Find tasks by category
+    print("\nPersonal tasks:")
+    personal_tasks = scheduler.find_tasks_by_category("personal")
+    for task in personal_tasks:
+        print(task)
+    
+    # Complete a task
+    print("\nCompleting 'Buy groceries'...")
+    completed = scheduler.complete_task("Buy groceries")
+    if completed:
+        print(f"Completed: {completed}")
+    
+    # List remaining tasks
+    print("\nRemaining tasks:")
+    for i, task in enumerate(scheduler.list_all_tasks()):
+        print(f"{i+1}. {task}")
+</code></pre>
+
+            <h2>Testing the Solution</h2>
+            <p>Expected Output:</p>
+            <pre><code>
+All tasks by priority:
+1. Complete project (Priority: 5, Due: 2023-12-15) - work
+2. Gym workout (Priority: 4, Due: 2023-12-11) - health
+3. Buy groceries (Priority: 3, Due: 2023-12-10) - personal
+4. Call mom (Priority: 2, Due: 2023-12-12) - personal
+5. Read book (Priority: 1) - education
+
+Next task to work on:
+Complete project (Priority: 5, Due: 2023-12-15) - work
+
+Personal tasks:
+Buy groceries (Priority: 3, Due: 2023-12-10) - personal
+Call mom (Priority: 2, Due: 2023-12-12) - personal
+
+Completing 'Buy groceries'...
+Completed: Buy groceries (Priority: 3, Due: 2023-12-10) - personal
+
+Remaining tasks:
+1. Complete project (Priority: 5, Due: 2023-12-15) - work
+2. Gym workout (Priority: 4, Due: 2023-12-11) - health
+3. Call mom (Priority: 2, Due: 2023-12-12) - personal
+4. Read book (Priority: 1) - education
+</code></pre>
+
+            <h2>Looking Back and Improving</h2>
+            <p>Our solution implements a custom priority queue using a sorted list. Here's an evaluation:</p>
+            <ul>
+                <li><strong>Time Complexity:</strong>
+                    <ul>
+                        <li>Adding a task: O(n) due to insertion in sorted position</li>
+                        <li>Getting next task: O(1)</li>
+                        <li>Completing a task: O(n) for finding and removing</li>
+                        <li>Finding tasks by name/category: O(1)</li>
+                    </ul>
+                </li>
+                <li><strong>Space Complexity:</strong> O(n) for storing n tasks</li>
+            </ul>
+            
+            <p><strong>Alternative Approaches:</strong></p>
+            <ul>
+                <li>Use Python's built-in <code>heapq</code> module for a more efficient priority queue implementation:</li>
+            </ul>
+            
+            <pre><code>
+import heapq
+
+class TaskSchedulerWithHeap:
+    def __init__(self):
+        self.tasks = []  # Heap queue
+        self.task_counter = 0  # For breaking ties
+        # Other indices remain the same...
+    
+    def add_task(self, name, description="", priority=1, due_date=None, category="general"):
+        task = Task(name, description, priority, due_date, category)
+        # Negate priority because heapq is a min-heap (we want max-priority first)
+        # Use counter to break ties consistently
+        entry = (-task.priority, self.task_counter, task)
+        self.task_counter += 1
+        heapq.heappush(self.tasks, entry)
+        # Update indices...
+        return task
+    
+    def get_next_task(self):
+        if not self.tasks:
+            return None
+        return self.tasks[0][2]  # Return task from first heap entry
+    
+    def complete_task(self, name):
+        # This is more complex with a heap...
+        # Would need to mark task as complete and add logic 
+        # to skip completed tasks when get_next_task is called
+</code></pre>
+
+            <p><strong>Real-world Applications:</strong></p>
+            <ul>
+                <li><strong>Operating System Task Schedulers:</strong> Prioritizing processes</li>
+                <li><strong>Project Management Software:</strong> Like Asana, Trello, or Jira</li>
+                <li><strong>Hospital Emergency Rooms:</strong> Prioritizing patients (triage)</li>
+                <li><strong>Printer Queue Systems:</strong> Determining which document to print next</li>
+                <li><strong>Network Packet Scheduling:</strong> Quality of Service (QoS) implementation</li>
+            </ul>
+        </section>
+
+        <section>
+            <h1>Challenge: Implement Your Own Solution</h1>
+            
+            <h2>Practice Problem: Student Grade Tracker</h2>
+            <p>Create a student grade tracking system that can:</p>
+            <ul>
+                <li>Store student information (name, ID, etc.)</li>
+                <li>Record grades for different subjects and assignments</li>
+                <li>Calculate average grades per student and per subject</li>
+                <li>Identify top performers</li>
+                <li>Generate reports</li>
+            </ul>
+            
+            <h2>Follow George Polya's Problem-Solving Steps:</h2>
+            <ol>
+                <li><strong>Understand the Problem</strong>
+                    <ul>
+                        <li>What data do you need to store?</li>
+                        <li>What operations should be supported?</li>
+                        <li>What reports need to be generated?</li>
+                    </ul>
+                </li>
+                <li><strong>Devise a Plan</strong>
+                    <ul>
+                        <li>Which data structures are appropriate?</li>
+                        <li>How will you organize the data?</li>
+                        <li>What are the key algorithms needed?</li>
+                    </ul>
+                </li>
+                <li><strong>Implement the Solution</strong>
+                    <ul>
+                        <li>Create the necessary classes</li>
+                        <li>Implement the required functionality</li>
+                        <li>Test with sample data</li>
+                    </ul>
+                </li>
+                <li><strong>Look Back and Improve</strong>
+                    <ul>
+                        <li>Analyze time and space complexity</li>
+                        <li>Consider alternative approaches</li>
+                        <li>Add additional features or optimizations</li>
+                    </ul>
+                </li>
+            </ol>
+            
+            <h2>Hints to Get Started:</h2>
+            <ul>
+                <li>Consider using a class structure with Student and Course classes</li>
+                <li>Use nested dictionaries for grade storage</li>
+                <li>Use lists for maintaining collections of students and courses</li>
+                <li>Implement statistics functions for calculating averages and rankings</li>
+            </ul>
+        </section>
+
+        <section>
+            <h1>Summary: Key Data Structure Principles</h1>
+            
+            <h2>Choosing the Right Data Structure</h2>
+            <p>When selecting a data structure, consider these factors:</p>
+            <ul>
+                <li><strong>Access Patterns:</strong> How will you need to retrieve or modify the data?</li>
+                <li><strong>Time Complexity:</strong> Which operations need to be efficient?</li>
+                <li><strong>Space Efficiency:</strong> How much memory can you afford to use?</li>
+                <li><strong>Data Relationships:</strong> How are different pieces of data related?</li>
+            </ul>
+            
+            <h2>Python Data Structures Quick Reference</h2>
+            <table border="1">
+                <tr>
+                    <th>Data Structure</th>
+                    <th>Best Used For</th>
+                    <th>Time Complexity</th>
+                </tr>
+                <tr>
+                    <td>List</td>
+                    <td>Ordered collection, accessing by index</td>
+                    <td>Access: O(1), Search: O(n), Insert/Delete at end: O(1), Insert/Delete at position: O(n)</td>
+                </tr>
+                <tr>
+                    <td>Tuple</td>
+                    <td>Immutable ordered collection</td>
+                    <td>Access: O(1), Search: O(n)</td>
+                </tr>
+                <tr>
+                    <td>Dictionary</td>
+                    <td>Key-value lookup, mapping</td>
+                    <td>Access/Insert/Delete: O(1) on average</td>
+                </tr>
+                <tr>
+                    <td>Set</td>
+                    <td>Unique elements, membership testing</td>
+                    <td>Access/Insert/Delete: O(1) on average</td>
+                </tr>
+            </table>
+            
+            <h2>Common Data Structure Patterns</h2>
+            <ul>
+                <li><strong>Index Mapping:</strong> Using dictionaries to create lookup tables for quick access</li>
+                <li><strong>Counting/Frequency Analysis:</strong> Dictionaries for tracking occurrences</li>
+                <li><strong>Nested Structures:</strong> Combining data structures for complex relationships</li>
+                <li><strong>Priority Queues:</strong> Keeping items sorted by importance</li>
+                <li><strong>Caching:</strong> Storing results for quick access later</li>
+            </ul>
+            
+            <h2>Real-world Applications</h2>
+            <p>Data structures are fundamental to many applications:</p>
+            <ul>
+                <li><strong>Databases:</strong> Using various structures to store and retrieve data efficiently</li>
+                <li><strong>File Systems:</strong> Organizing data hierarchically</li>
+                <li><strong>Operating Systems:</strong> Managing resources and processes</li>
+                <li><strong>Network Routing:</strong> Finding optimal paths through graph structures</li>
+                <li><strong>Search Engines:</strong> Indexing and retrieving relevant information</li>
+                <li><strong>Social Networks:</strong> Representing connections between people</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building a Simple Request-Response Todo Application</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Building a Simple Request-Response Todo Application</h1>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <p>
+                Welcome to this hands-on exercise where we'll build a simple but complete Todo application that demonstrates the fundamental request-response cycle in web development. This exercise is designed to help you understand how clients and servers communicate through HTTP requests and responses.
+            </p>
+        </section>
+
+        <section class="problem_solving">
+            <h2>Solving The Challenge: George Polya's 4-Step Method</h2>
+            
+            <h3>Step 1: Understand the Problem</h3>
+            <p>We need to create a full-stack web application that demonstrates the request-response cycle. The application should:</p>
+            <ul>
+                <li>Display a list of tasks (todos)</li>
+                <li>Allow users to add new tasks</li>
+                <li>Allow users to mark tasks as completed</li>
+                <li>Allow users to delete tasks</li>
+                <li>Communicate with a backend server to persist data</li>
+                <li>Clearly demonstrate HTTP requests and responses</li>
+            </ul>
+
+            <h3>Step 2: Devise a Plan</h3>
+            <ol>
+                <li>Create a Flask backend application with REST API endpoints</li>
+                <li>Implement data storage (using an in-memory list for simplicity)</li>
+                <li>Create API endpoints for CRUD operations (Create, Read, Update, Delete)</li>
+                <li>Develop a frontend HTML page with CSS for styling</li>
+                <li>Implement JavaScript to interact with the API</li>
+                <li>Handle loading states and errors appropriately</li>
+                <li>Connect everything together to form a complete application</li>
+            </ol>
+
+            <h3>Step 3: Execute the Plan</h3>
+            <p>Let's implement our solution step by step:</p>
+        </section>
+
+        <section class="backend_implementation">
+            <h2>Backend Implementation</h2>
+            <p>First, we'll create our Flask backend application. Create a file named <code>app.py</code> in your project folder:</p>
+
+            <pre><code>
+# app.py
+from flask import Flask, jsonify, request, render_template
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)  # Allow cross-origin requests for this example
+
+# In-memory "database" for simplicity
+todos = [
+    {"id": 1, "task": "Learn HTML", "completed": True},
+    {"id": 2, "task": "Learn CSS", "completed": True},
+    {"id": 3, "task": "Learn JavaScript", "completed": False},
+    {"id": 4, "task": "Learn Python", "completed": False},
+    {"id": 5, "task": "Learn Flask", "completed": False}
+]
+
+# Serve the HTML page
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+# API endpoints
+@app.route('/api/todos', methods=['GET'])
+def get_todos():
+    # Return all todos
+    return jsonify(todos)
+
+@app.route('/api/todos/&lt;int:todo_id&gt;', methods=['GET'])
+def get_todo(todo_id):
+    # Find the specific todo
+    todo = next((t for t in todos if t['id'] == todo_id), None)
+    if todo:
+        return jsonify(todo)
+    return jsonify({"error": "Todo not found"}), 404
+
+@app.route('/api/todos', methods=['POST'])
+def create_todo():
+    # Create a new todo
+    if not request.json or 'task' not in request.json:
+        return jsonify({"error": "Invalid request"}), 400
+    
+    # Generate a new ID (in a real app, the database would handle this)
+    new_id = max(todo['id'] for todo in todos) + 1
+    
+    new_todo = {
+        "id": new_id,
+        "task": request.json['task'],
+        "completed": request.json.get('completed', False)
+    }
+    
+    todos.append(new_todo)
+    return jsonify(new_todo), 201
+
+@app.route('/api/todos/&lt;int:todo_id&gt;', methods=['PUT'])
+def update_todo(todo_id):
+    # Update an existing todo
+    todo = next((t for t in todos if t['id'] == todo_id), None)
+    if not todo:
+        return jsonify({"error": "Todo not found"}), 404
+        
+    if not request.json:
+        return jsonify({"error": "Invalid request"}), 400
+        
+    # Update fields if provided
+    if 'task' in request.json:
+        todo['task'] = request.json['task']
+    if 'completed' in request.json:
+        todo['completed'] = request.json['completed']
+        
+    return jsonify(todo)
+
+@app.route('/api/todos/&lt;int:todo_id&gt;', methods=['DELETE'])
+def delete_todo(todo_id):
+    # Delete a todo
+    global todos
+    initial_count = len(todos)
+    todos = [t for t in todos if t['id'] != todo_id]
+    
+    if len(todos) < initial_count:
+        return '', 204  # No content response for successful delete
+    return jsonify({"error": "Todo not found"}), 404
+
+if __name__ == '__main__':
+    app.run(debug=True)
+            </code></pre>
+
+            <h3>Backend Code Explanation</h3>
+            <p>Let's break down the key components of our Flask application:</p>
+
+            <h4>Setting Up Flask</h4>
+            <ul>
+                <li><code>Flask</code>: The core web framework</li>
+                <li><code>jsonify</code>: Converts Python dictionaries to JSON responses</li>
+                <li><code>request</code>: Provides access to incoming request data</li>
+                <li><code>render_template</code>: Renders HTML templates</li>
+                <li><code>CORS</code>: Enables Cross-Origin Resource Sharing (allows requests from different domains)</li>
+            </ul>
+
+            <h4>In-Memory Database</h4>
+            <p>For simplicity, we're using a Python list to store our todos instead of a real database. Each todo is a dictionary with three properties:</p>
+            <ul>
+                <li><code>id</code>: A unique identifier for the todo</li>
+                <li><code>task</code>: The text of the todo</li>
+                <li><code>completed</code>: A boolean indicating whether the todo is completed</li>
+            </ul>
+
+            <h4>API Endpoints</h4>
+            <p>Our API follows RESTful principles:</p>
+            <ul>
+                <li><code>GET /api/todos</code>: Retrieve all todos</li>
+                <li><code>GET /api/todos/&lt;id&gt;</code>: Retrieve a specific todo</li>
+                <li><code>POST /api/todos</code>: Create a new todo</li>
+                <li><code>PUT /api/todos/&lt;id&gt;</code>: Update an existing todo</li>
+                <li><code>DELETE /api/todos/&lt;id&gt;</code>: Delete a todo</li>
+            </ul>
+
+            <h4>HTTP Status Codes</h4>
+            <p>We're using appropriate HTTP status codes:</p>
+            <ul>
+                <li><code>200 OK</code>: Default success response (implicit with jsonify)</li>
+                <li><code>201 Created</code>: Successfully created a new resource</li>
+                <li><code>204 No Content</code>: Successfully processed request but no content to return</li>
+                <li><code>400 Bad Request</code>: Invalid request data</li>
+                <li><code>404 Not Found</code>: Resource not found</li>
+            </ul>
+        </section>
+
+        <section class="frontend_implementation">
+            <h2>Frontend Implementation</h2>
+            <p>Now, let's create our frontend. Create a folder named <code>templates</code> in your project folder, and inside it, create a file named <code>index.html</code>:</p>
+
+            <pre><code>
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Todo Application&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .todo-item.completed .task-text {
+            text-decoration: line-through;
+            color: #888;
+        }
+        .loading, .error {
+            padding: 20px;
+            text-align: center;
+        }
+        .loading {
+            color: #888;
+        }
+        .error {
+            color: #d9534f;
+        }
+        form {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 8px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #4cae4c;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Todo List&lt;/h1&gt;
+    
+    &lt;form id="todo-form"&gt;
+        &lt;input type="text" id="new-todo" placeholder="Add a new task..." required&gt;
+        &lt;button type="submit"&gt;Add&lt;/button&gt;
+    &lt;/form&gt;
+    
+    &lt;div id="loading" class="loading"&gt;Loading todos...&lt;/div&gt;
+    &lt;div id="error" class="error" style="display: none"&gt;&lt;/div&gt;
+    &lt;div id="todo-list"&gt;&lt;/div&gt;
+    
+    &lt;script&gt;
+        // Elements
+        const todoForm = document.getElementById('todo-form');
+        const newTodoInput = document.getElementById('new-todo');
+        const todoList = document.getElementById('todo-list');
+        const loadingElement = document.getElementById('loading');
+        const errorElement = document.getElementById('error');
+        
+        // API URL (would be configured for production)
+        const API_URL = '/api/todos';
+        
+        // Initialize the app
+        loadTodos();
+        
+        // Event listeners
+        todoForm.addEventListener('submit', handleFormSubmit);
+        
+        // Load all todos from the API
+        async function loadTodos() {
+            // Show loading state
+            loadingElement.style.display = 'block';
+            errorElement.style.display = 'none';
+            todoList.innerHTML = '';
+            
+            try {
+                // Make the request
+                const response = await fetch(API_URL);
+                
+                // Check for errors
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                // Parse the JSON response
+                const todos = await response.json();
+                
+                // Render todos
+                renderTodoList(todos);
+            } catch (error) {
+                // Show error message
+                console.error('Failed to load todos:', error);
+                errorElement.textContent = `Failed to load todos: ${error.message}`;
+                errorElement.style.display = 'block';
+            } finally {
+                // Hide loading state
+                loadingElement.style.display = 'none';
+            }
+        }
+        
+        // Render the todo list
+        function renderTodoList(todos) {
+            todoList.innerHTML = '';
+            
+            if (todos.length === 0) {
+                todoList.innerHTML = '&lt;p&gt;No todos yet. Add one above!&lt;/p&gt;';
+                return;
+            }
+            
+            todos.forEach(todo => {
+                const todoElement = document.createElement('div');
+                todoElement.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+                todoElement.innerHTML = `
+                    &lt;input type="checkbox" data-id="${todo.id}" ${todo.completed ? 'checked' : ''}&gt;
+                    &lt;span class="task-text"&gt;${todo.task}&lt;/span&gt;
+                    &lt;button class="delete-btn" data-id="${todo.id}"&gt;Delete&lt;/button&gt;
+                `;
+                
+                // Add event listeners
+                const checkbox = todoElement.querySelector('input[type="checkbox"]');
+                checkbox.addEventListener('change', () => toggleTodoComplete(todo.id, !todo.completed));
+                
+                const deleteBtn = todoElement.querySelector('.delete-btn');
+                deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
+                
+                todoList.appendChild(todoElement);
+            });
+        }
+        
+        // Handle form submission to create a new todo
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            const task = newTodoInput.value.trim();
+            if (!task) return;
+            
+            try {
+                // Show loading/disable form
+                todoForm.classList.add('loading');
+                newTodoInput.disabled = true;
+                
+                // Make the request
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ task })
+                });
+                
+                // Check for errors
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                // Clear the input
+                newTodoInput.value = '';
+                
+                // Reload todos to show the new one
+                loadTodos();
+            } catch (error) {
+                console.error('Failed to add todo:', error);
+                alert(`Failed to add todo: ${error.message}`);
+            } finally {
+                // Re-enable form
+                todoForm.classList.remove('loading');
+                newTodoInput.disabled = false;
+            }
+        }
+        
+        // Toggle a todo's completed status
+        async function toggleTodoComplete(id, completed) {
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ completed })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                // Update the UI
+                const todoItem = document.querySelector(`.todo-item [data-id="${id}"]`).closest('.todo-item');
+                if (completed) {
+                    todoItem.classList.add('completed');
+                } else {
+                    todoItem.classList.remove('completed');
+                }
+            } catch (error) {
+                console.error('Failed to update todo:', error);
+                alert(`Failed to update todo: ${error.message}`);
+                // Reload to ensure UI is in sync with server
+                loadTodos();
+            }
+        }
+        
+        // Delete a todo
+        async function deleteTodo(id) {
+            if (!confirm('Are you sure you want to delete this task?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                // Reload todos to update the list
+                loadTodos();
+            } catch (error) {
+                console.error('Failed to delete todo:', error);
+                alert(`Failed to delete todo: ${error.message}`);
+            }
+        }
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </code></pre>
+
+            <h3>Frontend Code Explanation</h3>
+            <p>Let's break down the key components of our frontend:</p>
+
+            <h4>HTML Structure</h4>
+            <ul>
+                <li>A form for adding new todos</li>
+                <li>Loading and error message containers</li>
+                <li>A container for the todo list</li>
+            </ul>
+
+            <h4>JavaScript Functionality</h4>
+            <p>Our JavaScript code handles:</p>
+            <ul>
+                <li><strong>API Communication</strong>: Using the Fetch API to send HTTP requests</li>
+                <li><strong>DOM Manipulation</strong>: Creating and updating elements on the page</li>
+                <li><strong>Event Handling</strong>: Responding to user interactions</li>
+                <li><strong>Error Handling</strong>: Gracefully handling errors in communication</li>
+            </ul>
+
+            <h4>Key Functions</h4>
+            <ul>
+                <li><code>loadTodos()</code>: Fetches all todos from the API and displays them</li>
+                <li><code>renderTodoList()</code>: Creates HTML elements for each todo</li>
+                <li><code>handleFormSubmit()</code>: Processes form submissions to create new todos</li>
+                <li><code>toggleTodoComplete()</code>: Updates a todo's completion status</li>
+                <li><code>deleteTodo()</code>: Removes a todo from the list</li>
+            </ul>
+
+            <h4>Request-Response Flow</h4>
+            <p>Each user action triggers a specific request-response flow:</p>
+            <ul>
+                <li><strong>Loading Todos</strong>: GET request → Server processes → JSON response → Render HTML</li>
+                <li><strong>Adding a Todo</strong>: User input → POST request → Server adds to list → 201 Created response → Reload list</li>
+                <li><strong>Completing a Todo</strong>: Checkbox click → PUT request → Server updates → 200 OK response → Update UI</li>
+                <li><strong>Deleting a Todo</strong>: Delete click → Confirmation → DELETE request → Server removes → 204 No Content response → Reload list</li>
+            </ul>
+        </section>
+
+        <section class="application_structure">
+            <h2>Project Structure</h2>
+            <p>Your project folder should look like this:</p>
+            <pre><code>
+todo_app/
+│
+├── app.py                 # Flask backend application
+│
+└── templates/
+    └── index.html         # Frontend HTML
+            </code></pre>
+        </section>
+
+        <section class="running_the_application">
+            <h2>Running the Application</h2>
+            <p>Follow these steps to run the application:</p>
+            <ol>
+                <li>Make sure you have Flask and Flask-CORS installed:</li>
+                <pre><code>pip install flask flask-cors</code></pre>
+
+                <li>Navigate to your project folder in the terminal/command prompt</li>
+
+                <li>Run the Flask application:</li>
+                <pre><code>python app.py</code></pre>
+
+                <li>Open your web browser and go to <code>http://127.0.0.1:5000</code></li>
+
+                <li>You should see the Todo application loaded with the initial todos</li>
+            </ol>
+        </section>
+
+        <section class="step4_review_solution">
+            <h2>Step 4: Review the Solution</h2>
+            <p>Let's review our solution and analyze what we've learned:</p>
+
+            <h3>The Request-Response Cycle in Action</h3>
+            <p>This application demonstrates the complete request-response cycle in several ways:</p>
+            <ul>
+                <li><strong>Initial Page Load</strong>:
+                    <ol>
+                        <li>Browser sends a GET request to the root URL</li>
+                        <li>Flask server responds with the HTML template</li>
+                        <li>Browser renders the HTML page</li>
+                        <li>JavaScript executes and sends a GET request to fetch todos</li>
+                        <li>Server responds with JSON data</li>
+                        <li>JavaScript updates the DOM with the todo items</li>
+                    </ol>
+                </li>
+                <li><strong>Adding a New Todo</strong>:
+                    <ol>
+                        <li>User enters text and submits the form</li>
+                        <li>JavaScript sends a POST request with JSON data</li>
+                        <li>Server adds the new todo and responds with the created todo</li>
+                        <li>JavaScript reloads the list to show the new item</li>
+                    </ol>
+                </li>
+                <li><strong>Marking as Complete</strong>:
+                    <ol>
+                        <li>User clicks a checkbox</li>
+                        <li>JavaScript sends a PUT request with updated status</li>
+                        <li>Server updates the todo and responds with the updated todo</li>
+                        <li>JavaScript updates the UI to reflect the change</li>
+                    </ol>
+                </li>
+                <li><strong>Deleting a Todo</strong>:
+                    <ol>
+                        <li>User clicks the delete button and confirms</li>
+                        <li>JavaScript sends a DELETE request</li>
+                        <li>Server removes the todo and responds with a 204 No Content</li>
+                        <li>JavaScript reloads the list to remove the deleted item</li>
+                    </ol>
+                </li>
+            </ul>
+
+            <h3>Key Concepts Demonstrated</h3>
+            <ul>
+                <li><strong>HTTP Methods</strong>: GET, POST, PUT, DELETE</li>
+                <li><strong>Status Codes</strong>: 200, 201, 204, 400, 404</li>
+                <li><strong>Content Types</strong>: HTML, JSON</li>
+                <li><strong>Error Handling</strong>: Client and server-side</li>
+                <li><strong>Asynchronous Requests</strong>: Using JavaScript's async/await</li>
+                <li><strong>State Management</strong>: Loading, success, and error states</li>
+            </ul>
+        </section>
+
+        <section class="improvements">
+            <h2>Possible Improvements</h2>
+            <p>While our solution works well, there are several ways it could be improved:</p>
+            <ul>
+                <li><strong>Persistent Storage</strong>: Replace the in-memory list with a database</li>
+                <li><strong>User Authentication</strong>: Add login/registration to manage user-specific todos</li>
+                <li><strong>Input Validation</strong>: Add more robust validation on both client and server</li>
+                <li><strong>Optimistic UI Updates</strong>: Update the UI before the server confirms to improve perceived performance</li>
+                <li><strong>Pagination</strong>: Add support for large numbers of todos</li>
+                <li><strong>Frontend Framework</strong>: Use React, Vue, or Angular for more complex UIs</li>
+            </ul>
+        </section>
+
+        <section class="real_world_applications">
+            <h2>Real-World Applications</h2>
+            <p>The request-response pattern is the foundation of most web applications:</p>
+            <ul>
+                <li><strong>E-commerce Sites</strong>: Product browsing, cart management, checkout process</li>
+                <li><strong>Social Media</strong>: Post creation, commenting, liking, sharing</li>
+                <li><strong>Banking Applications</strong>: Account information, transactions, transfers</li>
+                <li><strong>Content Management Systems</strong>: Article creation, editing, publishing</li>
+                <li><strong>Email Services</strong>: Composing, sending, receiving messages</li>
+            </ul>
+
+            <p>In all these cases, the underlying pattern is the same: the client makes requests to a server, which processes those requests and sends back appropriate responses.</p>
+        </section>
+
+        <section class="conclusion">
+            <h2>Conclusion</h2>
+            <p>
+                Through this exercise, we've built a complete web application that demonstrates the request-response cycle. We've seen how HTTP methods, status codes, and content types work together to create interactive web experiences. This fundamental pattern is the cornerstone of web development, and understanding it deeply will serve you well as you build more complex applications.
+            </p>
+            <p>
+                Remember that each user interaction typically triggers one or more request-response cycles, and properly managing these cycles—including loading states, error handling, and UI updates—is essential for creating responsive and user-friendly web applications.
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course</p>
+    </footer>
+</body>
+</html>

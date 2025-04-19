@@ -1103,7 +1103,7 @@ def get_products():
     return jsonify([p.to_dict() for p in products])
 
 # Cache with dynamic parameters
-@app.route('/api/product/<int:product_id>')
+@app.route('/api/product/&lt;int:product_id>')
 @cache.memoize(timeout=300)
 def get_product(product_id):
     # This result is cached based on the product_id argument
@@ -1225,7 +1225,7 @@ def get_products():
     })
 
 # Field filtering to reduce response size
-@app.route('/api/users/<int:user_id>')
+@app.route('/api/users/&lt;int:user_id>')
 def get_user(user_id):
     user = User.query.get_or_404(user_id)
     
@@ -1334,7 +1334,7 @@ def get_todos():
     # Return all todos
     return jsonify(todos)
 
-@app.route('/api/todos/<int:todo_id>', methods=['GET'])
+@app.route('/api/todos/&lt;int:todo_id>', methods=['GET'])
 def get_todo(todo_id):
     # Find the specific todo
     todo = next((t for t in todos if t['id'] == todo_id), None)
@@ -1360,7 +1360,7 @@ def create_todo():
     todos.append(new_todo)
     return jsonify(new_todo), 201
 
-@app.route('/api/todos/<int:todo_id>', methods=['PUT'])
+@app.route('/api/todos/&lt;int:todo_id>', methods=['PUT'])
 def update_todo(todo_id):
     # Update an existing todo
     todo = next((t for t in todos if t['id'] == todo_id), None)
@@ -1378,7 +1378,7 @@ def update_todo(todo_id):
         
     return jsonify(todo)
 
-@app.route('/api/todos/<int:todo_id>', methods=['DELETE'])
+@app.route('/api/todos/&lt;int:todo_id>', methods=['DELETE'])
 def delete_todo(todo_id):
     # Delete a todo
     global todos
@@ -1596,4 +1596,43 @@ if __name__ == '__main__':
                 }
                 
                 // Update the UI
-                const todoItem
+                const todoItem = document.querySelector(`.todo-item [data-id="${id}"]`).closest('.todo-item');
+                if (completed) {
+                    todoItem.classList.add('completed');
+                } else {
+                    todoItem.classList.remove('completed');
+                }
+            } catch (error) {
+                console.error('Failed to update todo:', error);
+                alert(`Failed to update todo: ${error.message}`);
+                // Reload to ensure UI is in sync with server
+                loadTodos();
+            }
+        }
+        
+        // Delete a todo
+        async function deleteTodo(id) {
+            if (!confirm('Are you sure you want to delete this task?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                // Reload todos to update the list
+                loadTodos();
+            } catch (error) {
+                console.error('Failed to delete todo:', error);
+                alert(`Failed to delete todo: ${error.message}`);
+            }
+        }
+
+    &lt;/script&gt; 
+</body>
+</html>

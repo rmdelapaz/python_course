@@ -1,2491 +1,1400 @@
-// Like button handler
-document.querySelectorAll('.like-button').forEach(button => {
-    button.addEventListener('click', function() {
-        const postId = this.dataset.postId;
-        const isLiked = this.classList.contains('active');
-        
-        // Optimistically update UI
-        this.classList.toggle('active');
-        const likeCount = this.querySelector('.like-count');
-        let count = parseInt(likeCount.textContent);
-        likeCount.textContent = isLiked ? count - 1 : count + 1;
-        
-        // Send AJAX request
-        fetch('/api/posts/like', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-            },
-            body: JSON.stringify({
-                post_id: postId,
-                action: isLiked ? 'unlike' : 'like'
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (!data.success) {
-                // Revert the optimistic update if there was an error
-                this.classList.toggle('active');
-                likeCount.textContent = count;
-                console.error('Like action failed:', data.message);
-            }
-        })
-        .catch(error => {
-            // Revert the optimistic update if there was an error
-            this.classList.toggle('active');
-            likeCount.textContent = count;
-            console.error('Like error:', error);
-        });
-    });
-});</code></pre>
-            
-            <h3>Live Search and Autocomplete</h3>
-            <p>Live search provides suggestions as users type, similar to a librarian who anticipates your needs by pulling books from shelves as you describe what you're looking for.</p>
-            
-            <pre><code>// Live search implementation
-const searchInput = document.getElementById('search-input');
-const suggestionsContainer = document.getElementById('search-suggestions');
-
-// Debounce function to limit API calls
-function debounce(func, wait) {
-    let timeout;
-    return function(...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), wait);
-    };
-}
-
-// Function to fetch search suggestions
-const fetchSuggestions = debounce(function(query) {
-    if (query.length < 2) {
-        suggestionsContainer.innerHTML = '';
-        suggestionsContainer.style.display = 'none';
-        return;
-    }
-    
-    fetch(`/api/search/suggestions?q=${encodeURIComponent(query)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.suggestions && data.suggestions.length > 0) {
-                // Create suggestions list
-                suggestionsContainer.innerHTML = '';
-                data.suggestions.forEach(suggestion => {
-                    const item = document.createElement('div');
-                    item.className = 'suggestion-item';
-                    item.innerHTML = suggestion.highlight 
-                        ? suggestion.highlight 
-                        : `<strong>${suggestion.text}</strong>`;
-                    item.addEventListener('click', () => {
-                        searchInput.value = suggestion.text;
-                        suggestionsContainer.innerHTML = '';
-                        suggestionsContainer.style.display = 'none';
-                        // Submit the search with the selected suggestion
-                        document.getElementById('search-form').submit();
-                    });
-                    suggestionsContainer.appendChild(item);
-                });
-                suggestionsContainer.style.display = 'block';
-            } else {
-                suggestionsContainer.innerHTML = '';
-                suggestionsContainer.style.display = 'none';
-            }
-        })
-        .catch(error => {
-            console.error('Search suggestion error:', error);
-            suggestionsContainer.innerHTML = '';
-            suggestionsContainer.style.display = 'none';
-        });
-}, 300); // 300ms delay
-
-// Add input event listener
-searchInput.addEventListener('input', function() {
-    const query = this.value.trim();
-    fetchSuggestions(query);
-});</code></pre>
-            
-            <h3>Progressive Form Filling</h3>
-            <p>Imagine a form that adapts to your input, like a smart document that automatically adds or removes sections based on your previous answers:</p>
-            
-            <pre><code>document.addEventListener('DOMContentLoaded', function() {
-    const deliveryMethodRadios = document.querySelectorAll('input[name="delivery_method"]');
-    const deliveryAddressSection = document.getElementById('delivery-address-section');
-    const pickupLocationSection = document.getElementById('pickup-location-section');
-    
-    deliveryMethodRadios.forEach(radio => {
-        radio.addEventListener('change', function() {
-            if (this.value === 'delivery') {
-                // Show delivery address fields
-                deliveryAddressSection.style.display = 'block';
-                pickupLocationSection.style.display = 'none';
-                
-                // Make address fields required
-                deliveryAddressSection.querySelectorAll('input').forEach(input => {
-                    input.required = true;
-                });
-                
-                // Make pickup fields not required
-                pickupLocationSection.querySelectorAll('select').forEach(select => {
-                    select.required = false;
-                });
-                
-                // Update shipping cost via AJAX
-                fetch('/api/shipping-cost', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-                    },
-                    body: JSON.stringify({
-                        delivery_method: 'delivery',
-                        subtotal: document.getElementById('subtotal').value
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('shipping-cost').textContent = data.shipping_cost;
-                    document.getElementById('order-total').textContent = data.total;
-                });
-            } else if (this.value === 'pickup') {
-                // Show pickup location fields
-                deliveryAddressSection.style.display = 'none';
-                pickupLocationSection.style.display = 'block';
-                
-                // Make address fields not required
-                deliveryAddressSection.querySelectorAll('input').forEach(input => {
-                    input.required = false;
-                });
-                
-                // Make pickup fields required
-                pickupLocationSection.querySelectorAll('select').forEach(select => {
-                    select.required = true;
-                });
-                
-                // Update shipping cost via AJAX (free for pickup)
-                fetch('/api/shipping-cost', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-                    },
-                    body: JSON.stringify({
-                        delivery_method: 'pickup',
-                        subtotal: document.getElementById('subtotal').value
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('shipping-cost').textContent = data.shipping_cost;
-                    document.getElementById('order-total').textContent = data.total;
-                });
-            }
-        });
-    });
-});</code></pre>
-        </section>
-
-        <section>
-            <h2>Common Challenges and Solutions</h2>
-            
-            <h3>Challenge: CSRF Protection</h3>
-            <p>CSRF (Cross-Site Request Forgery) attacks can occur when a malicious site tricks a user's browser into making unwanted requests to a site where the user is authenticated.</p>
-            
-            <p><strong>Solution:</strong> Include CSRF tokens in all AJAX requests:</p>
-            
-            <pre><code>// Get CSRF token from a meta tag
-const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-// Include it in your fetch requests
-fetch('/api/endpoint', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken
-    },
-    body: JSON.stringify(data)
-});</code></pre>
-            
-            <h3>Challenge: File Uploads with AJAX</h3>
-            <p>File uploads require special handling in AJAX requests.</p>
-            
-            <p><strong>Solution:</strong> Use FormData for file uploads:</p>
-            
-            <pre><code>document.getElementById('upload-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const fileInput = document.getElementById('file-input');
-    const progressBar = document.getElementById('upload-progress');
-    
-    if (!fileInput.files.length) {
-        alert('Please select a file to upload');
-        return;
-    }
-    
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
-    formData.append('csrf_token', document.querySelector('input[name="csrf_token"]').value);
-    
-    // Create and configure the AJAX request
-    const xhr = new XMLHttpRequest();
-    
-    // Setup progress tracking
-    xhr.upload.addEventListener('progress', function(e) {
-        if (e.lengthComputable) {
-            const percentComplete = (e.loaded / e.total) * 100;
-            progressBar.style.width = percentComplete + '%';
-            progressBar.textContent = Math.round(percentComplete) + '%';
-        }
-    });
-    
-    // Handle completion
-    xhr.addEventListener('load', function() {
-        if (xhr.status === 200) {
-            const response = JSON.parse(xhr.responseText);
-            if (response.success) {
-                document.getElementById('upload-status').textContent = 'Upload complete!';
-                document.getElementById('upload-result').innerHTML = `
-                    <a href="${response.file_url}" target="_blank">View Uploaded File</a>
-                `;
-            } else {
-                document.getElementById('upload-status').textContent = 'Upload failed: ' + response.message;
-            }
-        } else {
-            document.getElementById('upload-status').textContent = 'Upload failed with status: ' + xhr.status;
-        }
-    });
-    
-    // Handle errors
-    xhr.addEventListener('error', function() {
-        document.getElementById('upload-status').textContent = 'Upload failed due to network error';
-    });
-    
-    // Send the request
-    xhr.open('POST', '/api/upload', true);
-    xhr.send(formData);
-});</code></pre>
-            
-            <h3>Challenge: AJAX Form Validation</h3>
-            <p>Combining client-side and server-side validation can be tricky.</p>
-            
-            <p><strong>Solution:</strong> Implement a two-tier validation approach:</p>
-            
-            <pre><code>document.getElementById('registration-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    // First tier: Client-side validation
-    if (!validateFormClient()) {
-        return; // Stop if client validation fails
-    }
-    
-    // Show loading state
-    const submitBtn = document.getElementById('submit-btn');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
-    
-    // Collect form data
-    const formData = new FormData(this);
-    
-    // Second tier: Server-side validation via AJAX
-    fetch('/api/register', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Registration successful
-            window.location.href = data.redirect_url;
-        } else {
-            // Display server validation errors
-            displayServerErrors(data.errors);
-            
-            // Reset button
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Register';
-        }
-    })
-    .catch(error => {
-        console.error('Registration error:', error);
-        alert('An error occurred during registration. Please try again later.');
-        
-        // Reset button
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Register';
-    });
-    
-    function validateFormClient() {
-        // Clear previous errors
-        clearErrors();
-        
-        let valid = true;
-        
-        // Validate username
-        const username = document.getElementById('username');
-        if (!username.value.trim()) {
-            showError(username, 'Username is required');
-            valid = false;
-        } else if (username.value.length < 3) {
-            showError(username, 'Username must be at least 3 characters');
-            valid = false;
-        }
-        
-        // Validate email
-        const email = document.getElementById('email');
-        if (!email.value.trim()) {
-            showError(email, 'Email is required');
-            valid = false;
-        } else if (!email.value.includes('@')) {
-            showError(email, 'Please enter a valid email address');
-            valid = false;
-        }
-        
-        // Validate password
-        const password = document.getElementById('password');
-        if (!password.value) {
-            showError(password, 'Password is required');
-            valid = false;
-        } else if (password.value.length < 8) {
-            showError(password, 'Password must be at least 8 characters');
-            valid = false;
-        }
-        
-        // Validate password confirmation
-        const confirmPassword = document.getElementById('confirm_password');
-        if (password.value !== confirmPassword.value) {
-            showError(confirmPassword, 'Passwords do not match');
-            valid = false;
-        }
-        
-        return valid;
-    }
-    
-    function showError(input, message) {
-        input.classList.add('is-invalid');
-        const errorElement = input.nextElementSibling;
-        if (errorElement && errorElement.classList.contains('invalid-feedback')) {
-            errorElement.textContent = message;
-        }
-    }
-    
-    function clearErrors() {
-        document.querySelectorAll('.is-invalid').forEach(input => {
-            input.classList.remove('is-invalid');
-        });
-        document.querySelectorAll('.invalid-feedback').forEach(element => {
-            element.textContent = '';
-        });
-    }
-    
-    function displayServerErrors(errors) {
-        for (const field in errors) {
-            const input = document.getElementById(field);
-            if (input) {
-                showError(input, errors[field]);
-            }
-        }
-    }
-});</code></pre>
-            
-            <h3>Challenge: Managing AJAX Request States</h3>
-            <p>Complex applications may have multiple AJAX requests in progress at once.</p>
-            
-            <p><strong>Solution:</strong> Implement a simple request manager:</p>
-            
-            <pre><code>// AJAX Request Manager
-const RequestManager = {
-    // Store active requests
-    activeRequests: {},
-    
-    // Generate a unique ID for each request
-    generateRequestId: function() {
-        return Math.random().toString(36).substring(2, 15);
-    },
-    
-    // Add a request to the active list
-    addRequest: function(id, controller) {
-        this.activeRequests[id] = controller;
-        this.updateUI();
-    },
-    
-    // Remove a completed request
-    removeRequest: function(id) {
-        delete this.activeRequests[id];
-        this.updateUI();
-    },
-    
-    // Cancel a specific request
-    cancelRequest: function(id) {
-        if (this.activeRequests[id]) {
-            this.activeRequests[id].abort();
-            this.removeRequest(id);
-        }
-    },
-    
-    // Cancel all active requests
-    cancelAllRequests: function() {
-        for (const id in this.activeRequests) {
-            this.activeRequests[id].abort();
-        }
-        this.activeRequests = {};
-        this.updateUI();
-    },
-    
-    // Update the UI to reflect active requests
-    updateUI: function() {
-        const count = Object.keys(this.activeRequests).length;
-        const indicator = document.getElementById('ajax-indicator');
-        
-        if (count > 0) {
-            indicator.textContent = `${count} request${count > 1 ? 's' : ''} in progress`;
-            indicator.style.display = 'block';
-        } else {
-            indicator.style.display = 'none';
-        }
-    },
-    
-    // Perform a fetch request with tracking
-    fetch: function(url, options = {}) {
-        // Create an AbortController for this request
-        const controller = new AbortController();
-        const signal = controller.signal;
-        
-        // Generate a request ID
-        const requestId = this.generateRequestId();
-        
-        // Add the signal to options
-        options.signal = signal;
-        
-        // Add the request to our tracking
-        this.addRequest(requestId, controller);
-        
-        // Perform the fetch
-        return fetch(url, options)
-            .then(response => {
-                // Remove from tracking when complete
-                this.removeRequest(requestId);
-                return response;
-            })
-            .catch(error => {
-                // Remove from tracking on error
-                this.removeRequest(requestId);
-                throw error;
-            });
-    }
-};
-
-// Usage
-document.getElementById('search-button').addEventListener('click', function() {
-    const query = document.getElementById('search-input').value;
-    
-    RequestManager.fetch(`/api/search?q=${encodeURIComponent(query)}`)
-        .then(response => response.json())
-        .then(data => {
-            // Process search results
-        })
-        .catch(error => {
-            if (error.name === 'AbortError') {
-                console.log('Search was cancelled');
-            } else {
-                console.error('Search error:', error);
-            }
-        });
-});</code></pre>
-        </section>
-
-        <section>
-            <h2>Advanced Topics</h2>
-            
-            <h3>WebSockets for Real-Time Forms</h3>
-            <p>While AJAX is great for most form interactions, WebSockets provide true real-time communication. This is like the difference between sending text messages (AJAX) and having a phone call (WebSockets).</p>
-            
-            <p>WebSockets are ideal for collaborative forms where multiple users might be editing the same data simultaneously:</p>
-            
-            <pre><code>// WebSocket setup for collaborative editing
-const socket = new WebSocket('wss://example.com/ws/document/' + documentId);
-
-// Connection opened
-socket.addEventListener('open', function(event) {
-    console.log('Connected to document server');
-    document.getElementById('status-indicator').textContent = 'Connected';
-    document.getElementById('status-indicator').className = 'status-connected';
-});
-
-// Listen for messages
-socket.addEventListener('message', function(event) {
-    const data = JSON.parse(event.data);
-    
-    switch(data.type) {
-        case 'user_joined':
-            // Add user to active users list
-            addActiveUser(data.user);
-            break;
-            
-        case 'user_left':
-            // Remove user from active users list
-            removeActiveUser(data.user);
-            break;
-            
-        case 'field_update':
-            // Another user updated a field
-            updateFieldValue(data.field_id, data.value, data.user);
-            break;
-            
-        case 'field_locked':
-            // Another user is editing a field
-            lockField(data.field_id, data.user);
-            break;
-            
-        case 'field_unlocked':
-            // A field was unlocked
-            unlockField(data.field_id);
-            break;
-    }
-});
-
-// Handle form field focus
-document.querySelectorAll('.collaborative-field').forEach(field => {
-    field.addEventListener('focus', function() {
-        // Tell the server we're editing this field
-        socket.send(JSON.stringify({
-            type: 'lock_field',
-            field_id: this.id
-        }));
-    });
-    
-    field.addEventListener('blur', function() {
-        // Tell the server we're done editing this field
-        socket.send(JSON.stringify({
-            type: 'unlock_field',
-            field_id: this.id
-        }));
-    });
-    
-    field.addEventListener('input', function() {
-        // Tell the server about the change
-        socket.send(JSON.stringify({
-            type: 'update_field',
-            field_id: this.id,
-            value: this.value
-        }));
-    });
-});
-
-// Handle connection close
-socket.addEventListener('close', function(event) {
-    console.log('Disconnected from document server');
-    document.getElementById('status-indicator').textContent = 'Disconnected';
-    document.getElementById('status-indicator').className = 'status-disconnected';
-});
-
-// Helper functions
-function addActiveUser(user) {
-    const userList = document.getElementById('active-users');
-    const userElement = document.createElement('li');
-    userElement.id = `user-${user.id}`;
-    userElement.className = 'active-user';
-    userElement.innerHTML = `
-        <span class="user-avatar" style="background-color: ${user.color}">
-            ${user.initials}
-        </span>
-        <span class="user-name">${user.name}</span>
-    `;
-    userList.appendChild(userElement);
-}
-
-function removeActiveUser(user) {
-    const userElement = document.getElementById(`user-${user.id}`);
-    if (userElement) {
-        userElement.remove();
-    }
-}
-
-function updateFieldValue(fieldId, value, user) {
-    const field = document.getElementById(fieldId);
-    
-    // Only update if the field is not currently focused by the current user
-    if (field && document.activeElement !== field) {
-        field.value = value;
-        
-        // Show a visual indicator of the change
-        field.classList.add('remote-update');
-        setTimeout(() => {
-            field.classList.remove('remote-update');
-        }, 1000);
-        
-        // Show who made the change
-        const changeIndicator = field.nextElementSibling;
-        if (changeIndicator && changeIndicator.classList.contains('change-indicator')) {
-            changeIndicator.textContent = `Updated by ${user.name}`;
-            changeIndicator.style.display = 'block';
-            
-            setTimeout(() => {
-                changeIndicator.style.display = 'none';
-            }, 3000);
-        }
-    }
-}
-
-function lockField(fieldId, user) {
-    const field = document.getElementById(fieldId);
-    
-    // Only lock if the field is not currently focused by the current user
-    if (field && document.activeElement !== field) {
-        field.disabled = true;
-        field.classList.add('locked');
-        
-        // Show who locked the field
-        const lockIndicator = field.nextElementSibling;
-        if (lockIndicator && lockIndicator.classList.contains('lock-indicator')) {
-            lockIndicator.textContent = `Being edited by ${user.name}`;
-            lockIndicator.style.display = 'block';
-        }
-    }
-}
-
-function unlockField(fieldId) {
-    const field = document.getElementById(fieldId);
-    
-    if (field) {
-        field.disabled = false;
-        field.classList.remove('locked');
-        
-        // Hide the lock indicator
-        const lockIndicator = field.nextElementSibling;
-        if (lockIndicator && lockIndicator.classList.contains('lock-indicator')) {
-            lockIndicator.style.display = 'none';
-        }
-    }
-}</code></pre>
-            
-            <h3>Service Workers for Offline Forms</h3>
-            <p>What if users need to fill out forms without an internet connection? Service Workers can help by caching form submissions and syncing them when the connection is restored.</p>
-            
-            <p>This is like writing a postcard while hiking in the mountains, then sending it once you return to civilization:</p>
-            
-            <pre><code>// Register a service worker
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(registration => {
-            console.log('Service Worker registered with scope:', registration.scope);
-        })
-        .catch(error => {
-            console.error('Service Worker registration failed:', error);
-        });
-}
-
-// In the service worker file (sw.js)
-self.addEventListener('install', function(event) {
-    event.waitUntil(
-        caches.open('forms-cache-v1').then(function(cache) {
-            return cache.addAll([
-                '/',
-                '/styles/main.css',
-                '/scripts/forms.js',
-                '/offline.html'
-            ]);
-        })
-    );
-});
-
-self.addEventListener('fetch', function(event) {
-    event.respondWith(
-        caches.match(event.request).then(function(response) {
-            return response || fetch(event.request).catch(function() {
-                if (event.request.url.includes('api') && event.request.method === 'POST') {
-                    // Store form submissions for later
-                    return saveFormSubmission(event.request.clone())
-                        .then(() => {
-                            return new Response(JSON.stringify({
-                                success: true,
-                                offline: true,
-                                message: 'Your form has been saved and will be submitted when you are online.'
-                            }), {
-                                headers: {'Content-Type': 'application/json'}
-                            });
-                        });
-                }
-                
-                // Return offline page for page requests
-                if (event.request.headers.get('Accept').includes('text/html')) {
-                    return caches.match('/offline.html');
-                }
-            });
-        })
-    );
-});
-
-// Function to save form submissions in IndexedDB
-function saveFormSubmission(request) {
-    return request.json().then(formData => {
-        return new Promise((resolve, reject) => {
-            const dbOpenRequest = indexedDB.open('forms-db', 1);
-            
-            dbOpenRequest.onupgradeneeded = function(event) {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains('pending-submissions')) {
-                    db.createObjectStore('pending-submissions', { autoIncrement: true });
-                }
-            };
-            
-            dbOpenRequest.onsuccess = function(event) {
-                const db = event.target.result;
-                const transaction = db.transaction(['pending-submissions'], 'readwrite');
-                const store = transaction.objectStore('pending-submissions');
-                
-                const storeRequest = store.add({
-                    url: request.url,
-                    method: request.method,
-                    headers: Array.from(request.headers.entries()),
-                    data: formData,
-                    timestamp: Date.now()
-                });
-                
-                storeRequest.onsuccess = function() {
-                    resolve();
-                };
-                
-                storeRequest.onerror = function(error) {
-                    reject(error);
-                };
-            };
-            
-            dbOpenRequest.onerror = function(error) {
-                reject(error);
-            };
-        });
-    });
-}
-
-// When the browser comes back online, sync the stored submissions
-self.addEventListener('sync', function(event) {
-    if (event.tag === 'sync-forms') {
-        event.waitUntil(syncFormSubmissions());
-    }
-});
-
-function syncFormSubmissions() {
-    return new Promise((resolve, reject) => {
-        const dbOpenRequest = indexedDB.open('forms-db', 1);
-        
-        dbOpenRequest.onsuccess = function(event) {
-            const db = event.target.result;
-            const transaction = db.transaction(['pending-submissions'], 'readwrite');
-            const store = transaction.objectStore('pending-submissions');
-            
-            const getRequest = store.getAll();
-            
-            getRequest.onsuccess = function() {
-                const submissions = getRequest.result;
-                
-                // Process each submission
-                const submissionPromises = submissions.map(submission => {
-                    return fetch(submission.url, {
-                        method: submission.method,
-                        headers: new Headers(submission.headers),
-                        body: JSON.stringify(submission.data)
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            // If successful, remove from the store
-                            const deleteRequest = store.delete(submission.id);
-                            return new Promise((resolve, reject) => {
-                                deleteRequest.onsuccess = resolve;
-                                deleteRequest.onerror = reject;
-                            });
-                        }
-                    });
-                });
-                
-                resolve(Promise.all(submissionPromises));
-            };
-            
-            getRequest.onerror = reject;
-        };
-        
-        dbOpenRequest.onerror = reject;
-    });
-}
-
-// In your main JavaScript
-function submitFormWithBackground() {
-    document.getElementById('contact-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        const jsonData = {};
-        
-        formData.forEach((value, key) => {
-            jsonData[key] = value;
-        });
-        
-        fetch('/api/contact', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-            },
-            body: JSON.stringify(jsonData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.offline) {
-                // Show offline notification
-                showNotification('Form Saved', data.message, 'info');
-            } else if (data.success) {
-                // Show success notification
-                showNotification('Success', 'Your message has been sent.', 'success');
-                this.reset();
-            } else {
-                // Show error notification
-                showNotification('Error', data.message || 'An error occurred.', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Submission error:', error);
-            
-            // If offline, trigger background sync
-            if (!navigator.onLine) {
-                // Register a background sync
-                navigator.serviceWorker.ready.then(registration => {
-                    registration.sync.register('sync-forms');
-                });
-                
-                showNotification('Offline', 'You are currently offline. Your message will be sent when you are back online.', 'info');
-            } else {
-                showNotification('Error', 'An error occurred while sending your message.', 'error');
-            }
-        });
-    });
-}</code></pre>
-        </section>
-
-        <section>
-            <h2>Conclusion and Next Steps</h2>
-            
-            <p>In this tutorial, we've explored how AJAX form submissions can greatly enhance the user experience of your web applications. By handling form data asynchronously, you can create smoother, more responsive interfaces that feel more like desktop applications than traditional websites.</p>
-            
-            <p>We've covered:</p>
-            <ul>
-                <li>Setting up backend API routes to handle AJAX requests</li>
-                <li>Implementing basic AJAX form submission</li>
-                <li>Integrating AJAX with Flask-WTF for better validation</li>
-                <li>Adding real-time validation as users type</li>
-                <li>Building multi-step forms with progress saving</li>
-                <li>Exploring real-world applications and best practices</li>
-                <li>Solving common challenges in AJAX form implementation</li>
-                <li>Looking at advanced topics like WebSockets and offline support</li>
-            </ul>
-            
-            <h3>Next Steps</h3>
-            <p>To continue building your skills with AJAX and forms, consider exploring these topics:</p>
-            
-            <ul>
-                <li><strong>Form Accessibility</strong>: Ensure your AJAX forms work well with screen readers and keyboard navigation</li>
-                <li><strong>FormData and File Uploads</strong>: Dive deeper into handling file uploads with progress tracking</li>
-                <li><strong>Form Serialization Libraries</strong>: Explore libraries like Formidable.js that can simplify complex form handling</li>
-                <li><strong>Web Components</strong>: Create reusable form components with Shadow DOM and custom elements</li>            data.full_name = document.getElementById('full_name').value;
-            data.email = document.getElementById('email').value;
-            data.phone = document.getElementById('phone').value;
-            data.address = document.getElementById('address').value;
-        }
-        else if (step === 'education') {
-            // Collect education entries from form
-            data.education = collectEducationData();
-        }
-        else if (step === 'experience') {
-            // Collect experience entries from form
-            data.experience = collectExperienceData();
-        }
-        else if (step === 'skills') {
-            data.skills = document.getElementById('skills').value.split(',').map(s => s.trim()).filter(s => s);
-            // We'll handle the resume file separately since it needs a different type of request
-        }
-        // ... other steps ...
-        
-        // Send AJAX request to save progress
-        fetch(`/api/application/${applicationId}/save`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                saveStatus.textContent = `Last saved: ${data.updated_at}`;
-            } else {
-                saveStatus.textContent = 'Failed to save';
-                console.error('Save error:', data.message);
-            }
-        })
-        .catch(error => {
-            saveStatus.textContent = 'Failed to save';
-            console.error('Save error:', error);
-        });
-    }
-    
-    // Set up auto-save on input changes
-    function setupAutoSave(step) {
-        // Clear previous timer
-        clearTimeout(autoSaveTimer);
-        
-        // Get all inputs in the current step
-        const stepElement = document.querySelector(`.step[data-step="${step}"]`);
-        const inputs = stepElement.querySelectorAll('input, textarea, select');
-        
-        // Add change event listeners
-        inputs.forEach(input => {
-            input.addEventListener('change', () => {
-                clearTimeout(autoSaveTimer);
-                autoSaveTimer = setTimeout(() => {
-                    saveProgress(step);
-                }, 1000);
-            });
-            
-            input.addEventListener('input', () => {
-                clearTimeout(autoSaveTimer);
-                autoSaveTimer = setTimeout(() => {
-                    saveProgress(step);
-                }, 3000);
-            });
-        });
-        
-        // Also set up auto-save on custom components
-        if (step === 'education') {
-            setupEducationAutoSave();
-        }
-        else if (step === 'experience') {
-            setupExperienceAutoSave();
-        }
-    }
-    
-    // Function to set up navigation between steps
-    function setupStepNavigation() {
-        const steps = document.querySelectorAll('.step');
-        const nextButtons = document.querySelectorAll('.next-step');
-        const prevButtons = document.querySelectorAll('.prev-step');
-        const progressBar = document.querySelector('.progress-bar');
-        const navLinks = document.querySelectorAll('.nav-steps .nav-link');
-        
-        let currentStepIndex = 0;
-        
-        // Show initial step
-        showStep(currentStepIndex);
-        
-        // Setup next buttons
-        nextButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                // Validate current step
-                if (validateStep(steps[currentStepIndex].dataset.step)) {
-                    // Save progress before moving to next step
-                    saveProgress(steps[currentStepIndex].dataset.step);
-                    
-                    currentStepIndex++;
-                    showStep(currentStepIndex);
-                }
-            });
-        });
-        
-        // Setup previous buttons
-        prevButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                // Save progress before moving to previous step
-                saveProgress(steps[currentStepIndex].dataset.step);
-                
-                currentStepIndex--;
-                showStep(currentStepIndex);
-            });
-        });
-        
-        // Setup navigation links
-        navLinks.forEach((link, index) => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                
-                // Only allow navigation to completed steps or next step
-                if (index <= currentStepIndex + 1) {
-                    saveProgress(steps[currentStepIndex].dataset.step);
-                    currentStepIndex = index;
-                    showStep(currentStepIndex);
-                }
-            });
-        });
-        
-        function showStep(index) {
-            // Hide all steps
-            steps.forEach(step => {
-                step.classList.remove('active');
-            });
-            
-            // Show current step
-            steps[index].classList.add('active');
-            
-            // Update navigation
-            navLinks.forEach((link, i) => {
-                link.classList.remove('active');
-                if (i === index) {
-                    link.classList.add('active');
-                }
-            });
-            
-            // Setup auto-save for the current step
-            setupAutoSave(steps[index].dataset.step);
-            
-            // Update progress bar
-            const progress = ((index + 1) / steps.length) * 100;
-            progressBar.style.width = `${progress}%`;
-            progressBar.setAttribute('aria-valuenow', progress);
-            progressBar.textContent = `Step ${index + 1} of ${steps.length}`;
-            
-            // Update buttons visibility
-            prevButtons.forEach(button => {
-                button.style.display = index === 0 ? 'none' : 'inline-block';
-            });
-            
-            // Handle final submit button
-            if (index === steps.length - 1) {
-                setupSubmitHandler();
-                
-                // Update review section with current data
-                updateReviewSection();
-            }
-        }
-        
-        // Function to validate current step
-        function validateStep(step) {
-            let valid = true;
-            const stepElement = document.querySelector(`.step[data-step="${step}"]`);
-            
-            // Reset previous errors
-            stepElement.querySelectorAll('.is-invalid').forEach(el => {
-                el.classList.remove('is-invalid');
-                const feedback = el.nextElementSibling;
-                if (feedback && feedback.classList.contains('invalid-feedback')) {
-                    feedback.textContent = '';
-                }
-            });
-            
-            // Validate based on step
-            if (step === 'personal') {
-                // Personal info validation
-                const requiredFields = ['full_name', 'email', 'phone', 'address'];
-                requiredFields.forEach(field => {
-                    const input = document.getElementById(field);
-                    if (!input.value.trim()) {
-                        valid = false;
-                        input.classList.add('is-invalid');
-                        const feedback = input.nextElementSibling;
-                        if (feedback) {
-                            feedback.textContent = 'This field is required';
-                        }
-                    }
-                });
-                
-                // Email validation
-                const email = document.getElementById('email');
-                if (email.value.trim() && !email.value.includes('@')) {
-                    valid = false;
-                    email.classList.add('is-invalid');
-                    const feedback = email.nextElementSibling;
-                    if (feedback) {
-                        feedback.textContent = 'Please enter a valid email address';
-                    }
-                }
-            }
-            else if (step === 'education') {
-                // Education validation
-                const educationEntries = document.querySelectorAll('.education-entry');
-                if (educationEntries.length === 0) {
-                    valid = false;
-                    document.getElementById('education-error').textContent = 'Please add at least one education entry';
-                } else {
-                    document.getElementById('education-error').textContent = '';
-                }
-            }
-            // ... other validation rules ...
-            
-            return valid;
-        }
-        
-        // Setup submit handler for final step
-        function setupSubmitHandler() {
-            const submitBtn = document.getElementById('submit-application');
-            
-            submitBtn.addEventListener('click', () => {
-                // Final validation
-                if (validateStep('review')) {
-                    // Save final step
-                    saveProgress('review');
-                    
-                    // Show confirmation modal
-                    const modal = new bootstrap.Modal(document.getElementById('submit-confirmation-modal'));
-                    modal.show();
-                    
-                    // Handle final submit
-                    document.getElementById('confirm-submit').addEventListener('click', () => {
-                        // Show loading state
-                        document.getElementById('submit-spinner').style.display = 'inline-block';
-                        document.getElementById('confirm-submit').disabled = true;
-                        
-                        // Submit application
-                        fetch(`/api/application/${applicationId}/submit`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                // Redirect to confirmation page
-                                window.location.href = data.redirect_url;
-                            } else {
-                                // Show errors
-                                modal.hide();
-                                displaySubmissionErrors(data.errors);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Submit error:', error);
-                            modal.hide();
-                            alert('There was a problem submitting your application. Please try again later.');
-                        });
-                    });
-                }
-            });
-        }
-        
-        // Helper function to display submission errors
-        function displaySubmissionErrors(errors) {
-            if (!errors) return;
-            
-            // Show error alert
-            const errorAlert = document.getElementById('submission-errors');
-            errorAlert.style.display = 'block';
-            
-            // Populate error list
-            const errorList = document.getElementById('error-list');
-            errorList.innerHTML = '';
-            
-            Object.entries(errors).forEach(([field, message]) => {
-                const li = document.createElement('li');
-                li.textContent = message;
-                errorList.appendChild(li);
-                
-                // If the field is in the current step, highlight it
-                const input = document.getElementById(field);
-                if (input) {
-                    input.classList.add('is-invalid');
-                    const feedback = input.nextElementSibling;
-                    if (feedback && feedback.classList.contains('invalid-feedback')) {
-                        feedback.textContent = message;
-                    }
-                }
-                
-                // Navigate to appropriate step if needed
-                if (field === 'full_name' || field === 'email' || field === 'phone' || field === 'address') {
-                    currentStepIndex = 0;
-                } else if (field === 'education') {
-                    currentStepIndex = 1;
-                } else if (field === 'experience') {
-                    currentStepIndex = 2;
-                } else if (field === 'skills' || field === 'resume') {
-                    currentStepIndex = 3;
-                }
-            });
-            
-            // Show the step with errors
-            showStep(currentStepIndex);
-        }
-    }
-    
-    // Function to update the review section
-    function updateReviewSection() {
-        // Update personal info
-        document.getElementById('review-full-name').textContent = document.getElementById('full_name').value || 'Not provided';
-        document.getElementById('review-email').textContent = document.getElementById('email').value || 'Not provided';
-        document.getElementById('review-phone').textContent = document.getElementById('phone').value || 'Not provided';
-        document.getElementById('review-address').textContent = document.getElementById('address').value || 'Not provided';
-        
-        // Update education
-        const educationContainer = document.getElementById('review-education');
-        educationContainer.innerHTML = '';
-        
-        const educationData = collectEducationData();
-        if (educationData.length > 0) {
-            educationData.forEach(edu => {
-                const endDate = edu.current ? 'Present' : edu.end_date;
-                const educationEntry = document.createElement('div');
-                educationEntry.className = 'mb-3 pb-3 border-bottom';
-                educationEntry.innerHTML = `
-                    <h5>${edu.degree} in ${edu.field}</h5>
-                    <p>${edu.institution} (${edu.start_date} - ${endDate})</p>
-                `;
-                educationContainer.appendChild(educationEntry);
-            });
-        } else {
-            educationContainer.innerHTML = '<p>No education entries provided</p>';
-        }
-        
-        // Update experience
-        const experienceContainer = document.getElementById('review-experience');
-        experienceContainer.innerHTML = '';
-        
-        const experienceData = collectExperienceData();
-        if (experienceData.length > 0) {
-            experienceData.forEach(exp => {
-                const endDate = exp.current ? 'Present' : exp.end_date;
-                const experienceEntry = document.createElement('div');
-                experienceEntry.className = 'mb-3 pb-3 border-bottom';
-                experienceEntry.innerHTML = `
-                    <h5>${exp.position} at ${exp.company}</h5>
-                    <p>${exp.location} (${exp.start_date} - ${endDate})</p>
-                    <p>${exp.description || ''}</p>
-                `;
-                experienceContainer.appendChild(experienceEntry);
-            });
-        } else {
-            experienceContainer.innerHTML = '<p>No experience entries provided</p>';
-        }
-        
-        // Update skills
-        document.getElementById('review-skills').textContent = document.getElementById('skills').value || 'No skills provided';
-        
-        // Update resume (this would normally show the file name or a link)
-        const resumeElement = document.getElementById('review-resume');
-        const resumeInput = document.getElementById('resume');
-        if (resumeInput.files && resumeInput.files[0]) {
-            resumeElement.textContent = resumeInput.files[0].name;
-        } else if (resumeElement.querySelector('a')) {
-            // Keep existing link if there is one
-        } else {
-            resumeElement.textContent = 'No resume uploaded';
-        }
-    }
-    
-    // Handle education entries
-    function setupEducation() {
-        const educationContainer = document.getElementById('education-container');
-        const addEducationButton = document.getElementById('add-education');
-        const educationTemplate = document.getElementById('education-template');
-        
-        // Add new education entry
-        addEducationButton.addEventListener('click', () => {
-            addEducationEntry();
-        });
-        
-        // Handle removal of education entries
-        educationContainer.addEventListener('click', (e) => {
-            if (e.target.classList.contains('remove-education')) {
-                e.target.closest('.education-entry').remove();
-            }
-        });
-        
-        // Handle "currently studying" checkbox
-        educationContainer.addEventListener('change', (e) => {
-            if (e.target.classList.contains('current-education')) {
-                const endDateInput = e.target.closest('.card-body').querySelector('.end-date');
-                endDateInput.disabled = e.target.checked;
-                if (e.target.checked) {
-                    endDateInput.value = '';
-                }
-            }
-        });
-        
-        // Add education entries from saved data
-        if ({{ application.education|tojson }}) {
-            const educationData = {{ application.education|tojson }};
-            educationData.forEach(edu => {
-                addEducationEntry(edu);
-            });
-        } else {
-            // Add one empty entry if none exist
-            addEducationEntry();
-        }
-        
-        function addEducationEntry(data = null) {
-            const content = educationTemplate.content.cloneNode(true);
-            const index = Date.now(); // Use timestamp for unique IDs
-            
-            // Update IDs and names with a unique index
-            content.querySelectorAll('[id], [name]').forEach(el => {
-                if (el.hasAttribute('id')) {
-                    el.id = el.id.replace('INDEX', index);
-                }
-                if (el.hasAttribute('name')) {
-                    el.name = el.name.replace('INDEX', index);
-                }
-                
-                // Update any labels that reference the fields
-                if (el.hasAttribute('id')) {
-                    const label = content.querySelector(`label[for="${el.id.replace(index, 'INDEX')}"]`);
-                    if (label) {
-                        label.setAttribute('for', el.id);
-                    }
-                }
-            });
-            
-            // Fill with existing data if provided
-            if (data) {
-                content.querySelector('.institution').value = data.institution || '';
-                content.querySelector('.degree').value = data.degree || '';
-                content.querySelector('.field').value = data.field || '';
-                content.querySelector('.start-date').value = data.start_date || '';
-                
-                if (data.current) {
-                    content.querySelector('.current-education').checked = true;
-                    content.querySelector('.end-date').disabled = true;
-                } else {
-                    content.querySelector('.end-date').value = data.end_date || '';
-                }
-            }
-            
-            educationContainer.appendChild(content);
-        }
-    }
-    
-    function setupEducationAutoSave() {
-        const educationContainer = document.getElementById('education-container');
-        
-        // Save when education entries change
-        educationContainer.addEventListener('change', () => {
-            clearTimeout(autoSaveTimer);
-            autoSaveTimer = setTimeout(() => {
-                saveProgress('education');
-            }, 1000);
-        });
-        
-        // Save when education entries are added or removed
-        document.getElementById('add-education').addEventListener('click', () => {
-            clearTimeout(autoSaveTimer);
-            autoSaveTimer = setTimeout(() => {
-                saveProgress('education');
-            }, 1000);
-        });
-    }
-    
-    // Helper functions to collect data from dynamic form sections
-    function collectEducationData() {
-        const entries = [];
-        document.querySelectorAll('.education-entry').forEach(entry => {
-            const institution = entry.querySelector('.institution').value;
-            const degree = entry.querySelector('.degree').value;
-            const field = entry.querySelector('.field').value;
-            const startDate = entry.querySelector('.start-date').value;
-            const current = entry.querySelector('.current-education').checked;
-            const endDate = current ? null : entry.querySelector('.end-date').value;
-            
-            // Only add complete entries
-            if (institution && degree && field && startDate) {
-                entries.push({
-                    institution,
-                    degree,
-                    field,
-                    start_date: startDate,
-                    end_date: endDate,
-                    current
-                });
-            }
-        });
-        return entries;
-    }
-    
-    // Similar setup for experience section
-    function setupExperience() {
-        const experienceContainer = document.getElementById('experience-container');
-        const addExperienceButton = document.getElementById('add-experience');
-        const experienceTemplate = document.getElementById('experience-template');
-        
-        // Add new experience entry
-        addExperienceButton.addEventListener('click', () => {
-            addExperienceEntry();
-        });
-        
-        // Handle removal of experience entries
-        experienceContainer.addEventListener('click', (e) => {
-            if (e.target.classList.contains('remove-experience')) {
-                e.target.closest('.experience-entry').remove();
-            }
-        });
-        
-        // Handle "currently work here" checkbox
-        experienceContainer.addEventListener('change', (e) => {
-            if (e.target.classList.contains('current-position')) {
-                const endDateInput = e.target.closest('.card-body').querySelector('.end-date');
-                endDateInput.disabled = e.target.checked;
-                if (e.target.checked) {
-                    endDateInput.value = '';
-                }
-            }
-        });
-        
-        // Add experience entries from saved data
-        if ({{ application.experience|tojson }}) {
-            const experienceData = {{ application.experience|tojson }};
-            experienceData.forEach(exp => {
-                addExperienceEntry(exp);
-            });
-        } else {
-            // Add one empty entry if none exist
-            addExperienceEntry();
-        }
-        
-        function addExperienceEntry(data = null) {
-            const content = experienceTemplate.content.cloneNode(true);
-            const index = Date.now(); // Use timestamp for unique IDs
-            
-            // Update IDs and names with a unique index
-            content.querySelectorAll('[id], [name]').forEach(el => {
-                if (el.hasAttribute('id')) {
-                    el.id = el.id.replace('INDEX', index);
-                }
-                if (el.hasAttribute('name')) {
-                    el.name = el.name.replace('INDEX', index);
-                }
-                
-                // Update any labels that reference the fields
-                if (el.hasAttribute('id')) {
-                    const label = content.querySelector(`label[for="${el.id.replace(index, 'INDEX')}"]`);
-                    if (label) {
-                        label.setAttribute('for', el.id);
-                    }
-                }
-            });
-            
-            // Fill with existing data if provided
-            if (data) {
-                content.querySelector('.company').value = data.company || '';
-                content.querySelector('.position').value = data.position || '';
-                content.querySelector('.location').value = data.location || '';
-                content.querySelector('.start-date').value = data.start_date || '';
-                content.querySelector('.description').value = data.description || '';
-                
-                if (data.current) {
-                    content.querySelector('.current-position').checked = true;
-                    content.querySelector('.end-date').disabled = true;
-                } else {
-                    content.querySelector('.end-date').value = data.end_date || '';
-                }
-            }
-            
-            experienceContainer.appendChild(content);
-        }
-    }
-    
-    function setupExperienceAutoSave() {
-        const experienceContainer = document.getElementById('experience-container');
-        
-        // Save when experience entries change
-        experienceContainer.addEventListener('change', () => {
-            clearTimeout(autoSaveTimer);
-            autoSaveTimer = setTimeout(() => {
-                saveProgress('experience');
-            }, 1000);
-        });
-        
-        // Save when experience entries are added or removed
-        document.getElementById('add-experience').addEventListener('click', () => {
-            clearTimeout(autoSaveTimer);
-            autoSaveTimer = setTimeout(() => {
-                saveProgress('experience');
-            }, 1000);
-        });
-    }
-    
-    function collectExperienceData() {
-        const entries = [];
-        document.querySelectorAll('.experience-entry').forEach(entry => {
-            const company = entry.querySelector('.company').value;
-            const position = entry.querySelector('.position').value;
-            const location = entry.querySelector('.location').value;
-            const startDate = entry.querySelector('.start-date').value;
-            const current = entry.querySelector('.current-position').checked;
-            const endDate = current ? null : entry.querySelector('.end-date').value;
-            const description = entry.querySelector('.description').value;
-            
-            // Only add complete entries
-            if (company && position && location && startDate) {
-                entries.push({
-                    company,
-                    position,
-                    location,
-                    start_date: startDate,
-                    end_date: endDate,
-                    current,
-                    description
-                });
-            }
-        });
-        return entries;
-    }
-    
-    // Handle file upload separately
-    function setupResumeUpload() {
-        const resumeInput = document.getElementById('resume');
-        
-        resumeInput.addEventListener('change', () => {
-            if (resumeInput.files && resumeInput.files[0]) {
-                // Create FormData to upload the file
-                const formData = new FormData();
-                formData.append('resume', resumeInput.files[0]);
-                formData.append('csrf_token', document.querySelector('input[name="csrf_token"]').value);
-                
-                // Show upload status
-                saveStatus.textContent = 'Uploading resume...';
-                
-                // Upload the resume
-                fetch(`/api/application/${applicationId}/upload-resume`, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        saveStatus.textContent = `Resume uploaded successfully. Last saved: ${data.updated_at}`;
-                    } else {
-                        saveStatus.textContent = 'Failed to upload resume';
-                        console.error('Upload error:', data.message);
-                    }
-                })
-                .catch(error => {
-                    saveStatus.textContent = 'Failed to upload resume';
-                    console.error('Upload error:', error);
-                });
-            }
-        });
-    }
-    
-    // Initialize components
-    setupStepNavigation();
-    setupEducation();
-    setupExperience();
-    setupResumeUpload();
-});
-&lt;/script&gt;
-{% endblock %}</code></pre>
-            
-            <p>This multi-step form provides a seamless user experience with the following AJAX-powered features:</p>
-            
-            <ul>
-                <li><strong>Auto-saving</strong>: Changes are saved automatically as the user types or moves between fields</li>
-                <li><strong>Step-by-step validation</strong>: Each section is validated before proceeding to the next</li>
-                <li><strong>Progressive disclosure</strong>: Complex forms are broken into manageable chunks</li>
-                <li><strong>Real-time feedback</strong>: Users see confirmation when their progress is saved</li>
-                <li><strong>Dynamic form elements</strong>: Users can add and remove education and experience entries</li>
-                <li><strong>Preview before submission</strong>: Users can review all their information before finalizing</li>
-            </ul>
-            
-            <p>This approach is like a guided tour through a museum, where each room (step) focuses on a particular exhibit (form section), and visitors can only proceed once they've fully explored each room.</p>
-        </section>
-
-        <section>
-            <h2>Best Practices for AJAX Form Submission</h2>
-            
-            <p>As you implement AJAX form handling in your applications, keep these best practices in mind:</p>
-            
-            <h3>User Experience</h3>
-            <ul>
-                <li><strong>Always provide feedback</strong>: Show loading indicators, success messages, and error notifications</li>
-                <li><strong>Maintain focus management</strong>: After updates, return focus to the appropriate element</li>
-                <li><strong>Implement graceful degradation</strong>: Forms should still work without JavaScript</li>
-                <li><strong>Use input validation</strong>: Validate both client-side for immediate feedback and server-side for security</li>
-                <li><strong>Show inline validation messages</strong>: Position error messages near the relevant fields</li>
-                <li><strong>Provide clear instructions</strong>: Help users understand what's expected before they encounter errors</li>
-            </ul>
-            
-            <h3>Technical Implementation</h3>
-            <ul>
-                <li><strong>Use debouncing/throttling</strong>: Limit API calls during real-time validation</li>
-                <li><strong>Handle all HTTP response codes</strong>: Don't just handle 200 OK responses</li>
-                <li><strong>Include CSRF protection</strong>: Always include CSRF tokens in your AJAX requests</li>
-                <li><strong>Implement proper error handling</strong>: Try/catch blocks and graceful error messages</li>
-                <li><strong>Optimize payload size</strong>: Only send what's necessary in requests</li>
-                <li><strong>Use appropriate content types</strong>: Choose JSON, FormData, or URL-encoded based on your needs</li>
-            </ul>
-            
-            <h3>Accessibility</h3>
-            <ul>
-                <li><strong>Use ARIA attributes</strong>: Enhance forms with aria-live regions for dynamic content</li>
-                <li><strong>Test with screen readers</strong>: Ensure your AJAX forms work with assistive technologies</li>
-                <li><strong>Provide keyboard navigation</strong>: All functionality should be accessible without a mouse</li>
-                <li><strong>Maintain focus management</strong>: Set focus appropriately after AJAX updates</li>
-                <li><strong>Use proper error announcements</strong>: Make sure screen readers announce validation errors</li>
-            </ul>
-            
-            <h3>Security</h3>
-            <ul>
-                <li><strong>Validate on the server</strong>: Never trust client-side validation alone</li>
-                <li><strong>Sanitize user input</strong>: Protect against XSS and SQL injection</li>
-                <li><strong>Use HTTPS</strong>: Always submit sensitive data over encrypted connections</li>
-                <li><strong>Implement rate limiting</strong>: Prevent abuse of your API endpoints</li>
-                <li><strong>Check permissions</strong>: Verify the user is authorized to perform the requested action</li>
-            </ul>
-            
-            <p>Think of these best practices as a safety checklist before takeoff. Just as pilots go through a detailed checklist before a flight, you should verify these points before deploying your AJAX-powered forms.</p>
-        </section>
-
-        <section>
-            <h2>Real-World Examples of AJAX Forms</h2>
-            
-            <p>Let's explore some common real-world applications of AJAX form techniques:</p>
-            
-            <h3>E-commerce Shopping Cart</h3>
-            <p>Shopping carts use AJAX to add products, update quantities, apply coupons, and calculate shipping costs without page reloads. This creates a fluid shopping experience similar to a physical store, where you don't have to walk back to the entrance every time you add an item to your basket.</p>
-            
-            <pre><code>// Add to cart button handler
-document.querySelectorAll('.add-to-cart').forEach(button => {
-    button.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        const productId = this.dataset.productId;
-        const quantity = document.getElementById(`quantity-${productId}`).value;
-        
-        // Show loading state
-        this.disabled = true;
-        this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Adding...';
-        
-        // Send AJAX request to add product to cart
-        fetch('/api/cart/add', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-            },
-            body: JSON.stringify({
-                product_id: productId,
-                quantity: quantity
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update cart count in navigation
-                document.getElementById('cart-count').textContent = data.cart_count;
-                
-                // Show success message
-                showToast('Product added to cart', 'success');
-                
-                // Update cart subtotal if available
-                if (data.cart_total) {
-                    document.getElementById('cart-total').textContent = data.cart_total;
-                }
-            } else {
-                showToast(data.message || 'Failed to add product', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('An error occurred. Please try again.', 'error');
-        })
-        .finally(() => {
-            // Reset button state
-            this.disabled = false;
-            this.innerHTML = 'Add to Cart';
-        });
-    });
-});</code></pre>
-            
-            <h3>Social Media Interactions</h3>
-            <p>Social platforms use AJAX for likes, comments, and shares. When you "like" a post, it's like giving someone a thumbs-up in real life – an immediate reaction that doesn't interrupt the conversation.</p>
-            
-            <pre><code>// Like button handler
-document.querySelectorAll('.like-button').forEach(button => {
-    button.addEventListener('click', function() {
-        const postId = this.dataset.postId;<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AJAX Form Submission with Flask</title>
+    <title>Python Full Stack Web Developer Course - Virtual Environments Best Practices</title>
     <link rel="stylesheet" href="/styles/main.css">
     <link rel="icon" href="/favicon.png">
 </head>
 <body>
     <header>
-        <h1>AJAX Form Submission with Flask</h1>
-        <p class="subtitle">Week 2 - Friday: Full Stack Web Development with Python</p>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 2: Python Fundamentals (Part 1)</h2>
+        <h3>Friday Morning: Virtual Environments Best Practices</h3>
     </header>
 
     <main>
-        <section>
-            <h2>Introduction to AJAX Form Submission</h2>
+        <section class="introduction">
+            <h3>Introduction to Virtual Environments</h3>
+            <p>Welcome to our deep dive into Python virtual environments! While we've already set up virtual environments earlier this week, today we'll explore why they're so important and learn best practices for using them effectively in professional development.</p>
             
-            <p>Traditional form submissions are like mailing a letter: you write your message, seal the envelope, and send it off. Then you wait at home until the reply arrives in your mailbox. During this waiting period, you can't do anything else with your mailbox – it's as if your entire house is frozen until the mail arrives.</p>
-            
-            <p>AJAX (Asynchronous JavaScript and XML) form submissions, however, are more like sending a text message. You compose your message, tap send, and continue using your phone while waiting for a reply. When the response arrives, you get a notification, but you were free to do other things in the meantime.</p>
-            
-            <p>In web terms, traditional form submissions require a full page reload, disrupting the user experience. AJAX lets us submit forms in the background, update parts of the page dynamically, and provide a smoother, more responsive interface.</p>
-
-            <h3>Why Use AJAX for Forms?</h3>
-            
-            <p>AJAX form submissions provide several significant benefits:</p>
-            
-            <ul>
-                <li><strong>Enhanced User Experience</strong>: Users can continue interacting with your application without waiting for page reloads</li>
-                <li><strong>Real-time Feedback</strong>: Provide immediate validation messages, progress indicators, and success/error notifications</li>
-                <li><strong>Partial Page Updates</strong>: Update just the relevant parts of the page instead of reloading everything</li>
-                <li><strong>Background Processing</strong>: Handle time-consuming operations without blocking the interface</li>
-                <li><strong>Reduced Server Load</strong>: Sending and receiving smaller chunks of data reduces bandwidth usage</li>
-            </ul>
-            
-            <p>Think about the best online shopping experiences you've had. When you add an item to your cart, the page doesn't reload entirely. Instead, the cart icon updates, a confirmation appears, and you continue browsing seamlessly. That's AJAX at work!</p>
+            <p>Think of virtual environments as isolated workspaces for your Python projects. Just as a chef keeps ingredients for different dishes separate to avoid cross-contamination, virtual environments keep your project dependencies separate to avoid conflicts. This isolation is crucial for creating reproducible, reliable, and shareable Python applications.</p>
         </section>
 
-        <section>
-            <h2>Setting Up the Backend for AJAX</h2>
+        <section class="why-virtual-environments">
+            <h3>Why Virtual Environments are Essential</h3>
             
-            <p>Before implementing AJAX on the frontend, we need to set up our Flask routes to handle AJAX requests. AJAX requests often expect JSON responses rather than HTML, so we'll create routes that return JSON data.</p>
+            <p>Before diving into best practices, let's understand the core problems that virtual environments solve:</p>
             
-            <h3>Creating API-Style Routes</h3>
+            <h4>1. Dependency Isolation</h4>
+            <p>Different projects often require different versions of the same package. Without virtual environments, this is impossible to manage in a single Python installation.</p>
             
-            <p>Let's create a Flask blueprint for our API routes in a file named <code>app/views/api.py</code>:</p>
+            <p><strong>Real-World Scenario:</strong> Project A requires Django 2.2 (which supports Python 3.5+), while Project B needs Django 3.2 (which requires Python 3.6+). Without virtual environments, you'd need to constantly uninstall and reinstall different versions, or compromise on one project's requirements.</p>
             
-            <pre><code># app/views/api.py
-from flask import Blueprint, jsonify, request
+            <h4>2. System Python Protection</h4>
+            <p>Your operating system might rely on specific Python packages. Modifying these for your project could break system functionality.</p>
+            
+            <p><strong>Real-World Scenario:</strong> Many Linux distributions use Python for system utilities. Installing conflicting packages globally could render your package manager or other system tools inoperable.</p>
+            
+            <h4>3. Clean Dependency Tracking</h4>
+            <p>Virtual environments make it easy to track exactly what packages your project needs.</p>
+            
+            <p><strong>Real-World Scenario:</strong> When a new developer joins your team, they can recreate your exact environment without guessing which packages to install.</p>
+            
+            <h4>4. Reproducible Builds</h4>
+            <p>Ensures that your application works the same way everywhere—development, testing, and production.</p>
+            
+            <p><strong>Real-World Scenario:</strong> Avoiding the dreaded "it works on my machine" problem when deploying to production or sharing with teammates.</p>
+        </section>
 
-bp = Blueprint('api', __name__, url_prefix='/api')
+        <section class="virtual-environment-tools">
+            <h3>Virtual Environment Tools Comparison</h3>
+            
+            <p>Several tools exist for creating and managing Python virtual environments. Let's compare the most common ones:</p>
+            
+            <table>
+                <tr>
+                    <th>Tool</th>
+                    <th>Pros</th>
+                    <th>Cons</th>
+                    <th>Best For</th>
+                </tr>
+                <tr>
+                    <td><code>venv</code></td>
+                    <td>
+                        <ul>
+                            <li>Built into Python 3.3+</li>
+                            <li>Simple to use</li>
+                            <li>No additional installation</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>Basic functionality only</li>
+                            <li>No dependency management</li>
+                            <li>Windows requires additional steps</li>
+                        </ul>
+                    </td>
+                    <td>Simple projects and learning Python</td>
+                </tr>
+                <tr>
+                    <td><code>virtualenv</code></td>
+                    <td>
+                        <ul>
+                            <li>Works with Python 2 and 3</li>
+                            <li>More features than venv</li>
+                            <li>Faster environment creation</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>Requires separate installation</li>
+                            <li>No dependency management</li>
+                        </ul>
+                    </td>
+                    <td>Projects supporting legacy Python</td>
+                </tr>
+                <tr>
+                    <td><code>conda</code></td>
+                    <td>
+                        <ul>
+                            <li>Cross-platform package manager</li>
+                            <li>Handles non-Python dependencies</li>
+                            <li>Creates isolated environments</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>Larger installation footprint</li>
+                            <li>Sometimes conflicts with pip</li>
+                            <li>Different from standard Python tooling</li>
+                        </ul>
+                    </td>
+                    <td>Data science and scientific computing</td>
+                </tr>
+                <tr>
+                    <td><code>pipenv</code></td>
+                    <td>
+                        <ul>
+                            <li>Combines pip and virtualenv</li>
+                            <li>Automatic dependency management</li>
+                            <li>Lock files for deterministic builds</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>Sometimes slower than alternatives</li>
+                            <li>Learning curve for beginners</li>
+                        </ul>
+                    </td>
+                    <td>Application development with dependency locking</td>
+                </tr>
+                <tr>
+                    <td><code>poetry</code></td>
+                    <td>
+                        <ul>
+                            <li>Modern dependency resolution</li>
+                            <li>Package building and publishing</li>
+                            <li>Intuitive commands</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>Newer tool, still evolving</li>
+                            <li>More opinionated workflow</li>
+                        </ul>
+                    </td>
+                    <td>Library development and modern applications</td>
+                </tr>
+            </table>
+            
+            <p>For the remainder of this course, we'll primarily use <code>venv</code> since it's built into Python and sufficient for our needs. However, we'll note where other tools might offer advantages in specific scenarios.</p>
+            
+            <p><strong>Analogy:</strong> Virtual environment tools are like different types of kitchen organization systems—some are simple drawer dividers (<code>venv</code>), some are specialized spice racks (<code>virtualenv</code>), and others are complete kitchen remodels with custom cabinets (<code>conda</code>, <code>pipenv</code>, <code>poetry</code>). The best choice depends on what you're cooking and how often.</p>
+        </section>
 
-@bp.route('/contact', methods=['POST'])
-def contact():
-    # Get JSON data from the request
-    data = request.json
-    
-    # Validate the data
-    errors = {}
-    if not data.get('name'):
-        errors['name'] = 'Name is required'
-    if not data.get('email'):
-        errors['email'] = 'Email is required'
-    elif '@' not in data.get('email', ''):
-        errors['email'] = 'Invalid email format'
-    if not data.get('message'):
-        errors['message'] = 'Message is required'
-    elif len(data.get('message', '')) < 10:
-        errors['message'] = 'Message must be at least 10 characters'
-    
-    # If validation fails, return errors
-    if errors:
-        return jsonify({
-            'success': False, 
-            'errors': errors
-        }), 400
-    
-    # Process the valid data (e.g., save to database, send email)
-    # For this example, we'll just simulate processing
-    try:
-        # In a real application, you would do something like:
-        # message = Message(
-        #     name=data['name'],
-        #     email=data['email'],
-        #     content=data['message']
-        # )
-        # db.session.add(message)
-        # db.session.commit()
+        <section class="venv-review">
+            <h3>Quick Review: Creating and Using Virtual Environments with venv</h3>
+            
+            <p>Let's quickly review the basic commands for working with <code>venv</code>:</p>
+            
+            <h4>Creating a Virtual Environment</h4>
+            <pre><code># On Windows
+python -m venv myenv
+
+# On macOS/Linux
+python3 -m venv myenv</code></pre>
+            
+            <h4>Activating a Virtual Environment</h4>
+            <pre><code># On Windows
+myenv\Scripts\activate
+
+# On macOS/Linux
+source myenv/bin/activate</code></pre>
+            
+            <h4>Deactivating a Virtual Environment</h4>
+            <pre><code>deactivate</code></pre>
+            
+            <h4>Installing Packages in a Virtual Environment</h4>
+            <pre><code># Make sure the environment is activated first
+pip install package_name
+
+# Install multiple packages
+pip install package1 package2 package3
+
+# Install with specific version
+pip install package==1.2.3
+
+# Install from requirements file
+pip install -r requirements.txt</code></pre>
+            
+            <h4>Capturing Dependencies</h4>
+            <pre><code># Create or update requirements.txt
+pip freeze > requirements.txt</code></pre>
+            
+            <p>Now, let's move beyond the basics to best practices that will make your virtual environment workflow more effective.</p>
+        </section>
+
+        <section class="naming-conventions">
+            <h3>Virtual Environment Naming and Location</h3>
+            
+            <h4>Naming Conventions</h4>
+            <p>Consistent naming helps you and your team identify environments quickly:</p>
+            
+            <ul>
+                <li><strong>Project-Based Naming</strong>: Name environments after your project, possibly with a suffix indicating purpose or Python version.</li>
+                <li><strong>Version-Based Naming</strong>: Include Python version if you work with multiple versions.</li>
+            </ul>
+            
+            <p>Examples of good environment names:</p>
+            <ul>
+                <li><code>myapp-env</code> - Basic project environment</li>
+                <li><code>myapp-3.9</code> - Project environment for Python 3.9</li>
+                <li><code>myapp-dev</code> / <code>myapp-prod</code> - Separate environments for development/production settings</li>
+            </ul>
+            
+            <h4>Environment Location</h4>
+            <p>Where you place your virtual environments matters:</p>
+            
+            <h5>Option 1: Inside Project Directory (Recommended for Most Projects)</h5>
+            <pre><code>my_project/
+├── .git/
+├── venv/           # Virtual environment
+├── src/
+├── tests/
+├── requirements.txt
+└── README.md</code></pre>
+            
+            <p><strong>Pros:</strong></p>
+            <ul>
+                <li>Self-contained project directory</li>
+                <li>Clear association between project and environment</li>
+                <li>Easy to delete/recreate along with the project</li>
+            </ul>
+            
+            <p><strong>Cons:</strong></p>
+            <ul>
+                <li>Takes up space in version control (if not properly ignored)</li>
+                <li>Can accidentally include environment files in project</li>
+            </ul>
+            
+            <h5>Option 2: Central Environment Directory</h5>
+            <pre><code>~/.virtualenvs/
+├── project1-env/
+├── project2-env/
+└── project3-env/</code></pre>
+            
+            <p><strong>Pros:</strong></p>
+            <ul>
+                <li>Keeps projects clean</li>
+                <li>Easier to manage multiple environments</li>
+                <li>No risk of accidentally versioning environment files</li>
+            </ul>
+            
+            <p><strong>Cons:</strong></p>
+            <ul>
+                <li>Environments can become "orphaned" when projects are deleted</li>
+                <li>Less intuitive for beginners</li>
+                <li>Requires remembering which environment goes with which project</li>
+            </ul>
+            
+            <h4>Environment Location Best Practices</h4>
+            <ul>
+                <li><strong>For individual projects</strong>: Inside project directory, add to <code>.gitignore</code></li>
+                <li><strong>For many related projects</strong>: Central directory with consistent naming</li>
+                <li><strong>For team environments</strong>: Document the convention you choose</li>
+            </ul>
+        </section>
         
-        # Return success response
-        return jsonify({
-            'success': True,
-            'message': 'Your message has been sent. We will respond shortly.'
-        })
-    except Exception as e:
-        # Handle errors
-        return jsonify({
-            'success': False,
-            'message': 'An error occurred while processing your request.',
-            'error': str(e)
-        }), 500</code></pre>
+        <section class="dependency-management">
+            <h3>Dependency Management Best Practices</h3>
             
-            <p>Don't forget to register this blueprint in your Flask application. In <code>app/__init__.py</code>:</p>
+            <h4>Use Requirements Files Effectively</h4>
             
-            <pre><code># app/__init__.py
+            <p>Requirements files (<code>requirements.txt</code>) are the standard way to capture and share dependencies. Here are best practices for using them:</p>
+            
+            <h5>1. Use Version Pinning</h5>
+            <p>Always specify exact versions to ensure reproducible environments:</p>
+            
+            <pre><code># Not recommended (loose dependencies)
+requests
+flask
+sqlalchemy
+
+# Recommended (pinned versions)
+requests==2.28.1
+flask==2.2.2
+sqlalchemy==1.4.41</code></pre>
+            
+            <h5>2. Organize Multiple Requirements Files</h5>
+            <p>For complex projects, split requirements by environment:</p>
+            
+            <pre><code># requirements/
+# ├── base.txt        - Core dependencies for all environments
+# ├── development.txt - Additional tools for development
+# ├── production.txt  - Production-specific packages
+# └── testing.txt     - Testing-specific packages
+
+# Example of development.txt
+-r base.txt           # Include base requirements
+pytest==7.1.3
+black==22.8.0
+flake8==5.0.4</code></pre>
+            
+            <h5>3. Include Comments</h5>
+            <p>Document why certain packages are needed or specific versions are required:</p>
+            
+            <pre><code># Web framework
+flask==2.2.2
+
+# ORM for database access
+sqlalchemy==1.4.41
+
+# JWT-based authentication
+# Pinned to 2.4.0 because 2.5.0 has a security issue
+pyjwt==2.4.0
+
+# Date handling utilities
+python-dateutil==2.8.2</code></pre>
+            
+            <h5>4. Consider Requirements.in Files</h5>
+            <p>For more control, separate direct dependencies from their sub-dependencies using <code>pip-tools</code>:</p>
+            
+            <pre><code># requirements.in - Only direct dependencies
+flask>=2.2.0
+sqlalchemy>=1.4.0
+requests>=2.27.0
+
+# Generate full requirements.txt with pinned versions
+# pip-compile requirements.in > requirements.txt</code></pre>
+            
+            <h4>Beyond requirements.txt</h4>
+            <p>Modern Python projects often use more sophisticated dependency management:</p>
+            
+            <h5>1. Pipenv's Pipfile and Pipfile.lock</h5>
+            <pre><code># Install pipenv
+pip install pipenv
+
+# Create new environment and Pipfile
+pipenv install flask sqlalchemy
+
+# Add development dependencies
+pipenv install --dev pytest black
+
+# Generate lock file
+pipenv lock</code></pre>
+            
+            <p>The resulting <code>Pipfile</code> separates direct dependencies from dev dependencies:</p>
+            
+            <pre><code>[packages]
+flask = "*"
+sqlalchemy = "*"
+
+[dev-packages]
+pytest = "*"
+black = "*"
+
+[requires]
+python_version = "3.9"</code></pre>
+            
+            <h5>2. Poetry's pyproject.toml</h5>
+            <pre><code># Install poetry
+pip install poetry
+
+# Initialize a new project
+poetry new myproject
+cd myproject
+
+# Add dependencies
+poetry add flask sqlalchemy
+
+# Add development dependencies
+poetry add --dev pytest black
+
+# The resulting pyproject.toml:
+[tool.poetry.dependencies]
+python = "^3.9"
+flask = "^2.2.2"
+sqlalchemy = "^1.4.41"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.1.3"
+black = "^22.8.0"</code></pre>
+            
+            <h4>Dependency Management Best Practices Summary</h4>
+            <ul>
+                <li><strong>Always pin versions</strong> for reproducible builds</li>
+                <li><strong>Document dependencies</strong> with comments</li>
+                <li><strong>Separate development dependencies</strong> from production ones</li>
+                <li><strong>Regularly update dependencies</strong> for security fixes</li>
+                <li><strong>Consider modern tools</strong> for complex projects</li>
+            </ul>
+        </section>
+
+        <section class="virtual-env-workflows">
+            <h3>Virtual Environment Workflows</h3>
+            
+            <h4>Environment Setup Workflow</h4>
+            <p>Follow these steps when setting up a new project:</p>
+            
+            <ol>
+                <li><strong>Create project directory</strong>
+                    <pre><code>mkdir myproject
+cd myproject</code></pre>
+                </li>
+                <li><strong>Initialize version control</strong>
+                    <pre><code>git init
+echo "venv/" >> .gitignore    # Ignore virtual environment directory</code></pre>
+                </li>
+                <li><strong>Create virtual environment</strong>
+                    <pre><code>python -m venv venv</code></pre>
+                </li>
+                <li><strong>Activate the environment</strong>
+                    <pre><code>source venv/bin/activate  # macOS/Linux
+venv\Scripts\activate    # Windows</code></pre>
+                </li>
+                <li><strong>Install initial dependencies</strong>
+                    <pre><code>pip install flask sqlalchemy</code></pre>
+                </li>
+                <li><strong>Freeze dependencies</strong>
+                    <pre><code>pip freeze > requirements.txt</code></pre>
+                </li>
+                <li><strong>Create initial project structure</strong>
+                    <pre><code>mkdir src tests
+touch README.md</code></pre>
+                </li>
+                <li><strong>Make initial commit</strong>
+                    <pre><code>git add .
+git commit -m "Initial project setup with virtual environment"</code></pre>
+                </li>
+            </ol>
+            
+            <h4>Joining an Existing Project Workflow</h4>
+            <p>When joining a project that already has a defined environment:</p>
+            
+            <ol>
+                <li><strong>Clone the repository</strong>
+                    <pre><code>git clone https://github.com/username/project.git
+cd project</code></pre>
+                </li>
+                <li><strong>Create virtual environment</strong>
+                    <pre><code>python -m venv venv</code></pre>
+                </li>
+                <li><strong>Activate the environment</strong>
+                    <pre><code>source venv/bin/activate  # macOS/Linux
+venv\Scripts\activate    # Windows</code></pre>
+                </li>
+                <li><strong>Install dependencies</strong>
+                    <pre><code>pip install -r requirements.txt</code></pre>
+                </li>
+                <li><strong>Verify installation</strong>
+                    <pre><code>pip list
+python -c "import flask; print(flask.__version__)"</code></pre>
+                </li>
+            </ol>
+            
+            <h4>Environment Maintenance Workflow</h4>
+            <p>Regular maintenance tasks to keep your environment healthy:</p>
+            
+            <ul>
+                <li><strong>Adding new dependencies</strong>
+                    <pre><code>pip install new-package
+pip freeze > requirements.txt
+git add requirements.txt
+git commit -m "Add new-package dependency"</code></pre>
+                </li>
+                <li><strong>Updating dependencies</strong>
+                    <pre><code># Careful approach: update one package at a time
+pip install --upgrade package-name
+pip freeze > requirements.txt
+
+# Bulk update (use with caution!)
+pip install --upgrade -r requirements.txt
+pip freeze > requirements.txt</code></pre>
+                </li>
+                <li><strong>Recreating from scratch</strong> (when things get messy)
+                    <pre><code>deactivate
+rm -rf venv/              # macOS/Linux
+rmdir /s /q venv          # Windows
+python -m venv venv
+source venv/bin/activate  # macOS/Linux
+venv\Scripts\activate     # Windows
+pip install -r requirements.txt</code></pre>
+                </li>
+            </ul>
+        </section>
+
+        <section class="virtual-env-docker">
+            <h3>Virtual Environments and Docker</h3>
+            
+            <p>As projects grow, you may use Docker alongside or instead of virtual environments. Understanding how they relate is important:</p>
+            
+            <h4>Differences Between Virtual Environments and Docker</h4>
+            <table>
+                <tr>
+                    <th>Aspect</th>
+                    <th>Virtual Environments</th>
+                    <th>Docker</th>
+                </tr>
+                <tr>
+                    <td>Isolation level</td>
+                    <td>Python packages only</td>
+                    <td>Full system isolation (OS, files, network)</td>
+                </tr>
+                <tr>
+                    <td>System dependencies</td>
+                    <td>Relies on host system</td>
+                    <td>Self-contained, including OS libraries</td>
+                </tr>
+                <tr>
+                    <td>Portability</td>
+                    <td>Works only on compatible Python versions</td>
+                    <td>Works the same on any Docker-compatible system</td>
+                </tr>
+                <tr>
+                    <td>Resource usage</td>
+                    <td>Very lightweight</td>
+                    <td>More resource-intensive</td>
+                </tr>
+                <tr>
+                    <td>Learning curve</td>
+                    <td>Simple, Python-specific</td>
+                    <td>Steeper, requires container knowledge</td>
+                </tr>
+            </table>
+            
+            <h4>When to Use Each</h4>
+            <ul>
+                <li><strong>Use virtual environments when:</strong>
+                    <ul>
+                        <li>Working on simple Python projects</li>
+                        <li>You have a consistent development environment</li>
+                        <li>You want minimal overhead</li>
+                        <li>There are few or no system-level dependencies</li>
+                    </ul>
+                </li>
+                <li><strong>Use Docker when:</strong>
+                    <ul>
+                        <li>Your application has complex system dependencies</li>
+                        <li>You need to match production environment exactly</li>
+                        <li>Your team uses different operating systems</li>
+                        <li>You have microservices or multi-container applications</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h4>Using Both Together</h4>
+            <p>Many developers use both tools in their workflow:</p>
+            <ul>
+                <li><strong>Virtual environment</strong> for daily development and testing</li>
+                <li><strong>Docker</strong> for integration testing and deployment</li>
+            </ul>
+            
+            <p>A common pattern is to maintain both a <code>requirements.txt</code> and a <code>Dockerfile</code>:</p>
+            
+            <pre><code># Developer workflow
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python manage.py runserver
+
+# Integration/deployment workflow
+docker build -t myapp .
+docker run -p 8000:8000 myapp</code></pre>
+            
+            <p>Example <code>Dockerfile</code> that uses the same requirements file:</p>
+            
+            <pre><code>FROM python:3.9-slim
+
+WORKDIR /app
+
+# Copy requirements first (for better caching)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Run the application
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]</code></pre>
+            
+            <p><strong>Recommendation:</strong> As you progress in this course, you'll work with both virtual environments and Docker. Learn to use them appropriately for different scenarios, and understand how they complement each other in a professional development workflow.</p>
+        </section>
+
+        <section class="advanced-practices">
+            <h3>Advanced Virtual Environment Practices</h3>
+            
+            <h4>Environment Variables and Settings</h4>
+            <p>Keep configuration out of your code using environment variables:</p>
+            
+            <h5>1. Use <code>.env</code> files (with python-dotenv)</h5>
+            <pre><code># Install python-dotenv
+pip install python-dotenv
+
+# Create .env file (NEVER commit to version control)
+echo "DEBUG=True
+SECRET_KEY=development-key-only
+DATABASE_URL=sqlite:///dev.db" > .env
+
+# Add to .gitignore
+echo ".env" >> .gitignore</code></pre>
+            
+            <p>Using the variables in your code:</p>
+            <pre><code># config.py
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+SECRET_KEY = os.getenv("SECRET_KEY")
+DATABASE_URL = os.getenv("DATABASE_URL")</code></pre>
+            
+            <h5>2. Environment-specific settings</h5>
+            <p>Create different settings files or environment variable sets for different environments:</p>
+            
+            <pre><code>environments/
+├── .env.development
+├── .env.testing
+└── .env.production</code></pre>
+            
+            <p>Loading a specific environment:</p>
+            <pre><code># Load specific environment
+from dotenv import load_dotenv
+
+# Choose environment based on ENV variable
+env_file = f".env.{os.getenv('ENV', 'development').lower()}"
+load_dotenv(env_file)</code></pre>
+            
+            <h4>Virtual Environment Helpers</h4>
+            <p>Tools to make virtual environment usage more convenient:</p>
+            
+            <h5>1. direnv</h5>
+            <p>Automatically activates environments when entering directories:</p>
+            
+            <pre><code># Install direnv (macOS)
+brew install direnv
+
+# Add to shell configuration
+echo 'eval "$(direnv hook bash)"' >> ~/.bashrc  # or .zshrc
+
+# Create .envrc file in project directory
+echo 'source venv/bin/activate' > .envrc
+direnv allow</code></pre>
+            
+            <p>Now the environment activates automatically when you <code>cd</code> into the project directory!</p>
+            
+            <h5>2. virtualenvwrapper</h5>
+            <p>Simplifies management of multiple virtual environments:</p>
+            
+            <pre><code># Install virtualenvwrapper
+pip install virtualenvwrapper
+
+# Add to shell configuration
+echo 'export WORKON_HOME=$HOME/.virtualenvs
+export PROJECT_HOME=$HOME/projects
+source /usr/local/bin/virtualenvwrapper.sh' >> ~/.bashrc
+
+# Create and work on environments
+mkvirtualenv myproject
+workon myproject
+deactivate</code></pre>
+            
+            <h5>3. IDE Integration</h5>
+            <p>Most modern IDEs have excellent virtual environment support:</p>
+            <ul>
+                <li><strong>VS Code</strong>: Automatically detects environments and prompts to use them</li>
+                <li><strong>PyCharm</strong>: Built-in virtual environment management</li>
+                <li><strong>Jupyter</strong>: Can add environments as kernels with <code>ipykernel</code></li>
+            </ul>
+            
+            <h4>Handling Python Versions</h4>
+            <p>Sometimes you need to work with multiple Python versions:</p>
+            
+            <h5>1. pyenv for Python Version Management</h5>
+            <pre><code># Install pyenv (macOS)
+brew install pyenv
+
+# Install different Python versions
+pyenv install 3.8.12
+pyenv install 3.9.7
+pyenv install 3.10.2
+
+# Set global default
+pyenv global 3.9.7
+
+# Set version for a specific project
+cd myproject
+pyenv local 3.8.12
+
+# Create virtual environment with specific version
+pyenv local 3.10.2
+python -m venv venv  # Uses Python 3.10.2</code></pre>
+            
+            <h5>2. tox for Testing Multiple Python Versions</h5>
+            <p>Automatically test your code against multiple Python versions:</p>
+            
+            <pre><code># Install tox
+pip install tox
+
+# Create tox.ini
+[tox]
+envlist = py38,py39,py310
+
+[testenv]
+deps = pytest
+commands = pytest</code></pre>
+            
+            <p>Run tests in all environments with a single command:</p>
+            <pre><code>tox</code></pre>
+        </section>
+
+        <section class="troubleshooting">
+            <h3>Troubleshooting Virtual Environments</h3>
+            
+            <h4>Common Issues and Solutions</h4>
+            
+            <h5>1. "Command not found" after activation</h5>
+            <p><strong>Symptom:</strong> You activate an environment, but commands like <code>pip</code> or <code>python</code> aren't found.</p>
+            <p><strong>Solution:</strong></p>
+            <pre><code># Check if the environment has the expected structure
+ls -la venv/bin  # macOS/Linux
+dir venv\Scripts  # Windows
+
+# If missing, recreate the environment
+python3 -m venv --clear venv</code></pre>
+            
+            <h5>2. Packages installed but not available</h5>
+            <p><strong>Symptom:</strong> You install a package with pip, but <code>import</code> fails.</p>
+            <p><strong>Solution:</strong></p>
+            <pre><code># Check if you have multiple Python installations
+which python  # macOS/Linux
+where python  # Windows
+
+# Verify the environment is activated (look for "(venv)" in prompt)
+
+# Check where pip is installing packages
+pip --version
+
+# Install explicitly to the environment
+python -m pip install package_name</code></pre>
+            
+            <h5>3. Environment activation doesn't work</h5>
+            <p><strong>Symptom:</strong> Activation script fails or doesn't change the environment.</p>
+            <p><strong>Solution:</strong></p>
+            <pre><code># Check activation script permissions
+chmod +x venv/bin/activate  # macOS/Linux
+
+# Try absolute path
+source /full/path/to/venv/bin/activate  # macOS/Linux
+C:\full\path\to\venv\Scripts\activate  # Windows
+
+# Check for script errors
+cat venv/bin/activate  # macOS/Linux
+type venv\Scripts\activate  # Windows</code></pre>
+            
+            <h5>4. "pip install" fails for compiled packages</h5>
+            <p><strong>Symptom:</strong> Packages with C extensions fail to install with compiler errors.</p>
+            <p><strong>Solution:</strong></p>
+            <pre><code># Install development tools
+# On Ubuntu/Debian
+sudo apt-get install python3-dev build-essential
+
+# On macOS
+xcode-select --install
+
+# On Windows
+# Install Visual Studio Build Tools
+
+# Try binary wheels instead of source
+pip install --only-binary=:all: package_name</code></pre>
+            
+            <h5>5. Virtual environment gets huge</h5>
+            <p><strong>Symptom:</strong> Environment directory takes up gigabytes of space.</p>
+            <p><strong>Solution:</strong></p>
+            <pre><code># Clear pip cache
+pip cache purge
+
+# Remove __pycache__ directories
+find venv -name __pycache__ -type d -exec rm -rf {} +  # macOS/Linux
+
+# Sometimes it's faster to recreate
+pip freeze > requirements.txt
+deactivate
+rm -rf venv
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt</code></pre>
+            
+            <h4>Debugging Techniques</h4>
+            <ul>
+                <li><strong>Check environment paths</strong>
+                    <pre><code>python -c "import sys; print(sys.path)"</code></pre>
+                </li>
+                <li><strong>Verify package installation location</strong>
+                    <pre><code>pip show package_name</code></pre>
+                </li>
+                <li><strong>Check environment interpreter</strong>
+                    <pre><code>python -c "import sys; print(sys.executable)"</code></pre>
+                </li>
+                <li><strong>Run pip with verbosity</strong>
+                    <pre><code>pip install -v package_name</code></pre>
+                </li>
+                <li><strong>Verify active Python version</strong>
+                    <pre><code>python --version</code></pre>
+                </li>
+            </ul>
+        </section>
+
+        <section class="team-environments">
+            <h3>Virtual Environments in Team Settings</h3>
+            
+            <h4>Establishing Team Conventions</h4>
+            <p>Consistent practices are essential for team productivity:</p>
+            
+            <ul>
+                <li><strong>Document environment setup</strong> in README.md
+                    <pre><code># Development Setup
+
+## Prerequisites
+- Python 3.9+
+- Git
+
+## Environment Setup
+1. Clone the repository
+   ```
+   git clone https://github.com/team/project.git
+   cd project
+   ```
+
+2. Create a virtual environment
+   ```
+   python -m venv venv
+   source venv/bin/activate  # macOS/Linux
+   venv\Scripts\activate     # Windows
+   ```
+
+3. Install dependencies
+   ```
+   pip install -r requirements.txt
+   ```
+
+4. Set up environment variables
+   ```
+   cp .env.example .env
+   # Edit .env with your local settings
+   ```
+
+5. Run initialization script
+   ```
+   python setup.py
+   ```</code></pre>
+                </li>
+                <li><strong>Use setup scripts</strong> for complex initialization
+                    <pre><code># setup.py
+#!/usr/bin/env python
+"""Project setup script"""
+import os
+import subprocess
+
+def main():
+    """Run setup steps"""
+    print("Setting up development environment...")
+    
+    # Initialize database
+    print("Creating database...")
+    if not os.path.exists("instance"):
+        os.mkdir("instance")
+    subprocess.run(["python", "manage.py", "db", "init"], check=True)
+    subprocess.run(["python", "manage.py", "db", "migrate"], check=True)
+    subprocess.run(["python", "manage.py", "db", "upgrade"], check=True)
+    
+    # Create sample data
+    print("Creating sample data...")
+    subprocess.run(["python", "manage.py", "seed"], check=True)
+    
+    print("Setup complete! Run 'python manage.py run' to start the application.")
+
+if __name__ == "__main__":
+    main()</code></pre>
+                </li>
+                <li><strong>Standardize linting and formatting</strong> with configuration files
+                    <pre><code># .flake8
+[flake8]
+max-line-length = 100
+exclude = venv,.git,__pycache__,build,dist
+
+# pyproject.toml (for black)
+[tool.black]
+line-length = 100
+target-version = ['py39']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | _build
+  | build
+  | dist
+)/
+'''</code></pre>
+                </li>
+            </ul>
+            
+            <h4>Git Hooks for Environment Consistency</h4>
+            <p>Use Git hooks to enforce standards:</p>
+            
+            <pre><code># .git/hooks/pre-commit (make executable with chmod +x)
+#!/bin/bash
+
+# Check that we're using the project's virtual environment
+if [[ $VIRTUAL_ENV != *$(pwd)* ]]; then
+    echo "ERROR: Virtual environment not activated or doesn't match project!"
+    echo "Activate with: source venv/bin/activate"
+    exit 1
+fi
+
+# Run linters and tests
+echo "Running linters..."
+flake8 src tests || exit 1
+black --check src tests || exit 1
+
+echo "Running tests..."
+pytest -xvs tests/unit || exit 1
+
+echo "Pre-commit checks passed!"</code></pre>
+            
+            <h4>Continuous Integration (CI) Environment</h4>
+            <p>Configure CI systems to replicate your virtual environment setup:</p>
+            
+            <pre><code># .github/workflows/ci.yml
+name: Python CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Lint
+      run: |
+        flake8 src tests
+        black --check src tests
+    
+    - name: Test
+      run: |
+        pytest -xvs tests/
+</code></pre>
+        </section>
+
+        <section class="real-world-example">
+            <h3>Real-World Example: Flask Project Structure with Best Practices</h3>
+            
+            <p>Let's bring together everything we've learned with a practical example of a Flask web application that follows best practices:</p>
+            
+            <h4>Project Structure</h4>
+            <pre><code>flask_app/
+├── .env.example            # Example environment variables (template)
+├── .flake8                 # Linting configuration
+├── .gitignore              # Files to exclude from Git
+├── .pre-commit-config.yaml # Pre-commit hooks configuration
+├── README.md               # Project documentation
+├── pyproject.toml          # Python project configuration (black, etc.)
+├── requirements/
+│   ├── base.txt            # Core dependencies
+│   ├── development.txt     # Development tools
+│   ├── production.txt      # Production-specific requirements
+│   └── testing.txt         # Testing tools
+├── setup.py                # Package installation script
+├── src/
+│   └── myapp/
+│       ├── __init__.py     # Package initialization
+│       ├── app.py          # Application factory
+│       ├── config.py       # Configuration management
+│       ├── models/         # Database models
+│       ├── routes/         # API and view routes
+│       ├── services/       # Business logic
+│       ├── static/         # Static assets (CSS, JS)
+│       └── templates/      # Jinja2 templates
+├── tests/
+│   ├── conftest.py         # Test fixtures
+│   ├── unit/               # Unit tests
+│   └── integration/        # Integration tests
+└── venv/                   # Virtual environment (not in version control)</code></pre>
+            
+            <h4>Environment Setup Guide</h4>
+            <p>Here's how the README.md would guide environment setup:</p>
+            
+            <pre><code># Flask App Example
+
+A modern Flask application demonstrating Python best practices.
+
+## Development Setup
+
+### Prerequisites
+- Python 3.9+
+- Git
+
+### Setting Up Your Development Environment
+
+1. Clone the repository:
+   ```
+   git clone https://github.com/username/flask_app.git
+   cd flask_app
+   ```
+
+2. Create and activate a virtual environment:
+   ```
+   python -m venv venv
+   source venv/bin/activate  # macOS/Linux
+   venv\Scripts\activate     # Windows
+   ```
+
+3. Install development dependencies:
+   ```
+   pip install -r requirements/development.txt
+   ```
+
+4. Set up your environment variables:
+   ```
+   cp .env.example .env
+   # Edit .env with your settings
+   ```
+
+5. Set up pre-commit hooks:
+   ```
+   pre-commit install
+   ```
+
+6. Initialize the database:
+   ```
+   flask db init
+   flask db migrate
+   flask db upgrade
+   ```
+
+7. Run the development server:
+   ```
+   flask run
+   ```
+
+The application should now be running at http://127.0.0.1:5000/
+
+### Testing
+
+Run the test suite:
+```
+pytest
+```
+
+Run with coverage report:
+```
+pytest --cov=src/myapp
+```</code></pre>
+            
+            <h4>Configuration Management</h4>
+            <p>Example of the application's config.py:</p>
+            
+            <pre><code>"""Application configuration."""
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+env_path = Path(".") / ".env"
+load_dotenv(dotenv_path=env_path)
+
+class Config:
+    """Base configuration."""
+    
+    # Flask
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev-key-only-for-development")
+    FLASK_ENV = os.getenv("FLASK_ENV", "development")
+    DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+    
+    # Database
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///app.db")
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Security
+    SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "False").lower() == "true"
+    REMEMBER_COOKIE_SECURE = True
+    
+class DevelopmentConfig(Config):
+    """Development configuration."""
+    DEBUG = True
+    SQLALCHEMY_ECHO = True
+
+class TestingConfig(Config):
+    """Testing configuration."""
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    WTF_CSRF_ENABLED = False
+
+class ProductionConfig(Config):
+    """Production configuration."""
+    DEBUG = False
+    SESSION_COOKIE_SECURE = True
+    
+    # Override this in production environment
+    if not os.getenv("SECRET_KEY"):
+        raise ValueError("SECRET_KEY environment variable is required in production")
+
+# Configuration dictionary
+config = {
+    "development": DevelopmentConfig,
+    "testing": TestingConfig,
+    "production": ProductionConfig,
+    "default": DevelopmentConfig
+}
+
+def get_config():
+    """Get the correct configuration based on environment."""
+    env = os.getenv("FLASK_ENV", "development")
+    return config.get(env, config["default"])</code></pre>
+            
+            <h4>Application Factory</h4>
+            <p>The app.py module uses our configuration system:</p>
+            
+            <pre><code>"""Flask application factory."""
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+
+from myapp.config import get_config
+
+# Initialize extensions
+db = SQLAlchemy()
+migrate = Migrate()
 
 def create_app():
+    """Create and configure the Flask application."""
     app = Flask(__name__)
-    # ... other configuration ...
+    app.config.from_object(get_config())
+    
+    # Initialize extensions with app
+    db.init_app(app)
+    migrate.init_app(app, db)
     
     # Register blueprints
-    from app.views import main, auth, api
-    app.register_blueprint(main.bp)
-    app.register_blueprint(auth.bp)
-    app.register_blueprint(api.bp)
+    from myapp.routes import main_bp, api_bp
+    app.register_blueprint(main_bp)
+    app.register_blueprint(api_bp, url_prefix='/api')
+    
+    # Register error handlers
+    from myapp.errors import register_error_handlers
+    register_error_handlers(app)
     
     return app</code></pre>
             
-            <p>Notice how our API route returns JSON responses with HTTP status codes instead of rendering HTML templates. This is ideal for AJAX requests because JavaScript can easily parse JSON data and update the page accordingly.</p>
+            <p>This example demonstrates:</p>
+            <ul>
+                <li>Proper virtual environment setup and documentation</li>
+                <li>Environment-specific configuration</li>
+                <li>Dependency management with separate requirement files</li>
+                <li>Application structure that supports clean architecture</li>
+                <li>Environment variables for configuration</li>
+            </ul>
         </section>
 
-        <section>
-            <h2>Basic AJAX Form Submission</h2>
+        <section class="conclusions">
+            <h3>Conclusion: Virtual Environment Principles to Live By</h3>
             
-            <p>Now that our backend is ready, let's implement the frontend part. We'll create an HTML form and add JavaScript to handle the AJAX submission.</p>
-            
-            <p>Create a file named <code>app/templates/contact_ajax.html</code>:</p>
-            
-            <pre><code>{% extends 'base.html' %}
-
-{% block title %}Contact Us{% endblock %}
-
-{% block content %}
-    &lt;h2&gt;Contact Us&lt;/h2&gt;
-    
-    &lt;div id="form-messages" class="alert" style="display: none;"&gt;&lt;/div&gt;
-    
-    &lt;form id="contact-form" method="post" novalidate&gt;
-        &lt;div class="form-group"&gt;
-            &lt;label for="name"&gt;Name&lt;/label&gt;
-            &lt;input type="text" class="form-control" id="name" name="name" required&gt;
-            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
-        &lt;/div&gt;
-        
-        &lt;div class="form-group"&gt;
-            &lt;label for="email"&gt;Email&lt;/label&gt;
-            &lt;input type="email" class="form-control" id="email" name="email" required&gt;
-            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
-        &lt;/div&gt;
-        
-        &lt;div class="form-group"&gt;
-            &lt;label for="message"&gt;Message&lt;/label&gt;
-            &lt;textarea class="form-control" id="message" name="message" rows="5" required&gt;&lt;/textarea&gt;
-            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
-        &lt;/div&gt;
-        
-        &lt;div class="form-group mt-3"&gt;
-            &lt;button type="submit" class="btn btn-primary" id="submit-btn"&gt;Send Message&lt;/button&gt;
-            &lt;span id="loading-indicator" style="display: none;"&gt;
-                Sending... &lt;div class="spinner-border spinner-border-sm text-primary"&gt;&lt;/div&gt;
-            &lt;/span&gt;
-        &lt;/div&gt;
-    &lt;/form&gt;
-{% endblock %}
-
-{% block scripts %}
-&lt;script&gt;
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('contact-form');
-    const submitBtn = document.getElementById('submit-btn');
-    const loadingIndicator = document.getElementById('loading-indicator');
-    const formMessages = document.getElementById('form-messages');
-    
-    form.addEventListener('submit', function(event) {
-        // Prevent the default form submission
-        event.preventDefault();
-        
-        // Reset previous errors
-        resetFormErrors();
-        
-        // Show loading indicator
-        submitBtn.style.display = 'none';
-        loadingIndicator.style.display = 'inline-block';
-        
-        // Collect form data
-        const formData = {
-            name: document.getElementById('name').value,
-            email: document.getElementById('email').value,
-            message: document.getElementById('message').value
-        };
-        
-        // Send AJAX request
-        fetch('/api/contact', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData),
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Hide loading indicator
-            submitBtn.style.display = 'inline-block';
-            loadingIndicator.style.display = 'none';
-            
-            if (data.success) {
-                // Show success message
-                formMessages.textContent = data.message;
-                formMessages.className = 'alert alert-success';
-                formMessages.style.display = 'block';
-                
-                // Reset form
-                form.reset();
-            } else {
-                // Show field-specific errors
-                if (data.errors) {
-                    Object.keys(data.errors).forEach(field => {
-                        const inputField = document.getElementById(field);
-                        const feedbackElement = inputField.nextElementSibling;
-                        feedbackElement.textContent = data.errors[field];
-                        inputField.classList.add('is-invalid');
-                    });
-                }
-                
-                // Show general error message
-                formMessages.textContent = 'Please correct the errors below.';
-                formMessages.className = 'alert alert-danger';
-                formMessages.style.display = 'block';
-            }
-        })
-        .catch(error => {
-            // Handle network errors
-            submitBtn.style.display = 'inline-block';
-            loadingIndicator.style.display = 'none';
-            
-            formMessages.textContent = 'There was a problem with your submission. Please try again later.';
-            formMessages.className = 'alert alert-danger';
-            formMessages.style.display = 'block';
-            console.error('Error:', error);
-        });
-    });
-    
-    function resetFormErrors() {
-        // Hide any previous messages
-        formMessages.style.display = 'none';
-        
-        // Clear field-specific errors
-        const invalidFields = form.querySelectorAll('.is-invalid');
-        invalidFields.forEach(field => {
-            field.classList.remove('is-invalid');
-            const feedbackElement = field.nextElementSibling;
-            if (feedbackElement && feedbackElement.classList.contains('invalid-feedback')) {
-                feedbackElement.textContent = '';
-            }
-        });
-    }
-});
-&lt;/script&gt;
-{% endblock %}</code></pre>
-            
-            <p>Add a route in <code>app/views/main.py</code> to render this template:</p>
-            
-            <pre><code># app/views/main.py
-@bp.route('/contact-ajax')
-def contact_ajax():
-    return render_template('contact_ajax.html')</code></pre>
-            
-            <h3>Understanding the AJAX Flow</h3>
-            
-            <p>Let's break down what happens in this implementation:</p>
+            <p>As we conclude our exploration of virtual environments, let's distill the key principles that will serve you well throughout your Python development career:</p>
             
             <ol>
-                <li><strong>Intercept Form Submission</strong>: We prevent the default form submission with <code>event.preventDefault()</code></li>
-                <li><strong>Collect Data</strong>: We gather the form values into a JavaScript object</li>
-                <li><strong>Show Loading Indicator</strong>: We provide visual feedback that the submission is in progress</li>
-                <li><strong>Send Data</strong>: We use the Fetch API to send the data as JSON to our backend</li>
-                <li><strong>Process Response</strong>: We handle success and error responses accordingly</li>
-                <li><strong>Update UI</strong>: We show appropriate messages and highlight any validation errors</li>
+                <li><strong>One Project, One Environment</strong>: Always create a dedicated virtual environment for each project.</li>
+                <li><strong>Documentation is Key</strong>: Document your environment setup process thoroughly.</li>
+                <li><strong>Version Pinning</strong>: Pin your dependency versions for reproducibility.</li>
+                <li><strong>Isolation is Protection</strong>: Never install project-specific packages globally.</li>
+                <li><strong>Environment Variables for Configuration</strong>: Keep sensitive or environment-specific settings in environment variables, not code.</li>
+                <li><strong>Regular Maintenance</strong>: Periodically update dependencies and rebuild environments.</li>
+                <li><strong>Use the Right Tool</strong>: Choose the appropriate virtual environment tool for your project's needs.</li>
+                <li><strong>Scripts and Automation</strong>: Automate repetitive environment tasks.</li>
+                <li><strong>Team Consistency</strong>: Establish and follow team conventions for environments.</li>
+                <li><strong>Clean Up Regularly</strong>: Delete unused environments to save disk space.</li>
             </ol>
             
-            <p>This pattern is like a waiter taking your order at a restaurant. Instead of making you fill out a form and walk to the kitchen yourself (traditional form submission), the waiter (JavaScript) takes your order (form data), brings it to the kitchen (server) on your behalf, and returns with a response.</p>
+            <p>By internalizing these principles, you'll develop clean, reproducible Python projects that are easier to maintain, share, and deploy.</p>
+            
+            <p>In our next sessions, we'll build on this foundation as we dive into module organization, packages, and more advanced Python development concepts.</p>
         </section>
 
-        <section>
-            <h2>AJAX with Flask-WTF Integration</h2>
+        <section class="exercise">
+            <h3>Exercise: Environment Health Check Tool</h3>
             
-            <p>The previous approach works, but it bypasses Flask-WTF's server-side validation and CSRF protection. Let's create a more integrated solution that leverages Flask-WTF's features.</p>
+            <p>Let's apply what we've learned by creating a virtual environment "health check" script that you can use to validate your environment setup.</p>
             
-            <h3>Backend Route with Flask-WTF</h3>
+            <p>Create a file named <code>env_check.py</code> with the following content:</p>
             
-            <p>First, let's create a contact form class in <code>app/forms/contact.py</code>:</p>
-            
-            <pre><code># app/forms/contact.py
-from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SubmitField
-from wtforms.validators import DataRequired, Email, Length
+            <pre><code>#!/usr/bin/env python
+"""
+Virtual Environment Health Check
 
-class ContactForm(FlaskForm):
-    name = StringField('Name', validators=[DataRequired(), Length(min=2, max=50)])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    message = TextAreaField('Message', validators=[DataRequired(), Length(min=10, max=1000)])
-    submit = SubmitField('Send Message')</code></pre>
-            
-            <p>Now, let's create a route that uses this form but returns JSON for AJAX requests:</p>
-            
-            <pre><code># app/views/main.py
-from flask import jsonify, request
-from app.forms.contact import ContactForm
-from app.models.message import Message
+A utility to verify your virtual environment is properly configured.
+"""
 
-@bp.route('/contact-wtf-ajax', methods=['GET', 'POST'])
-def contact_wtf_ajax():
-    form = ContactForm()
-    
-    if request.method == 'POST':
-        if form.validate_on_submit():
-            # Process the valid form data
-            try:
-                message = Message(
-                    name=form.name.data,
-                    email=form.email.data,
-                    content=form.message.data
-                )
-                db.session.add(message)
-                db.session.commit()
-                
-                return jsonify({
-                    'success': True,
-                    'message': 'Your message has been sent. Thank you!'
-                })
-            except Exception as e:
-                return jsonify({
-                    'success': False,
-                    'message': 'An error occurred while processing your request.',
-                    'error': str(e)
-                }), 500
-        else:
-            # Return validation errors
-            errors = {}
-            for field_name, field_errors in form.errors.items():
-                errors[field_name] = field_errors[0]  # Just take the first error for each field
-            
-            return jsonify({
-                'success': False,
-                'errors': errors
-            }), 400
-    
-    # For GET request, just render the form
-    return render_template('contact_wtf_ajax.html', form=form)</code></pre>
-            
-            <h3>Frontend Template with Flask-WTF</h3>
-            
-            <p>Create a template at <code>app/templates/contact_wtf_ajax.html</code>:</p>
-            
-            <pre><code>{% extends 'base.html' %}
+import os
+import sys
+import site
+import subprocess
+import platform
+from pathlib import Path
 
-{% block title %}Contact Us{% endblock %}
+def header(text):
+    """Print a section header."""
+    print("\n" + "=" * 60)
+    print(f" {text}")
+    print("=" * 60)
 
-{% block content %}
-    &lt;h2&gt;Contact Us with Flask-WTF&lt;/h2&gt;
-    
-    &lt;div id="form-messages" class="alert" style="display: none;"&gt;&lt;/div&gt;
-    
-    &lt;form id="contact-form" method="post" novalidate&gt;
-        {{ form.hidden_tag() }}
-        
-        &lt;div class="form-group"&gt;
-            {{ form.name.label }}
-            {{ form.name(class="form-control") }}
-            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
-        &lt;/div&gt;
-        
-        &lt;div class="form-group"&gt;
-            {{ form.email.label }}
-            {{ form.email(class="form-control") }}
-            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
-        &lt;/div&gt;
-        
-        &lt;div class="form-group"&gt;
-            {{ form.message.label }}
-            {{ form.message(class="form-control", rows=5) }}
-            &lt;div class="invalid-feedback"&gt;&lt;/div&gt;
-        &lt;/div&gt;
-        
-        &lt;div class="form-group mt-3"&gt;
-            {{ form.submit(class="btn btn-primary", id="submit-btn") }}
-            &lt;span id="loading-indicator" style="display: none;"&gt;
-                Sending... &lt;div class="spinner-border spinner-border-sm text-primary"&gt;&lt;/div&gt;
-            &lt;/span&gt;
-        &lt;/div&gt;
-    &lt;/form&gt;
-{% endblock %}
+def check_mark(condition):
+    """Return a check mark or X based on condition."""
+    return "✅" if condition else "❌"
 
-{% block scripts %}
-&lt;script&gt;
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('contact-form');
-    const submitBtn = document.getElementById('submit-btn');
-    const loadingIndicator = document.getElementById('loading-indicator');
-    const formMessages = document.getElementById('form-messages');
+def main():
+    """Run the environment health check."""
+    header("VIRTUAL ENVIRONMENT HEALTH CHECK")
     
-    form.addEventListener('submit', function(event) {
-        event.preventDefault();
-        
-        // Reset previous errors
-        resetFormErrors();
-        
-        // Show loading indicator
-        submitBtn.style.display = 'none';
-        loadingIndicator.style.display = 'inline-block';
-        
-        // Get form data including CSRF token
-        const formData = new FormData(form);
-        
-        // Send AJAX request to the current URL
-        fetch(window.location.href, {
-            method: 'POST',
-            body: formData,
-            // Don't set Content-Type header when using FormData
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Hide loading indicator
-            submitBtn.style.display = 'inline-block';
-            loadingIndicator.style.display = 'none';
-            
-            if (data.success) {
-                // Show success message
-                formMessages.textContent = data.message;
-                formMessages.className = 'alert alert-success';
-                formMessages.style.display = 'block';
-                
-                // Reset form
-                form.reset();
-                
-                // Re-add the CSRF token (it gets cleared with form.reset())
-                const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-                document.querySelector('input[name="csrf_token"]').value = csrfToken;
-            } else {
-                // Show field-specific errors
-                if (data.errors) {
-                    Object.keys(data.errors).forEach(field => {
-                        // Handle special case for csrf_token
-                        if (field === 'csrf_token') {
-                            formMessages.textContent = 'Session expired. Please refresh the page and try again.';
-                            formMessages.className = 'alert alert-danger';
-                            formMessages.style.display = 'block';
-                            return;
-                        }
-                        
-                        const inputField = document.getElementById(field);
-                        if (inputField) {
-                            const feedbackElement = inputField.nextElementSibling;
-                            feedbackElement.textContent = data.errors[field];
-                            inputField.classList.add('is-invalid');
-                        }
-                    });
-                }
-                
-                // Show general error message
-                formMessages.textContent = 'Please correct the errors below.';
-                formMessages.className = 'alert alert-danger';
-                formMessages.style.display = 'block';
-            }
-        })
-        .catch(error => {
-            // Handle network errors
-            submitBtn.style.display = 'inline-block';
-            loadingIndicator.style.display = 'none';
-            
-            formMessages.textContent = 'There was a problem with your submission. Please try again later.';
-            formMessages.className = 'alert alert-danger';
-            formMessages.style.display = 'block';
-            console.error('Error:', error);
-        });
-    });
+    # Check if running in a virtual environment
+    in_venv = sys.prefix != sys.base_prefix
+    print(f"{check_mark(in_venv)} Running in a virtual environment")
     
-    function resetFormErrors() {
-        // Hide any previous messages
-        formMessages.style.display = 'none';
+    if not in_venv:
+        print("\n⚠️  WARNING: Not running in a virtual environment!")
+        print("    Please activate your virtual environment and try again.")
+        print("    Example: source venv/bin/activate")
+        sys.exit(1)
+    
+    # Get environment details
+    venv_path = sys.prefix
+    python_version = platform.python_version()
+    pip_version = subprocess.run(
+        [sys.executable, "-m", "pip", "--version"],
+        capture_output=True, text=True
+    ).stdout.split()[1]
+    
+    print(f"\nEnvironment path: {venv_path}")
+    print(f"Python version: {python_version}")
+    print(f"Pip version: {pip_version}")
+    
+    # Check site-packages location
+    site_packages = site.getsitepackages()[0]
+    correct_site_packages = Path(site_packages).is_relative_to(Path(venv_path))
+    print(f"{check_mark(correct_site_packages)} Site-packages directory: {site_packages}")
+    
+    # Check activation script
+    if os.name == 'nt':  # Windows
+        activate_script = Path(venv_path) / "Scripts" / "activate.bat"
+    else:  # Unix
+        activate_script = Path(venv_path) / "bin" / "activate"
+    
+    script_exists = activate_script.exists()
+    print(f"{check_mark(script_exists)} Activation script: {activate_script}")
+    
+    # Check for key packages
+    header("INSTALLED PACKAGES")
+    
+    # Get installed packages
+    installed_packages = subprocess.run(
+        [sys.executable, "-m", "pip", "list"],
+        capture_output=True, text=True
+    ).stdout.strip().split('\n')[2:]  # Skip header lines
+    
+    print(f"Total installed packages: {len(installed_packages)}")
+    
+    # Show top packages (first 10)
+    if installed_packages:
+        print("\nTop packages:")
+        for i, package_line in enumerate(installed_packages[:10]):
+            print(f"  {package_line}")
         
-        // Clear field-specific errors
-        const invalidFields = form.querySelectorAll('.is-invalid');
-        invalidFields.forEach(field => {
-            field.classList.remove('is-invalid');
-            const feedbackElement = field.nextElementSibling;
-            if (feedbackElement && feedbackElement.classList.contains('invalid-feedback')) {
-                feedbackElement.textContent = '';
-            }
-        });
-    }
-});
-&lt;/script&gt;
-{% endblock %}</code></pre>
+        if len(installed_packages) > 10:
+            print(f"  ...and {len(installed_packages) - 10} more")
+    
+    # Check requirements file
+    header("PROJECT CONFIGURATION")
+    
+    # Find requirements files
+    req_files = list(Path().glob("requirements*.txt")) + list(Path().glob("requirements/*.txt"))
+    if req_files:
+        print(f"{check_mark(True)} Found {len(req_files)} requirements files:")
+        for req_file in req_files:
+            print(f"  - {req_file}")
+    else:
+        print(f"{check_mark(False)} No requirements files found")
+    
+    # Check for common environment files
+    env_files = list(Path().glob(".env*"))
+    if env_files:
+        print(f"{check_mark(True)} Found {len(env_files)} environment files:")
+        for env_file in env_files:
+            print(f"  - {env_file}")
+    else:
+        print(f"{check_mark(False)} No environment files found")
+    
+    # Check for .gitignore
+    gitignore = Path(".gitignore")
+    gitignore_exists = gitignore.exists()
+    print(f"{check_mark(gitignore_exists)} .gitignore file")
+    
+    if gitignore_exists:
+        venv_ignored = False
+        gitignore_content = gitignore.read_text()
+        venv_patterns = ["venv/", "/venv", "venv", "env/", "ENV/"]
+        for pattern in venv_patterns:
+            if pattern in gitignore_content:
+                venv_ignored = True
+                break
+        print(f"{check_mark(venv_ignored)} Virtual environment ignored in .gitignore")
+    
+    # Summary
+    header("SUMMARY")
+    
+    if in_venv and correct_site_packages and script_exists:
+        print("✅ Your virtual environment appears to be configured correctly!")
+    else:
+        print("⚠️  Your virtual environment may have issues that need attention.")
+    
+    if not req_files:
+        print("\n⚠️  Recommendation: Create a requirements.txt file to track dependencies.")
+    
+    if not env_files:
+        print("\n⚠️  Recommendation: Consider using .env files for environment variables.")
+    
+    if gitignore_exists and not venv_ignored:
+        print("\n⚠️  Recommendation: Add your virtual environment directory to .gitignore.")
+    
+    print("\nFor additional checks, consider tools like 'pip-audit' for security vulnerabilities")
+    print("or 'pip check' to verify package dependencies.")
+
+if __name__ == "__main__":
+    main()
+</code></pre>
             
-            <h3>Key Differences with Flask-WTF Integration</h3>
+            <h4>Using the Script</h4>
+            <p>To use this script:</p>
             
-            <p>This approach has several advantages over the previous one:</p>
+            <ol>
+                <li>Save it as <code>env_check.py</code> in your project directory</li>
+                <li>Activate your virtual environment</li>
+                <li>Run it with <code>python env_check.py</code></li>
+            </ol>
             
+            <p>The script will perform several checks on your virtual environment and provide recommendations for improvements.</p>
+            
+            <h4>Script Features</h4>
             <ul>
-                <li><strong>CSRF Protection</strong>: We include Flask-WTF's CSRF token and handle expired tokens</li>
-                <li><strong>Server-Side Validation</strong>: We leverage Flask-WTF's validators</li>
-                <li><strong>FormData</strong>: We use the FormData API instead of manually collecting fields</li>
-                <li><strong>Same Endpoint</strong>: The form submits to the same URL that rendered it</li>
+                <li>Verifies you're running in a virtual environment</li>
+                <li>Displays key environment information</li>
+                <li>Lists installed packages</li>
+                <li>Checks for requirements files</li>
+                <li>Verifies .gitignore configuration</li>
+                <li>Provides recommendations for best practices</li>
             </ul>
             
-            <p>The CSRF token is like a special ticket that proves you got the form from our website. Without it, someone could trick users into submitting forms to our site from somewhere else (a Cross-Site Request Forgery attack). It's similar to how movie theaters stamp your hand when you leave temporarily – it proves you came from inside.</p>
+            <p>This script demonstrates practical application of the virtual environment concepts we've covered, and gives you a tool you can use in future projects.</p>
         </section>
 
-        <section>
-            <h2>Real-Time Form Validation with AJAX</h2>
+        <section class="additional-resources">
+            <h3>Additional Resources</h3>
             
-            <p>AJAX isn't just useful for form submission – it can also provide real-time validation feedback as users type. Let's implement an example for checking if a username is available.</p>
-            
-            <h3>Backend Route for Username Validation</h3>
-            
-            <p>Add this route to <code>app/views/api.py</code>:</p>
-            
-            <pre><code>@bp.route('/check-username')
-def check_username():
-    """Check if a username is available"""
-    username = request.args.get('username', '').strip()
-    
-    if not username:
-        return jsonify({'available': False, 'message': 'Please enter a username'})
-    
-    if len(username) < 3:
-        return jsonify({
-            'available': False,
-            'message': 'Username must be at least 3 characters long'
-        })
-    
-    # Check if username exists in the database
-    user = User.query.filter(User.username.ilike(username)).first()
-    
-    if user is None:
-        return jsonify({
-            'available': True,
-            'message': 'Username is available'
-        })
-    else:
-        return jsonify({
-            'available': False,
-            'message': 'This username is already taken'
-        })
-</code></pre>
-            
-            <h3>Frontend JavaScript for Real-Time Validation</h3>
-            
-            <p>Add this JavaScript to your registration form:</p>
-            
-            <pre><code>&lt;script&gt;
-document.addEventListener('DOMContentLoaded', function() {
-    const usernameField = document.getElementById('username');
-    const usernameValidationMessage = document.getElementById('username-validation');
-    
-    // Debounce function to limit API calls
-    function debounce(func, wait) {
-        let timeout;
-        return function(...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-        };
-    }
-    
-    // Function to check username availability
-    const checkUsername = debounce(function() {
-        const username = usernameField.value.trim();
-        
-        // Skip validation for empty or very short usernames
-        if (username.length < 3) {
-            usernameValidationMessage.textContent = '';
-            usernameValidationMessage.className = '';
-            usernameField.classList.remove('is-valid', 'is-invalid');
-            return;
-        }
-        
-        // Show loading state
-        usernameValidationMessage.textContent = 'Checking availability...';
-        usernameValidationMessage.className = 'text-muted';
-        
-        // Make AJAX request to check username
-        fetch(`/api/check-username?username=${encodeURIComponent(username)}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.available) {
-                    usernameValidationMessage.textContent = data.message;
-                    usernameValidationMessage.className = 'text-success';
-                    usernameField.classList.remove('is-invalid');
-                    usernameField.classList.add('is-valid');
-                } else {
-                    usernameValidationMessage.textContent = data.message;
-                    usernameValidationMessage.className = 'text-danger';
-                    usernameField.classList.remove('is-valid');
-                    usernameField.classList.add('is-invalid');
-                }
-            })
-            .catch(error => {
-                usernameValidationMessage.textContent = 'Error checking username';
-                usernameValidationMessage.className = 'text-danger';
-                console.error('Error checking username:', error);
-            });
-    }, 500); // 500ms delay
-    
-    // Add event listener for input changes
-    usernameField.addEventListener('input', checkUsername);
-});
-&lt;/script&gt;</code></pre>
-            
-            <p>Make sure your form includes a place for the validation message:</p>
-            
-            <pre><code>&lt;div class="form-group"&gt;
-    &lt;label for="username"&gt;Username&lt;/label&gt;
-    &lt;input type="text" class="form-control" id="username" name="username" required&gt;
-    &lt;small id="username-validation" class="form-text"&gt;&lt;/small&gt;
-&lt;/div&gt;</code></pre>
-            
-            <h3>Understanding Debouncing</h3>
-            
-            <p>Notice the <code>debounce</code> function in our code. It's an important technique when implementing real-time validation. Debouncing ensures we don't send a request for every keystroke, which would overwhelm the server.</p>
-            
-            <p>Think of debouncing like controlling the water when you're taking a shower. Instead of turning the knob back and forth rapidly as the temperature fluctuates, you make small adjustments and wait to see the effect before making more. Similarly, debouncing waits until the user pauses typing before sending a request.</p>
-            
-            <p>Real-time validation creates a responsive form that feels like having a helpful assistant looking over your shoulder, offering immediate feedback as you fill it out.</p>
+            <ul>
+                <li><a href="https://docs.python.org/3/library/venv.html" target="_blank">Python venv documentation</a></li>
+                <li><a href="https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/" target="_blank">Python Packaging User Guide: Virtual Environments</a></li>
+                <li><a href="https://realpython.com/python-virtual-environments-a-primer/" target="_blank">Real Python: Virtual Environments Primer</a></li>
+                <li><a href="https://docs.pipenv.org/" target="_blank">Pipenv documentation</a></li>
+                <li><a href="https://python-poetry.org/docs/" target="_blank">Poetry documentation</a></li>
+                <li><a href="https://github.com/pypa/pipx" target="_blank">pipx: Install and Run Python Applications in Isolated Environments</a></li>
+                <li><a href="https://direnv.net/" target="_blank">direnv: Unclutter your .profile</a></li>
+                <li><a href="https://virtualenvwrapper.readthedocs.io/" target="_blank">virtualenvwrapper documentation</a></li>
+            </ul>
         </section>
+    </main>
 
-        <section>
-            <h2>Multi-Step Forms with AJAX</h2>
-            
-            <p>Multi-step forms break a complex form into manageable pieces, like dividing a long journey into shorter legs. AJAX is perfect for multi-step forms because it allows you to validate each step before proceeding and save progress along the way.</p>
-            
-            <p>Let's look at a practical example of a job application form with progress saving.</p>
-            
-            <h3>Backend Model for Job Applications</h3>
-            
-            <p>First, let's create a model to store application data in <code>app/models/application.py</code>:</p>
-            
-            <pre><code># app/models/application.py
-from datetime import datetime
-from app import db
-
-class JobApplication(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
-    status = db.Column(db.String(20), default='draft')  # draft, submitted, under_review, etc.
-    
-    # Personal Information
-    full_name = db.Column(db.String(100))
-    email = db.Column(db.String(100))
-    phone = db.Column(db.String(20))
-    address = db.Column(db.String(200))
-    
-    # Education
-    education = db.Column(db.JSON)  # List of education entries
-    
-    # Experience
-    experience = db.Column(db.JSON)  # List of experience entries
-    
-    # Skills
-    skills = db.Column(db.JSON)  # List of skills
-    
-    # Additional Questions
-    additional_info = db.Column(db.JSON)  # Answers to job-specific questions
-    
-    # Resume
-    resume_path = db.Column(db.String(255))
-    
-    # Timestamps
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    submitted_at = db.Column(db.DateTime)
-    
-    # Relationships
-    user = db.relationship('User', backref='applications')
-    job = db.relationship('Job', backref='applications')</code></pre>
-            
-            <h3>API Routes for Saving Progress</h3>
-            
-            <p>Add these routes to <code>app/views/api.py</code>:</p>
-            
-            <pre><code>@bp.route('/application/<int:application_id>/save', methods=['POST'])
-@login_required
-def save_application_progress(application_id):
-    """Save progress for a job application"""
-    application = JobApplication.query.get_or_404(application_id)
-    
-    # Make sure the application belongs to the current user
-    if application.user_id != current_user.id:
-        return jsonify({'success': False, 'message': 'Access denied'}), 403
-    
-    data = request.json
-    step = data.get('step')
-    
-    if not step:
-        return jsonify({'success': False, 'message': 'Step is required'}), 400
-    
-    # Update the application based on the current step
-    if step == 'personal':
-        application.full_name = data.get('full_name')
-        application.email = data.get('email')
-        application.phone = data.get('phone')
-        application.address = data.get('address')
-    
-    elif step == 'education':
-        application.education = data.get('education', [])
-    
-    elif step == 'experience':
-        application.experience = data.get('experience', [])
-    
-    elif step == 'skills':
-        application.skills = data.get('skills', [])
-    
-    elif step == 'additional':
-        application.additional_info = data.get('answers', {})
-    
-    # Update the timestamp
-    application.updated_at = datetime.utcnow()
-    
-    try:
-        db.session.commit()
-        return jsonify({
-            'success': True, 
-            'message': 'Progress saved successfully',
-            'updated_at': application.updated_at.strftime('%Y-%m-%d %H:%M:%S')
-        })
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)}), 500
-
-@bp.route('/application/<>/submit', methods=['POST'])
-@login_required
-def submit_application(application_id):
-    """Submit a completed job application"""
-    application = JobApplication.query.get_or_404(application_id)
-    
-    # Make sure the application belongs to the current user
-    if application.user_id != current_user.id:
-        return jsonify({'success': False, 'message': 'Access denied'}), 403
-    
-    # Validate all required fields are filled
-    errors = {}
-    
-    # Personal info validation
-    if not application.full_name:
-        errors['full_name'] = 'Full name is required'
-    if not application.email:
-        errors['email'] = 'Email is required'
-    if not application.phone:
-        errors['phone'] = 'Phone number is required'
-    if not application.address:
-        errors['address'] = 'Address is required'
-    
-    # Education validation
-    if not application.education or len(application.education) == 0:
-        errors['education'] = 'At least one education entry is required'
-    
-    # Experience validation (might be optional depending on job)
-    # if not application.experience or len(application.experience) == 0:
-    #     errors['experience'] = 'At least one experience entry is required'
-    
-    # Resume validation
-    if not application.resume_path:
-        errors['resume'] = 'Resume is required'
-    
-    # Return errors if validation fails
-    if errors:
-        return jsonify({'success': False, 'errors': errors}), 400
-    
-    # Update application status and submission timestamp
-    application.status = 'submitted'
-    application.submitted_at = datetime.utcnow()
-    
-    try:
-        db.session.commit()
-        
-        # Send confirmation email (in a real app)
-        # send_application_confirmation(application)
-        
-        return jsonify({
-            'success': True,
-            'message': 'Application submitted successfully',
-            'redirect_url': url_for('job.application_confirmation', application_id=application.id)
-        })
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)}), 500
-</code></pre>
-</section>
-</main>
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
 </body>
 </html>
+

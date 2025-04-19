@@ -3,393 +3,965 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Uploads in Flask-WTF</title>
+    <title>Python Full Stack Web Developer Course - Package Management with pip</title>
     <link rel="stylesheet" href="/styles/main.css">
     <link rel="icon" href="/favicon.png">
 </head>
 <body>
     <header>
-        <h1>File Uploads in Flask-WTF</h1>
-        <p class="subtitle">Week 2 - Friday: Full Stack Web Development with Python</p>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 2: Python Fundamentals (Part 1)</h2>
+        <h3>Friday Morning: Package Management with pip</h3>
     </header>
 
     <main>
-        <section>
-            <h2>File Uploads</h2>
-            <p>File uploads add a new dimension to form handling. They're like receiving physical documents at an office — they need to be validated, processed, and stored securely.</p>
+        <section class="introduction">
+            <h3>Introduction to Package Management</h3>
+            <p>Welcome to our session on package management with pip! In Python development, the ability to efficiently manage external libraries and dependencies is just as important as writing good code. Today, we'll dive deep into pip, Python's official package manager, and explore how it can streamline your development process.</p>
             
-            <h3>Setting Up File Uploads</h3>
-            <p>Flask-WTF makes it easy to handle file uploads using the <code>FileField</code> class:</p>
-            
-            <pre><code>from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileRequired, FileAllowed
-from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired
+            <p>Think of pip like a skilled librarian for your code. Just as a librarian helps you find and borrow books from a vast collection, pip helps you discover, install, and manage Python packages from the Python Package Index (PyPI) and other sources. Without package management, you'd need to manually download and install every library you want to use, track their versions, and handle their dependencies yourself—a tedious and error-prone process.</p>
+        </section>
 
-class ProfilePictureForm(FlaskForm):
-    display_name = StringField('Display Name', validators=[DataRequired()])
-    profile_picture = FileField('Profile Picture', validators=[
-        FileRequired(),
-        FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')
-    ])
-    submit = SubmitField('Update Profile')</code></pre>
+        <section class="what-is-pip">
+            <h3>What is pip and PyPI?</h3>
             
-            <p>You'll need to configure your application to handle file uploads:</p>
+            <p><strong>pip</strong> (which stands for "pip installs packages") is Python's official package installer. It connects to package repositories, downloads packages, and handles the installation process including managing dependencies.</p>
             
-            <pre><code># app/__init__.py or config.py
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size</code></pre>
+            <p><strong>PyPI</strong> (the Python Package Index) is the main repository of Python software, hosting over 400,000 projects. Think of PyPI as an enormous shared library where developers publish their code for others to use.</p>
             
-            <h3>Processing Uploaded Files</h3>
-            <p>Once you've set up the form, you need to handle the uploaded file in your route:</p>
+            <p><strong>Real-World Analogy:</strong> If Python is like a carpentry workshop, then pip is your supplier who delivers tools and materials. PyPI is the massive warehouse where these tools are stored. Just as a carpenter doesn't manufacture their own screws or saws, a Python developer doesn't need to write everything from scratch—they can leverage existing tools from PyPI.</p>
             
-            <pre><code>import os
-from werkzeug.utils import secure_filename
-from flask import current_app
-
-# Define a function to save uploaded files
-def save_file(file, folder):
-    filename = secure_filename(file.filename)
-    # Create a unique filename to prevent overwriting
-    base_filename, extension = os.path.splitext(filename)
-    unique_filename = f"{base_filename}_{int(time.time())}{extension}"
-    
-    # Ensure the upload folder exists
-    upload_folder = os.path.join(current_app.root_path, 'static', folder)
-    os.makedirs(upload_folder, exist_ok=True)
-    
-    # Save the file
-    file_path = os.path.join(upload_folder, unique_filename)
-    file.save(file_path)
-    
-    # Return the path relative to the static folder
-    return os.path.join(folder, unique_filename)
-
-@bp.route('/profile/picture', methods=['GET', 'POST'])
-@login_required
-def update_profile_picture():
-    form = ProfilePictureForm()
-    
-    if form.validate_on_submit():
-        # Save the uploaded file
-        picture_path = save_file(form.profile_picture.data, 'uploads/profile_pictures')
-        
-        # Update user profile
-        current_user.display_name = form.display_name.data
-        current_user.profile_picture = picture_path
-        db.session.commit()
-        
-        flash('Your profile has been updated!', 'success')
-        return redirect(url_for('main.profile'))
-    
-    # Pre-populate form with current values
-    if request.method == 'GET':
-        form.display_name.data = current_user.display_name
-    
-    return render_template('profile/picture.html', form=form)</code></pre>
-            
-            <h3>File Upload Template</h3>
-            <p>The template for file uploads needs the <code>enctype</code> attribute:</p>
-            
-            <pre><code>&lt;!-- templates/profile/picture.html --&gt;
-{% extends 'base.html' %}
-
-{% block title %}Update Profile Picture{% endblock %}
-
-{% block content %}
-    &lt;h2&gt;Update Profile Picture&lt;/h2&gt;
-    
-    {% if current_user.profile_picture %}
-        &lt;div class="mb-3"&gt;
-            &lt;h4&gt;Current Profile Picture&lt;/h4&gt;
-            &lt;img src="{{ url_for('static', filename=current_user.profile_picture) }}" 
-                 alt="Current profile picture"
-                 class="img-thumbnail"
-                 style="max-width: 200px"&gt;
-        &lt;/div&gt;
-    {% endif %}
-    
-    &lt;form method="post" enctype="multipart/form-data" novalidate&gt;
-        {{ form.hidden_tag() }}
-        
-        &lt;div class="form-group"&gt;
-            {{ form.display_name.label }}
-            {{ form.display_name(class="form-control") }}
-            {% for error in form.display_name.errors %}
-                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
-            {% endfor %}
-        &lt;/div&gt;
-        
-        &lt;div class="form-group"&gt;
-            {{ form.profile_picture.label }}
-            {{ form.profile_picture(class="form-control") }}
-            {% for error in form.profile_picture.errors %}
-                &lt;span class="text-danger"&gt;{{ error }}&lt;/span&gt;
-            {% endfor %}
-            &lt;small class="form-text text-muted"&gt;
-                Allowed formats: JPG, JPEG, PNG. Maximum size: 16MB.
-            &lt;/small&gt;
-        &lt;/div&gt;
-        
-        &lt;div class="form-group mt-3"&gt;
-            {{ form.submit(class="btn btn-primary") }}
-        &lt;/div&gt;
-    &lt;/form&gt;
-{% endblock %}</code></pre>
-            
-            <h3>Advanced File Validation</h3>
-            <p>For more sophisticated validation, you can create custom validators:</p>
-            
-            <pre><code>import imghdr
-from wtforms.validators import ValidationError
-
-def validate_image(form, field):
-    """Validate that the uploaded file is an image with proper format"""
-    if field.data:
-        # Check if there's an actual file
-        file = field.data
-        
-        # Additional check beyond extension
-        image_type = imghdr.what(file)
-        if image_type not in ['jpeg', 'png', 'gif']:
-            raise ValidationError('Uploaded file is not a valid image. Please upload a JPEG, PNG, or GIF.')
-        
-        # Check file size (max 5MB)
-        file.seek(0, os.SEEK_END)
-        file_size = file.tell()
-        file.seek(0)  # Reset file pointer
-        
-        if file_size > 5 * 1024 * 1024:  # 5MB in bytes
-            raise ValidationError('File size exceeds the 5MB limit.')
-
-class AdvancedProfilePictureForm(FlaskForm):
-    display_name = StringField('Display Name', validators=[DataRequired()])
-    profile_picture = FileField('Profile Picture', validators=[
-        FileRequired(),
-        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!'),
-        validate_image
-    ])
-    submit = SubmitField('Update Profile')</code></pre>
-            
-            <h3>Multiple File Uploads</h3>
-            <p>To handle multiple file uploads, you can use <code>MultipleFileField</code>:</p>
-            
-            <pre><code>from flask_wtf.file import MultipleFileField
-
-class ProductImagesForm(FlaskForm):
-    product_name = StringField('Product Name', validators=[DataRequired()])
-    images = MultipleFileField('Product Images', validators=[
-        DataRequired('Please select at least one image.'),
-        FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')
-    ])
-    submit = SubmitField('Add Product')</code></pre>
-            
-            <p>And process the files in your route:</p>
-            
-            <pre><code>@bp.route('/product/add', methods=['GET', 'POST'])
-@login_required
-def add_product():
-    form = ProductImagesForm()
-    
-    if form.validate_on_submit():
-        # Create the product
-        product = Product(
-            name=form.product_name.data,
-            seller_id=current_user.id
-        )
-        db.session.add(product)
-        db.session.flush()  # Get the product ID
-        
-        # Save all uploaded images
-        for image_file in form.images.data:
-            # Skip if file is empty
-            if not image_file.filename:
-                continue
-                
-            image_path = save_file(image_file, f'uploads/products/{product.id}')
-            
-            # Create image record
-            product_image = ProductImage(
-                product_id=product.id,
-                image_path=image_path
-            )
-            db.session.add(product_image)
-        
-        db.session.commit()
-        flash('Product added successfully!', 'success')
-        return redirect(url_for('product.details', product_id=product.id))
-    
-    return render_template('product/add.html', form=form)</code></pre>
-            
-            <h3>Real-World Example: Document Management System</h3>
-            <p>Let's look at a more complex example for a document management system that handles various file types with different validation requirements:</p>
-            
-            <pre><code># models/document.py
-class DocumentType(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
-    allowed_extensions = db.Column(db.String(255), nullable=False)  # Comma-separated list
-    max_size_mb = db.Column(db.Integer, nullable=False, default=10)
-    requires_approval = db.Column(db.Boolean, default=False)
-    
-    def get_allowed_extensions_list(self):
-        return self.allowed_extensions.split(',')
-
-class Document(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    filename = db.Column(db.String(255), nullable=False)
-    file_path = db.Column(db.String(255), nullable=False)
-    file_size = db.Column(db.Integer, nullable=False)  # Size in bytes
-    file_type = db.Column(db.String(50), nullable=False)
-    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    document_type_id = db.Column(db.Integer, db.ForeignKey('document_type.id'), nullable=False)
-    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
-
-# forms/document.py
-def create_document_upload_form(document_types):
-    """Create a form based on available document types"""
-    class DocumentUploadForm(FlaskForm):
-        title = StringField('Document Title', validators=[DataRequired(), Length(max=100)])
-        document_type = SelectField('Document Type', coerce=int, validators=[DataRequired()])
-        file = FileField('File', validators=[FileRequired()])
-        notes = TextAreaField('Notes', validators=[Length(max=500)])
-        submit = SubmitField('Upload Document')
-        
-        def __init__(self, *args, **kwargs):
-            super(DocumentUploadForm, self).__init__(*args, **kwargs)
-            self.document_type.choices = [(dt.id, dt.name) for dt in document_types]
-        
-        def validate_file(self, field):
-            # Get the selected document type
-            doc_type = DocumentType.query.get(self.document_type.data)
-            if not doc_type:
-                raise ValidationError('Invalid document type.')
-            
-            # Check file extension
-            filename = field.data.filename
-            file_ext = os.path.splitext(filename)[1].lower().lstrip('.')
-            allowed_extensions = doc_type.get_allowed_extensions_list()
-            
-            if file_ext not in allowed_extensions:
-                raise ValidationError(
-                    f'File type not allowed. Allowed types: {", ".join(allowed_extensions)}'
-                )
-            
-            # Check file size
-            field.data.seek(0, os.SEEK_END)
-            file_size = field.data.tell()
-            field.data.seek(0)  # Reset file pointer
-            
-            max_size = doc_type.max_size_mb * 1024 * 1024  # Convert MB to bytes
-            if file_size > max_size:
-                raise ValidationError(
-                    f'File size exceeds the {doc_type.max_size_mb}MB limit.'
-                )
-    
-    return DocumentUploadForm()
-
-# views/document.py
-@bp.route('/documents/upload', methods=['GET', 'POST'])
-@login_required
-def upload_document():
-    # Get available document types
-    document_types = DocumentType.query.all()
-    if not document_types:
-        flash('No document types available. Please contact the administrator.', 'danger')
-        return redirect(url_for('main.dashboard'))
-    
-    form = create_document_upload_form(document_types)
-    
-    if form.validate_on_submit():
-        file = form.file.data
-        filename = secure_filename(file.filename)
-        
-        # Get selected document type
-        doc_type = DocumentType.query.get_or_404(form.document_type.data)
-        
-        # Create upload directory if it doesn't exist
-        upload_dir = os.path.join(
-            current_app.root_path, 
-            'uploads', 
-            'documents', 
-            str(current_user.id)
-        )
-        os.makedirs(upload_dir, exist_ok=True)
-        
-        # Generate unique filename
-        base_name, extension = os.path.splitext(filename)
-        unique_filename = f"{base_name}_{int(time.time())}{extension}"
-        file_path = os.path.join(upload_dir, unique_filename)
-        
-        # Save the file
-        file.save(file_path)
-        
-        # Get file size
-        file_size = os.path.getsize(file_path)
-        
-        # Create document record
-        document = Document(
-            title=form.title.data,
-            filename=unique_filename,
-            file_path=os.path.join(
-                'uploads', 
-                'documents', 
-                str(current_user.id), 
-                unique_filename
-            ),
-            file_size=file_size,
-            file_type=os.path.splitext(filename)[1].lower().lstrip('.'),
-            user_id=current_user.id,
-            document_type_id=doc_type.id,
-            status='pending' if doc_type.requires_approval else 'approved'
-        )
-        
-        db.session.add(document)
-        db.session.commit()
-        
-        if doc_type.requires_approval:
-            flash('Document uploaded successfully and pending approval.', 'success')
-        else:
-            flash('Document uploaded successfully.', 'success')
-        
-        return redirect(url_for('document.my_documents'))
-    
-    return render_template('document/upload.html', form=form)</code></pre>
-
-            <h3>Security Considerations for File Uploads</h3>
-            <p>File uploads present several security challenges that you need to address:</p>
-            
+            <h4>Key Benefits of Using pip:</h4>
             <ul>
-                <li><strong>File Type Validation</strong>: Always verify the file type both by extension and content (using libraries like <code>imghdr</code> for images)</li>
-                <li><strong>File Size Limits</strong>: Set reasonable size limits to prevent denial-of-service attacks</li>
-                <li><strong>Secure Filenames</strong>: Use <code>secure_filename()</code> from Werkzeug to sanitize filenames</li>
-                <li><strong>Storage Location</strong>: Store uploaded files outside the web root if possible</li>
-                <li><strong>Permissions</strong>: Set appropriate file permissions on uploaded files</li>
-                <li><strong>Malware Scanning</strong>: For high-security applications, consider scanning uploads for malware</li>
-                <li><strong>Content Disposition</strong>: When serving files back to users, set appropriate Content-Disposition headers</li>
+                <li><strong>Efficiency</strong>: Install packages with a single command</li>
+                <li><strong>Dependency Resolution</strong>: Automatically installs required dependencies</li>
+                <li><strong>Version Management</strong>: Install specific versions of packages</li>
+                <li><strong>Consistent Environments</strong>: Ensure all developers use the same package versions</li>
+                <li><strong>Project Isolation</strong>: Install packages in virtual environments to avoid conflicts</li>
+            </ul>
+        </section>
+
+        <section class="installing-pip">
+            <h3>Verifying and Installing pip</h3>
+            
+            <p>Most Python installations come with pip pre-installed. Let's first check if pip is already installed and what version you have:</p>
+            
+            <pre><code>pip --version</code></pre>
+            
+            <p>If you need to install or upgrade pip, here's how:</p>
+            
+            <h4>On Windows:</h4>
+            <pre><code>python -m ensurepip --upgrade</code></pre>
+            
+            <h4>On macOS/Linux:</h4>
+            <pre><code>python3 -m ensurepip --upgrade</code></pre>
+            
+            <p>Alternative method using get-pip.py:</p>
+            <pre><code># Download the installation script
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+
+# Run the script to install pip
+python get-pip.py</code></pre>
+            
+            <p><strong>Note:</strong> On some Linux distributions, you might need to use the package manager:</p>
+            <pre><code># Debian/Ubuntu
+sudo apt update
+sudo apt install python3-pip
+
+# CentOS/RHEL
+sudo yum install python3-pip</code></pre>
+        </section>
+
+        <section class="basic-pip-usage">
+            <h3>Basic pip Commands</h3>
+            
+            <h4>Installing Packages</h4>
+            <p>The most common pip command is <code>install</code>, which downloads and installs packages from PyPI:</p>
+            
+            <pre><code>pip install package_name</code></pre>
+            
+            <p>Install a specific version:</p>
+            <pre><code>pip install package_name==1.2.3</code></pre>
+            
+            <p>Install the latest version in a specific range:</p>
+            <pre><code>pip install "package_name>=1.2.0,&lt;2.0.0"</code></pre>
+            
+            <p>Install multiple packages at once:</p>
+            <pre><code>pip install package1 package2 package3</code></pre>
+            
+            <h4>Listing Installed Packages</h4>
+            <p>See what packages are currently installed:</p>
+            
+            <pre><code>pip list</code></pre>
+            
+            <p>For a more detailed view including dependencies:</p>
+            <pre><code>pip list --format=columns</code></pre>
+            
+            <h4>Showing Package Information</h4>
+            <p>Get detailed information about a package:</p>
+            
+            <pre><code>pip show package_name</code></pre>
+            
+            <p>This command displays information like:</p>
+            <ul>
+                <li>Package version</li>
+                <li>Summary</li>
+                <li>Home page</li>
+                <li>Author</li>
+                <li>License</li>
+                <li>Location on your system</li>
+                <li>Required dependencies</li>
             </ul>
             
-            <h3>Best Practices for File Uploads</h3>
+            <h4>Searching for Packages</h4>
+            <p>Search for packages on PyPI:</p>
             
+            <pre><code>pip search search_term</code></pre>
+            
+            <p><strong>Note:</strong> The <code>pip search</code> command has been disabled due to performance issues with PyPI. Instead, you can search for packages directly on the <a href="https://pypi.org" target="_blank">PyPI website</a>.</p>
+            
+            <h4>Uninstalling Packages</h4>
+            <p>Remove a package:</p>
+            
+            <pre><code>pip uninstall package_name</code></pre>
+            
+            <h4>Upgrading Packages</h4>
+            <p>Update a package to the latest version:</p>
+            
+            <pre><code>pip install --upgrade package_name</code></pre>
+            
+            <p>Upgrade pip itself:</p>
+            <pre><code>pip install --upgrade pip</code></pre>
+        </section>
+
+        <section class="requirements-files">
+            <h3>Managing Dependencies with Requirements Files</h3>
+            
+            <p>For projects with multiple dependencies, manually installing each package becomes cumbersome. Requirements files solve this by listing all dependencies in a single file.</p>
+            
+            <h4>Creating a requirements.txt File</h4>
+            <p>A <code>requirements.txt</code> file is simply a text file listing packages, one per line. For example:</p>
+            
+            <pre><code># requirements.txt
+requests==2.28.1
+flask==2.2.2
+sqlalchemy>=1.4.0,&lt;2.0.0
+pillow
+</code></pre>
+            
+            <p>You can also generate a requirements file from your current environment:</p>
+            <pre><code>pip freeze > requirements.txt</code></pre>
+            
+            <p><strong>Note:</strong> <code>pip freeze</code> outputs all installed packages, including dependencies. This is useful for replicating environments exactly, but might include more packages than your project directly needs.</p>
+            
+            <h4>Installing from a Requirements File</h4>
+            <p>Install all packages listed in a requirements file:</p>
+            
+            <pre><code>pip install -r requirements.txt</code></pre>
+            
+            <p><strong>Real-World Analogy:</strong> If pip is your supplier, then a requirements file is like a shopping list. Instead of ordering items one by one over the phone, you simply send your complete list, and the supplier delivers everything you need in one go.</p>
+            
+            <h4>Best Practices for requirements.txt</h4>
             <ul>
-                <li><strong>Use a CDN for Public Files</strong>: For user-uploaded content that needs to be publicly accessible, consider using a content delivery network (CDN)</li>
-                <li><strong>Store Metadata in Database</strong>: Keep file metadata (original filename, size, type, upload date) in your database</li>
-                <li><strong>Use Unique Filenames</strong>: Generate unique filenames to prevent overwrites</li>
-                <li><strong>Implement Chunked Uploads</strong>: For large files, consider implementing chunked uploads</li>
-                <li><strong>Progress Indicators</strong>: Provide upload progress indicators for better user experience</li>
-                <li><strong>Preview Functionality</strong>: For images and PDFs, consider adding preview functionality</li>
+                <li><strong>Be specific</strong>: Pin versions when possible to ensure reproducible environments</li>
+                <li><strong>Include comments</strong>: Document why certain packages or versions are needed</li>
+                <li><strong>Group requirements</strong>: Organize by purpose (e.g., main, development, testing)</li>
+                <li><strong>Avoid overly strict constraints</strong>: Use version ranges when appropriate to allow compatible updates</li>
+                <li><strong>Regularly update</strong>: Periodically review and update dependencies for security patches</li>
             </ul>
             
-            <div class="reflection">
-                <h4>Reflection Point</h4>
-                <p>Think about the security implications of file uploads. What types of validation should you perform? How can you prevent users from uploading malicious files? What storage options might be appropriate for different types of files or security requirements?</p>
-            </div>
+            <h4>Example of a Well-Structured Requirements File</h4>
+            <pre><code># Core dependencies
+flask==2.2.2         # Web framework
+sqlalchemy==1.4.46   # Database ORM
+pyjwt==2.6.0         # JWT handling for authentication
+
+# API integrations
+requests==2.28.1     # HTTP client
+stripe==5.0.0        # Payment processing
+
+# Development only
+pytest==7.2.0        # Testing framework
+black==22.12.0       # Code formatting
+flake8==6.0.0        # Linting
+</code></pre>
+        </section>
+
+        <section class="virtual-environments">
+            <h3>Using pip with Virtual Environments</h3>
+            
+            <p>Virtual environments provide isolated Python environments for your projects, ensuring dependency conflicts don't occur between different projects. Let's see how pip works with virtual environments.</p>
+            
+            <h4>Creating a Virtual Environment</h4>
+            <p>Using the built-in <code>venv</code> module (Python 3.3+):</p>
+            
+            <pre><code># Create a virtual environment
+python -m venv myenv
+
+# Activate it on Windows
+myenv\Scripts\activate
+
+# Activate it on macOS/Linux
+source myenv/bin/activate</code></pre>
+            
+            <p>With the virtual environment activated, any packages you install with pip will be installed only in this environment, not globally.</p>
+            
+            <h4>Installing Packages in a Virtual Environment</h4>
+            <p>Once your virtual environment is activated, you use pip normally:</p>
+            
+            <pre><code># Your prompt should show the active environment
+(myenv) $ pip install requests flask
+
+# Verify the installations
+(myenv) $ pip list</code></pre>
+            
+            <h4>Creating a requirements.txt from a Virtual Environment</h4>
+            <p>Capture the state of your virtual environment for recreation later:</p>
+            
+            <pre><code>(myenv) $ pip freeze > requirements.txt</code></pre>
+            
+            <h4>Recreating an Environment</h4>
+            <p>To recreate the environment on another machine or after deletion:</p>
+            
+            <pre><code># Create a fresh virtual environment
+python -m venv new_env
+
+# Activate it
+source new_env/bin/activate  # or new_env\Scripts\activate on Windows
+
+# Install the same packages
+(new_env) $ pip install -r requirements.txt</code></pre>
+            
+            <p><strong>Real-World Analogy:</strong> A virtual environment is like a separate workshop for each project. Each workshop has its own tools (packages) that don't interfere with tools in other workshops. This means you can have one project using Flask 1.0 and another using Flask 2.0 without any conflicts.</p>
+        </section>
+
+        <section class="advanced-pip">
+            <h3>Advanced pip Features</h3>
+            
+            <h4>Installing from Various Sources</h4>
+            <p>pip can install packages from more than just PyPI:</p>
+            
+            <p>From a Git repository:</p>
+            <pre><code>pip install git+https://github.com/user/repository.git</code></pre>
+            
+            <p>From a specific branch or commit:</p>
+            <pre><code>pip install git+https://github.com/user/repository.git@branch_name
+pip install git+https://github.com/user/repository.git@commit_hash</code></pre>
+            
+            <p>From a local directory (in development mode):</p>
+            <pre><code>pip install -e /path/to/directory</code></pre>
+            
+            <p>From a .tar.gz or .whl file:</p>
+            <pre><code>pip install /path/to/package.tar.gz
+pip install /path/to/package.whl</code></pre>
+            
+            <h4>Using Alternative Package Indexes</h4>
+            <p>Use a different package index instead of PyPI:</p>
+            
+            <pre><code>pip install --index-url https://alternative-pypi.org/simple/ package_name</code></pre>
+            
+            <p>Add an extra index while keeping PyPI:</p>
+            <pre><code>pip install --extra-index-url https://alternative-pypi.org/simple/ package_name</code></pre>
+            
+            <h4>Downloading Without Installing</h4>
+            <p>Download a package without installing it:</p>
+            
+            <pre><code>pip download package_name -d /path/to/download/directory</code></pre>
+            
+            <h4>Installing in User Mode</h4>
+            <p>Install a package in the user's home directory without requiring admin privileges:</p>
+            
+            <pre><code>pip install --user package_name</code></pre>
+            
+            <h4>Viewing the Dependency Tree</h4>
+            <p>See the dependency tree for an installed package:</p>
+            
+            <pre><code>pip show --files package_name</code></pre>
+            
+            <p>For a more detailed dependency tree, you can use the <code>pipdeptree</code> package:</p>
+            <pre><code>pip install pipdeptree
+pipdeptree</code></pre>
+        </section>
+
+        <section class="dependency-resolution">
+            <h3>Understanding Dependency Resolution</h3>
+            
+            <p>One of pip's most important features is dependency resolution—automatically figuring out what other packages are needed when you install something.</p>
+            
+            <h4>How Dependency Resolution Works</h4>
+            <ol>
+                <li>When you <code>pip install package_a</code>, pip first checks what dependencies package_a requires</li>
+                <li>It then checks if those dependencies are already installed</li>
+                <li>If not, it adds them to the installation queue</li>
+                <li>This process continues recursively for all dependencies</li>
+                <li>pip tries to find a set of package versions that satisfy all requirements</li>
+            </ol>
+            
+            <h4>Dependency Conflicts</h4>
+            <p>Sometimes packages have incompatible requirements. For example:</p>
+            <ul>
+                <li>Package A requires Package C version 1.x</li>
+                <li>Package B requires Package C version 2.x</li>
+            </ul>
+            
+            <p>In this case, pip cannot satisfy both requirements and will show an error. You might need to:</p>
+            <ul>
+                <li>Choose between Package A and Package B</li>
+                <li>Find compatible versions</li>
+                <li>Contact the maintainers about the conflict</li>
+                <li>Use separate virtual environments for projects with conflicting requirements</li>
+            </ul>
+            
+            <h4>Example of a Dependency Conflict</h4>
+            <pre><code>ERROR: Cannot install package_a and package_b because these package versions have conflicting dependencies.
+
+The conflict is caused by:
+    package_a requires package_c>=2.0.0
+    package_b requires package_c&lt;2.0.0
+
+To fix this you could try to:
+1. loosen the range of package versions you've specified
+2. remove package versions to allow pip to attempt to solve the dependency conflict
+</code></pre>
+            
+            <p><strong>Real-World Analogy:</strong> Dependency resolution is like planning a dinner party where some guests have dietary restrictions. If one guest is allergic to nuts and another only eats dishes with nuts, you have an irreconcilable conflict. Similarly, pip tries to "prepare a meal" (your environment) that satisfies all package "dietary requirements" (dependencies).</p>
+        </section>
+
+        <section class="pip-configuration">
+            <h3>Configuring pip</h3>
+            
+            <p>You can customize pip's behavior through configuration files or environment variables.</p>
+            
+            <h4>Configuration Files</h4>
+            <p>pip looks for configuration in multiple locations, in this order:</p>
+            <ol>
+                <li>Site-wide: <code>/etc/pip.conf</code> (Unix) or <code>C:\ProgramData\pip\pip.ini</code> (Windows)</li>
+                <li>User-specific: <code>~/.config/pip/pip.conf</code> (Unix) or <code>%APPDATA%\pip\pip.ini</code> (Windows)</li>
+                <li>Virtualenv-specific: <code>myenv/pip.conf</code> or <code>myenv\pip.ini</code></li>
+                <li>Per-command using <code>--config</code></li>
+            </ol>
+            
+            <h4>Example Configuration File</h4>
+            <pre><code>[global]
+timeout = 60
+index-url = https://pypi.org/simple
+trusted-host = pypi.org
+              files.pythonhosted.org
+
+[install]
+require-virtualenv = true
+no-cache-dir = false
+
+[freeze]
+timeout = 10
+</code></pre>
+            
+            <h4>Environment Variables</h4>
+            <p>You can also set configuration via environment variables using the format <code>PIP_&lt;UPPER_CONFIG_NAME&gt;</code>:</p>
+            
+            <pre><code># Set default timeout
+export PIP_TIMEOUT=60
+
+# Require virtualenv for installations
+export PIP_REQUIRE_VIRTUALENV=true</code></pre>
+            
+            <p><strong>Note:</strong> Environment variables take precedence over configuration files.</p>
+            
+            <h4>Useful Configuration Options</h4>
+            <ul>
+                <li><code>require-virtualenv</code>: Prevent accidental global installations</li>
+                <li><code>timeout</code>: Change the default network timeout</li>
+                <li><code>index-url</code>: Change the default package index</li>
+                <li><code>trusted-host</code>: Specify trusted package sources</li>
+                <li><code>no-cache-dir</code>: Disable the cache for clean builds</li>
+                <li><code>default-timeout</code>: Set default timeout for all commands</li>
+            </ul>
+        </section>
+
+        <section class="security-best-practices">
+            <h3>Security Best Practices with pip</h3>
+            
+            <p>Using third-party packages introduces security considerations. Here are best practices to minimize risks:</p>
+            
+            <h4>1. Keep pip Updated</h4>
+            <p>Regularly update pip itself to get security fixes:</p>
+            <pre><code>pip install --upgrade pip</code></pre>
+            
+            <h4>2. Verify Package Sources</h4>
+            <p>Use trusted package sources and verify the integrity of packages:</p>
+            <pre><code># Verify a package has been properly signed
+pip install --require-hashes -r requirements.txt</code></pre>
+            
+            <h4>3. Use Hash-Checking Mode</h4>
+            <p>In a requirements file, you can specify exact file hashes to ensure you get exactly what you expect:</p>
+            <pre><code>requests==2.28.1 --hash=sha256:7c5599b102feddaa661c826c56ab4fee28bfd17f5abca1ebbe3e7f19d7c97983
+flask==2.2.2 --hash=sha256:642c450d19c4ad482f96729bd2a8f6d32554aa1e231f4f6b4e7e5264b16cca2b</code></pre>
+            
+            <h4>4. Scan for Vulnerabilities</h4>
+            <p>Use tools like safety or pip-audit to scan your dependencies for known vulnerabilities:</p>
+            <pre><code>pip install safety
+safety check
+
+# Or with pip-audit
+pip install pip-audit
+pip-audit</code></pre>
+            
+            <h4>5. Minimize Dependencies</h4>
+            <p>Each dependency increases your attack surface. Regularly review and remove unnecessary packages.</p>
+            
+            <h4>6. Use Dependency Lockfiles</h4>
+            <p>Tools like pip-tools can generate comprehensive lock files with exact versions and hashes:</p>
+            <pre><code>pip install pip-tools
+pip-compile requirements.in  # Generates requirements.txt with pinned versions
+pip-sync                    # Installs exactly what's in requirements.txt</code></pre>
+            
+            <h4>7. Be Cautious with Pre-releases</h4>
+            <p>Avoid pre-release versions in production unless necessary:</p>
+            <pre><code># Don't use this in production
+pip install --pre package_name</code></pre>
+            
+            <p><strong>Real-World Analogy:</strong> Security with dependencies is like food safety in a restaurant. You need to trust your suppliers (package authors), inspect deliveries (verify hashes), check for recalls (vulnerability scanning), and maintain proper storage (isolation with virtual environments).</p>
+        </section>
+
+        <section class="modern-alternatives">
+            <h3>Modern Alternatives and Complementary Tools</h3>
+            
+            <p>While pip is the standard package manager for Python, several modern tools enhance or complement its functionality:</p>
+            
+            <h4>1. pipenv</h4>
+            <p>Combines pip, virtual environments, and a lock file mechanism:</p>
+            <pre><code>pip install pipenv
+
+# Create project with virtual environment
+pipenv install
+
+# Add packages
+pipenv install requests flask
+
+# Add development packages
+pipenv install --dev pytest
+
+# Run commands in the virtual environment
+pipenv run python app.py
+
+# Activate the environment shell
+pipenv shell</code></pre>
+            
+            <p><strong>Key Benefits:</strong></p>
+            <ul>
+                <li>Automatically creates and manages a virtualenv</li>
+                <li>Generates Pipfile and Pipfile.lock for deterministic builds</li>
+                <li>Separates development and production dependencies</li>
+                <li>Better dependency resolution than plain pip</li>
+            </ul>
+            
+            <h4>2. Poetry</h4>
+            <p>Modern packaging and dependency management:</p>
+            <pre><code>pip install poetry
+
+# Create a new project
+poetry new my_project
+
+# Add dependencies
+poetry add requests flask
+
+# Add development dependencies
+poetry add --dev pytest
+
+# Install all dependencies
+poetry install
+
+# Run commands
+poetry run python app.py
+
+# Activate the environment shell
+poetry shell</code></pre>
+            
+            <p><strong>Key Benefits:</strong></p>
+            <ul>
+                <li>Built-in packaging and publishing to PyPI</li>
+                <li>Sophisticated dependency resolver</li>
+                <li>Modern lockfile mechanism for deterministic installations</li>
+                <li>Project isolation by default</li>
+                <li>Good handling of development vs. production dependencies</li>
+            </ul>
+            
+            <h4>3. pip-tools</h4>
+            <p>Lightweight approach to dependency pinning:</p>
+            <pre><code>pip install pip-tools
+
+# Create a requirements.in file with high-level dependencies
+echo "flask\nrequests" > requirements.in
+
+# Compile it to a pinned requirements.txt
+pip-compile requirements.in
+
+# Install the pinned dependencies
+pip-sync requirements.txt</code></pre>
+            
+            <p><strong>Key Benefits:</strong></p>
+            <ul>
+                <li>Separates high-level dependencies from complete pinned set</li>
+                <li>Allows comments in requirement files</li>
+                <li>Maintains hashes for verification</li>
+                <li>Integrates with existing pip workflow</li>
+                <li>Lightweight compared to pipenv or Poetry</li>
+            </ul>
+            
+            <h4>4. conda</h4>
+            <p>Package, dependency, and environment management system, particularly popular in data science:</p>
+            <pre><code># Create a new environment
+conda create -n myenv python=3.10
+
+# Activate it
+conda activate myenv
+
+# Install packages
+conda install numpy pandas matplotlib
+
+# Create an environment from a file
+conda env create -f environment.yml</code></pre>
+            
+            <p><strong>Key Benefits:</strong></p>
+            <ul>
+                <li>Handles non-Python dependencies (e.g., C libraries)</li>
+                <li>Popular in scientific computing and data science</li>
+                <li>Cross-platform binary compatibility</li>
+                <li>Can install packages from pip when needed</li>
+            </ul>
+            
+            <h4>Comparison of Tools</h4>
+            <table>
+                <tr>
+                    <th>Feature</th>
+                    <th>pip</th>
+                    <th>pipenv</th>
+                    <th>Poetry</th>
+                    <th>pip-tools</th>
+                    <th>conda</th>
+                </tr>
+                <tr>
+                    <td>Virtual Environments</td>
+                    <td>No (needs venv)</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                    <td>No</td>
+                    <td>Yes</td>
+                </tr>
+                <tr>
+                    <td>Lock Files</td>
+                    <td>No</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                    <td>Yes (environment.yml)</td>
+                </tr>
+                <tr>
+                    <td>Dev vs. Prod Dependencies</td>
+                    <td>No</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                    <td>Limited</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td>Packaging</td>
+                    <td>No</td>
+                    <td>No</td>
+                    <td>Yes</td>
+                    <td>No</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td>Non-Python Dependencies</td>
+                    <td>No</td>
+                    <td>No</td>
+                    <td>No</td>
+                    <td>No</td>
+                    <td>Yes</td>
+                </tr>
+            </table>
+            
+            <p><strong>When to Choose What:</strong></p>
+            <ul>
+                <li><strong>pip + venv</strong>: Simple projects, learning, quick scripts</li>
+                <li><strong>pipenv</strong>: Medium-complexity web applications, transitioning from pip</li>
+                <li><strong>Poetry</strong>: Libraries, publishable packages, complex applications</li>
+                <li><strong>pip-tools</strong>: When you want deterministic builds but minimal tooling change</li>
+                <li><strong>conda</strong>: Data science, scientific computing, projects with C dependencies</li>
+            </ul>
+        </section>
+
+        <section class="real-world-examples">
+            <h3>Real-World Examples</h3>
+            
+            <h4>Example 1: Setting Up a Flask Web Application</h4>
+            <pre><code># Create and activate a virtual environment
+python -m venv flask_app_env
+source flask_app_env/bin/activate  # or flask_app_env\Scripts\activate on Windows
+
+# Install Flask and related packages
+pip install flask flask-sqlalchemy flask-login flask-wtf
+
+# Freeze the dependencies
+pip freeze > requirements.txt
+
+# Create a simple app.py
+echo "from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return 'Hello, World!'
+
+if __name__ == '__main__':
+    app.run(debug=True)" > app.py
+
+# Run the application
+python app.py</code></pre>
+            
+            <h4>Example 2: Setting Up a Data Science Environment</h4>
+            <pre><code># Create and activate a virtual environment
+python -m venv data_science_env
+source data_science_env/bin/activate  # or data_science_env\Scripts\activate on Windows
+
+# Install data science packages
+pip install numpy pandas matplotlib scikit-learn jupyter
+
+# Create a requirements file with version constraints
+echo "numpy>=1.20.0,<2.0.0
+pandas>=1.3.0,<2.0.0
+matplotlib>=3.4.0,<4.0.0
+scikit-learn>=1.0.0,<2.0.0
+jupyter>=1.0.0,<2.0.0" > requirements.txt
+
+# In the future, you can recreate this environment with:
+# pip install -r requirements.txt
+
+# Launch Jupyter Notebook
+jupyter notebook</code></pre>
+            
+            <h4>Example 3: Managing a Production Web Service with pipenv</h4>
+            <pre><code># Install pipenv
+pip install pipenv
+
+# Initialize a new project
+mkdir web_service
+cd web_service
+
+# Set up pipenv environment
+pipenv install flask gunicorn psycopg2-binary requests
+
+# Add development dependencies
+pipenv install --dev pytest pytest-cov black flake8
+
+# Create a simple app.py
+echo "from flask import Flask, jsonify
+app = Flask(__name__)
+
+@app.route('/api/status')
+def status():
+    return jsonify({'status': 'ok'})
+
+if __name__ == '__main__':
+    app.run()" > app.py
+
+# Create a Procfile for deployment
+echo "web: gunicorn app:app" > Procfile
+
+# Run the application with pipenv
+pipenv run python app.py
+
+# Run tests
+pipenv run pytest
+
+# Format code
+pipenv run black .</code></pre>
+            
+            <h4>Example 4: Creating and Publishing a Package with Poetry</h4>
+            <pre><code># Install poetry
+pip install poetry
+
+# Create a new library project
+poetry new my_library
+
+# Navigate to the project
+cd my_library
+
+# Add dependencies
+poetry add requests
+
+# Add development dependencies
+poetry add --dev pytest black
+
+# Update the pyproject.toml with metadata
+# Edit in your text editor...
+
+# Build the package
+poetry build
+
+# Publish to PyPI (you'll need credentials)
+poetry publish</code></pre>
+        </section>
+
+        <section class="troubleshooting">
+            <h3>Troubleshooting Common pip Issues</h3>
+            
+            <h4>1. Permission Errors</h4>
+            <p><strong>Problem:</strong> "Permission denied" when installing packages</p>
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li>Use virtual environments (recommended)</li>
+                <li>Use the <code>--user</code> flag: <code>pip install --user package_name</code></li>
+                <li>On Unix systems, avoid using <code>sudo pip</code> (can break system packages)</li>
+            </ul>
+            
+            <h4>2. Package Not Found</h4>
+            <p><strong>Problem:</strong> "No matching distribution found for package_name"</p>
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li>Check the package name spelling</li>
+                <li>Verify the package exists on PyPI</li>
+                <li>Check if you're trying to install a package not compatible with your Python version</li>
+                <li>Try using the package's GitHub or documentation URL to find the correct name</li>
+            </ul>
+            
+            <h4>3. Version Conflicts</h4>
+            <p><strong>Problem:</strong> "Cannot install X and Y because these package versions have conflicting dependencies"</p>
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li>Use a separate virtual environment</li>
+                <li>Try relaxing version constraints</li>
+                <li>Check if newer versions of packages resolve the conflict</li>
+                <li>Use a tool like pipenv or Poetry with better dependency resolution</li>
+            </ul>
+            
+            <h4>4. Installation Fails with Build Errors</h4>
+            <p><strong>Problem:</strong> Packages with C extensions fail to build</p>
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li>Install required build tools (compiler, development headers)</li>
+                <li>On Windows: Install Visual C++ Build Tools</li>
+                <li>On Linux: <code>sudo apt-get install python3-dev build-essential</code></li>
+                <li>Look for pre-built wheels: <code>pip install --only-binary :all: package_name</code></li>
+            </ul>
+            
+            <h4>5. SSL Certificate Errors</h4>
+            <p><strong>Problem:</strong> "SSL: CERTIFICATE_VERIFY_FAILED" when downloading packages</p>
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li>Update pip, setuptools, and certifi: <code>pip install --upgrade pip setuptools certifi</code></li>
+                <li>Check system time and date are correct</li>
+                <li>In corporate environments, configure pip to use the company proxy</li>
+            </ul>
+            
+            <h4>6. Cached Wheels Not Updated</h4>
+            <p><strong>Problem:</strong> Changes to a package don't appear after reinstalling</p>
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li>Clear the pip cache: <code>pip cache purge</code></li>
+                <li>Disable cache for an installation: <code>pip install --no-cache-dir package_name</code></li>
+            </ul>
+            
+            <h4>Debugging Tips</h4>
+            <ul>
+                <li>Increase verbosity for more information: <code>pip install -v package_name</code></li>
+                <li>See where packages are installed: <code>pip show package_name</code></li>
+                <li>Check Python environment: <code>python -m site</code></li>
+                <li>Verify which pip is being used: <code>which pip</code> or <code>where pip</code> on Windows</li>
+            </ul>
+        </section>
+
+        <section class="exercise">
+            <h3>Exercise: Setting Up a Project with Dependencies</h3>
+            
+            <p>Let's apply what we've learned by setting up a web scraping project with proper dependency management.</p>
+            
+            <h4>Project Requirements:</h4>
+            <ul>
+                <li>Create a virtual environment</li>
+                <li>Install and manage dependencies using pip</li>
+                <li>Create a requirements.txt file</li>
+                <li>Write a simple script that uses the dependencies</li>
+            </ul>
+            
+            <h4>Step 1: Set Up the Project Structure</h4>
+            <pre><code># Create project directory
+mkdir web_scraper
+cd web_scraper
+
+# Create a virtual environment
+python -m venv scraper_env
+
+# Activate the environment
+source scraper_env/bin/activate  # or scraper_env\Scripts\activate on Windows</code></pre>
+            
+            <h4>Step 2: Install Dependencies</h4>
+            <pre><code># Install packages for web scraping
+pip install requests beautifulsoup4 lxml
+
+# Additional utility packages
+pip install pandas tqdm</code></pre>
+            
+            <h4>Step 3: Create a requirements.txt File</h4>
+            <pre><code># Generate requirements.txt with exact versions
+pip freeze > requirements.txt
+
+# Alternatively, create a more flexible requirements.txt
+echo "requests>=2.28.0,<3.0.0
+beautifulsoup4>=4.10.0,<5.0.0
+lxml>=4.9.0,<5.0.0
+pandas>=1.4.0,<2.0.0
+tqdm>=4.64.0,<5.0.0" > requirements.txt</code></pre>
+            
+            <h4>Step 4: Create a Simple Web Scraper</h4>
+            <p>Create a file named <code>scraper.py</code> with the following content:</p>
+            <pre><code>import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+from tqdm import tqdm
+import time
+import argparse
+
+def scrape_quotes(pages=1):
+    """Scrape quotes from quotes.toscrape.com"""
+    base_url = "https://quotes.toscrape.com/page/{}/"
+    quotes = []
+    
+    for page in tqdm(range(1, pages + 1), desc="Scraping pages"):
+        response = requests.get(base_url.format(page))
+        if response.status_code != 200:
+            print(f"Failed to fetch page {page}")
+            continue
+            
+        soup = BeautifulSoup(response.text, 'lxml')
+        quotes_on_page = soup.select(".quote")
+        
+        for quote in quotes_on_page:
+            text = quote.select_one(".text").get_text()
+            author = quote.select_one(".author").get_text()
+            tags = [tag.get_text() for tag in quote.select(".tag")]
+            
+            quotes.append({
+                "text": text,
+                "author": author,
+                "tags": ", ".join(tags)
+            })
+            
+        # Be nice to the server
+        time.sleep(0.5)
+        
+    return quotes
+
+def main():
+    parser = argparse.ArgumentParser(description="Scrape quotes from quotes.toscrape.com")
+    parser.add_argument("--pages", type=int, default=1, help="Number of pages to scrape")
+    parser.add_argument("--output", type=str, default="quotes.csv", help="Output file name")
+    args = parser.parse_args()
+    
+    print(f"Scraping {args.pages} pages from quotes.toscrape.com")
+    quotes = scrape_quotes(args.pages)
+    
+    if quotes:
+        df = pd.DataFrame(quotes)
+        df.to_csv(args.output, index=False)
+        print(f"Scraped {len(quotes)} quotes and saved to {args.output}")
+    else:
+        print("No quotes found")
+
+if __name__ == "__main__":
+    main()
+</code></pre>
+            
+            <h4>Step 5: Test the Script</h4>
+            <pre><code># Run the scraper with default settings (1 page)
+python scraper.py
+
+# Scrape multiple pages
+python scraper.py --pages 3
+
+# Save to a different file
+python scraper.py --pages 2 --output famous_quotes.csv</code></pre>
+            
+            <h4>Step 6: Document the Project</h4>
+            <p>Create a <code>README.md</code> file:</p>
+            <pre><code># Web Scraper Project
+
+A simple web scraper for quotes.toscrape.com.
+
+## Setup
+
+1. Create a virtual environment:
+   ```
+   python -m venv scraper_env
+   source scraper_env/bin/activate  # or scraper_env\Scripts\activate on Windows
+   ```
+
+2. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
+## Usage
+
+Run the scraper:
+```
+python scraper.py --pages 5 --output quotes.csv
+```
+
+Arguments:
+- `--pages`: Number of pages to scrape (default: 1)
+- `--output`: Output CSV file name (default: quotes.csv)
+</code></pre>
+            
+            <p>This exercise demonstrates:</p>
+            <ul>
+                <li>Setting up a virtual environment</li>
+                <li>Installing packages with pip</li>
+                <li>Creating a requirements.txt file</li>
+                <li>Building a small application with external dependencies</li>
+                <li>Documenting how to set up and use the project</li>
+            </ul>
+        </section>
+
+        <section class="conclusion">
+            <h3>Conclusion</h3>
+            
+            <p>Package management is a fundamental skill for Python developers, enabling you to leverage the vast ecosystem of open-source libraries. By mastering pip and understanding how to manage dependencies effectively, you'll be able to:</p>
+            
+            <ul>
+                <li>Build more sophisticated applications without reinventing the wheel</li>
+                <li>Ensure your environments are reproducible and consistent</li>
+                <li>Avoid "dependency hell" with proper isolation and version management</li>
+                <li>Collaborate effectively by communicating exact dependency requirements</li>
+                <li>Keep your applications secure by managing and updating dependencies</li>
+            </ul>
+            
+            <p>As you continue your Python journey, the skills you've learned today will become increasingly valuable. Modern software development relies heavily on package management, and these concepts apply across virtually all programming ecosystems.</p>
+            
+            <p>In future sessions, we'll build on this foundation as we work with more complex projects that integrate multiple packages into cohesive applications.</p>
+            
+            <p>Remember: "Standing on the shoulders of giants" is the essence of package management. By leveraging the work of others through packages, you can focus on solving your unique problems rather than reinventing solutions to common challenges.</p>
+        </section>
+
+        <section class="additional-resources">
+            <h3>Additional Resources</h3>
+            
+            <ul>
+                <li><a href="https://pip.pypa.io/en/stable/" target="_blank">Official pip documentation</a></li>
+                <li><a href="https://packaging.python.org/en/latest/tutorials/installing-packages/" target="_blank">Python Packaging User Guide</a></li>
+                <li><a href="https://pypi.org/" target="_blank">Python Package Index (PyPI)</a></li>
+                <li><a href="https://pipenv.pypa.io/en/latest/" target="_blank">Pipenv documentation</a></li>
+                <li><a href="https://python-poetry.org/docs/" target="_blank">Poetry documentation</a></li>
+                <li><a href="https://github.com/jazzband/pip-tools" target="_blank">pip-tools GitHub repository</a></li>
+                <li><a href="https://packaging.python.org/en/latest/tutorials/packaging-projects/" target="_blank">Packaging Python Projects tutorial</a></li>
+                <li><a href="https://github.com/pypa/sampleproject" target="_blank">Python packaging sample project</a></li>
+            </ul>
         </section>
     </main>
 
     <footer>
-        <p>&copy; 2025 Full Stack Python Web Development Course</p>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
     </footer>
 </body>
 </html>

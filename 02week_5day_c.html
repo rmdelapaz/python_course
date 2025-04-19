@@ -3,617 +3,2084 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Forms in Flask-WTF</title>
+    <title>Python Full Stack Web Developer Course - Python Standard Library Overview</title>
     <link rel="stylesheet" href="/styles/main.css">
     <link rel="icon" href="/favicon.png">
 </head>
 <body>
     <header>
-        <h1>Dynamic Forms in Flask-WTF</h1>
-        <p class="subtitle">Week 2 - Friday: Full Stack Web Development with Python</p>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 2: Python Fundamentals (Part 1)</h2>
+        <h3>Friday Morning: Python Standard Library Overview</h3>
     </header>
 
     <main>
-        <section>
-            <h2>Dynamic Forms</h2>
-            <p>Static forms are like fixed menus at restaurants — they serve a purpose but can't adapt to changing needs. Dynamic forms, on the other hand, are like customizable buffets that adjust based on previous selections or user context.</p>
+        <section class="introduction">
+            <h3>Introduction to the Python Standard Library</h3>
+            <p>Welcome to our exploration of the Python Standard Library! One of Python's greatest strengths is its "batteries included" philosophy—the idea that Python comes with a rich and versatile standard library that allows you to accomplish a wide range of tasks without installing any additional packages.</p>
             
-            <h3>Why Dynamic Forms?</h3>
-            <p>In many real-world scenarios, the form structure needs to change based on:</p>
+            <p>Think of the Python Standard Library as a vast workshop filled with pre-made tools that come with your Python installation. Just as a well-equipped workshop saves a carpenter from having to craft basic tools before starting a project, the standard library saves you from having to write common functionality from scratch.</p>
+            
+            <p>Today, we'll explore the most important modules in the standard library, understand when and how to use them, and look at practical examples that demonstrate their power in real-world applications.</p>
+        </section>
+
+        <section class="why-standard-library">
+            <h3>Why Use the Standard Library?</h3>
+            
+            <p>Before diving into specific modules, let's understand why the standard library is so valuable:</p>
+            
             <ul>
-                <li>User input (e.g., showing additional fields based on a selection)</li>
-                <li>User role or permissions</li>
-                <li>Context (e.g., different fields for different product categories)</li>
-                <li>Variable number of items (e.g., adding multiple phone numbers)</li>
+                <li><strong>Availability</strong>: It's always there—no need to install anything extra</li>
+                <li><strong>Reliability</strong>: Well-tested, robust code maintained by the Python core team</li>
+                <li><strong>Consistency</strong>: Works the same way across different Python versions and platforms</li>
+                <li><strong>Documentation</strong>: Comprehensive documentation with examples</li>
+                <li><strong>Performance</strong>: Many modules are optimized for speed (some written in C)</li>
+                <li><strong>Security</strong>: Regularly audited and patched for vulnerabilities</li>
             </ul>
             
-            <h3>Techniques for Dynamic Forms</h3>
-            
-            <h4>Conditional Fields</h4>
-            <p>One common pattern is showing or hiding fields based on other field values:</p>
-            
-            <pre><code># In your form class
-class SurveyForm(FlaskForm):
-    occupation = SelectField('Occupation', choices=[
-        ('student', 'Student'),
-        ('employed', 'Employed'),
-        ('unemployed', 'Unemployed'),
-        ('retired', 'Retired')
-    ])
-    
-    # Only relevant for 'employed' selection
-    company = StringField('Company Name')
-    position = StringField('Position')
-    years_employed = IntegerField('Years at Company')
-    
-    # Only relevant for 'student' selection
-    institution = StringField('Educational Institution')
-    field_of_study = StringField('Field of Study')
-    year = SelectField('Year', choices=[
-        ('1', '1st Year'),
-        ('2', '2nd Year'),
-        ('3', '3rd Year'),
-        ('4', '4th Year'),
-        ('5+', '5+ Year')
-    ])
-    
-    submit = SubmitField('Submit')</code></pre>
-            
-            <p>In your template, you'll use JavaScript to show/hide fields based on the selection:</p>
-            
-            <pre><code>&lt;!-- In your template --&gt;
-&lt;script&gt;
-    document.addEventListener('DOMContentLoaded', function() {
-        const occupationField = document.getElementById('occupation');
-        const employedFields = document.getElementById('employed-fields');
-        const studentFields = document.getElementById('student-fields');
-        
-        function updateFieldVisibility() {
-            const occupation = occupationField.value;
-            
-            // Hide all conditional fields first
-            employedFields.style.display = 'none';
-            studentFields.style.display = 'none';
-            
-            // Show relevant fields based on selection
-            if (occupation === 'employed') {
-                employedFields.style.display = 'block';
-            } else if (occupation === 'student') {
-                studentFields.style.display = 'block';
-            }
-        }
-        
-        // Initial update and event listener for changes
-        updateFieldVisibility();
-        occupationField.addEventListener('change', updateFieldVisibility);
-    });
-&lt;/script&gt;
+            <p><strong>Real-World Analogy:</strong> The standard library is like having a fully stocked kitchen before you start cooking. You might need to buy special ingredients occasionally, but you've already got the staples, utensils, and appliances to make most dishes without a trip to the store.</p>
+        </section>
 
-&lt;form method="post" novalidate&gt;
-    {{ form.hidden_tag() }}
-    
-    &lt;div class="form-group"&gt;
-        {{ form.occupation.label }}
-        {{ form.occupation(class="form-control") }}
-    &lt;/div&gt;
-    
-    &lt;div id="employed-fields"&gt;
-        &lt;div class="form-group"&gt;
-            {{ form.company.label }}
-            {{ form.company(class="form-control") }}
-        &lt;/div&gt;
-        &lt;div class="form-group"&gt;
-            {{ form.position.label }}
-            {{ form.position(class="form-control") }}
-        &lt;/div&gt;
-        &lt;div class="form-group"&gt;
-            {{ form.years_employed.label }}
-            {{ form.years_employed(class="form-control") }}
-        &lt;/div&gt;
-    &lt;/div&gt;
-    
-    &lt;div id="student-fields"&gt;
-        &lt;div class="form-group"&gt;
-            {{ form.institution.label }}
-            {{ form.institution(class="form-control") }}
-        &lt;/div&gt;
-        &lt;div class="form-group"&gt;
-            {{ form.field_of_study.label }}
-            {{ form.field_of_study(class="form-control") }}
-        &lt;/div&gt;
-        &lt;div class="form-group"&gt;
-        {{ form.field_of_study.label }}
-        {{ form.field_of_study(class="form-control") }}
-    &lt;/div&gt;
-    &lt;div class="form-group"&gt;
-        {{ form.year.label }}
-        {{ form.year(class="form-control") }}
-    &lt;/div&gt;
-&lt;/div&gt;
+        <section class="navigation">
+            <h3>Navigating the Standard Library</h3>
+            
+            <p>The standard library is organized into modules, each focusing on a specific functionality area. Here's how we can categorize them:</p>
+            
+            <h4>Built-in Functions and Types</h4>
+            <p>These are always available without importing anything:</p>
+            <ul>
+                <li>Basic types: <code>str</code>, <code>int</code>, <code>float</code>, <code>list</code>, <code>dict</code>, <code>set</code>, etc.</li>
+                <li>Functions: <code>print()</code>, <code>len()</code>, <code>range()</code>, <code>sorted()</code>, etc.</li>
+            </ul>
+            
+            <h4>Categorized Modules</h4>
+            <ul>
+                <li><strong>Text Processing</strong>: string, re, difflib, textwrap...</li>
+                <li><strong>Data Types</strong>: datetime, collections, array, enum...</li>
+                <li><strong>Numeric and Mathematical</strong>: math, random, statistics...</li>
+                <li><strong>File and Directory Access</strong>: os.path, glob, shutil...</li>
+                <li><strong>Data Persistence</strong>: pickle, sqlite3, json, csv...</li>
+                <li><strong>Operating System</strong>: os, io, time, argparse...</li>
+                <li><strong>Networking</strong>: socket, email, http, urllib...</li>
+                <li><strong>Internet Data Handling</strong>: json, html, xml...</li>
+                <li><strong>Development Tools</strong>: unittest, doctest, logging...</li>
+                <li><strong>Concurrency</strong>: threading, multiprocessing, asyncio...</li>
+            </ul>
+            
+            <p>Let's explore the most important ones for web development!</p>
+        </section>
 
-&lt;div class="form-group mt-3"&gt;
-    {{ form.submit(class="btn btn-primary") }}
-&lt;/div&gt;
-&lt;/form&gt;</code></pre>
-        
-        <p>In your route, you'll need to validate only the relevant fields:</p>
-        
-        <pre><code>@bp.route('/survey', methods=['GET', 'POST'])
-def survey():
-form = SurveyForm()
+        <section class="core-modules">
+            <h3>Core Modules Every Python Developer Should Know</h3>
+            
+            <p>These fundamental modules are the workhorses of Python programming and are used in almost every significant project:</p>
+            
+            <h4>1. <code>os</code> and <code>os.path</code> - Operating System Interface</h4>
+            <p>These modules provide a portable way to interact with the operating system:</p>
+            
+            <pre><code>import os
 
-if form.validate_on_submit():
-    # Basic data collection
-    survey_data = {
-        'occupation': form.occupation.data
+# Get current working directory
+current_dir = os.getcwd()
+print(f"Current directory: {current_dir}")
+
+# List files in a directory
+files = os.listdir(current_dir)
+print(f"Files in current directory: {files}")
+
+# Create a directory
+os.makedirs("new_folder", exist_ok=True)
+
+# Join paths in an OS-independent way
+config_path = os.path.join("settings", "config.json")
+print(f"Config path: {config_path}")
+
+# Check if a file exists
+if os.path.exists("data.txt"):
+    print("data.txt exists")
+
+# Get file information
+if os.path.isfile("script.py"):
+    size = os.path.getsize("script.py")
+    print(f"script.py is {size} bytes")
+    
+# Split a path into directory and filename
+dir_path, filename = os.path.split("/home/user/documents/report.pdf")
+print(f"Directory: {dir_path}, Filename: {filename}")
+
+# Get file extension
+_, ext = os.path.splitext("document.pdf")
+print(f"Extension: {ext}")</code></pre>
+            
+            <p><strong>Real-World Usage:</strong> File management, path handling, environment variables, process management.</p>
+            
+            <h4>2. <code>datetime</code> - Date and Time Handling</h4>
+            <p>Essential for any application that deals with dates, times, or time intervals:</p>
+            
+            <pre><code>from datetime import datetime, timedelta, date
+
+# Get current date and time
+now = datetime.now()
+print(f"Current date and time: {now}")
+
+# Format dates
+formatted_date = now.strftime("%Y-%m-%d %H:%M:%S")
+print(f"Formatted date: {formatted_date}")
+
+# Parse date strings
+date_string = "2023-05-15"
+parsed_date = datetime.strptime(date_string, "%Y-%m-%d")
+print(f"Parsed date: {parsed_date}")
+
+# Date calculations
+tomorrow = now + timedelta(days=1)
+print(f"Tomorrow: {tomorrow}")
+
+next_week = now + timedelta(weeks=1)
+print(f"Next week: {next_week}")
+
+# Date comparison
+due_date = datetime(2023, 12, 31)
+days_remaining = (due_date - now).days
+print(f"Days until due date: {days_remaining}")
+
+# Working with just dates (no time)
+today = date.today()
+print(f"Today's date: {today}")
+
+# Check if a year is a leap year
+def is_leap_year(year):
+    return (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
+
+print(f"2024 is a leap year: {is_leap_year(2024)}")</code></pre>
+            
+            <p><strong>Real-World Usage:</strong> Scheduling, time tracking, age calculation, event management, log timestamps.</p>
+            
+            <h4>3. <code>json</code> - JSON Encoding and Decoding</h4>
+            <p>Critical for web applications, APIs, and configuration files:</p>
+            
+            <pre><code>import json
+
+# Create a Python dictionary
+user = {
+    "name": "Alice Smith",
+    "age": 28,
+    "email": "alice@example.com",
+    "is_active": True,
+    "tags": ["developer", "python", "web"],
+    "preferences": {
+        "theme": "dark",
+        "notifications": True
+    }
+}
+
+# Convert Python object to JSON string
+json_string = json.dumps(user, indent=4)
+print(f"JSON string:\n{json_string}")
+
+# Convert JSON string back to Python object
+parsed_user = json.loads(json_string)
+print(f"Name from parsed JSON: {parsed_user['name']}")
+
+# Write JSON to a file
+with open("user_data.json", "w") as f:
+    json.dump(user, f, indent=4)
+    
+# Read JSON from a file
+with open("user_data.json", "r") as f:
+    loaded_user = json.load(f)
+    print(f"Loaded user email: {loaded_user['email']}")</code></pre>
+            
+            <p><strong>Real-World Usage:</strong> API responses, configuration files, data storage, client-server communication.</p>
+            
+            <h4>4. <code>re</code> - Regular Expressions</h4>
+            <p>Powerful pattern matching and text processing:</p>
+            
+            <pre><code>import re
+
+# Simple pattern matching
+text = "Contact us at support@example.com or sales@example.com"
+emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
+print(f"Emails found: {emails}")
+
+# Validation
+def is_valid_email(email):
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email))
+
+print(f"Is valid email: {is_valid_email('user@example.com')}")
+print(f"Is valid email: {is_valid_email('invalid@email')}")
+
+# Search and replace
+phone_text = "Call me at 555-123-4567 or 555.987.6543"
+formatted_phones = re.sub(r'(\d{3})[-.]+(\d{3})[-.]+(\d{4})', r'(\1) \2-\3', phone_text)
+print(f"Formatted phones: {formatted_phones}")
+
+# Splitting text
+log_line = "2023-05-15 14:23:45 ERROR Server connection failed"
+parts = re.split(r'\s+', log_line, maxsplit=3)
+timestamp, level, message = parts[0] + " " + parts[1], parts[2], parts[3]
+print(f"Timestamp: {timestamp}, Level: {level}, Message: {message}")
+
+# Extracting specific parts with groups
+url = "https://www.example.com/products/category/item?id=1234"
+pattern = r'https?://(?:www\.)?([^/]+)(/.*)?'
+match = re.match(pattern, url)
+if match:
+    domain, path = match.groups()
+    print(f"Domain: {domain}, Path: {path or 'No path'}")</code></pre>
+            
+            <p><strong>Real-World Usage:</strong> Form validation, data extraction, text parsing, search functionality.</p>
+            
+            <h4>5. <code>collections</code> - Specialized Container Types</h4>
+            <p>Enhanced data structures that extend the capabilities of built-in types:</p>
+            
+            <pre><code>from collections import defaultdict, Counter, deque, namedtuple
+
+# defaultdict - Dictionary with default values
+word_groups = defaultdict(list)
+words = ["apple", "banana", "avocado", "apricot", "blueberry"]
+
+for word in words:
+    word_groups[word[0]].append(word)
+    
+print(f"Words starting with 'a': {word_groups['a']}")
+print(f"Words starting with 'b': {word_groups['b']}")
+# No error for missing keys
+print(f"Words starting with 'c': {word_groups['c']}")  # Returns an empty list
+
+# Counter - Count occurrences of elements
+colors = ["red", "blue", "green", "red", "blue", "red", "yellow"]
+color_count = Counter(colors)
+print(f"Color counts: {color_count}")
+print(f"Most common colors: {color_count.most_common(2)}")
+
+text = "Python programming is both fun and powerful"
+letter_count = Counter(text.lower().replace(" ", ""))
+print(f"Letter frequency: {letter_count}")
+
+# deque - Double-ended queue with efficient operations at both ends
+task_queue = deque(["Task 1", "Task 2", "Task 3"])
+task_queue.append("Task 4")       # Add to right end
+task_queue.appendleft("Task 0")   # Add to left end
+print(f"Task queue: {task_queue}")
+
+# Process tasks from both ends
+first_task = task_queue.popleft()  # Remove from left end
+last_task = task_queue.pop()       # Remove from right end
+print(f"First task: {first_task}, Last task: {last_task}")
+print(f"Remaining tasks: {task_queue}")
+
+# namedtuple - Tuple with named fields
+Person = namedtuple('Person', ['name', 'age', 'job'])
+alice = Person(name='Alice', age=30, job='Developer')
+bob = Person('Bob', 25, 'Designer')
+
+print(f"{alice.name} is {alice.age} years old and works as a {alice.job}")
+# Still works like a regular tuple
+name, age, job = bob
+print(f"{name} is {age} years old and works as a {job}")</code></pre>
+            
+            <p><strong>Real-World Usage:</strong> Data analysis, memory-efficient storage, flexible data structures, improving code readability.</p>
+        </section>
+
+        <section class="file-handling">
+            <h3>File and Data Handling</h3>
+            
+            <h4>1. <code>csv</code> - CSV File Reading and Writing</h4>
+            <p>Essential for data import/export and working with spreadsheets:</p>
+            
+            <pre><code>import csv
+
+# Writing CSV data
+users = [
+    {'id': 1, 'name': 'Alice', 'email': 'alice@example.com'},
+    {'id': 2, 'name': 'Bob', 'email': 'bob@example.com'},
+    {'id': 3, 'name': 'Charlie', 'email': 'charlie@example.com'}
+]
+
+with open('users.csv', 'w', newline='') as file:
+    fieldnames = ['id', 'name', 'email']
+    writer = csv.DictWriter(file, fieldnames=fieldnames)
+    
+    writer.writeheader()
+    for user in users:
+        writer.writerow(user)
+        
+# Reading CSV data
+with open('users.csv', 'r', newline='') as file:
+    reader = csv.DictReader(file)
+    for row in reader:
+        print(f"User {row['id']}: {row['name']} ({row['email']})")
+        
+# Working with custom delimiters and formatting
+data = [
+    ['Name', 'Department', 'Salary'],
+    ['John Doe', 'Engineering', '75000'],
+    ['Jane Smith', 'Marketing', '65000'],
+    ['Bob Johnson', 'Sales', '80000']
+]
+
+# Write with tab delimiter
+with open('employees.tsv', 'w', newline='') as file:
+    writer = csv.writer(file, delimiter='\t')
+    writer.writerows(data)
+    
+# Read with tab delimiter
+with open('employees.tsv', 'r', newline='') as file:
+    reader = csv.reader(file, delimiter='\t')
+    headers = next(reader)  # Skip header row
+    
+    for row in reader:
+        name, dept, salary = row
+        print(f"{name} works in {dept} and earns ${salary}")</code></pre>
+            
+            <p><strong>Real-World Usage:</strong> Data import/export, reports generation, data migration, batch processing.</p>
+            
+            <h4>2. <code>pickle</code> - Python Object Serialization</h4>
+            <p>For saving and loading Python objects:</p>
+            
+            <pre><code>import pickle
+
+# Complex Python object
+class User:
+    def __init__(self, name, email, settings=None):
+        self.name = name
+        self.email = email
+        self.settings = settings or {}
+        self.login_count = 0
+        
+    def login(self):
+        self.login_count += 1
+        
+    def __str__(self):
+        return f"User({self.name}, {self.email}, logins: {self.login_count})"
+
+# Create an object
+user = User("Alice", "alice@example.com", {"theme": "dark", "notifications": True})
+user.login()
+user.login()
+
+print(f"Original object: {user}")
+
+# Save object to file (serialization)
+with open('user.pickle', 'wb') as file:
+    pickle.dump(user, file)
+    
+# Load object from file (deserialization)
+with open('user.pickle', 'rb') as file:
+    loaded_user = pickle.load(file)
+    
+print(f"Loaded object: {loaded_user}")
+print(f"User settings: {loaded_user.settings}")
+print(f"Login count: {loaded_user.login_count}")
+
+# Serialize multiple objects
+users = [
+    User("Alice", "alice@example.com"),
+    User("Bob", "bob@example.com"),
+    User("Charlie", "charlie@example.com")
+]
+
+with open('users.pickle', 'wb') as file:
+    pickle.dump(users, file)
+    
+with open('users.pickle', 'rb') as file:
+    loaded_users = pickle.load(file)
+    
+for user in loaded_users:
+    print(user)</code></pre>
+            
+            <p><strong>Security Note:</strong> Never unpickle data from untrusted sources, as it can execute arbitrary code!</p>
+            
+            <p><strong>Real-World Usage:</strong> Caching, saving program state, storing machine learning models, web session management.</p>
+            
+            <h4>3. <code>sqlite3</code> - SQLite Database</h4>
+            <p>Embedded database for local storage and prototyping:</p>
+            
+            <pre><code>import sqlite3
+import datetime
+
+# Connect to database (creates file if it doesn't exist)
+conn = sqlite3.connect('application.db')
+cursor = conn.cursor()
+
+# Create table
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    created_at TEXT NOT NULL
+)
+''')
+
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS posts (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+)
+''')
+
+# Insert data
+def add_user(username, email):
+    now = datetime.datetime.now().isoformat()
+    try:
+        cursor.execute(
+            "INSERT INTO users (username, email, created_at) VALUES (?, ?, ?)",
+            (username, email, now)
+        )
+        conn.commit()
+        return cursor.lastrowid
+    except sqlite3.IntegrityError:
+        print(f"User {username} or email {email} already exists")
+        return None
+
+def add_post(user_id, title, content):
+    now = datetime.datetime.now().isoformat()
+    cursor.execute(
+        "INSERT INTO posts (user_id, title, content, created_at) VALUES (?, ?, ?, ?)",
+        (user_id, title, content, now)
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+# Add some users and posts
+alice_id = add_user("alice", "alice@example.com")
+bob_id = add_user("bob", "bob@example.com")
+
+if alice_id:
+    add_post(alice_id, "Hello World", "This is my first post!")
+    add_post(alice_id, "Python Tips", "SQLite is easy to use in Python.")
+    
+if bob_id:
+    add_post(bob_id, "My Introduction", "Hi everyone, I'm Bob.")
+
+# Query data
+print("All users:")
+for row in cursor.execute("SELECT id, username, email FROM users"):
+    user_id, username, email = row
+    print(f"User {user_id}: {username} ({email})")
+    
+    # Get posts for this user
+    posts_cursor = conn.cursor()
+    posts_cursor.execute("SELECT id, title FROM posts WHERE user_id = ?", (user_id,))
+    posts = posts_cursor.fetchall()
+    
+    if posts:
+        print(f"  Posts by {username}:")
+        for post_id, title in posts:
+            print(f"  - Post {post_id}: {title}")
+    else:
+        print(f"  No posts by {username}")
+
+# More complex query
+print("\nAll posts with user info:")
+cursor.execute('''
+SELECT u.username, p.title, p.content
+FROM posts p
+JOIN users u ON p.user_id = u.id
+ORDER BY p.created_at DESC
+''')
+
+for username, title, content in cursor.fetchall():
+    print(f"{username}: {title}")
+    print(f"  {content[:50]}...")
+
+# Clean up
+conn.close()</code></pre>
+            
+            <p><strong>Real-World Usage:</strong> Local applications, prototyping, testing, small to medium web applications, mobile apps.</p>
+        </section>
+
+        <section class="networking">
+            <h3>Networking and Internet Modules</h3>
+            
+            <h4>1. <code>urllib</code> - URL Handling</h4>
+            <p>Basic tools for working with URLs and HTTP requests:</p>
+            
+            <pre><code>from urllib.request import urlopen, Request
+from urllib.parse import urlparse, urlencode, parse_qs
+from urllib.error import URLError, HTTPError
+import json
+
+# Parse URL components
+url = "https://api.example.com/search?q=python&page=1"
+parsed_url = urlparse(url)
+print(f"Scheme: {parsed_url.scheme}")
+print(f"Netloc: {parsed_url.netloc}")
+print(f"Path: {parsed_url.path}")
+print(f"Query parameters: {parse_qs(parsed_url.query)}")
+
+# Build URL with query parameters
+base_url = "https://api.example.com/search"
+params = {
+    "q": "python tutorial",
+    "page": 1,
+    "limit": 10
+}
+query_string = urlencode(params)
+full_url = f"{base_url}?{query_string}"
+print(f"Encoded URL: {full_url}")
+
+# Make HTTP request (with error handling)
+def fetch_data(url):
+    # Set custom headers
+    headers = {
+        "User-Agent": "Mozilla/5.0 Python Sample",
+        "Accept": "application/json"
     }
     
-    # Collect occupation-specific data
-    if form.occupation.data == 'employed':
-        survey_data.update({
-            'company': form.company.data,
-            'position': form.position.data,
-            'years_employed': form.years_employed.data
-        })
-    elif form.occupation.data == 'student':
-        survey_data.update({
-            'institution': form.institution.data,
-            'field_of_study': form.field_of_study.data,
-            'year': form.year.data
-        })
-    
-    # Process the survey data
-    # ...
-    
-    flash('Thank you for completing the survey!', 'success')
-    return redirect(url_for('main.index'))
+    try:
+        req = Request(url, headers=headers)
+        with urlopen(req) as response:
+            if response.status == 200:
+                # Assuming JSON response
+                data = json.loads(response.read().decode('utf-8'))
+                return data
+            else:
+                print(f"Unexpected status code: {response.status}")
+                return None
+                
+    except HTTPError as e:
+        print(f"HTTP Error: {e.code} - {e.reason}")
+        return None
+    except URLError as e:
+        print(f"URL Error: {e.reason}")
+        return None
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return None
 
-return render_template('survey.html', form=form)</code></pre>
-        
-        <h4>Form Factories</h4>
-        <p>For more complex scenarios, you can dynamically create forms at runtime:</p>
-        
-        <pre><code>def create_product_form(category):
-"""Create a form specific to a product category"""
-class ProductForm(FlaskForm):
-    name = StringField('Product Name', validators=[DataRequired()])
-    price = DecimalField('Price', validators=[DataRequired(), NumberRange(min=0)])
-    description = TextAreaField('Description', validators=[DataRequired()])
+# Example usage (using httpbin.org for testing)
+test_url = "https://httpbin.org/get?param1=value1&param2=value2"
+response_data = fetch_data(test_url)
+
+if response_data:
+    print("\nResponse data:")
+    print(f"Args: {response_data.get('args')}")
+    print(f"Headers sent: {response_data.get('headers')}")</code></pre>
+            
+            <p><strong>Note:</strong> While <code>urllib</code> is part of the standard library, for more complex HTTP requests, many developers prefer the third-party <code>requests</code> library for its simpler API.</p>
+            
+            <h4>2. <code>http</code> modules - HTTP Protocol Support</h4>
+            <p>Low-level HTTP protocol implementation:</p>
+            
+            <pre><code>from http.server import HTTPServer, BaseHTTPRequestHandler
+import json
+
+# Simple HTTP server example
+class SimpleHandler(BaseHTTPRequestHandler):
+    def _set_headers(self, status_code=200, content_type='text/html'):
+        self.send_response(status_code)
+        self.send_header('Content-type', content_type)
+        self.end_headers()
     
-    # Add category-specific fields
-    if category == 'clothing':
-        size = SelectField('Size', choices=[
-            ('xs', 'Extra Small'),
-            ('s', 'Small'),
-            ('m', 'Medium'),
-            ('l', 'Large'),
-            ('xl', 'Extra Large')
-        ])
-        color = StringField('Color', validators=[DataRequired()])
-        material = StringField('Material', validators=[DataRequired()])
+    def do_GET(self):
+        if self.path == '/':
+            # Serve HTML for root path
+            self._set_headers()
+            self.wfile.write(b"""
+                &lt;html&gt;
+                &lt;head&gt;&lt;title&gt;Simple HTTP Server&lt;/title&gt;&lt;/head&gt;
+                &lt;body&gt;
+                    &lt;h1&gt;Welcome to the Simple HTTP Server&lt;/h1&gt;
+                    &lt;p&gt;This is a basic example using http.server.&lt;/p&gt;
+                    &lt;p&gt;Try visiting /api/data for JSON data.&lt;/p&gt;
+                &lt;/body&gt;
+                &lt;/html&gt;
+            """)
+        elif self.path == '/api/data':
+            # Serve JSON for API path
+            self._set_headers(content_type='application/json')
+            data = {
+                'message': 'Hello from Python HTTP Server',
+                'status': 'success',
+                'data': [1, 2, 3, 4, 5]
+            }
+            self.wfile.write(json.dumps(data).encode())
+        else:
+            # 404 for unknown paths
+            self._set_headers(404)
+            self.wfile.write(b"404 Not Found")
     
-    elif category == 'electronics':
-        warranty = IntegerField('Warranty (months)', validators=[DataRequired(), NumberRange(min=0)])
-        technical_specs = TextAreaField('Technical Specifications', validators=[DataRequired()])
-        
-    elif category == 'books':
-        author = StringField('Author', validators=[DataRequired()])
-        isbn = StringField('ISBN', validators=[DataRequired()])
-        pages = IntegerField('Number of Pages', validators=[DataRequired(), NumberRange(min=1)])
+    def do_POST(self):
+        if self.path == '/api/submit':
+            # Get content length to read the data
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                # Parse JSON data (assuming JSON request)
+                data = json.loads(post_data.decode('utf-8'))
+                
+                # Process the data (just echo back in this example)
+                response = {
+                    'message': 'Data received successfully',
+                    'received_data': data
+                }
+                
+                # Send response
+                self._set_headers(content_type='application/json')
+                self.wfile.write(json.dumps(response).encode())
+                
+            except json.JSONDecodeError:
+                self._set_headers(400, 'application/json')
+                error = {'error': 'Invalid JSON data'}
+                self.wfile.write(json.dumps(error).encode())
+        else:
+            self._set_headers(404)
+            self.wfile.write(b"404 Not Found")
+
+# Run the server
+def run_server(server_class=HTTPServer, handler_class=SimpleHandler, port=8000):
+    server_address = ('', port)
+    httpd = server_class(server_address, handler_class)
+    print(f"Starting HTTP server on port {port}...")
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("Stopping server...")
+        httpd.server_close()
+
+# The following line would start the server if executed directly
+# run_server()</code></pre>
+            
+            <p><strong>Note:</strong> This server is for development and testing only, not for production use.</p>
+            
+            <p><strong>Real-World Usage:</strong> Simple API servers, testing, proxies, custom web applications.</p>
+        </section>
+
+        <section class="text-processing">
+            <h3>Text Processing</h3>
+            
+            <h4>1. <code>string</code> - Common String Operations</h4>
+            <p>Useful constants and helpers for string manipulation:</p>
+            
+            <pre><code>import string
+
+# String constants
+print(f"ASCII lowercase: {string.ascii_lowercase}")
+print(f"ASCII uppercase: {string.ascii_uppercase}")
+print(f"Digits: {string.digits}")
+print(f"Hexadecimal digits: {string.hexdigits}")
+print(f"Punctuation: {string.punctuation}")
+print(f"Whitespace: {repr(string.whitespace)}")
+
+# String formatting with Template
+from string import Template
+
+template = Template("Hello, $name! Welcome to $service.")
+message = template.substitute(name="Alice", service="Python Programming")
+print(message)
+
+# Safe substitution (missing values become $name instead of raising error)
+template = Template("User: $username, Role: $role")
+print(template.safe_substitute(username="bob"))  # role is missing
+
+# Character translation
+translation_table = str.maketrans({
+    ' ': '_',   # Replace spaces with underscores
+    '.': None,  # Remove periods
+    ',': None   # Remove commas
+})
+
+text = "Hello, world. This is an example."
+translated = text.translate(translation_table)
+print(f"Translated text: {translated}")
+
+# Create a custom translation table (e.g., for a basic cipher)
+def create_rot13_table():
+    # ROT13 cipher (rotate alphabet by 13 positions)
+    lowercase = string.ascii_lowercase
+    uppercase = string.ascii_uppercase
     
-    submit = SubmitField('Add Product')
-
-return ProductForm()
-
-@bp.route('/add-product/<category>', methods=['GET', 'POST'])
-@login_required
-def add_product(category):
-if category not in ['clothing', 'electronics', 'books']:
-    flash('Invalid product category', 'danger')
-    return redirect(url_for('main.dashboard'))
-
-ProductForm = create_product_form(category)
-form = ProductForm()
-
-if form.validate_on_submit():
-    # Common product data
-    product = Product(
-        name=form.name.data,
-        price=form.price.data,
-        description=form.description.data,
-        category=category
+    rot13_lower = lowercase[13:] + lowercase[:13]
+    rot13_upper = uppercase[13:] + uppercase[:13]
+    
+    trans_table = str.maketrans(
+        lowercase + uppercase,
+        rot13_lower + rot13_upper
     )
     
-    # Category-specific data
-    if category == 'clothing':
-        product.attributes = {
-            'size': form.size.data,
-            'color': form.color.data,
-            'material': form.material.data
-        }
-    elif category == 'electronics':
-        product.attributes = {
-            'warranty': form.warranty.data,
-            'technical_specs': form.technical_specs.data
-        }
-    elif category == 'books':
-        product.attributes = {
-            'author': form.author.data,
-            'isbn': form.isbn.data,
-            'pages': form.pages.data
-        }
+    return trans_table
+
+rot13_table = create_rot13_table()
+
+message = "Hello, World!"
+encrypted = message.translate(rot13_table)
+decrypted = encrypted.translate(rot13_table)  # ROT13 reverses itself
+
+print(f"Original: {message}")
+print(f"Encrypted: {encrypted}")
+print(f"Decrypted: {decrypted}")</code></pre>
+            
+            <p><strong>Real-World Usage:</strong> Text normalization, character filtering, templating, basic ciphers.</p>
+            
+            <h4>2. <code>textwrap</code> - Text Wrapping and Filling</h4>
+            <p>Formatting text for display and output:</p>
+            
+            <pre><code>import textwrap
+
+# Long text for demonstration
+long_text = """Python is an interpreted, high-level, general-purpose programming language. Created by Guido van Rossum and first released in 1991, Python's design philosophy emphasizes code readability with its notable use of significant whitespace. Its language constructs and object-oriented approach aim to help programmers write clear, logical code for small and large-scale projects."""
+
+# Wrap text to specified width
+wrapped = textwrap.fill(long_text, width=40)
+print("Wrapped text (40 chars):")
+print(wrapped)
+print()
+
+# Wrap with initial indent
+wrapped_indented = textwrap.fill(long_text, width=40, 
+                                initial_indent="    ", 
+                                subsequent_indent="  ")
+print("Wrapped with indentation:")
+print(wrapped_indented)
+print()
+
+# Shorten text with placeholder
+shortened = textwrap.shorten(long_text, width=100, placeholder="...")
+print("Shortened text:")
+print(shortened)
+print()
+
+# Dedent text (remove common leading whitespace)
+indented_text = """
+    This is an example of text
+    with common leading whitespace.
+        This line has extra indentation.
+    Back to the original indentation.
+"""
+
+dedented = textwrap.dedent(indented_text)
+print("Before dedent:")
+print(repr(indented_text))
+print("After dedent:")
+print(repr(dedented))</code></pre>
+            
+            <p><strong>Real-World Usage:</strong> Console output formatting, report generation, email formatting, CLI applications.</p>
+        </section>
+
+        <section class="utility-modules">
+            <h3>Utility Modules</h3>
+            
+            <h4>1. <code>random</code> - Random Number Generation</h4>
+            <p>Essential for games, simulations, and testing:</p>
+            
+            <pre><code>import random
+
+# Basic random numbers
+print(f"Random float (0.0 to 1.0): {random.random()}")
+print(f"Random integer (1 to 100): {random.randint(1, 100)}")
+print(f"Random float (5.0 to 10.0): {random.uniform(5.0, 10.0)}")
+
+# Selecting random elements
+fruits = ["apple", "banana", "orange", "grape", "kiwi", "pineapple"]
+print(f"Random fruit: {random.choice(fruits)}")
+print(f"Three random fruits: {random.sample(fruits, 3)}")
+
+# Random with weighted probabilities
+weighted_choices = [
+    ("common", 0.7),     # 70% chance
+    ("uncommon", 0.25),  # 25% chance
+    ("rare", 0.05)       # 5% chance
+]
+
+def weighted_choice(choices):
+    items, weights = zip(*choices)
+    return random.choices(items, weights=weights, k=1)[0]
+
+results = {"common": 0, "uncommon": 0, "rare": 0}
+for _ in range(1000):
+    result = weighted_choice(weighted_choices)
+    results[result] += 1
+
+print("Simulation results (1000 trials):")
+for category, count in results.items():
+    print(f"  {category}: {count} ({count/10}%)")
+
+# Shuffling
+deck = list(range(1, 53))  # Cards numbered 1-52
+random.shuffle(deck)
+print(f"First 5 cards from shuffled deck: {deck[:5]}")
+
+# Random permutation without modifying original
+original = ['A', 'B', 'C', 'D', 'E']
+permutation = random.sample(original, len(original))
+print(f"Original: {original}")
+print(f"Random permutation: {permutation}")
+
+# Setting seed for reproducibility
+random.seed(42)  # Any number works as a seed
+print("With seed 42:")
+print(f"  Random number 1: {random.random()}")
+print(f"  Random number 2: {random.random()}")
+
+random.seed(42)  # Same seed gives same sequence
+print("With seed 42 again:")
+print(f"  Random number 1: {random.random()}")
+print(f"  Random number 2: {random.random()}")
+
+# For cryptographic purposes, use 'secrets' module instead
+import secrets
+print(f"Cryptographically strong random bytes: {secrets.token_hex(8)}")</code></pre>
+            
+            <p><strong>Note:</strong> For security-sensitive applications (like tokens or passwords), use the <code>secrets</code> module instead.</p>
+            
+            <p><strong>Real-World Usage:</strong> Games, simulations, testing, randomized algorithms, sampling.</p>
+            
+            <h4>2. <code>argparse</code> - Command Line Arguments Parser</h4>
+            <p>Creating professional command-line interfaces:</p>
+            
+            <pre><code>import argparse
+import os
+import sys
+
+def process_file(filename, encryption_key=None, verbose=False):
+    """Simulate processing a file with options."""
+    if verbose:
+        print(f"Processing file: {filename}")
+        if encryption_key:
+            print(f"Using encryption key: {encryption_key}")
     
-    db.session.add(product)
-    db.session.commit()
+    # Just demo functionality
+    if not os.path.exists(filename):
+        print(f"Error: File '{filename}' not found.")
+        return False
+        
+    file_size = os.path.getsize(filename)
+    print(f"File '{filename}' is {file_size} bytes.")
+    return True
+
+def main():
+    # Create parser
+    parser = argparse.ArgumentParser(
+        description="File Processor Tool - Demonstrates argparse capabilities",
+        epilog="Example: python script.py input.txt -v -k secret123"
+    )
     
-    flash(f'Product "{product.name}" added successfully!', 'success')
-    return redirect(url_for('main.products'))
-
-return render_template('add_product.html', form=form, category=category)</code></pre>
+    # Required positional argument
+    parser.add_argument("filename", help="The file to process")
+    
+    # Optional arguments
+    parser.add_argument("-v", "--verbose", 
+                        action="store_true", 
+                        help="Increase output verbosity")
+                        
+    parser.add_argument("-k", "--key", 
+                        metavar="KEY", 
+                        help="Encryption key to use")
+                        
+    parser.add_argument("-o", "--output", 
+                        metavar="OUTPUT_FILE",
+                        help="Output file (default: add '_processed' suffix)")
+                        
+    # Mutually exclusive options
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument("--compress", action="store_true", 
+                          help="Compress the output file")
+    mode_group.add_argument("--encrypt", action="store_true", 
+                          help="Encrypt the output file")
+    
+    # Parse arguments
+    args = parser.parse_args()
+    
+    # Use the arguments
+    success = process_file(args.filename, args.key, args.verbose)
+    
+    if success:
+        output = args.output or f"{os.path.splitext(args.filename)[0]}_processed{os.path.splitext(args.filename)[1]}"
         
-        <h4>FormField and FieldList</h4>
-        <p>WTForms provides tools for nested forms and variable-length field lists:</p>
+        if args.verbose:
+            print(f"Output will be saved to: {output}")
+            
+        if args.compress:
+            print("Compression mode selected")
+        elif args.encrypt:
+            if not args.key:
+                print("Error: Encryption mode requires a key (-k/--key)")
+                parser.print_help()
+                return 1
+            print("Encryption mode selected")
         
-        <pre><code>from wtforms import FormField, FieldList
+        print(f"Processing complete. Results saved to '{output}'")
+    
+    return 0
 
-class AddressForm(FlaskForm):
-street = StringField('Street', validators=[DataRequired()])
-city = StringField('City', validators=[DataRequired()])
-state = StringField('State', validators=[DataRequired()])
-zip_code = StringField('ZIP Code', validators=[DataRequired()])
+if __name__ == "__main__":
+    sys.exit(main())</code></pre>
+            
+            <p>Running this script with different arguments:</p>
+            <pre><code># Basic usage
+python script.py data.txt
 
-# Make this form usable as a subform
-class Meta:
-    csrf = False
+# With verbose flag
+python script.py data.txt --verbose
 
-class PhoneNumberForm(FlaskForm):
-number = StringField('Phone Number', validators=[DataRequired()])
-type = SelectField('Type', choices=[
-    ('home', 'Home'),
-    ('work', 'Work'),
-    ('mobile', 'Mobile'),
-    ('other', 'Other')
-])
+# With encryption key
+python script.py data.txt -k secret123
 
-# Make this form usable as a subform
-class Meta:
-    csrf = False
+# With custom output file
+python script.py data.txt -o result.txt
 
-class CustomerForm(FlaskForm):
-name = StringField('Name', validators=[DataRequired()])
-email = StringField('Email', validators=[DataRequired(), Email()])
+# With compression mode
+python script.py data.txt --compress
 
-# Nested form
-shipping_address = FormField(AddressForm, label='Shipping Address')
-billing_address = FormField(AddressForm, label='Billing Address')
+# With encryption mode (and required key)
+python script.py data.txt --encrypt -k secret123
 
-# Variable list of phone numbers
-phone_numbers = FieldList(
-    FormField(PhoneNumberForm), 
-    min_entries=1,  # At least one phone number
-    max_entries=5   # Maximum five phone numbers
+# Show help
+python script.py --help</code></pre>
+            
+            <p><strong>Real-World Usage:</strong> CLI applications, automation scripts, data processing tools, administrative utilities.</p>
+        </section>
+
+        <section class="advanced-modules">
+            <h3>Advanced Modules for Specific Needs</h3>
+            
+            <h4>1. <code>logging</code> - Logging Facility</h4>
+            <p>Professional logging for applications:</p>
+            
+            <pre><code>import logging
+import sys
+from datetime import datetime
+
+# Basic configuration
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("application.log"),
+        logging.StreamHandler(sys.stdout)
+    ]
 )
 
-# Add another phone number button is handled with JavaScript
-submit = SubmitField('Save Customer')</code></pre>
-        
-        <p>The corresponding template might look like:</p>
-        
-        <pre><code>&lt;!-- customer_form.html --&gt;
-&lt;form method="post" novalidate&gt;
-{{ form.hidden_tag() }}
+# Create a logger for this module
+logger = logging.getLogger(__name__)
 
-&lt;div class="form-group"&gt;
-    {{ form.name.label }}
-    {{ form.name(class="form-control") }}
-&lt;/div&gt;
+# Basic logging examples
+logger.debug("This is a debug message")  # Won't show due to level setting
+logger.info("Application started")
+logger.warning("This is a warning message")
+logger.error("An error occurred")
+logger.critical("Critical error - application shutting down")
 
-&lt;div class="form-group"&gt;
-    {{ form.email.label }}
-    {{ form.email(class="form-control") }}
-&lt;/div&gt;
+# Logging with variable data
+user_id = 12345
+action = "login"
+logger.info(f"User {user_id} performed action: {action}")
 
-&lt;h3&gt;Addresses&lt;/h3&gt;
+# Logging exceptions
+try:
+    result = 10 / 0
+except Exception as e:
+    logger.exception("Division error occurred")  # Logs traceback too
 
-&lt;div class="card mb-3"&gt;
-    &lt;div class="card-header"&gt;{{ form.shipping_address.label }}&lt;/div&gt;
-    &lt;div class="card-body"&gt;
-        &lt;div class="form-group"&gt;
-            {{ form.shipping_address.street.label }}
-            {{ form.shipping_address.street(class="form-control") }}
-        &lt;/div&gt;
-        &lt;div class="form-group"&gt;
-            {{ form.shipping_address.city.label }}
-            {{ form.shipping_address.city(class="form-control") }}
-        &lt;/div&gt;
-        &lt;div class="form-group"&gt;
-            {{ form.shipping_address.state.label }}
-            {{ form.shipping_address.state(class="form-control") }}
-        &lt;/div&gt;
-        &lt;div class="form-group"&gt;
-            {{ form.shipping_address.zip_code.label }}
-            {{ form.shipping_address.zip_code(class="form-control") }}
-        &lt;/div&gt;
-    &lt;/div&gt;
-&lt;/div&gt;
-
-&lt;div class="card mb-3"&gt;
-    &lt;div class="card-header"&gt;{{ form.billing_address.label }}&lt;/div&gt;
-    &lt;div class="card-body"&gt;
-        &lt;div class="form-group"&gt;
-            {{ form.billing_address.street.label }}
-            {{ form.billing_address.street(class="form-control") }}
-        &lt;/div&gt;
-        &lt;div class="form-group"&gt;
-            {{ form.billing_address.city.label }}
-            {{ form.billing_address.city(class="form-control") }}
-        &lt;/div&gt;
-        &lt;div class="form-group"&gt;
-            {{ form.billing_address.state.label }}
-            {{ form.billing_address.state(class="form-control") }}
-        &lt;/div&gt;
-        &lt;div class="form-group"&gt;
-            {{ form.billing_address.zip_code.label }}
-            {{ form.billing_address.zip_code(class="form-control") }}
-        &lt;/div&gt;
-    &lt;/div&gt;
-&lt;/div&gt;
-
-&lt;h3&gt;Phone Numbers&lt;/h3&gt;
-&lt;div id="phone-numbers"&gt;
-    {% for phone_form in form.phone_numbers %}
-        &lt;div class="phone-entry card mb-2"&gt;
-            &lt;div class="card-body"&gt;
-                &lt;div class="row"&gt;
-                    &lt;div class="col-md-8"&gt;
-                        &lt;div class="form-group"&gt;
-                            {{ phone_form.number.label }}
-                            {{ phone_form.number(class="form-control") }}
-                        &lt;/div&gt;
-                    &lt;/div&gt;
-                    &lt;div class="col-md-4"&gt;
-                        &lt;div class="form-group"&gt;
-                            {{ phone_form.type.label }}
-                            {{ phone_form.type(class="form-control") }}
-                        &lt;/div&gt;
-                    &lt;/div&gt;
-                &lt;/div&gt;
-                {% if not loop.first %}
-                    &lt;button type="button" class="btn btn-sm btn-danger remove-phone"&gt;Remove&lt;/button&gt;
-                {% endif %}
-            &lt;/div&gt;
-        &lt;/div&gt;
-    {% endfor %}
-&lt;/div&gt;
-
-&lt;button type="button" id="add-phone" class="btn btn-secondary mb-3"&gt;Add Another Phone Number&lt;/button&gt;
-
-&lt;div class="form-group mt-3"&gt;
-    {{ form.submit(class="btn btn-primary") }}
-&lt;/div&gt;
-&lt;/form&gt;
-
-&lt;script&gt;
-document.addEventListener('DOMContentLoaded', function() {
-    const phoneContainer = document.getElementById('phone-numbers');
-    const addButton = document.getElementById('add-phone');
+# Creating a more complex logger setup
+def setup_logger(log_file, level=logging.INFO):
+    """Set up a logger with file and console output."""
+    # Create logger
+    new_logger = logging.getLogger(log_file)
+    new_logger.setLevel(level)
     
-    // Add a new phone number entry
-    addButton.addEventListener('click', function() {
-        // Get the last phone entry as a template
-        const lastEntry = phoneContainer.querySelector('.phone-entry:last-child');
-        const newEntry = lastEntry.cloneNode(true);
-        
-        // Clear input values
-        newEntry.querySelectorAll('input').forEach(input => {
-            input.value = '';
-            
-            // Update the input name to match WTForms naming convention
-            const nameParts = input.name.split('-');
-            const newIndex = parseInt(nameParts[1]) + 1;
-            input.name = `${nameParts[0]}-${newIndex}-${nameParts[2]}`;
-        });
-        
-        // Update select names as well
-        newEntry.querySelectorAll('select').forEach(select => {
-            const nameParts = select.name.split('-');
-            const newIndex = parseInt(nameParts[1]) + 1;
-            select.name = `${nameParts[0]}-${newIndex}-${nameParts[2]}`;
-        });
-        
-        // Add remove button if not already present
-        if (!newEntry.querySelector('.remove-phone')) {
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'btn btn-sm btn-danger remove-phone';
-            removeBtn.textContent = 'Remove';
-            newEntry.querySelector('.card-body').appendChild(removeBtn);
-        }
-        
-        // Add the new entry to the container
-        phoneContainer.appendChild(newEntry);
-        
-        // Add event listener for the remove button
-        setupRemoveButtons();
-    });
-    
-    // Function to handle removal of phone entries
-    function setupRemoveButtons() {
-        document.querySelectorAll('.remove-phone').forEach(button => {
-            button.addEventListener('click', function() {
-                this.closest('.phone-entry').remove();
-            });
-        });
-    }
-    
-    // Initial setup
-    setupRemoveButtons();
-});
-&lt;/script&gt;</code></pre>
-        
-        <h3>Real-World Example: Event Registration Form</h3>
-        <p>Consider an event registration system where users can register for conferences. Depending on the event type, different information needs to be collected:</p>
-        
-        <pre><code># models/event.py
-class Event(db.Model):
-id = db.Column(db.Integer, primary_key=True)
-name = db.Column(db.String(100), nullable=False)
-event_type = db.Column(db.String(50), nullable=False)  # 'conference', 'workshop', 'webinar'
-start_date = db.Column(db.DateTime, nullable=False)
-end_date = db.Column(db.DateTime, nullable=False)
-# ... other fields ...
-
-# forms/event.py
-def create_registration_form(event):
-"""Create a registration form based on event type"""
-class RegistrationForm(FlaskForm):
-    first_name = StringField('First Name', validators=[DataRequired()])
-    last_name = StringField('Last Name', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    
-    # Common fields for all event types
-    dietary_requirements = SelectField('Dietary Requirements', choices=[
-        ('none', 'None'),
-        ('vegetarian', 'Vegetarian'),
-        ('vegan', 'Vegan'),
-        ('gluten_free', 'Gluten Free'),
-        ('other', 'Other (please specify)')
-    ])
-    dietary_notes = TextAreaField('Dietary Notes')
-    
-    # For conferences and workshops (in-person events)
-    if event.event_type in ['conference', 'workshop']:
-        # Accommodation options
-        needs_accommodation = BooleanField('I need accommodation')
-        check_in_date = DateField('Check-in Date')
-        check_out_date = DateField('Check-out Date')
-        room_type = SelectField('Room Type', choices=[
-            ('single', 'Single Room'),
-            ('double', 'Double Room'),
-            ('shared', 'Shared Room')
-        ])
-        
-        # Workshop-specific fields
-        if event.event_type == 'workshop':
-            experience_level = SelectField('Experience Level', choices=[
-                ('beginner', 'Beginner'),
-                ('intermediate', 'Intermediate'),
-                ('advanced', 'Advanced')
-            ])
-            equipment = BooleanField('I will bring my own equipment')
-            
-        # Conference-specific fields
-        if event.event_type == 'conference':
-            # Multiple sessions selection
-            from app.models.event import Session
-            sessions = Session.query.filter_by(event_id=event.id).all()
-            session_choices = [(str(s.id), s.title) for s in sessions]
-            
-            selected_sessions = SelectMultipleField(
-                'Select Sessions to Attend',
-                choices=session_choices
-            )
-            networking_dinner = BooleanField('I will attend the networking dinner')
-    
-    # Webinar-specific fields
-    if event.event_type == 'webinar':
-        platform_experience = BooleanField('I have used the webinar platform before')
-        receive_recording = BooleanField('I would like to receive the recording')
-        timezone = SelectField('Your Timezone', choices=[
-            ('GMT-8', 'Pacific Time (PT)'),
-            ('GMT-7', 'Mountain Time (MT)'),
-            ('GMT-6', 'Central Time (CT)'),
-            ('GMT-5', 'Eastern Time (ET)'),
-            ('GMT', 'Greenwich Mean Time (GMT)'),
-            ('GMT+1', 'Central European Time (CET)'),
-            # ... other timezones ...
-        ])
-    
-    submit = SubmitField('Register')
-    
-    # Add custom validation as needed
-    def validate(self):
-        if not super().validate():
-            return False
-        
-        # Custom validation for accommodations
-        if event.event_type in ['conference', 'workshop'] and self.needs_accommodation.data:
-            if not self.check_in_date.data:
-                self.check_in_date.errors.append('Check-in date is required if accommodation is needed.')
-                return False
-            if not self.check_out_date.data:
-                self.check_out_date.errors.append('Check-out date is required if accommodation is needed.')
-                return False
-            if self.check_in_date.data > self.check_out_date.data:
-                self.check_out_date.errors.append('Check-out date must be after check-in date.')
-                return False
-        
-        return True
-
-return RegistrationForm()
-
-# views/event.py
-@bp.route('/event/<int:event_id>/register', methods=['GET', 'POST'])
-def register_for_event(event_id):
-event = Event.query.get_or_404(event_id)
-RegistrationForm = create_registration_form(event)
-form = RegistrationForm()
-
-if form.validate_on_submit():
-    # Create registration record
-    registration = Registration(
-        user_id=current_user.id if current_user.is_authenticated else None,
-        event_id=event.id,
-        first_name=form.first_name.data,
-        last_name=form.last_name.data,
-        email=form.email.data,
-        dietary_requirements=form.dietary_requirements.data,
-        dietary_notes=form.dietary_notes.data
+    # Create formatters
+    file_formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    console_formatter = logging.Formatter(
+        '%(levelname)s: %(message)s'
     )
     
-    # Handle event-specific data
-    metadata = {}
+    # File handler
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setFormatter(file_formatter)
     
-    if event.event_type in ['conference', 'workshop']:
-        metadata['needs_accommodation'] = form.needs_accommodation.data
-        if form.needs_accommodation.data:
-            metadata['check_in_date'] = form.check_in_date.data.strftime('%Y-%m-%d')
-            metadata['check_out_date'] = form.check_out_date.data.strftime('%Y-%m-%d')
-            metadata['room_type'] = form.room_type.data
-        
-        if event.event_type == 'workshop':
-            metadata['experience_level'] = form.experience_level.data
-            metadata['equipment'] = form.equipment.data
-        
-        if event.event_type == 'conference':
-            metadata['selected_sessions'] = form.selected_sessions.data
-            metadata['networking_dinner'] = form.networking_dinner.data
+    # Console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(console_formatter)
+    console_handler.setLevel(logging.WARNING)  # Only warnings+ to console
     
-    if event.event_type == 'webinar':
-        metadata['platform_experience'] = form.platform_experience.data
-        metadata['receive_recording'] = form.receive_recording.data
-        metadata['timezone'] = form.timezone.data
+    # Add handlers
+    new_logger.addHandler(file_handler)
+    new_logger.addHandler(console_handler)
     
-    registration.metadata = metadata
-    db.session.add(registration)
-    db.session.commit()
-    
-    flash(f'You have successfully registered for {event.name}!', 'success')
-    return redirect(url_for('event.event_details', event_id=event.id))
+    return new_logger
 
-return render_template('event/register.html', form=form, event=event)</code></pre>
-        
-        <p>This example shows how a single registration endpoint can handle different event types, dynamically generating the appropriate form with fields that make sense for that context.</p>
-        
-        <div class="reflection">
-            <h4>Reflection Point</h4>
-            <p>Consider a multi-step process you've encountered online, such as an e-commerce checkout, job application, or travel booking. How was it structured? Why might the developers have chosen to dynamically show/hide fields or split the process into steps? How might you implement a similar process in your application?</p>
-        </div>
-    </section>
-</main>
+# Example using custom logger
+transaction_logger = setup_logger("transactions.log")
+transaction_logger.info(f"Transaction {datetime.now().strftime('%Y%m%d%H%M%S')} started")
+transaction_logger.warning("Transaction taking longer than expected")
+transaction_logger.error("Transaction failed: insufficient funds")</code></pre>
+            
+            <p><strong>Real-World Usage:</strong> Application monitoring, debugging, audit trails, error tracking.</p>
+            
+            <h4>2. <code>threading</code> and <code>multiprocessing</code> - Concurrent Execution</h4>
+            <p>For performance and parallelism:</p>
+            
+            <pre><code>import threading
+import multiprocessing
+import time
+import os
 
-<footer>
-    <p>&copy; 2025 Full Stack Python Web Development Course</p>
-</footer>
-</body>
-</html>
+# Simple function to demonstrate parallel execution
+def process_data(name, delay):
+    print(f"{name}: Starting (process ID: {os.getpid()})")
+    time.sleep(delay)  # Simulate work
+    print(f"{name}: Finished after {delay} seconds")
+    return f"{name} result"
+
+# Threading example
+def threading_example():
+    print("\n=== Threading Example ===")
+    start_time = time.time()
+    
+    # Create threads
+    threads = []
+    for i in range(4):
+        t = threading.Thread(
+            target=process_data, 
+            args=(f"Thread-{i}", i+1)  # Different delays
+        )
+        threads.append(t)
+        
+    # Start threads
+    for t in threads:
+        t.start()
+        
+    # Wait for all threads to complete
+    for t in threads:
+        t.join()
+        
+    elapsed = time.time() - start_time
+    print(f"All threads completed in {elapsed:.2f} seconds")
+    
+# Multiprocessing example
+def multiprocessing_example():
+    print("\n=== Multiprocessing Example ===")
+    start_time = time.time()
+    
+    # Create processes
+    processes = []
+    for i in range(4):
+        p = multiprocessing.Process(
+            target=process_data,
+            args=(f"Process-{i}", i+1)  # Different delays
+        )
+        processes.append(p)
+        
+    # Start processes
+    for p in processes:
+        p.start()
+        
+    # Wait for all processes to complete
+    for p in processes:
+        p.join()
+        
+    elapsed = time.time() - start_time
+    print(f"All processes completed in {elapsed:.2f} seconds")
+    
+# Thread pool with results
+def thread_pool_example():
+    print("\n=== Thread Pool Example ===")
+    from concurrent.futures import ThreadPoolExecutor
+    
+    start_time = time.time()
+    
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        # Submit tasks and get futures
+        futures = [
+            executor.submit(process_data, f"Task-{i}", i+1)
+            for i in range(4)
+        ]
+        
+        # Get results as they complete
+        for future in futures:
+            result = future.result()
+            print(f"Got result: {result}")
+    
+    elapsed = time.time() - start_time
+    print(f"Thread pool completed in {elapsed:.2f} seconds")
+    
+# Process pool with results
+def process_pool_example():
+    print("\n=== Process Pool Example ===")
+    from concurrent.futures import ProcessPoolExecutor
+    
+    start_time = time.time()
+    
+    with ProcessPoolExecutor(max_workers=4) as executor:
+        # Map function to arguments
+        tasks = [f"Task-{i}" for i in range(4)]
+        delays = [i+1 for i in range(4)]
+        
+        # Execute and get results
+        for result in executor.map(process_data, tasks, delays):
+            print(f"Got result: {result}")
+    
+    elapsed = time.time() - start_time
+    print(f"Process pool completed in {elapsed:.2f} seconds")
+
+# Run examples
+if __name__ == "__main__":
+    print(f"Main process ID: {os.getpid()}")
+    
+    threading_example()
+    multiprocessing_example()
+    thread_pool_example()
+    process_pool_example()
+    
+    print("\nAll examples completed.")</code></pre>
+            
+            <p><strong>Key Differences:</strong></p>
+            <ul>
+                <li><strong>Threading</strong>: Good for I/O-bound tasks (network, file operations)</li>
+                <li><strong>Multiprocessing</strong>: Good for CPU-bound tasks (computation, data processing)</li>
+                <li>Threads share memory; processes have separate memory spaces</li>
+                <li>Python's Global Interpreter Lock (GIL) limits thread performance for CPU operations</li>
+            </ul>
+            
+            <p><strong>Real-World Usage:</strong> Web scraping, data processing, responsive UIs, server applications, parallel computations.</p>
+        </section>
+
+        <section class="finding-modules">
+            <h3>Finding and Using Library Modules</h3>
+            
+            <h4>Exploring Available Modules</h4>
+            <p>Python provides several ways to discover standard library modules:</p>
+            
+            <pre><code>import sys
+import pkgutil
+
+# List loaded modules
+print("Currently loaded modules:")
+for name, module in sorted(sys.modules.items()):
+    if name.startswith('_'):  # Skip internal modules
+        continue
+    print(f"  {name}")
+print()
+
+# List all available standard library modules
+print("Available standard library modules:")
+for module in pkgutil.iter_modules():
+    if not module.name.startswith('_'):  # Skip internal modules
+        print(f"  {module.name}")
+print()
+
+# Get information about a module
+import inspect
+import random
+
+print("Information about 'random' module:")
+print(f"  Name: {random.__name__}")
+print(f"  File: {random.__file__}")
+print(f"  Doc: {random.__doc__.splitlines()[0] if random.__doc__ else 'No docstring'}")
+print()
+
+# List functions in a module
+print("Functions in 'random' module:")
+for name, obj in inspect.getmembers(random):
+    if inspect.isfunction(obj) and not name.startswith('_'):
+        doc = obj.__doc__.splitlines()[0] if obj.__doc__ else 'No docstring'
+        print(f"  {name}: {doc}")
+print()
+
+# List constants in a module
+import math
+print("Constants in 'math' module:")
+for name, obj in inspect.getmembers(math):
+    if isinstance(obj, (int, float)) and name.isupper():
+        print(f"  {name} = {obj}")</code></pre>
+            
+            <h4>Using the Help System</h4>
+            <p>Python's built-in help system provides documentation:</p>
+            
+            <pre><code># In the interactive interpreter, you can use:
+# help(module_name)
+# help(module_name.function_name)
+
+# We can simulate this in code:
+import pydoc
+import io
+
+def get_help(obj):
+    """Capture help output as a string."""
+    buffer = io.StringIO()
+    pydoc.Helper(output=buffer).help(obj)
+    return buffer.getvalue()
+
+# Example: Getting help on datetime.date
+import datetime
+help_text = get_help(datetime.date)
+print(help_text[:500] + "...")  # Show start of help text</code></pre>
+            
+            <h4>Best Practices for Importing</h4>
+            <pre><code># Standard import (most common)
+import os
+path = os.path.join("dir", "file.txt")
+
+# Import specific items (good for frequently used functions)
+from math import sqrt, sin, cos
+result = sqrt(sin(0.5) ** 2 + cos(0.5) ** 2)
+
+# Import with alias (good for long module names)
+import datetime as dt
+now = dt.datetime.now()
+
+# What to avoid (imports everything into namespace - risk of conflicts)
+from os import *  # BAD PRACTICE
+
+# For large imports, use multi-line format
+from collections import (
+    defaultdict,
+    Counter,
+    namedtuple,
+    deque
+)
+
+# Organizing imports in a file
+# 1. Standard library imports
+import os
+import sys
+import json
+
+# 2. Third-party imports (if any)
+# import requests
+# import numpy
+
+# 3. Local application imports
+# from myapp import utils
+# from .helpers import format_data</code></pre>
+        </section>
+
+        <section class="real-world-example">
+            <h3>Real-World Example: Building a Log Analyzer</h3>
+            
+            <p>Let's tie everything together with a practical example that uses multiple standard library modules:</p>
+            
+            <pre><code>"""
+Log Analyzer
+
+A utility to analyze web server log files, demonstrating
+multiple standard library modules working together.
+"""
+
+import os
+import re
+import sys
+import gzip
+import argparse
+import datetime
+import collections
+import statistics
+import json
+from concurrent.futures import ThreadPoolExecutor
+
+# Log entry regex pattern (simplified Apache log format)
+LOG_PATTERN = re.compile(
+    r'(\d+\.\d+\.\d+\.\d+) - - \[(.*?)\] "(.*?)" (\d+) (\d+|-) "(.*?)" "(.*?)"'
+)
+
+def parse_log_line(line):
+    """Parse a single log line into a structured dictionary."""
+    match = LOG_PATTERN.match(line)
+    if not match:
+        return None
+    
+    ip, timestamp, request, status, size, referer, user_agent = match.groups()
+    
+    # Parse the request
+    request_parts = request.split()
+    method = uri = protocol = ""
+    if len(request_parts) >= 1:
+        method = request_parts[0]
+    if len(request_parts) >= 2:
+        uri = request_parts[1]
+    if len(request_parts) >= 3:
+        protocol = request_parts[2]
+    
+    # Parse the timestamp
+    try:
+        dt = datetime.datetime.strptime(timestamp, "%d/%b/%Y:%H:%M:%S %z")
+    except ValueError:
+        dt = None
+    
+    # Convert size to integer
+    try:
+        size = int(size) if size != '-' else 0
+    except ValueError:
+        size = 0
+        
+    # Convert status to integer
+    try:
+        status = int(status)
+    except ValueError:
+        status = 0
+    
+    return {
+        'ip': ip,
+        'timestamp': dt,
+        'date': dt.date() if dt else None,
+        'time': dt.time() if dt else None,
+        'method': method,
+        'uri': uri,
+        'protocol': protocol,
+        'status': status,
+        'size': size,
+        'referer': referer,
+        'user_agent': user_agent
+    }
+
+def process_log_file(file_path):
+    """Process a single log file."""
+    print(f"Processing {file_path}...")
+    entries = []
+    
+    # Handle gzipped files
+    if file_path.endswith('.gz'):
+        opener = gzip.open
+    else:
+        opener = open
+        
+    with opener(file_path, 'rt', encoding='utf-8', errors='ignore') as f:
+        for line in f:
+            entry = parse_log_line(line.strip())
+            if entry:
+                entries.append(entry)
+                
+    print(f"  {len(entries)} entries processed")
+    return entries
+
+def analyze_logs(entries):
+    """Analyze log entries and generate statistics."""
+    if not entries:
+        return {
+            'total_entries': 0,
+            'error': 'No valid log entries found'
+        }
+        
+    # Basic statistics
+    total = len(entries)
+    
+    # Group by date
+    requests_by_date = collections.defaultdict(int)
+    for entry in entries:
+        if entry['date']:
+            requests_by_date[entry['date'].isoformat()] += 1
+    
+    # Group by status code
+    status_counts = collections.Counter(entry['status'] for entry in entries)
+    
+    # Group by HTTP method
+    method_counts = collections.Counter(entry['method'] for entry in entries)
+    
+    # Group by URI path (simplified)
+    uri_counts = collections.Counter()
+    for entry in entries:
+        uri = entry['uri']
+        # Remove query string
+        uri = uri.split('?')[0]
+        # Group similar dynamic paths
+        if uri.count('/') > 3:  # Likely a dynamic path
+            parts = uri.split('/')
+            # Replace numeric parts with {id}
+            parts = ['{id}' if part.isdigit() else part for part in parts]
+            uri = '/'.join(parts)
+        uri_counts[uri] += 1
+    
+    # Calculate response size statistics
+    sizes = [entry['size'] for entry in entries if entry['size'] > 0]
+    size_stats = {
+        'min': min(sizes) if sizes else 0,
+        'max': max(sizes) if sizes else 0,
+        'mean': statistics.mean(sizes) if sizes else 0,
+        'median': statistics.median(sizes) if sizes else 0
+    }
+    
+    # IP address statistics
+    ip_counts = collections.Counter(entry['ip'] for entry in entries)
+    
+    # Error analysis
+    errors = [entry for entry in entries if entry['status'] >= 400]
+    error_uris = collections.Counter(error['uri'] for error in errors)
+    
+    return {
+        'total_entries': total,
+        'date_range': {
+            'start': min(d for d in requests_by_date.keys()),
+            'end': max(d for d in requests_by_date.keys()),
+        },
+        'requests_by_date': dict(requests_by_date),
+        'status_counts': dict(status_counts),
+        'method_counts': dict(method_counts),
+        'top_uris': dict(uri_counts.most_common(10)),
+        'top_ips': dict(ip_counts.most_common(10)),
+        'response_size': size_stats,
+        'errors': {
+            'total': len(errors),
+            'percentage': (len(errors) / total * 100) if total else 0,
+            'top_error_uris': dict(error_uris.most_common(10))
+        }
+    }
+
+def format_report(stats, format_type='text'):
+    """Format the analysis results as text or JSON."""
+    if format_type == 'json':
+        return json.dumps(stats, indent=4)
+    
+    # Text report
+    lines = []
+    lines.append("=== LOG ANALYSIS REPORT ===")
+    lines.append(f"Total Entries: {stats['total_entries']}")
+    
+    if 'date_range' in stats:
+        lines.append(f"\nDate Range: {stats['date_range']['start']} to {stats['date_range']['end']}")
+    
+    lines.append("\nHTTP Methods:")
+    for method, count in stats.get('method_counts', {}).items():
+        lines.append(f"  {method}: {count}")
+    
+    lines.append("\nStatus Codes:")
+    for status, count in sorted(stats.get('status_counts', {}).items()):
+        lines.append(f"  {status}: {count}")
+    
+    lines.append("\nTop 10 URIs:")
+    for uri, count in stats.get('top_uris', {}).items():
+        lines.append(f"  {uri}: {count}")
+    
+    lines.append("\nResponse Size Statistics:")
+    size_stats = stats.get('response_size', {})
+    lines.append(f"  Min: {size_stats.get('min', 0)} bytes")
+    lines.append(f"  Max: {size_stats.get('max', 0)} bytes")
+    lines.append(f"  Mean: {size_stats.get('mean', 0):.2f} bytes")
+    lines.append(f"  Median: {size_stats.get('median', 0):.2f} bytes")
+    
+    lines.append("\nError Analysis:")
+    error_stats = stats.get('errors', {})
+    lines.append(f"  Total Errors: {error_stats.get('total', 0)}")
+    lines.append(f"  Error Rate: {error_stats.get('percentage', 0):.2f}%")
+    
+    lines.append("\nTop Error URIs:")
+    for uri, count in error_stats.get('top_error_uris', {}).items():
+        lines.append(f"  {uri}: {count}")
+    
+    return "\n".join(lines)
+
+def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="Analyze web server log files")
+    parser.add_argument("files", nargs="+", help="Log files to analyze")
+    parser.add_argument("--format", choices=["text", "json"], default="text",
+                      help="Output format (default: text)")
+    parser.add_argument("--output", help="Output file (default: stdout)")
+    parser.add_argument("--threads", type=int, default=4,
+                      help="Number of threads for processing (default: 4)")
+    
+    args = parser.parse_args()
+    
+    # Validate input files
+    valid_files = []
+    for file_path in args.files:
+        if not os.path.exists(file_path):
+            print(f"Warning: File {file_path} not found. Skipping.", file=sys.stderr)
+        else:
+            valid_files.append(file_path)
+    
+    if not valid_files:
+        print("Error: No valid log files provided.", file=sys.stderr)
+        return 1
+    
+    # Process log files in parallel
+    all_entries = []
+    with ThreadPoolExecutor(max_workers=args.threads) as executor:
+        results = executor.map(process_log_file, valid_files)
+        for entries in results:
+            all_entries.extend(entries)
+    
+    # Analyze the combined data
+    stats = analyze_logs(all_entries)
+    
+    # Format the report
+    report = format_report(stats, args.format)
+    
+    # Output the report
+    if args.output:
+        with open(args.output, 'w') as f:
+            f.write(report)
+        print(f"Report written to {args.output}")
+    else:
+        print(report)
+    
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())</code></pre>
+            
+            <p>This example demonstrates:</p>
+            <ul>
+                <li>File handling with <code>open</code> and <code>gzip</code></li>
+                <li>Regular expressions with <code>re</code></li>
+                <li>Date and time handling with <code>datetime</code></li>
+                <li>Command line arguments with <code>argparse</code></li>
+                <li>JSON encoding with <code>json</code></li>
+                <li>Data structures with <code>collections</code></li>
+                <li>Statistical analysis with <code>statistics</code></li>
+                <li>Parallel processing with <code>concurrent.futures</code></li>
+                <li>System interaction with <code>os</code> and <code>sys</code></li>
+            </ul>
+            
+            <p>It's a practical, real-world example that shows how different standard library modules can work together to create a useful application.</p>
+        </section>
+
+        <section class="exercise">
+            <h3>Exercise: Standard Library Explorer</h3>
+            
+            <p>Let's put your knowledge into practice with a hands-on exercise:</p>
+            
+            <h4>Task:</h4>
+            <p>Create a script that helps developers explore the standard library by providing information about modules, their functions, and documentation.</p>
+            
+            <h4>Starter Code:</h4>
+      
+                        <pre><code>"""
+            Standard Library Explorer
+            
+            A tool to help Python developers discover and explore
+            modules in the Python Standard Library.
+            """
+            
+            import sys
+            import importlib
+            import inspect
+            import pkgutil
+            import argparse
+            import json
+            import textwrap
+            
+            def get_module_info(module_name):
+                """Get detailed information about a module."""
+                try:
+                    # Import the module
+                    module = importlib.import_module(module_name)
+                    
+                    # Basic module info
+                    info = {
+                        'name': module_name,
+                        'file': getattr(module, '__file__', 'Built-in'),
+                        'doc': textwrap.shorten(module.__doc__ or 'No documentation', width=80),
+                        'functions': [],
+                        'classes': [],
+                        'constants': []
+                    }
+                    
+                    # Extract functions, classes, and constants
+                    for name, obj in inspect.getmembers(module):
+                        # Skip private/special attributes
+                        if name.startswith('_'):
+                            continue
+                            
+                        if inspect.isfunction(obj):
+                            info['functions'].append({
+                                'name': name,
+                                'doc': textwrap.shorten(obj.__doc__ or 'No documentation', width=80),
+                                'signature': str(inspect.signature(obj))
+                            })
+                        elif inspect.isclass(obj):
+                            info['classes'].append({
+                                'name': name,
+                                'doc': textwrap.shorten(obj.__doc__ or 'No documentation', width=80),
+                                'methods': len([m for m in dir(obj) if callable(getattr(obj, m)) and not m.startswith('_')])
+                            })
+                        elif isinstance(obj, (int, float, str, bool)) and name.isupper():
+                            # Likely a constant
+                            info['constants'].append({
+                                'name': name,
+                                'value': repr(obj),
+                                'type': type(obj).__name__
+                            })
+                    
+                    return info
+                
+                except ImportError:
+                    return {
+                        'name': module_name,
+                        'error': f"Could not import module '{module_name}'"
+                    }
+                except Exception as e:
+                    return {
+                        'name': module_name,
+                        'error': f"Error analyzing module: {str(e)}"
+                    }
+            
+            def list_stdlib_modules():
+                """List available standard library modules."""
+                modules = []
+                for module in pkgutil.iter_modules():
+                    name = module.name
+                    if not name.startswith('_'):  # Skip internal modules
+                        modules.append(name)
+                
+                # Add some important modules that might not be in pkgutil
+                for name in ['os', 'sys', 'math', 'datetime', 'json', 're']:
+                    if name not in modules:
+                        modules.append(name)
+                        
+                return sorted(modules)
+            
+            def display_module_info(info, format_type='text'):
+                """Format module information for display."""
+                if format_type == 'json':
+                    return json.dumps(info, indent=4)
+                    
+                # Text format
+                lines = []
+                
+                if 'error' in info:
+                    lines.append(f"ERROR: {info['error']}")
+                    return "\n".join(lines)
+                
+                lines.append(f"MODULE: {info['name']}")
+                lines.append(f"FILE: {info['file']}")
+                lines.append(f"DESCRIPTION: {info['doc']}")
+                
+                if info['functions']:
+                    lines.append("\nFUNCTIONS:")
+                    for func in sorted(info['functions'], key=lambda x: x['name']):
+                        lines.append(f"  {func['name']}{func['signature']}")
+                        lines.append(f"    {func['doc']}")
+                
+                if info['classes']:
+                    lines.append("\nCLASSES:")
+                    for cls in sorted(info['classes'], key=lambda x: x['name']):
+                        lines.append(f"  {cls['name']} ({cls['methods']} methods)")
+                        lines.append(f"    {cls['doc']}")
+                
+                if info['constants']:
+                    lines.append("\nCONSTANTS:")
+                    for const in sorted(info['constants'], key=lambda x: x['name']):
+                        lines.append(f"  {const['name']} = {const['value']} ({const['type']})")
+                        
+                return "\n".join(lines)
+            
+            def search_modules(query, modules=None):
+                """Search for modules matching a query string."""
+                if modules is None:
+                    modules = list_stdlib_modules()
+                    
+                matches = []
+                query = query.lower()
+                
+                for module_name in modules:
+                    # Direct name match
+                    if query in module_name.lower():
+                        matches.append(module_name)
+                        continue
+                        
+                    # Try importing and checking documentation
+                    try:
+                        module = importlib.import_module(module_name)
+                        doc = module.__doc__ or ""
+                        if query in doc.lower():
+                            matches.append(module_name)
+                            continue
+                            
+                    except (ImportError, AttributeError):
+                        continue
+                        
+                return matches
+            
+            def explore_categorized_modules():
+                """Provide information about categorized standard library modules."""
+                categories = {
+                    "Text Processing": [
+                        "string", "re", "difflib", "textwrap", "unicodedata", "stringprep"
+                    ],
+                    "Data Types": [
+                        "datetime", "calendar", "collections", "array", "enum", "heapq",
+                        "bisect", "weakref", "types", "copy", "pprint", "reprlib"
+                    ],
+                    "Numeric and Mathematical": [
+                        "math", "cmath", "decimal", "fractions", "random", "statistics"
+                    ],
+                    "File and Directory Access": [
+                        "os.path", "pathlib", "glob", "fnmatch", "linecache", "shutil",
+                        "fileinput", "stat", "filecmp", "tempfile"
+                    ],
+                    "Data Persistence": [
+                        "pickle", "copyreg", "shelve", "marshal", "dbm", "sqlite3",
+                        "zlib", "gzip", "bz2", "lzma", "zipfile", "tarfile"
+                    ],
+                    "Operating System": [
+                        "os", "io", "time", "argparse", "getopt", "logging",
+                        "getpass", "curses", "platform", "errno", "ctypes"
+                    ],
+                    "Networking": [
+                        "socket", "ssl", "select", "selectors", "asyncio", 
+                        "signal", "mmap"
+                    ],
+                    "Internet Data Handling": [
+                        "email", "json", "mailbox", "mimetypes", "base64",
+                        "binhex", "binascii", "quopri", "uu",
+                        "html", "xml", "webbrowser", "cgi"
+                    ],
+                    "Development Tools": [
+                        "typing", "pydoc", "doctest", "unittest", "test", 
+                        "traceback", "gc", "inspect", "site", "sys"
+                    ],
+                    "Concurrency": [
+                        "threading", "multiprocessing", "concurrent", 
+                        "subprocess", "sched", "queue", "asyncio"
+                    ]
+                }
+                
+                result = {}
+                for category, modules in categories.items():
+                    available = []
+                    for module_name in modules:
+                        try:
+                            importlib.import_module(module_name)
+                            available.append(module_name)
+                        except ImportError:
+                            continue
+                    result[category] = available
+                    
+                return result
+            
+            def main():
+                parser = argparse.ArgumentParser(
+                    description="Explore the Python Standard Library"
+                )
+                
+                subparsers = parser.add_subparsers(dest="command", help="Command to execute")
+                
+                # List command
+                list_parser = subparsers.add_parser("list", help="List available modules")
+                list_parser.add_argument(
+                    "--category", action="store_true", 
+                    help="List modules by category"
+                )
+                
+                # Info command
+                info_parser = subparsers.add_parser("info", help="Get information about a module")
+                info_parser.add_argument(
+                    "module", help="Name of the module to inspect"
+                )
+                info_parser.add_argument(
+                    "--format", choices=["text", "json"], default="text",
+                    help="Output format (default: text)"
+                )
+                info_parser.add_argument(
+                    "--output", help="Output file (default: stdout)"
+                )
+                
+                # Search command
+                search_parser = subparsers.add_parser("search", help="Search for modules")
+                search_parser.add_argument(
+                    "query", help="Search query"
+                )
+                
+                args = parser.parse_args()
+                
+                # Default to list if no command provided
+                if not args.command:
+                    args.command = "list"
+                    args.category = False
+                
+                # Execute command
+                if args.command == "list":
+                    if args.category:
+                        categories = explore_categorized_modules()
+                        print("Standard Library Modules by Category:")
+                        for category, modules in categories.items():
+                            if modules:
+                                print(f"\n{category}:")
+                                for module in sorted(modules):
+                                    print(f"  {module}")
+                    else:
+                        modules = list_stdlib_modules()
+                        print("Available Standard Library Modules:")
+                        for module in modules:
+                            print(f"  {module}")
+                
+                elif args.command == "info":
+                    info = get_module_info(args.module)
+                    output = display_module_info(info, args.format)
+                    
+                    if args.output:
+                        with open(args.output, 'w') as f:
+                            f.write(output)
+                        print(f"Module information written to {args.output}")
+                    else:
+                        print(output)
+                
+                elif args.command == "search":
+                    matches = search_modules(args.query)
+                    if matches:
+                        print(f"Modules matching '{args.query}':")
+                        for module in sorted(matches):
+                            print(f"  {module}")
+                    else:
+                        print(f"No modules found matching '{args.query}'")
+                
+                return 0
+            
+            if __name__ == "__main__":
+                sys.exit(main())
+            </code></pre>
+            
+                        <h4>How to Use the Tool:</h4>
+                        <pre><code># List all available standard library modules
+            python stdlib_explorer.py list
+            
+            # List modules by category
+            python stdlib_explorer.py list --category
+            
+            # Get detailed information about a specific module
+            python stdlib_explorer.py info datetime
+            
+            # Search for modules related to a topic
+            python stdlib_explorer.py search file
+            
+            # Output module information as JSON
+            python stdlib_explorer.py info json --format json
+            
+            # Save output to a file
+            python stdlib_explorer.py info os --output os_module.txt</code></pre>
+            
+                        <p>This exercise demonstrates:</p>
+                        <ul>
+                            <li>Dynamic module importing with <code>importlib</code></li>
+                            <li>Module introspection with <code>inspect</code></li>
+                            <li>Command-line interface creation with <code>argparse</code></li>
+                            <li>Text wrapping and formatting with <code>textwrap</code></li>
+                            <li>JSON serialization with <code>json</code></li>
+                            <li>Module discovery with <code>pkgutil</code></li>
+                        </ul>
+                        
+                        <p>By completing this exercise, you'll gain deeper understanding of the standard library's organization and how to discover and use modules programmatically.</p>
+                    </section>
+            
+                    <section class="common-pitfalls">
+                        <h3>Common Pitfalls and Best Practices</h3>
+                        
+                        <h4>Pitfall 1: Reinventing the Wheel</h4>
+                        <p>One of the most common mistakes is writing code that already exists in the standard library.</p>
+                        
+                        <table>
+                            <tr>
+                                <th>Instead of Writing This</th>
+                                <th>Use This from the Standard Library</th>
+                            </tr>
+                            <tr>
+                                <td>Custom date parsing logic</td>
+                                <td><code>datetime.strptime()</code></td>
+                            </tr>
+                            <tr>
+                                <td>Manual path joining with slashes</td>
+                                <td><code>os.path.join()</code></td>
+                            </tr>
+                            <tr>
+                                <td>Reading CSV files line by line and splitting</td>
+                                <td><code>csv.reader()</code> or <code>csv.DictReader()</code></td>
+                            </tr>
+                            <tr>
+                                <td>Complex regular expression pattern matching</td>
+                                <td><code>re</code> module</td>
+                            </tr>
+                            <tr>
+                                <td>Custom argument parsing</td>
+                                <td><code>argparse</code> module</td>
+                            </tr>
+                            <tr>
+                                <td>Creating temporary files/directories</td>
+                                <td><code>tempfile</code> module</td>
+                            </tr>
+                        </table>
+                        
+                        <h4>Pitfall 2: Overlooking Platform Differences</h4>
+                        <p>Not accounting for different operating systems can lead to bugs.</p>
+                        
+                        <table>
+                            <tr>
+                                <th>Instead of This</th>
+                                <th>Use This</th>
+                            </tr>
+                            <tr>
+                                <td><code>open("path/to/file")</code></td>
+                                <td><code>open(os.path.join("path", "to", "file"))</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>if path.startswith("C:\")</code></td>
+                                <td><code>if os.path.isabs(path)</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>path = path + "/" + filename</code></td>
+                                <td><code>path = os.path.join(path, filename)</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>os.system("cls") # Windows-only</code></td>
+                                <td><code>os.system("cls" if os.name == "nt" else "clear")</code></td>
+                            </tr>
+                        </table>
+                        
+                        <h4>Pitfall 3: Ignoring Resource Management</h4>
+                        <p>Not properly managing resources can lead to leaks and errors.</p>
+                        
+                        <pre><code># Bad practice: File not properly closed
+            f = open("data.txt", "r")
+            content = f.read()
+            # If an exception occurs, the file might not be closed
+            
+            # Good practice: Use context manager
+            with open("data.txt", "r") as f:
+                content = f.read()
+            # File automatically closed when leaving the block</code></pre>
+                        
+                        <h4>Pitfall 4: Using Deprecated Features</h4>
+                        <p>Some older standard library functions and patterns have been replaced with better alternatives.</p>
+                        
+                        <table>
+                            <tr>
+                                <th>Avoid</th>
+                                <th>Use Instead</th>
+                            </tr>
+                            <tr>
+                                <td><code>os.path</code> for advanced path operations</td>
+                                <td><code>pathlib.Path</code> (more intuitive, object-oriented)</td>
+                            </tr>
+                            <tr>
+                                <td><code>time.clock()</code></td>
+                                <td><code>time.perf_counter()</code> or <code>time.process_time()</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>dict.has_key()</code></td>
+                                <td><code>key in dict</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>imp</code> module</td>
+                                <td><code>importlib</code> module</td>
+                            </tr>
+                            <tr>
+                                <td><code>optparse</code> module</td>
+                                <td><code>argparse</code> module</td>
+                            </tr>
+                        </table>
+                        
+                        <h4>Best Practice 1: Follow the Zen of Python</h4>
+                        <p>The "Zen of Python" (accessible via <code>import this</code>) provides guiding principles, including:</p>
+                        <ul>
+                            <li>"There should be one—and preferably only one—obvious way to do it."</li>
+                            <li>"Explicit is better than implicit."</li>
+                            <li>"Simple is better than complex."</li>
+                        </ul>
+                        <p>These principles suggest leveraging the standard library for common tasks rather than creating custom solutions.</p>
+                        
+                        <h4>Best Practice 2: Read the Documentation</h4>
+                        <p>The Python documentation is comprehensive and includes:</p>
+                        <ul>
+                            <li>Detailed module and function descriptions</li>
+                            <li>Examples and use cases</li>
+                            <li>Compatibility notes</li>
+                            <li>Performance considerations</li>
+                        </ul>
+                        <p>Always check the docs before implementing functionality that might already exist!</p>
+                        
+                        <h4>Best Practice 3: Use Virtual Environments</h4>
+                        <p>Even when working with the standard library, use virtual environments to isolate your project dependencies and avoid conflicts.</p>
+                    </section>
+            
+                    <section class="advanced-topics">
+                        <h3>Advanced Topics: The Future of the Standard Library</h3>
+                        
+                        <h4>PEP 594: Removing Dead Batteries</h4>
+                        <p>Python Enhancement Proposal 594 outlines plans to remove obsolete modules from the standard library. Some modules that might be deprecated in the future:</p>
+                        <ul>
+                            <li><code>aifc</code>, <code>sunau</code>, <code>xdrlib</code> (rarely used audio and data formats)</li>
+                            <li><code>cgi</code>, <code>cgitb</code> (CGI is largely obsolete for web development)</li>
+                            <li><code>imghdr</code>, <code>sndhdr</code> (limited file type detection)</li>
+                        </ul>
+                        <p>It's good practice to stay current with Python's evolution and prefer actively maintained modules.</p>
+                        
+                        <h4>Standard Library Alternatives</h4>
+                        <p>Some third-party packages have become de facto standards because they offer enhanced functionality compared to standard library equivalents:</p>
+                        
+                        <table>
+                            <tr>
+                                <th>Standard Library</th>
+                                <th>Popular Alternative</th>
+                                <th>Why Use the Alternative</th>
+                            </tr>
+                            <tr>
+                                <td><code>urllib</code></td>
+                                <td><code>requests</code></td>
+                                <td>More intuitive API, better error handling, simpler auth</td>
+                            </tr>
+                            <tr>
+                                <td><code>datetime</code></td>
+                                <td><code>arrow</code> or <code>pendulum</code></td>
+                                <td>Better timezone handling, more human-friendly interfaces</td>
+                            </tr>
+                            <tr>
+                                <td><code>json</code></td>
+                                <td><code>simplejson</code></td>
+                                <td>Better error messages, decimal support, order preservation</td>
+                            </tr>
+                            <tr>
+                                <td><code>sqlite3</code></td>
+                                <td><code>SQLAlchemy</code></td>
+                                <td>ORM capabilities, multiple database support, query building</td>
+                            </tr>
+                        </table>
+                        
+                        <p>For web development specifically, several third-party packages are essential complements to the standard library:</p>
+                        <ul>
+                            <li><code>Flask</code>/<code>Django</code>: Web frameworks</li>
+                            <li><code>Jinja2</code>: Templating</li>
+                            <li><code>SQLAlchemy</code>: Database ORM</li>
+                            <li><code>Requests</code>: HTTP client</li>
+                            <li><code>Beautiful Soup</code>: HTML parsing</li>
+                        </ul>
+                    </section>
+            
+                    <section class="conclusion">
+                        <h3>Conclusion</h3>
+                        
+                        <p>The Python Standard Library is a treasure trove of functionality that forms the foundation of Python development. By mastering these built-in modules, you'll:</p>
+                        
+                        <ul>
+                            <li><strong>Write more concise, readable code</strong> by leveraging well-tested implementations</li>
+                            <li><strong>Solve problems faster</strong> without constantly reinventing solutions</li>
+                            <li><strong>Create more portable applications</strong> that work consistently across platforms</li>
+                            <li><strong>Reduce dependencies</strong> on external packages when standard tools suffice</li>
+                            <li><strong>Better understand Python's design philosophy</strong> and ecosystem</li>
+                        </ul>
+                        
+                        <p>As you continue your Python journey, make it a habit to check if the standard library already provides a solution before writing custom code or installing third-party packages. The modules we've explored today are just the beginning—the standard library contains dozens more specialized modules waiting to be discovered.</p>
+                        
+                        <p>Remember: Python's "batteries included" philosophy means you already have a powerful toolkit at your fingertips. Learning to use these tools effectively is a major step toward becoming a proficient Python developer.</p>
+                        
+                        <p>In our upcoming sessions, we'll build on this foundation as we explore more advanced Python concepts and start building real-world web applications.</p>
+                    </section>
+            
+                    <section class="additional-resources">
+                        <h3>Additional Resources</h3>
+                        
+                        <ul>
+                            <li><a href="https://docs.python.org/3/library/index.html" target="_blank">Python Standard Library Documentation</a></li>
+                            <li><a href="https://pymotw.com/3/" target="_blank">Python Module of the Week</a> - Doug Hellmann's deep dive into the standard library</li>
+                            <li><a href="https://realpython.com/python-modules-packages/" target="_blank">Real Python: Python Modules and Packages</a></li>
+                            <li><a href="https://github.com/vinta/awesome-python" target="_blank">Awesome Python</a> - Curated list of Python libraries and resources</li>
+                            <li><a href="https://pyvideo.org/" target="_blank">PyVideo</a> - Collection of videos related to Python (many on standard library topics)</li>
+                        </ul>
+                    </section>
+                </main>
+            
+                <footer>
+                    <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+                </footer>
+            </body>
+            </html>

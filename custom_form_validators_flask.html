@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Form Validators in Flask-WTF</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Custom Form Validators in Flask-WTF</h1>
+        <p class="subtitle">Week 2 - Friday: Full Stack Web Development with Python</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Custom Form Validators</h2>
+            <p>While WTForms provides many built-in validators, real-world applications often require custom validation logic. Think of validators as quality control inspectors on an assembly line — each one checks a specific aspect of the data.</p>
+            
+            <h3>Why Custom Validators?</h3>
+            <p>Built-in validators handle common cases, but custom validators allow you to implement business-specific rules, such as:</p>
+            <ul>
+                <li>Username availability</li>
+                <li>Password strength requirements</li>
+                <li>Age restrictions</li>
+                <li>Specific formats (e.g., SKU codes, product identifiers)</li>
+                <li>Cross-field validation</li>
+            </ul>
+            
+            <h3>Creating Custom Validators</h3>
+            <p>There are two main approaches to creating custom validators in WTForms:</p>
+            
+            <h4>Inline Validators</h4>
+            <p>These are methods defined within your form class that validate specific fields:</p>
+            
+            <pre><code>class RegistrationForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=25)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Register')
+    
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user:
+            raise ValidationError('That username is already taken. Please choose a different one.')
+    
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user:
+            raise ValidationError('That email is already registered. Please use a different one.')</code></pre>
+            
+            <p>The method naming convention <code>validate_fieldname</code> is important — WTForms automatically calls these methods during validation.</p>
+            
+            <h4>Standalone Validators</h4>
+            <p>For more complex validation or to create reusable validators, you can create standalone validator functions or classes:</p>
+            
+            <pre><code>from wtforms.validators import ValidationError
+
+def password_strength(form, field):
+    """Validate password strength"""
+    password = field.data
+    
+    if not any(char.isdigit() for char in password):
+        raise ValidationError('Password must contain at least one number.')
+    
+    if not any(char.isupper() for char in password):
+        raise ValidationError('Password must contain at least one uppercase letter.')
+    
+    if not any(char.islower() for char in password):
+        raise ValidationError('Password must contain at least one lowercase letter.')
+    
+    if not any(char in '!@#$%^&*()_+-=[]{}|;:,.<>?/~`' for char in password):
+        raise ValidationError('Password must contain at least one special character.')
+
+class RegistrationForm(FlaskForm):
+    # ... other fields ...
+    password = PasswordField('Password', validators=[
+        DataRequired(), 
+        Length(min=8),
+        password_strength
+    ])</code></pre>
+            
+            <h3>Cross-Field Validation</h3>
+            <p>Sometimes you need to validate fields in relation to each other. For example, ensuring that a start date comes before an end date:</p>
+            
+            <pre><code>class EventForm(FlaskForm):
+    title = StringField('Event Title', validators=[DataRequired()])
+    start_date = DateField('Start Date', validators=[DataRequired()])
+    end_date = DateField('End Date', validators=[DataRequired()])
+    submit = SubmitField('Create Event')
+    
+    def validate(self):
+        if not super().validate():
+            return False
+        
+        # Custom cross-field validation
+        if self.start_date.data >= self.end_date.data:
+            self.end_date.errors.append('End date must be after start date.')
+            return False
+        
+        return True</code></pre>
+            
+            <p>By overriding the <code>validate</code> method, you can implement validation logic that depends on multiple fields.</p>
+            
+            <h3>Real-World Example: Credit Card Form</h3>
+            <p>Let's look at a form for collecting credit card information that uses custom validators to ensure data integrity:</p>
+            
+            <pre><code>import re
+from datetime import datetime
+from wtforms.validators import ValidationError
+
+def validate_credit_card_number(form, field):
+    """Validate credit card number using Luhn algorithm"""
+    # Remove any spaces or dashes
+    number = re.sub(r'\D', '', field.data)
+    
+    # Check length
+    if not (13 <= len(number) <= 19):
+        raise ValidationError('Invalid card number length.')
+    
+    # Luhn algorithm
+    digits = [int(d) for d in number]
+    checksum = 0
+    for i, digit in enumerate(reversed(digits)):
+        if i % 2 == 1:  # Odd position (0-indexed from right)
+            digit *= 2
+            if digit > 9:
+                digit -= 9
+        checksum += digit
+    
+    if checksum % 10 != 0:
+        raise ValidationError('Invalid card number.')
+
+class PaymentForm(FlaskForm):
+    cardholder_name = StringField('Cardholder Name', validators=[DataRequired()])
+    card_number = StringField('Card Number', validators=[DataRequired(), validate_credit_card_number])
+    expiry_month = SelectField('Expiry Month', choices=[(str(i).zfill(2), str(i).zfill(2)) for i in range(1, 13)], validators=[DataRequired()])
+    expiry_year = SelectField('Expiry Year', choices=[(str(i), str(i)) for i in range(datetime.now().year, datetime.now().year + 11)], validators=[DataRequired()])
+    cvv = StringField('CVV', validators=[DataRequired(), Length(min=3, max=4)])
+    submit = SubmitField('Submit Payment')
+    
+    def validate(self):
+        if not super().validate():
+            return False
+        
+        # Validate expiry date
+        current_year = datetime.now().year
+        current_month = datetime.now().month
+        
+        exp_year = int(self.expiry_year.data)
+        exp_month = int(self.expiry_month.data)
+        
+        if exp_year < current_year or (exp_year == current_year and exp_month < current_month):
+            self.expiry_month.errors.append('Card has expired.')
+            return False
+        
+        return True</code></pre>
+            
+            <p>This example demonstrates both standalone validators and cross-field validation. The <code>validate_credit_card_number</code> function checks that the card number is valid using the Luhn algorithm, while the form's <code>validate</code> method ensures that the expiry date is in the future.</p>
+            
+            <h3>Advanced Validation Techniques</h3>
+            
+            <h4>Conditional Validation</h4>
+            <p>Sometimes, validation rules should only apply under certain conditions:</p>
+            
+            <pre><code>class ShippingForm(FlaskForm):
+    shipping_method = SelectField('Shipping Method', choices=[
+        ('standard', 'Standard Shipping (5-7 days)'),
+        ('express', 'Express Shipping (2-3 days)'),
+        ('pickup', 'Local Pickup')
+    ])
+    
+    address = StringField('Address')
+    city = StringField('City')
+    state = StringField('State')
+    zip_code = StringField('ZIP Code')
+    
+    def validate(self):
+        # First run the standard validation
+        if not super().validate():
+            return False
+            
+        # If shipping method is not pickup, shipping address is required
+        if self.shipping_method.data != 'pickup':
+            if not self.address.data:
+                self.address.errors = ['Address is required for shipping']
+                return False
+            if not self.city.data:
+                self.city.errors = ['City is required for shipping']
+                return False
+            if not self.state.data:
+                self.state.errors = ['State is required for shipping']
+                return False
+            if not self.zip_code.data:
+                self.zip_code.errors = ['ZIP Code is required for shipping']
+                return False
+        
+        return True</code></pre>
+            
+            <h4>Custom Validator Classes</h4>
+            <p>For more complex validation logic that can be reused across forms, you can create custom validator classes:</p>
+            
+            <pre><code>from wtforms.validators import ValidationError
+
+class UniqueUsername:
+    """Validator that checks if username is available"""
+    def __init__(self, message=None):
+        self.message = message or 'This username is already taken.'
+    
+    def __call__(self, form, field):
+        from app.models.user import User
+        
+        # Check if a user with this username already exists
+        existing_user = User.query.filter_by(username=field.data).first()
+        
+        # For an edit form, we should exclude the current user
+        current_user_id = getattr(form, 'id', None)
+        
+        if existing_user and (not current_user_id or existing_user.id != current_user_id):
+            raise ValidationError(self.message)
+
+# Usage in a form
+class RegistrationForm(FlaskForm):
+    username = StringField('Username', validators=[
+        DataRequired(),
+        Length(min=3, max=25),
+        UniqueUsername()
+    ])
+    # ... other fields ...</code></pre>
+            
+            <h4>Regular Expression Validators</h4>
+            <p>For validating formats like phone numbers, postal codes, etc.:</p>
+            
+            <pre><code>from wtforms.validators import Regexp
+
+class ContactForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
+    phone = StringField('Phone', validators=[
+        DataRequired(),
+        Regexp(r'^\d{3}-\d{3}-\d{4}$', message='Phone must be in format XXX-XXX-XXXX')
+    ])
+    postal_code = StringField('Postal Code', validators=[
+        DataRequired(),
+        Regexp(r'^\d{5}(-\d{4})?$', message='Enter a valid US postal code (XXXXX or XXXXX-XXXX)')
+    ])</code></pre>
+            
+            <h3>Best Practices for Custom Validators</h3>
+            
+            <ul>
+                <li><strong>Keep validators focused</strong>: Each validator should check one specific thing</li>
+                <li><strong>Write clear error messages</strong>: Help users understand what's wrong and how to fix it</li>
+                <li><strong>Reuse validation logic</strong>: Create standalone validators for rules you'll use in multiple forms</li>
+                <li><strong>Balance client and server validation</strong>: Use JavaScript for immediate feedback, but always validate on the server</li>
+                <li><strong>Test edge cases</strong>: Make sure your validators handle all possible inputs correctly</li>
+                <li><strong>Handle internationalization</strong>: Consider how validation rules might differ by locale (e.g., phone formats, addresses)</li>
+            </ul>
+            
+            <div class="reflection">
+                <h4>Reflection Point</h4>
+                <p>Think about situations where standard validation isn't enough. Have you encountered forms that rejected valid data or accepted invalid data? How might custom validators improve these experiences? Consider a specific business rule in your domain that would require custom validation.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Full Stack Python Web Development Course</p>
+    </footer>
+</body>
+</html>

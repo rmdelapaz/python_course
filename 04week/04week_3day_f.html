@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Images and Media in Web Design</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Responsive Images and Media</h1>
+        <h2>Week 4: Wednesday Morning Session</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>The Challenge of Images in Responsive Design</h3>
+            <p>In our journey through responsive web design, we've explored fluid layouts, media queries, and mobile-first approaches. However, creating truly responsive websites requires one more critical piece: responsive images and media.</p>
+            
+            <p>Consider this scenario: you've built a beautiful responsive layout that adapts seamlessly to screens from 320px to 2560px wide. But you're using the same 2000px-wide hero image for all devices. On mobile, this means users are downloading an enormous image that's being squeezed into a tiny viewport—wasting bandwidth, slowing page loads, and draining batteries. On high-resolution displays, that same image might appear pixelated despite its large file size.</p>
+            
+            <p>Responsive images and media solve these problems by ensuring users receive the most appropriate media resources for their specific context. This includes:</p>
+            
+            <ul>
+                <li><strong>Resolution switching:</strong> Serving different sized images based on screen dimensions</li>
+                <li><strong>Density switching:</strong> Providing higher resolution images for high-DPI displays</li>
+                <li><strong>Art direction:</strong> Delivering completely different images optimized for different viewports</li>
+                <li><strong>Format selection:</strong> Sending modern image formats to browsers that support them</li>
+            </ul>
+            
+            <p>Mastering responsive images isn't just about visual aesthetics—it's a performance imperative. Images typically account for the majority of bytes downloaded on websites. Implementing responsive images can dramatically reduce page weight, improve loading times, and enhance the overall user experience across devices.</p>
+        </section>
+
+        <section class="basic_techniques">
+            <h3>Basic Responsive Image Techniques</h3>
+            <p>Let's start with the simplest approach to creating responsive images—one that requires minimal effort but still offers significant benefits:</p>
+            
+            <h4>The Max-Width Approach</h4>
+            <p>The foundation of responsive images is this simple CSS rule:</p>
+            
+            <pre><code>img {
+    max-width: 100%;
+    height: auto;
+}</code></pre>
+            
+            <p>This rule ensures that images never exceed the width of their container while maintaining their aspect ratio. It's like telling images, "You can be as big as you want, but you can't be bigger than your parent."</p>
+            
+            <p><strong>How it works:</strong></p>
+            <ul>
+                <li><code>max-width: 100%</code> allows the image to scale down if its container is narrower than the image's natural width</li>
+                <li><code>height: auto</code> maintains the image's aspect ratio as it scales</li>
+            </ul>
+            
+            <div class="example-container">
+                <h4>Example: Simple Responsive Product Image</h4>
+                <pre><code>&lt;div class="product-card"&gt;
+    &lt;img src="product.jpg" alt="Our Product" class="responsive-img"&gt;
+    &lt;h3&gt;Product Name&lt;/h3&gt;
+    &lt;p&gt;Product description...&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+                
+                <pre><code>.product-card {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+    border: 1px solid #ddd;
+    padding: 15px;
+}
+
+.responsive-img {
+    max-width: 100%;
+    height: auto;
+    display: block; /* Removes bottom space from inline elements */
+}</code></pre>
+            </div>
+            
+            <p><strong>Benefits of this approach:</strong></p>
+            <ul>
+                <li>Extremely simple implementation</li>
+                <li>Works across all modern browsers</li>
+                <li>Requires no special HTML markup</li>
+                <li>Prevents layout breaks on small screens</li>
+            </ul>
+            
+            <p><strong>Limitations:</strong></p>
+            <ul>
+                <li>All devices download the same image file, which is inefficient</li>
+                <li>Doesn't address high-resolution displays</li>
+                <li>No control over art direction for different contexts</li>
+            </ul>
+            
+            <div class="analogy-box">
+                <h4>Analogy: The One-Size Clothing Approach</h4>
+                <p>The max-width approach is like a piece of clothing labeled "one-size-fits-all." It will technically fit most people, but it's not optimized for anyone in particular. For some, it will be too big and wasteful; for others, it might stretch too thin and look poor. Just as tailored clothing provides a better experience, tailored images create better user experiences.</p>
+            </div>
+        </section>
+
+        <section class="responsive_image_solutions">
+            <h3>Modern Responsive Image Solutions</h3>
+            <p>HTML5 introduced several powerful features for creating truly responsive images that load the optimal resources for each user's context.</p>
+            
+            <h4>The srcset and sizes Attributes</h4>
+            <p>The <code>srcset</code> and <code>sizes</code> attributes allow browsers to choose the most appropriate image from a set of options based on viewport size and device pixel ratio.</p>
+            
+            <pre><code>&lt;img 
+    src="image-800w.jpg" 
+    srcset="image-320w.jpg 320w,
+            image-480w.jpg 480w,
+            image-800w.jpg 800w,
+            image-1200w.jpg 1200w"
+    sizes="(max-width: 320px) 280px,
+           (max-width: 480px) 440px,
+           (max-width: 800px) 760px,
+           1000px"
+    alt="Responsive image example"&gt;</code></pre>
+            
+            <p><strong>Breaking down this example:</strong></p>
+            <ul>
+                <li><code>src</code>: The fallback image for browsers that don't support srcset</li>
+                <li><code>srcset</code>: A comma-separated list of image URLs with their intrinsic widths (the w suffix)</li>
+                <li><code>sizes</code>: Helps the browser determine which image to download by specifying how large the image will be rendered at different viewport sizes</li>
+            </ul>
+            
+            <p>The browser uses this information to make an intelligent decision about which image to download before any CSS or layout is applied. It considers:</p>
+            <ul>
+                <li>The device's viewport width</li>
+                <li>The device's pixel density (e.g., 2x for Retina displays)</li>
+                <li>The user's browser settings (e.g., data-saving mode)</li>
+            </ul>
+            
+            <div class="example-container">
+                <h4>Example: Product Image with Resolution Switching</h4>
+                <pre><code>&lt;div class="product-card"&gt;
+    &lt;img 
+        src="product-800w.jpg"
+        srcset="product-400w.jpg 400w,
+                product-800w.jpg 800w,
+                product-1200w.jpg 1200w"
+        sizes="(max-width: 500px) 100vw,
+               (max-width: 900px) 50vw,
+               33vw"
+        alt="Our Amazing Product"&gt;
+    &lt;h3&gt;Product Name&lt;/h3&gt;
+    &lt;p&gt;Product description...&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+            </div>
+            
+            <p><strong>The sizes attribute explained:</strong></p>
+            <ul>
+                <li><code>(max-width: 500px) 100vw</code>: On small screens (up to 500px), the image takes up 100% of the viewport width</li>
+                <li><code>(max-width: 900px) 50vw</code>: On medium screens (501px-900px), the image takes up 50% of the viewport width</li>
+                <li><code>33vw</code>: On large screens (901px+), the image takes up 33% of the viewport width</li>
+            </ul>
+            
+            <p><strong>Real-world example:</strong> An e-commerce product listing might show one product per row on mobile (100vw), two per row on tablets (50vw), and three per row on desktop (33vw). With the sizes attribute, browsers can select the most appropriate image for each context.</p>
+            
+            <div class="analogy-box">
+                <h4>Analogy: The Smart Wardrobe</h4>
+                <p>Using srcset and sizes is like having a smart wardrobe that automatically selects the right clothes based on the weather and your activities. You tell it your plans (sizes), provide options for different conditions (srcset), and it picks the perfect outfit. In both cases, you're preparing options in advance and letting intelligent systems choose the best one for the current context.</p>
+            </div>
+            
+            <h4>Resolution Switching with x Descriptors</h4>
+            <p>When your image will always be displayed at the same size regardless of viewport (like a logo or icon), you can use pixel density descriptors instead of width descriptors:</p>
+            
+            <pre><code>&lt;img 
+    src="logo.png" 
+    srcset="logo.png 1x,
+            logo-2x.png 2x,
+            logo-3x.png 3x"
+    alt="Company Logo"&gt;</code></pre>
+            
+            <p>This tells the browser: "Use logo.png on standard displays, logo-2x.png on 2x displays (like Retina), and logo-3x.png on 3x displays (like high-end smartphones)."</p>
+            
+            <p><strong>Notice there's no sizes attribute</strong> — it's not needed because the display size isn't changing, only the pixel density.</p>
+        </section>
+
+        <section class="picture_element">
+            <h3>The Picture Element: Art Direction for Responsive Images</h3>
+            <p>While <code>srcset</code> and <code>sizes</code> handle resolution switching effectively, sometimes you need more control over which images are displayed in different contexts. This is where the <code>&lt;picture&gt;</code> element shines.</p>
+            
+            <p>The <code>&lt;picture&gt;</code> element allows you to specify different images for different viewport sizes or conditions—what's called "art direction" in responsive design.</p>
+            
+            <pre><code>&lt;picture&gt;
+    &lt;source media="(min-width: 1024px)" srcset="landscape-large.jpg"&gt;
+    &lt;source media="(min-width: 768px)" srcset="landscape-medium.jpg"&gt;
+    &lt;img src="portrait-small.jpg" alt="Description of the image"&gt;
+&lt;/picture&gt;</code></pre>
+            
+            <p><strong>How it works:</strong></p>
+            <ul>
+                <li>The browser evaluates each <code>&lt;source&gt;</code> element from top to bottom</li>
+                <li>It uses the first source whose media query matches the current viewport</li>
+                <li>If no media queries match, it falls back to the <code>&lt;img&gt;</code> element</li>
+                <li>The <code>&lt;img&gt;</code> element is required as the final fallback</li>
+            </ul>
+            
+            <h4>When to Use Picture vs. Srcset</h4>
+            <ul>
+                <li><strong>Use <code>srcset</code> when:</strong> You need the browser to choose the best resource based on resolution and viewport size, but the image content remains the same.</li>
+                <li><strong>Use <code>&lt;picture&gt;</code> when:</strong> You need to serve completely different images or crops based on viewport size or other conditions.</li>
+            </ul>
+            
+            <div class="example-container">
+                <h4>Example: Art Direction for a Hero Image</h4>
+                <pre><code>&lt;picture&gt;
+    &lt;!-- Desktop: Horizontal landscape shot --&gt;
+    &lt;source 
+        media="(min-width: 1024px)" 
+        srcset="hero-landscape-1600w.jpg 1600w,
+                hero-landscape-1200w.jpg 1200w,
+                hero-landscape-800w.jpg 800w"
+        sizes="100vw"&gt;
+    
+    &lt;!-- Tablet: Square cropped version --&gt;
+    &lt;source 
+        media="(min-width: 640px)" 
+        srcset="hero-square-800w.jpg 800w,
+                hero-square-600w.jpg 600w"
+        sizes="100vw"&gt;
+    
+    &lt;!-- Mobile fallback: Vertical portrait crop --&gt;
+    &lt;img 
+        src="hero-portrait-400w.jpg"
+        srcset="hero-portrait-600w.jpg 600w,
+                hero-portrait-400w.jpg 400w"
+        sizes="100vw"
+        alt="Our company headquarters"&gt;
+&lt;/picture&gt;</code></pre>
+            </div>
+            
+            <p><strong>Real-world scenario:</strong> Consider a hero image of a person. On desktop, you might want a wide landscape shot showing the person and their environment. On mobile, a close-up portrait crop would be more effective. The picture element lets you deliver these completely different compositions based on the user's viewport.</p>
+            
+            <h4>Combining Format Selection with Picture</h4>
+            <p>The picture element also allows you to serve different image formats based on browser support:</p>
+            
+            <pre><code>&lt;picture&gt;
+    &lt;!-- WebP version for browsers that support it --&gt;
+    &lt;source 
+        type="image/webp" 
+        srcset="image.webp"&gt;
+    
+    &lt;!-- AVIF version for browsers that support it --&gt;
+    &lt;source 
+        type="image/avif" 
+        srcset="image.avif"&gt;
+    
+    &lt;!-- JPG fallback for others --&gt;
+    &lt;img 
+        src="image.jpg" 
+        alt="Description"&gt;
+&lt;/picture&gt;</code></pre>
+            
+            <p>This serves the most efficient format the browser supports, potentially saving significant bandwidth. Modern formats like WebP and AVIF can reduce file sizes by 30-50% compared to JPG while maintaining quality.</p>
+            
+            <div class="analogy-box">
+                <h4>Analogy: The Adaptive Cookbook</h4>
+                <p>The picture element is like a cookbook that provides different recipes for the same dish based on available ingredients and equipment. For a beginner with basic tools, it offers a simple approach. For someone with advanced equipment, it provides a more sophisticated technique. The end dish (content) is conceptually the same, but the presentation is tailored to the specific context.</p>
+            </div>
+        </section>
+
+        <section class="responsive_background">
+            <h3>Responsive Background Images with CSS</h3>
+            <p>HTML's responsive image features are powerful, but what about background images set in CSS? These require different techniques.</p>
+            
+            <h4>Basic Responsive Background</h4>
+            <p>The simplest approach ensures background images scale properly within their containers:</p>
+            
+            <pre><code>.hero {
+    background-image: url('background.jpg');
+    background-size: cover;
+    background-position: center;
+    height: 50vh;
+}</code></pre>
+            
+            <p><code>background-size: cover</code> ensures the image covers the entire container while maintaining its aspect ratio, potentially cropping parts of the image.</p>
+            
+            <h4>Media Queries for Background Images</h4>
+            <p>Use media queries to serve different background images at different breakpoints:</p>
+            
+            <pre><code>/* Mobile first: smaller background image */
+.hero {
+    background-image: url('background-small.jpg');
+    background-size: cover;
+    background-position: center;
+    height: 50vh;
+}
+
+/* Medium screens */
+@media (min-width: 768px) {
+    .hero {
+        background-image: url('background-medium.jpg');
+    }
+}
+
+/* Large screens */
+@media (min-width: 1200px) {
+    .hero {
+        background-image: url('background-large.jpg');
+    }
+}</code></pre>
+            
+            <p>This approach loads only the image needed for the current viewport size.</p>
+            
+            <h4>Resolution Media Queries</h4>
+            <p>You can also use resolution media queries to serve high-resolution images to high-DPI displays:</p>
+            
+            <pre><code>/* Standard resolution */
+.logo {
+    background-image: url('logo.png');
+    width: 200px;
+    height: 60px;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+/* High resolution (Retina and similar) */
+@media (-webkit-min-device-pixel-ratio: 2), 
+       (min-resolution: 192dpi) {
+    .logo {
+        background-image: url('logo@2x.png');
+    }
+}</code></pre>
+            
+            <h4>Image-Set for Background Images</h4>
+            <p>Some browsers support the <code>image-set()</code> function, which works similarly to srcset but for CSS:</p>
+            
+            <pre><code>.header {
+    /* Fallback */
+    background-image: url('header-1x.jpg');
+    
+    /* Modern syntax */
+    background-image: image-set(
+        url('header-1x.jpg') 1x,
+        url('header-2x.jpg') 2x
+    );
+}</code></pre>
+            
+            <p>This allows the browser to choose the best background image based on the display's pixel density.</p>
+            
+            <div class="example-container">
+                <h4>Example: Complete Responsive Hero Section</h4>
+                <pre><code>&lt;div class="hero"&gt;
+    &lt;div class="hero-content"&gt;
+        &lt;h1&gt;Welcome to Our Website&lt;/h1&gt;
+        &lt;p&gt;Learn more about our services&lt;/p&gt;
+        &lt;a href="#" class="button"&gt;Get Started&lt;/a&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                
+                <pre><code>/* Base (Mobile) Styles */
+.hero {
+    position: relative;
+    height: 50vh;
+    background-image: url('hero-mobile.jpg');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Overlay for better text visibility */
+}
+
+.hero-content {
+    position: relative; /* Places above the overlay */
+    padding: 20px;
+    max-width: 600px;
+}
+
+/* Tablet Styles */
+@media (min-width: 768px) {
+    .hero {
+        height: 60vh;
+        background-image: url('hero-tablet.jpg');
+    }
+}
+
+/* Desktop Styles */
+@media (min-width: 1200px) {
+    .hero {
+        height: 70vh;
+        background-image: url('hero-desktop.jpg');
+    }
+}</code></pre>
+            </div>
+        </section>
+
+        <section class="video_responsive">
+            <h3>Responsive Video Embedding</h3>
+            <p>Videos present unique challenges in responsive design, especially embedded videos from platforms like YouTube or Vimeo.</p>
+            
+            <h4>The Responsive Video Container</h4>
+            <p>The standard approach creates a responsive container that maintains the video's aspect ratio:</p>
+            
+            <pre><code>&lt;div class="video-container"&gt;
+    &lt;iframe 
+        src="https://www.youtube.com/embed/VIDEO_ID" 
+        frameborder="0" 
+        allowfullscreen&gt;&lt;/iframe&gt;
+&lt;/div&gt;</code></pre>
+            
+            <pre><code>.video-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}</code></pre>
+            
+            <p><strong>How it works:</strong> This technique creates a container with a padding-bottom percentage that corresponds to the video's aspect ratio (56.25% = 9 ÷ 16 × 100 for 16:9 videos). The iframe is then absolutely positioned within this container, ensuring it maintains the correct aspect ratio at any screen size.</p>
+            
+            <h4>Using the aspect-ratio Property</h4>
+            <p>Modern browsers support the <code>aspect-ratio</code> property, which simplifies this pattern:</p>
+            
+            <pre><code>.video-container {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+}
+
+.video-container iframe {
+    width: 100%;
+    height: 100%;
+}</code></pre>
+            
+            <h4>Responsive Native Video</h4>
+            <p>For self-hosted videos using the HTML5 <code>&lt;video&gt;</code> element, make them responsive with:</p>
+            
+            <pre><code>&lt;video controls width="100%" poster="video-poster.jpg"&gt;
+    &lt;source src="video.webm" type="video/webm"&gt;
+    &lt;source src="video.mp4" type="video/mp4"&gt;
+    Sorry, your browser doesn't support embedded videos.
+&lt;/video&gt;</code></pre>
+            
+            <pre><code>video {
+    max-width: 100%;
+    height: auto;
+}</code></pre>
+            
+            <p>For more control over video quality based on connection speed, consider using adaptive streaming formats like HLS or DASH with a suitable player library.</p>
+            
+            <div class="example-container">
+                <h4>Example: Responsive Video Gallery</h4>
+                <pre><code>&lt;div class="video-gallery"&gt;
+    &lt;div class="video-item"&gt;
+        &lt;div class="video-container"&gt;
+            &lt;iframe src="https://www.youtube.com/embed/VIDEO_ID_1" frameborder="0" allowfullscreen&gt;&lt;/iframe&gt;
+        &lt;/div&gt;
+        &lt;h3&gt;Video Title 1&lt;/h3&gt;
+        &lt;p&gt;Brief description of the first video...&lt;/p&gt;
+    &lt;/div&gt;
+    
+    &lt;div class="video-item"&gt;
+        &lt;div class="video-container"&gt;
+            &lt;iframe src="https://www.youtube.com/embed/VIDEO_ID_2" frameborder="0" allowfullscreen&gt;&lt;/iframe&gt;
+        &lt;/div&gt;
+        &lt;h3&gt;Video Title 2&lt;/h3&gt;
+        &lt;p&gt;Brief description of the second video...&lt;/p&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                
+                <pre><code>.video-gallery {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+}
+
+@media (min-width: 768px) {
+    .video-gallery {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.video-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 */
+    height: 0;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.video-item h3 {
+    margin-top: 0;
+}
+</code></pre>
+            </div>
+        </section>
+
+        <section class="performance">
+            <h3>Performance Optimization for Responsive Media</h3>
+            <p>Responsive images aren't just about visual adaptation—they're a crucial part of web performance optimization.</p>
+            
+            <h4>Image Compression and Formats</h4>
+            <p>Always optimize your images regardless of responsiveness:</p>
+            <ul>
+                <li><strong>Format selection:</strong> Use WebP (with JPG/PNG fallbacks) for best compression/quality ratio</li>
+                <li><strong>AVIF:</strong> Even better compression than WebP, though less supported</li>
+                <li><strong>SVG:</strong> Ideal for logos, icons, and illustrations</li>
+                <li><strong>Compression tools:</strong> Use tools like ImageOptim, squoosh.app, or serverless image optimization</li>
+            </ul>
+            
+            <h4>Lazy Loading</h4>
+            <p>Delay loading off-screen images until they're needed:</p>
+            
+            <pre><code>&lt;img 
+    src="image.jpg" 
+    loading="lazy" 
+    alt="Lazy loaded image"&gt;</code></pre>
+            
+            <p>Native lazy loading is now supported in most modern browsers. For broader support or more control, consider using JavaScript libraries or the Intersection Observer API.</p>
+            
+            <h4>Image CDNs and Responsive Image Services</h4>
+            <p>Services like Cloudinary, Imgix, and Akamai Image Manager can automatically generate and serve responsive images:</p>
+            
+            <pre><code>&lt;img 
+    src="https://res.cloudinary.com/demo/image/upload/w_auto,c_scale/sample.jpg"
+    alt="Cloudinary responsive image"&gt;</code></pre>
+            
+            <p>These services can:</p>
+            <ul>
+                <li>Dynamically resize images based on viewport or container</li>
+                <li>Automatically convert to optimal formats based on browser support</li>
+                <li>Apply compression and other optimizations</li>
+                <li>Deliver via fast CDN networks</li>
+            </ul>
+            
+            <h4>Image Load Optimization Techniques</h4>
+            <ul>
+                <li><strong>Low-quality image placeholders (LQIP):</strong> Show a tiny blurred image while the full version loads</li>
+                <li><strong>Progressive JPEGs:</strong> Display increasingly detailed versions of the image as it loads</li>
+                <li><strong>CSS background color:</strong> Set a matching background color behind images to improve perceived performance</li>
+                <li><strong>Preload critical images:</strong> Use <code>&lt;link rel="preload"&gt;</code> for important above-the-fold images</li>
+            </ul>
+            
+            <pre><code>&lt;!-- Preload hero image --&gt;
+&lt;link 
+    rel="preload" 
+    as="image" 
+    href="hero.jpg" 
+    imagesrcset="hero-small.jpg 320w, hero-medium.jpg 800w, hero-large.jpg 1400w" 
+    imagesizes="100vw"&gt;</code></pre>
+            
+            <div class="example-container">
+                <h4>Example: Complete Responsive Image with Optimizations</h4>
+                <pre><code>&lt;!-- Preload critical image --&gt;
+&lt;link 
+    rel="preload" 
+    as="image" 
+    href="hero-400w.webp" 
+    type="image/webp"
+    media="(max-width: 400px)"&gt;
+
+&lt;!-- Hero image with multiple optimizations --&gt;
+&lt;div class="hero-container" style="background-color: #3a7bd5;"&gt; &lt;!-- Placeholder color --&gt;
+    &lt;picture&gt;
+        &lt;!-- WebP versions --&gt;
+        &lt;source 
+            type="image/webp" 
+            srcset="hero-400w.webp 400w,
+                    hero-800w.webp 800w,
+                    hero-1600w.webp 1600w"
+            sizes="100vw"&gt;
+        
+        &lt;!-- JPEG fallback --&gt;
+        &lt;img 
+            src="hero-400w.jpg"
+            srcset="hero-400w.jpg 400w,
+                    hero-800w.jpg 800w,
+                    hero-1600w.jpg 1600w"
+            sizes="100vw"
+            alt="Hero image description"
+            loading="eager" &lt;!-- Load immediately as it's above the fold --&gt;
+            width="1600"
+            height="900" &lt;!-- Include dimensions to reduce layout shift --&gt;
+            class="hero-image"&gt;
+    &lt;/picture&gt;
+&lt;/div&gt;</code></pre>
+            </div>
+        </section>
+
+        <section class="best_practices">
+            <h3>Best Practices and Common Pitfalls</h3>
+            
+            <h4>Responsive Images Best Practices</h4>
+            <ol>
+                <li><strong>Start with content strategy:</strong> Determine how images should adapt across devices before implementation</li>
+                <li><strong>Choose appropriate techniques:</strong> Use srcset for resolution switching, picture for art direction</li>
+                <li><strong>Provide fallbacks:</strong> Always include a basic src attribute for older browsers</li>
+                <li><strong>Optimize all image versions:</strong> Don't neglect compression and format optimization</li>
+                <li><strong>Test across devices:</strong> Verify that images load correctly on various screen sizes and pixel densities</li>
+                <li><strong>Specify dimensions:</strong> Include width and height attributes to reduce layout shift during loading</li>
+                <li><strong>Consider bandwidth:</strong> Some users may have limited or expensive data plans</li>
+                <li><strong>Use appropriate descriptive alt text:</strong> Ensure accessibility for screen readers</li>
+            </ol>
+            
+            <h4>Common Pitfalls to Avoid</h4>
+            <ul>
+                <li><strong>Overcomplicating:</strong> Don't use picture when srcset would suffice</li>
+                <li><strong>Too many image versions:</strong> Usually 3-4 size variations is sufficient</li>
+                <li><strong>Ignoring orientations:</strong> Test in both portrait and landscape modes</li>
+                <li><strong>Forgetting alt text:</strong> Always provide descriptive alternatives</li>
+                <li><strong>Incorrect sizes values:</strong> Sizes should reflect the actual rendered size, not the viewport size</li>
+                <li><strong>Overloading picture element:</strong> Too many sources can increase complexity and potential for errors</li>
+                <li><strong>Neglecting file sizes:</strong> Remember that a responsive strategy that downloads larger files than necessary defeats the purpose</li>
+            </ul>
+            
+            <div class="analogy-box">
+                <h4>Analogy: The Efficient Travel Packer</h4>
+                <p>Implementing responsive images effectively is like being a smart traveler who packs different bags for different trips. You don't bring a massive suitcase for an overnight stay, nor do you try to cram a week's worth of clothes into a tiny backpack. Instead, you select the right-sized bag with the appropriate contents for each specific journey. Similarly, responsive images deliver the right media assets for each unique viewing context.</p>
+            </div>
+        </section>
+
+        <section class="practical_workshop">
+            <h3>Practical Workshop: Building a Responsive Image Gallery</h3>
+            <p>Let's apply what we've learned by building a responsive image gallery that optimizes for different viewport sizes and device capabilities.</p>
+            
+            <h4>HTML Structure</h4>
+            <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Responsive Image Gallery&lt;/title&gt;
+    &lt;link rel="stylesheet" href="styles.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;header&gt;
+        &lt;h1&gt;Responsive Image Gallery&lt;/h1&gt;
+        &lt;p&gt;Optimized for all devices and screen sizes&lt;/p&gt;
+    &lt;/header&gt;
+    
+    &lt;main&gt;
+        &lt;div class="gallery"&gt;
+            &lt;!-- Gallery Item 1 --&gt;
+            &lt;div class="gallery-item"&gt;
+                &lt;picture&gt;
+                    &lt;!-- WebP versions --&gt;
+                    &lt;source 
+                        type="image/webp" 
+                        srcset="images/photo1-400w.webp 400w,
+                                images/photo1-800w.webp 800w"
+                        sizes="(max-width: 600px) 100vw,
+                               (max-width: 900px) 50vw,
+                               33vw"&gt;
+                    
+                    &lt;!-- JPEG fallback --&gt;
+                    &lt;img 
+                        src="images/photo1-400w.jpg"
+                        srcset="images/photo1-400w.jpg 400w,
+                                images/photo1-800w.jpg 800w"
+                        sizes="(max-width: 600px) 100vw,
+                               (max-width: 900px) 50vw,
+                               33vw"
+                        alt="Description of photo 1"
+                        loading="lazy"
+                        width="800"
+                        height="600"&gt;
+                &lt;/picture&gt;
+                &lt;div class="gallery-caption"&gt;Photo 1 Title&lt;/div&gt;
+            &lt;/div&gt;
+            
+            &lt;!-- Gallery Item 2 (with art direction) --&gt;
+            &lt;div class="gallery-item"&gt;
+                &lt;picture&gt;
+                    &lt;!-- Desktop: Landscape crop --&gt;
+                    &lt;source 
+                        media="(min-width: 900px)" 
+                        srcset="images/photo2-landscape-400w.webp 400w,
+                                images/photo2-landscape-800w.webp 800w"
+                        sizes="33vw"
+                        type="image/webp"&gt;
+                    
+                    &lt;!-- Tablet: Square crop --&gt;
+                    &lt;source 
+                        media="(min-width: 600px)" 
+                        srcset="images/photo2-square-400w.webp 400w,
+                                images/photo2-square-800w.webp 800w"
+                        sizes="50vw"
+                        type="image/webp"&gt;
+                    
+                    &lt;!-- JPEG fallbacks for browsers without WebP support --&gt;
+                    &lt;source 
+                        media="(min-width: 900px)" 
+                        srcset="images/photo2-landscape-400w.jpg 400w,
+                                images/photo2-landscape-800w.jpg 800w"
+                        sizes="33vw"&gt;
+                    
+                    &lt;source 
+                        media="(min-width: 600px)" 
+                        srcset="images/photo2-square-400w.jpg 400w,
+                                images/photo2-square-800w.jpg 800w"
+                        sizes="50vw"&gt;
+                    
+                    &lt;!-- Mobile: Portrait crop fallback --&gt;
+                    &lt;img 
+                        src="images/photo2-portrait-400w.jpg"
+                        srcset="images/photo2-portrait-400w.jpg 400w,
+                                images/photo2-portrait-800w.jpg 800w"
+                        sizes="100vw"
+                        alt="Description of photo 2"
+                        loading="lazy"
+                        width="400"
+                        height="600"&gt;
+                &lt;/picture&gt;
+                &lt;div class="gallery-caption"&gt;Photo 2 Title&lt;/div&gt;
+            &lt;/div&gt;
+            
+            &lt;!-- Repeat for more gallery items... --&gt;
+        &lt;/div&gt;
+    &lt;/main&gt;
+    
+    &lt;footer&gt;
+        &lt;p&gt;Responsive Image Techniques Demo&lt;/p&gt;
+    &lt;/footer&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            
+            <h4>CSS Implementation</h4>
+            <pre><code>/* Base styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+    color: #333;
+}
+
+header {
+    text-align: center;
+    padding: 2rem 1rem;
+    background-color: #f8f9fa;
+    margin-bottom: 2rem;
+}
+
+h1 {
+    margin-bottom: 0.5rem;
+}
+
+/* Gallery Layout */
+.gallery {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Tablet: 2 columns */
+@media (min-width: 600px) {
+    .gallery {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Desktop: 3 columns */
+@media (min-width: 900px) {
+    .gallery {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Gallery Items */
+.gallery-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background-color: #eee; /* Placeholder color while image loads */
+}
+
+.gallery-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Images */
+.gallery-item img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    aspect-ratio: 4/3;
+}
+
+/* Caption */
+.gallery-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 0.75rem;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover .gallery-caption {
+    transform: translateY(0);
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 2rem;
+    margin-top: 2rem;
+    background-color: #f8f9fa;
+}
+
+/* Loading Animation */
+.gallery-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: loading 1.5s infinite;
+    display: block;
+}
+
+.gallery-item.loaded::before {
+    display: none;
+}
+
+@keyframes loading {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}</code></pre>
+            
+            <h4>JavaScript Enhancement</h4>
+            <pre><code>// Simple script to detect when images are loaded
+document.addEventListener('DOMContentLoaded', function() {
+    const galleryItems = document.querySelectorAll('.gallery-item');
+    
+    galleryItems.forEach(item => {
+        const img = item.querySelector('img');
+        
+        if (img.complete) {
+            item.classList.add('loaded');
+        } else {
+            img.addEventListener('load', function() {
+                item.classList.add('loaded');
+            });
+            
+            img.addEventListener('error', function() {
+                item.classList.add('loaded');
+                item.classList.add('error');
+            });
+        }
+    });
+});</code></pre>
+            
+            <p><strong>Key features of this implementation:</strong></p>
+            <ul>
+                <li>Responsive grid layout that adapts to different viewport sizes</li>
+                <li>WebP images with JPEG fallbacks for broader compatibility</li>
+                <li>Art direction for one image to demonstrate different crops for different viewports</li>
+                <li>Lazy loading for all images except those near the viewport</li>
+                <li>Width and height attributes to prevent layout shifts</li>
+                <li>Placeholder colors and loading animations for better perceived performance</li>
+                <li>Hover effects that reveal image captions</li>
+                <li>JavaScript to detect when images are loaded and remove the loading animation</li>
+            </ul>
+            
+            <p>This gallery demonstrates all the responsive image techniques we've discussed, providing an optimized viewing experience across devices while maintaining performance.</p>
+        </section>
+
+        <section class="future_trends">
+            <h3>Future Trends in Responsive Media</h3>
+            <p>As web technology continues to evolve, several emerging trends are shaping the future of responsive images and media:</p>
+            
+            <h4>Improved Image Formats and Compression</h4>
+            <ul>
+                <li><strong>AVIF:</strong> The AV1 Image File Format offers superior compression and quality compared to WebP</li>
+                <li><strong>JPEG XL:</strong> A next-generation format designed as a JPEG replacement with better compression and features</li>
+                <li><strong>Content-aware compression:</strong> AI-powered tools that optimize images based on their content</li>
+            </ul>
+            
+            <h4>Automated Responsive Images</h4>
+            <ul>
+                <li><strong>AI-powered cropping:</strong> Automatically identifying the important parts of an image for different viewport sizes</li>
+                <li><strong>Automated WebP/AVIF conversion:</strong> Server-side or CDN-based format detection and conversion</li>
+                <li><strong>JavaScript libraries:</strong> Tools that automatically generate responsive images from high-resolution sources</li>
+            </ul>
+            
+            <h4>Priority Hints and Fetchpriority</h4>
+            <p>The emerging <code>fetchpriority</code> attribute allows developers to hint at the relative priority of images:</p>
+            
+            <pre><code>&lt;!-- Critical hero image --&gt;
+&lt;img src="hero.jpg" fetchpriority="high" alt="Hero image"&gt;
+
+&lt;!-- Less important below-the-fold image --&gt;
+&lt;img src="below-fold.jpg" fetchpriority="low" loading="lazy" alt="Secondary image"&gt;</code></pre>
+            
+            <h4>Resource Hints and Machine Learning</h4>
+            <ul>
+                <li><strong>Predictive loading:</strong> Using ML to predict which images a user is likely to need next</li>
+                <li><strong>Connection-aware loading:</strong> Adapting image quality based on network conditions</li>
+                <li><strong>User-preference aware:</strong> Learning user preferences for image quality vs. performance</li>
+            </ul>
+            
+            <p>As these technologies mature, implementing responsive images will likely become more automated and integrated into browsers and frameworks, reducing the manual work while improving the user experience.</p>
+        </section>
+
+        <section class="conclusion">
+            <h3>Conclusion: The Complete Responsive Image Strategy</h3>
+            <p>Responsive images are a critical component of modern web design, bridging the gap between visual quality and performance across the vast ecosystem of devices accessing the web.</p>
+            
+            <p>A complete responsive image strategy considers:</p>
+            <ul>
+                <li><strong>Resolution switching:</strong> Providing appropriately sized images for different viewport sizes</li>
+                <li><strong>Device capabilities:</strong> Adapting to pixel density and format support</li>
+                <li><strong>Art direction:</strong> Using different image crops or compositions based on context</li>
+                <li><strong>Performance optimization:</strong> Balancing quality with loading speed and bandwidth usage</li>
+                <li><strong>Progressive enhancement:</strong> Ensuring a baseline experience with enhancements for capable browsers</li>
+                <li><strong>Accessibility:</strong> Providing meaningful alternatives for non-visual users</li>
+            </ul>
+            
+            <p>By implementing the techniques we've explored—from basic <code>max-width</code> approaches to advanced <code>srcset</code>, <code>&lt;picture&gt;</code>, and optimization strategies—you can create image-rich websites that load quickly and look great on any device.</p>
+            
+            <p>Remember that responsive images aren't just a technical implementation detail—they're an essential part of creating inclusive, performant, and visually compelling web experiences in our multi-device world.</p>
+        </section>
+
+        <section class="assignment">
+            <h3>Daily Assignment: Responsive Image Implementation</h3>
+            <p>Apply what you've learned by implementing responsive images for a simple landing page:</p>
+            
+            <ol>
+                <li>Create a landing page with the following elements:
+                    <ul>
+                        <li>A hero image banner at the top (full width)</li>
+                        <li>A grid of at least 4 product or portfolio items with images</li>
+                        <li>A background image section</li>
+                        <li>An embedded video (YouTube or self-hosted)</li>
+                    </ul>
+                </li>
+                <li>Implement responsive images using:
+                    <ul>
+                        <li><code>srcset</code> and <code>sizes</code> for resolution switching on the product images</li>
+                        <li>The <code>&lt;picture&gt;</code> element with art direction for the hero banner</li>
+                        <li>Format selection (WebP with fallbacks) for at least one image</li>
+                        <li>Media queries for the background image section</li>
+                        <li>Responsive video embedding that maintains aspect ratio</li>
+                    </ul>
+                </li>
+                <li>Optimize all images using appropriate compression and formats</li>
+                <li>Implement lazy loading for below-the-fold images</li>
+                <li>Include loading indicators or placeholder colors</li>
+                <li>Use appropriate width and height attributes to minimize layout shift</li>
+                <li>Test your implementation on at least two different device sizes</li>
+            </ol>
+            
+            <p><strong>Deliverables:</strong></p>
+            <ul>
+                <li>HTML, CSS, and JavaScript files</li>
+                <li>All image files in multiple resolutions and formats</li>
+                <li>A brief write-up explaining your implementation decisions</li>
+                <li>Screenshots showing the page on different devices</li>
+            </ul>
+            
+            <p>Create your project in a file called <code>04week/responsive_images_assignment.html</code> with accompanying assets, and submit it to the course repository by the end of day.</p>
+        </section>
+
+        <section class="resources">
+            <h3>Additional Resources</h3>
+            <ul>
+                <li><a href="https://developer.mozilla.org/en-US/docs/Learn/HTML/Multimedia_and_embedding/Responsive_images" target="_blank">MDN: Responsive Images Guide</a></li>
+                <li><a href="https://web.dev/learn/images/" target="_blank">web.dev: Image Optimization</a></li>
+                <li><a href="https://css-tricks.com/responsive-images-css/" target="_blank">CSS-Tricks: Responsive Images in CSS</a></li>
+                <li><a href="https://jakearchibald.com/2015/anatomy-of-responsive-images/" target="_blank">The Anatomy of Responsive Images</a></li>
+                <li><a href="https://www.smashingmagazine.com/2015/06/responsive-images-in-practice/" target="_blank">Smashing Magazine: Responsive Images in Practice</a></li>
+                <li><a href="https://imagekit.io/responsive-images/" target="_blank">ImageKit: Responsive Images Guide</a></li>
+                <li><a href="https://squoosh.app/" target="_blank">Squoosh: Modern Image Compression Tool</a></li>
+                <li><a href="https://responsivebreakpoints.com/" target="_blank">Responsive Breakpoints Generator</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+   
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

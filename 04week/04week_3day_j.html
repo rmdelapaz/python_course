@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Responsive Patterns for JavaScript Developers - Python Full Stack Web Developer Course</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 4: For JavaScript Developers - Advanced Responsive Patterns</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h2>Introduction to Advanced Responsive Patterns</h2>
+            <p>While CSS media queries form the foundation of responsive design, JavaScript developers can leverage advanced patterns to create truly adaptive experiences that go beyond simple layout changes. This session explores sophisticated responsive techniques that enhance user experience across all devices.</p>
+            
+            <p>As JavaScript developers transitioning to Python full-stack development, you already have a valuable perspective on client-side interactivity. We'll build on that knowledge to create responsive systems that intelligently adapt both presentation and behavior.</p>
+            
+            <div class="file-location">
+                <p><strong>File Location:</strong> Create a new file in your project at <code>04week/04week_3day_js_advanced_responsive.html</code> and corresponding JavaScript at <code>04week/js/advanced_responsive.js</code></p>
+            </div>
+        </section>
+
+        <section class="beyond-media-queries">
+            <h2>Beyond Media Queries: JavaScript-Enhanced Responsive Design</h2>
+            <p>While CSS media queries excel at layout adjustments, JavaScript enables more nuanced responsiveness based on device capabilities, user preferences, and interaction patterns.</p>
+            
+            <h3>The Responsive Enhancement Pyramid</h3>
+            <p>Think of responsive design as a pyramid with three layers:</p>
+            <ol>
+                <li><strong>Foundation (CSS):</strong> Basic layout adaptation using media queries</li>
+                <li><strong>Capability Enhancement (JS):</strong> Feature adjustments based on device capabilities</li>
+                <li><strong>Behavioral Adaptation (JS):</strong> Interaction models tailored to device context</li>
+            </ol>
+            
+            <p>As JavaScript developers, you're uniquely positioned to implement the upper layers of this pyramid, creating truly context-aware applications that transcend simple layout adjustments.</p>
+        </section>
+
+        <section class="feature-detection">
+            <h2>Feature Detection and Capability-Based Responsive Design</h2>
+            <p>Unlike CSS media queries which primarily detect viewport dimensions, JavaScript can detect precise device capabilities and adapt accordingly.</p>
+            
+            <h3>Using Feature Detection Libraries</h3>
+            <p>Modernizr remains the gold standard for feature detection, though modern browsers offer native methods for many capabilities:</p>
+            
+            <div class="code-example">
+                <pre><code>// Check for touch capability
+const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+// Check for specific CSS features
+const supportsGridLayout = CSS.supports('display', 'grid');
+const supportsCustomProperties = CSS.supports('--custom-property', 'value');
+
+// Check for advanced API availability
+const hasIntersectionObserver = 'IntersectionObserver' in window;
+const hasGeolocation = 'geolocation' in navigator;
+
+// Apply different behaviors based on capabilities
+if (hasTouch) {
+    initializeTouchFriendlyInteractions();
+} else {
+    initializeHoverInteractions();
+}
+
+// Load different scripts based on capabilities
+if (hasIntersectionObserver) {
+    import('./advanced-lazy-loading.js').then(module => {
+        module.initialize();
+    });
+} else {
+    import('./basic-lazy-loading.js').then(module => {
+        module.initialize();
+    });
+}</code></pre>
+            </div>
+            
+            <p>This approach allows for much finer-grained responsiveness than CSS media queries alone. Instead of assuming capabilities based on screen size, you're directly checking for the features that matter to your application.</p>
+            
+            <h3>Integration with Python Web Applications</h3>
+            <p>In a Flask or Django application, you can pass detected features back to the server to adapt server responses:</p>
+            
+            <div class="code-example">
+                <pre><code>// Client-side detection script
+function detectCapabilities() {
+    const capabilities = {
+        touch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+        grid: CSS.supports('display', 'grid'),
+        webpSupport: detectWebPSupport(),
+        connectionType: navigator.connection ? navigator.connection.effectiveType : 'unknown',
+        memory: navigator.deviceMemory || 'unknown'
+    };
+    
+    // Store in sessionStorage for use across page loads
+    sessionStorage.setItem('deviceCapabilities', JSON.stringify(capabilities));
+    
+    // Send to server on first detection
+    fetch('/api/capabilities', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(capabilities)
+    });
+}
+
+// Function to detect WebP support
+function detectWebPSupport() {
+    const canvas = document.createElement('canvas');
+    if (canvas.getContext && canvas.getContext('2d')) {
+        return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+    }
+    return false;
+}</code></pre>
+            </div>
+            
+            <p>On the Python side, you can use this information to customize responses:</p>
+            
+            <div class="code-example">
+                <pre><code># Flask route for capability detection
+@app.route('/api/capabilities', methods=['POST'])
+def store_capabilities():
+    capabilities = request.json
+    session['device_capabilities'] = capabilities
+    return jsonify({'status': 'success'})
+
+# Using capabilities to customize responses
+@app.route('/images/hero')
+def serve_hero_image():
+    capabilities = session.get('device_capabilities', {})
+    
+    # Select image format based on support
+    if capabilities.get('webpSupport'):
+        image_path = 'static/images/hero.webp'
+    else:
+        image_path = 'static/images/hero.jpg'
+        
+    # Adjust quality based on connection
+    if capabilities.get('connectionType') == 'slow-2g' or capabilities.get('connectionType') == '2g':
+        # Serve lower quality image
+        image_path = image_path.replace('hero', 'hero-low')
+        
+    return send_file(image_path)</code></pre>
+            </div>
+            
+            <p>This server-client collaboration creates a truly adaptive system that goes far beyond what CSS media queries alone can achieve.</p>
+        </section>
+
+        <section class="component-level">
+            <h2>Component-Level Responsive Patterns</h2>
+            <p>Modern web development emphasizes component-based architecture. JavaScript developers can create intelligent components that adapt to their container context, not just the viewport.</p>
+            
+            <h3>Container Queries and JavaScript Alternatives</h3>
+            <p>While container queries are becoming available in CSS, JavaScript has long enabled components to respond to their immediate context:</p>
+            
+            <div class="code-example">
+                <pre><code>class ResponsiveComponent extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.shadowRoot.innerHTML = `
+            <style>
+                :host { display: block; }
+                .content { padding: 1rem; }
+            </style>
+            <div class="content">
+                <slot></slot>
+            </div>
+        `;
+        
+        // Set up the resize observer
+        this.observer = new ResizeObserver(entries => this.handleResize(entries[0]));
+        this.observer.observe(this);
+    }
+    
+    connectedCallback() {
+        // Initial layout adjustment
+        setTimeout(() => this.adjustLayout(), 0);
+    }
+    
+    disconnectedCallback() {
+        this.observer.disconnect();
+    }
+    
+    handleResize(entry) {
+        const width = entry.contentRect.width;
+        this.adjustLayout(width);
+    }
+    
+    adjustLayout(width = this.offsetWidth) {
+        // Remove any existing layout classes
+        this.classList.remove('layout-small', 'layout-medium', 'layout-large');
+        
+        // Add appropriate layout class
+        if (width < 300) {
+            this.classList.add('layout-small');
+        } else if (width < 600) {
+            this.classList.add('layout-medium');
+        } else {
+            this.classList.add('layout-large');
+        }
+    }
+}
+
+customElements.define('responsive-component', ResponsiveComponent);</code></pre>
+            </div>
+            
+            <p>This pattern creates truly encapsulated components that adapt to their container, not just the viewport. This is especially useful when:</p>
+            <ul>
+                <li>Components are used in different layout contexts within the same application</li>
+                <li>Components are nested within dynamically sized containers</li>
+                <li>Layout adjustments need to happen when containers change size due to user interaction</li>
+            </ul>
+            
+            <h3>Implementation in Python Web Applications</h3>
+            <p>In a Flask or Django application, you can create template components that follow this pattern:</p>
+            
+            <div class="code-example">
+                <pre><code><!-- Flask/Jinja2 template for a product card component -->
+{% macro product_card(product, container_class="") %}
+<div class="product-card {{ container_class }}" data-product-id="{{ product.id }}">
+    <div class="card-content">
+        <img class="product-image" src="{{ product.image_url }}" alt="{{ product.name }}">
+        <h3 class="product-name">{{ product.name }}</h3>
+        <p class="product-price">{{ product.price }}</p>
+        <div class="product-actions">
+            <button class="btn add-to-cart">Add to Cart</button>
+            <button class="btn details">View Details</button>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+<!-- JavaScript to make it responsive to container -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const productCards = document.querySelectorAll('.product-card');
+    
+    const observer = new ResizeObserver(entries => {
+        entries.forEach(entry => {
+            const card = entry.target;
+            const width = entry.contentRect.width;
+            
+            // Reset classes
+            card.classList.remove('compact', 'medium', 'expanded');
+            
+            // Apply layout based on container width
+            if (width < 200) {
+                card.classList.add('compact');
+            } else if (width < 350) {
+                card.classList.add('medium');
+            } else {
+                card.classList.add('expanded');
+            }
+        });
+    });
+    
+    // Observe all product cards
+    productCards.forEach(card => observer.observe(card));
+});
+</script>
+
+<!-- CSS to handle the different layouts -->
+<style>
+.product-card.compact .product-actions {
+    flex-direction: column;
+}
+
+.product-card.compact .product-image {
+    max-height: 100px;
+}
+
+.product-card.expanded .card-content {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    grid-template-areas: 
+        "image name"
+        "image price"
+        "image actions";
+}
+</style></code></pre>
+            </div>
+            
+            <p>This approach allows components to adapt regardless of where they're used in your application, creating a more flexible system than viewport-based media queries alone.</p>
+        </section>
+
+        <section class="animation-patterns">
+            <h2>Responsive Animation Patterns</h2>
+            <p>As JavaScript developers, you know that animations aren't just decorative—they provide crucial feedback and guide users through interactions. Responsive animations adapt not just to screen size but to user preferences and device capabilities.</p>
+            
+            <h3>Motion Reduction and User Preferences</h3>
+            <p>Modern browsers support the prefers-reduced-motion media query, which you can detect with JavaScript:</p>
+            
+            <div class="code-example">
+                <pre><code>// Check if user prefers reduced motion
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Animation factory that respects user preferences
+function createAnimation(element, properties, options = {}) {
+    // Default options
+    const defaults = {
+        duration: 300,
+        easing: 'ease-in-out',
+        reduceMotion: true // Whether this animation should respect reduced motion
+    };
+    
+    const settings = { ...defaults, ...options };
+    
+    // If user prefers reduced motion and this animation should respect that
+    if (prefersReducedMotion && settings.reduceMotion) {
+        // Either skip animation entirely
+        element.style = properties.target;
+        return Promise.resolve();
+        
+        // Or use minimal animation
+        // return element.animate(properties, { duration: 50 }).finished;
+    }
+    
+    // Otherwise, run full animation
+    return element.animate(properties, settings).finished;
+}
+
+// Example usage
+const menuButton = document.querySelector('.menu-button');
+menuButton.addEventListener('click', () => {
+    const menu = document.querySelector('.menu');
+    
+    // Define both complex and simple animations
+    const fullAnimation = [
+        { transform: 'translateX(-100%)', opacity: 0 },
+        { transform: 'translateX(0)', opacity: 1 }
+    ];
+    
+    // Use our factory function
+    createAnimation(menu, fullAnimation, { 
+        duration: 500,
+        easing: 'cubic-bezier(0.17, 0.67, 0.83, 0.67)'
+    }).then(() => {
+        menu.classList.add('active');
+    });
+});</code></pre>
+            </div>
+            
+            <h3>Performance-Aware Animations</h3>
+            <p>Responsive animations should adapt to device performance capabilities:</p>
+            
+            <div class="code-example">
+                <pre><code>// Performance-aware animation system
+class PerformanceAwareAnimator {
+    constructor() {
+        this.performanceLevel = this.detectPerformance();
+        
+        // Listen for performance changes (battery, throttling)
+        if ('connection' in navigator) {
+            navigator.connection.addEventListener('change', () => {
+                this.performanceLevel = this.detectPerformance();
+            });
+        }
+    }
+    
+    detectPerformance() {
+        let score = 0;
+        
+        // Check for low-end device
+        if (navigator.deviceMemory && navigator.deviceMemory < 4) {
+            score -= 1;
+        }
+        
+        // Check for slow connection
+        if (navigator.connection) {
+            const connection = navigator.connection;
+            if (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g') {
+                score -= 1;
+            }
+            if (connection.saveData) {
+                score -= 1;
+            }
+        }
+        
+        // Check for battery status
+        if (navigator.getBattery) {
+            navigator.getBattery().then(battery => {
+                if (battery.level < 0.15 && !battery.charging) {
+                    score -= 1;
+                }
+            });
+        }
+        
+        // Check for page visibility (reduce animations in background tabs)
+        if (document.hidden) {
+            score -= 1;
+        }
+        
+        // Classify performance level
+        if (score < -2) return 'minimal';
+        if (score < 0) return 'reduced';
+        return 'full';
+    }
+    
+    animate(element, options) {
+        const { minimal, reduced, full } = options;
+        
+        switch(this.performanceLevel) {
+            case 'minimal':
+                return minimal();
+            case 'reduced':
+                return reduced();
+            case 'full':
+            default:
+                return full();
+        }
+    }
+}
+
+// Usage example
+const animator = new PerformanceAwareAnimator();
+
+function openModal(modal) {
+    animator.animate(modal, {
+        // No animation, just show
+        minimal: () => {
+            modal.style.display = 'block';
+            return Promise.resolve();
+        },
+        
+        // Simple fade
+        reduced: () => {
+            modal.style.display = 'block';
+            return modal.animate([
+                { opacity: 0 },
+                { opacity: 1 }
+            ], { duration: 200 }).finished;
+        },
+        
+        // Full entrance animation
+        full: () => {
+            modal.style.display = 'block';
+            return modal.animate([
+                { transform: 'scale(0.8)', opacity: 0 },
+                { transform: 'scale(1)', opacity: 1 }
+            ], {
+                duration: 350,
+                easing: 'cubic-bezier(0.17, 0.67, 0.83, 0.67)'
+            }).finished;
+        }
+    });
+}</code></pre>
+            </div>
+            
+            <p>This pattern ensures that animations adapt to the device's performance capabilities, providing the best experience possible without negatively impacting battery life or performance.</p>
+        </section>
+
+        <section class="content-adaptation">
+            <h2>Content Adaptation Patterns</h2>
+            <p>Truly responsive applications adapt not just their presentation but their content to different contexts. JavaScript developers can implement sophisticated content adaptation strategies.</p>
+            
+            <h3>Progressive Loading</h3>
+            <p>Load increasing levels of content detail as the device/connection allows:</p>
+            
+            <div class="code-example">
+                <pre><code>class ProgressiveContentLoader {
+    constructor(options = {}) {
+        this.options = {
+            initialContentSelector: '.content-essential',
+            enhancedContentSelector: '.content-enhanced',
+            fullContentSelector: '.content-full',
+            ...options
+        };
+        
+        this.connectionType = this.getConnectionType();
+        this.initialized = false;
+    }
+    
+    getConnectionType() {
+        if (!navigator.connection) return 'unknown';
+        return navigator.connection.effectiveType || 'unknown';
+    }
+    
+    init() {
+        if (this.initialized) return;
+        this.initialized = true;
+        
+        // Always load initial content
+        this.loadInitialContent();
+        
+        // Load enhanced content based on connection
+        if (this.connectionType !== 'slow-2g' && this.connectionType !== '2g') {
+            this.loadEnhancedContent();
+        }
+        
+        // Load full content for fast connections
+        if (this.connectionType === '4g') {
+            this.loadFullContent();
+        } else {
+            // For slower connections, add buttons to load more content
+            this.addLoadMoreButtons();
+        }
+    }
+    
+    loadInitialContent() {
+        // Initial content is loaded with the page
+        document.querySelectorAll(this.options.initialContentSelector).forEach(el => {
+            el.style.display = 'block';
+        });
+    }
+    
+    loadEnhancedContent() {
+        document.querySelectorAll(this.options.enhancedContentSelector).forEach(el => {
+            // If data-src attribute exists, it's likely an image or iframe to load
+            if (el.dataset.src) {
+                if (el.tagName === 'IMG' || el.tagName === 'IFRAME') {
+                    el.src = el.dataset.src;
+                } else {
+                    el.style.backgroundImage = `url(${el.dataset.src})`;
+                }
+            }
+            
+            // Load content via AJAX if needed
+            if (el.dataset.contentUrl) {
+                fetch(el.dataset.contentUrl)
+                    .then(response => response.text())
+                    .then(html => {
+                        el.innerHTML = html;
+                    });
+            }
+            
+            el.style.display = 'block';
+        });
+    }
+    
+    loadFullContent() {
+        document.querySelectorAll(this.options.fullContentSelector).forEach(el => {
+            if (el.dataset.src) {
+                if (el.tagName === 'IMG' || el.tagName === 'IFRAME') {
+                    el.src = el.dataset.src;
+                } else {
+                    el.style.backgroundImage = `url(${el.dataset.src})`;
+                }
+            }
+            
+            if (el.dataset.contentUrl) {
+                fetch(el.dataset.contentUrl)
+                    .then(response => response.text())
+                    .then(html => {
+                        el.innerHTML = html;
+                    });
+            }
+            
+            el.style.display = 'block';
+        });
+    }
+    
+    addLoadMoreButtons() {
+        // Add "Load more content" buttons for enhanced content
+        const enhancedElements = document.querySelectorAll(this.options.enhancedContentSelector);
+        if (enhancedElements.length > 0) {
+            const loadMoreButton = document.createElement('button');
+            loadMoreButton.className = 'load-more-button';
+            loadMoreButton.textContent = 'Load enhanced content';
+            loadMoreButton.addEventListener('click', () => {
+                this.loadEnhancedContent();
+                loadMoreButton.remove();
+                
+                // Show load full content button if applicable
+                if (document.querySelectorAll(this.options.fullContentSelector).length > 0) {
+                    document.querySelector('.load-full-button').style.display = 'block';
+                }
+            });
+            
+            document.body.appendChild(loadMoreButton);
+        }
+        
+        // Add "Load full experience" button
+        const fullElements = document.querySelectorAll(this.options.fullContentSelector);
+        if (fullElements.length > 0) {
+            const loadFullButton = document.createElement('button');
+            loadFullButton.className = 'load-full-button';
+            loadFullButton.textContent = 'Load full experience';
+            loadFullButton.style.display = enhancedElements.length > 0 ? 'none' : 'block';
+            loadFullButton.addEventListener('click', () => {
+                this.loadFullContent();
+                loadFullButton.remove();
+            });
+            
+            document.body.appendChild(loadFullButton);
+        }
+    }
+}
+
+// Usage
+document.addEventListener('DOMContentLoaded', () => {
+    const loader = new ProgressiveContentLoader();
+    loader.init();
+});</code></pre>
+            </div>
+            
+            <h3>Implementing in Python Web Applications</h3>
+            <p>This pattern complements server-side techniques in Flask or Django applications:</p>
+            
+            <div class="code-example">
+                <pre><code># Flask route with progressive loading support
+@app.route('/article/<slug>')
+def article(slug):
+    article = Article.query.filter_by(slug=slug).first_or_404()
+    
+    # Check if this is an AJAX request for enhanced content
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        content_type = request.args.get('content_type', 'enhanced')
+        
+        if content_type == 'enhanced':
+            return render_template('_article_enhanced_content.html', article=article)
+        elif content_type == 'full':
+            return render_template('_article_full_content.html', article=article)
+    
+    # Initial page load includes basic content
+    return render_template('article.html', article=article)
+
+# Corresponding Jinja2 template (article.html)
+{% extends "base.html" %}
+
+{% block content %}
+<article>
+    <header>
+        <h1>{{ article.title }}</h1>
+        <p class="meta">{{ article.published_date }}</p>
+    </header>
+    
+    <!-- Essential content - always loaded -->
+    <div class="content-essential">
+        {{ article.summary | safe }}
+    </div>
+    
+    <!-- Enhanced content - loaded based on connection -->
+    <div class="content-enhanced" style="display: none;" 
+         data-content-url="{{ url_for('article', slug=article.slug) }}?content_type=enhanced">
+        <!-- Will be populated via AJAX -->
+    </div>
+    
+    <!-- Full content - loaded for fast connections -->
+    <div class="content-full" style="display: none;"
+         data-content-url="{{ url_for('article', slug=article.slug) }}?content_type=full">
+        <!-- Will be populated via AJAX -->
+    </div>
+</article>
+
+<script src="{{ url_for('static', filename='js/progressive-loader.js') }}"></script>
+{% endblock %}</code></pre>
+            </div>
+            
+            <p>This collaborative approach between frontend and backend creates truly adaptive experiences that respond to both device capabilities and network conditions.</p>
+        </section>
+
+        <section class="interaction-patterns">
+            <h2>Responsive Interaction Patterns</h2>
+            <p>Beyond layout and content, truly responsive applications adapt their interaction models to different input methods.</p>
+            
+            <h3>Input Method Detection</h3>
+            <p>Create interfaces that automatically adapt to touch, pointer, keyboard, or voice input:</p>
+            
+            <div class="code-example">
+                <pre><code>class InputMethodDetector {
+    constructor() {
+        this.currentInputMethod = 'unknown';
+        this.previousInputMethod = 'unknown';
+        this.listeners = [];
+        
+        // Setup detection events
+        this.setupDetection();
+    }
+    
+    setupDetection() {
+        // Detect mouse
+        document.addEventListener('mousemove', this.handleMouseMove.bind(this), { passive: true });
+        
+        // Detect touch
+        document.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: true });
+        
+        // Detect keyboard
+        document.addEventListener('keydown', this.handleKeyDown.bind(this));
+        
+        // Detect speech (if available)
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            this.setupSpeechDetection();
+        }
+        
+        // Check for initial touch capability
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+            this.setInputMethod('touch');
+        } else {
+            this.setInputMethod('mouse');
+        }
+    }
+    
+    handleMouseMove(event) {
+        // Ignore simulated mouse events that follow touch
+        if (event.sourceCapabilities && event.sourceCapabilities.firesTouchEvents) {
+            return;
+        }
+        this.setInputMethod('mouse');
+    }
+    
+    handleTouchStart() {
+        this.setInputMethod('touch');
+    }
+    
+    handleKeyDown(event) {
+        // Ignore modifier keys and keys that are likely part of mouse/touch interactions
+        const ignoredKeys = ['Shift', 'Control', 'Alt', 'Meta', 'Enter', 'Escape'];
+        if (!ignoredKeys.includes(event.key)) {
+            this.setInputMethod('keyboard');
+        }
+    }
+    
+    setupSpeechDetection() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        this.recognition = new SpeechRecognition();
+        this.recognition.continuous = true;
+        this.recognition.interimResults = true;
+        
+        this.recognition.onstart = () => {
+            this.setInputMethod('voice');
+        };
+        
+        // Listen for speech input command
+        document.addEventListener('keydown', (event) => {
+            if (event.key === '/' && event.ctrlKey) {
+                this.recognition.start();
+            }
+        });
+    }
+    
+    setInputMethod(method) {
+        if (this.currentInputMethod !== method) {
+            this.previousInputMethod = this.currentInputMethod;
+            this.currentInputMethod = method;
+            
+            // Update document data attribute for CSS targeting
+            document.documentElement.setAttribute('data-input-method', method);
+            
+            // Trigger listeners
+            this.notify();
+        }
+    }
+    
+    onInputMethodChange(callback) {
+        this.listeners.push(callback);
+        
+        // Immediately call with current state
+        callback(this.currentInputMethod, this.previousInputMethod);
+        
+        // Return unsubscribe function
+        return () => {
+            this.listeners = this.listeners.filter(listener => listener !== callback);
+        };
+    }
+    
+    notify() {
+        this.listeners.forEach(callback => {
+            callback(this.currentInputMethod, this.previousInputMethod);
+        });
+    }
+}
+
+// Usage
+const inputDetector = new InputMethodDetector();
+
+inputDetector.onInputMethodChange((current, previous) => {
+    console.log(`Input method changed from ${previous} to ${current}`);
+    
+    // Adjust UI based on input method
+    if (current === 'touch') {
+        // Increase target sizes, spacing
+        document.body.classList.add('touch-input');
+        document.body.classList.remove('mouse-input', 'keyboard-input', 'voice-input');
+    } else if (current === 'mouse') {
+        // Enable hover effects, smaller targets
+        document.body.classList.add('mouse-input');
+        document.body.classList.remove('touch-input', 'keyboard-input', 'voice-input');
+    } else if (current === 'keyboard') {
+        // Enhance focus styles, show shortcuts
+        document.body.classList.add('keyboard-input');
+        document.body.classList.remove('touch-input', 'mouse-input', 'voice-input');
+    } else if (current === 'voice') {
+        // Show voice feedback UI
+        document.body.classList.add('voice-input');
+        document.body.classList.remove('touch-input', 'mouse-input', 'keyboard-input');
+    }
+});</code></pre>
+            </div>
+            
+            <h3>Adaptive Controls</h3>
+            <p>Create UI controls that transform based on input method:</p>
+            
+            <div class="code-example">
+                <pre><code>class AdaptiveControl extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        
+        // Base template
+        this.shadowRoot.innerHTML = `
+            <style>
+                :host {
+                    display: block;
+                }
+                
+                .control {
+                    padding: 1rem;
+                    border-radius: 4px;
+                    border: 1px solid #ccc;
+                }
+                
+                /* Input-specific styles applied dynamically */
+            </style>
+            <div class="control">
+                <slot></slot>
+            </div>
+        `;
+        
+        // Current input method
+        this.inputMethod = document.documentElement.getAttribute('data-input-method') || 'mouse';
+        
+        // Control types defined in attributes
+        this.mouseVersion = this.getAttribute('mouse-control') || 'default';
+        this.touchVersion = this.getAttribute('touch-control') || 'default';
+        this.keyboardVersion = this.getAttribute('keyboard-control') || 'default';
+        this.voiceVersion = this.getAttribute('voice-control') || 'default';
+    }
+    
+    connectedCallback() {
+        // Listen for input method changes
+        this.observer = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
+                if (mutation.attributeName === 'data-input-method') {
+                    const newInputMethod = document.documentElement.getAttribute('data-input-method');
+                    this.updateControl(newInputMethod);
+                }
+            });
+        });
+        
+        this.observer.observe(document.documentElement, { attributes: true });
+        
+        // Initial setup
+        this.updateControl(this.inputMethod);
+    }
+    
+    disconnectedCallback() {
+        this.observer.disconnect();
+    }
+    
+    updateControl(inputMethod) {
+        this.inputMethod = inputMethod;
+        
+        // Remove current control type classes
+        this.classList.remove('mouse-variant', 'touch-variant', 'keyboard-variant', 'voice-variant');
+        
+        // Add new control type class
+        this.classList.add(`${inputMethod}-variant`);
+        
+        // Adjust internal structure based on input method
+        switch(inputMethod) {
+            case 'touch':
+                this.updateTouchVersion();
+                break;
+            case 'mouse':
+                this.updateMouseVersion();
+                break;
+            case 'keyboard':
+                this.updateKeyboardVersion();
+                break;
+            case 'voice':
+                this.updateVoiceVersion();
+                break;
+        }
+    }
+    
+    updateTouchVersion() {
+        const control = this.shadowRoot.querySelector('.control');
+        
+        // Apply touch-specific styles
+        control.style.padding = '16px';
+        control.style.fontSize = '1.2em';
+        
+        // Load touch-specific template if defined
+        if (this.touchVersion !== 'default') {
+            // This could fetch a template or apply different structure
+            fetch(`/templates/controls/${this.touchVersion}.html`)
+                .then(response => response.text())
+                .then(html => {
+                    control.innerHTML = html;
+                });
+        }
+    }
+    
+    updateMouseVersion() {
+        const control = this.shadowRoot.querySelector('.control');
+        
+        // Reset to default styles
+        control.style.padding = '1rem';
+        control.style.fontSize = '1em';
+        
+        // Load mouse-specific template if defined
+        if (this.mouseVersion !== 'default') {
+            fetch(`/templates/controls/${this.mouseVersion}.html`)
+                .then(response => response.text())
+                .then(html => {
+                    control.innerHTML = html;
+                });
+        }
+    }
+    
+    updateKeyboardVersion() {
+        const control = this.shadowRoot.querySelector('.control');
+        
+        // Add keyboard focus styles and shortcuts
+        control.style.outline = '2px solid blue';
+        
+        // Load keyboard-specific template if defined
+        if (this.keyboardVersion !== 'default') {
+            fetch(`/templates/controls/${this.keyboardVersion}.html`)
+                .then(response => response.text())
+                .then(html => {
+                    control.innerHTML = html;
+                });
+        }
+    }
+    
+    updateVoiceVersion() {
+        const control = this.shadowRoot.querySelector('.control');
+        
+        // Add voice interaction indicators
+        control.style.border = '2px solid purple';
+        
+        // Load voice-specific template if defined
+        if (this.voiceVersion !== 'default') {
+            fetch(`/templates/controls/${this.voiceVersion}.html`)
+                .then(response => response.text())
+                .then(html => {
+                    control.innerHTML = html;
+                });
+        }
+    }
+}
+
+customElements.define('adaptive-control', AdaptiveControl);</code></pre>
+            </div>
+            
+            <h3>Usage in HTML</h3>
+            <p>Use these components in your HTML:</p>
+            
+            <div class="code-example">
+                <pre><code>&lt;!-- Basic usage --&gt;
+&lt;adaptive-control&gt;
+    &lt;button&gt;Click me&lt;/button&gt;
+&lt;/adaptive-control&gt;
+
+&lt;!-- With specific control variants --&gt;
+&lt;adaptive-control 
+    mouse-control="slider" 
+    touch-control="large-buttons"
+    keyboard-control="shortcuts"
+    voice-control="voice-commands"&gt;
+    Volume Control
+&lt;/adaptive-control&gt;</code></pre>
+            </div>
+            
+            <p>This pattern creates truly adaptive interfaces that respond to how users are interacting with your application at any given moment.</p>
+        </section>
+        
+        <section class="integration">
+            <h2>Integration with Python Web Frameworks</h2>
+            <p>As a JavaScript developer transitioning to Python full-stack development, you can apply these patterns within Flask and Django applications.</p>
+            
+            <h3>Client-Server Collaboration</h3>
+            <p>Create a system where client-side detection informs server responses:</p>
+            
+            <div class="code-example">
+                <pre><code># In Flask application
+@app.route('/api/device-context', methods=['POST'])
+def store_device_context():
+    context = request.json
+    session['device_context'] = context
+    return jsonify({'status': 'success'})
+
+# Context-aware template rendering
+@app.route('/dashboard')
+def dashboard():
+    device_context = session.get('device_context', {})
+    
+    # Default values if no context detected
+    context = {
+        'input_method': 'mouse',
+        'screen_size': 'desktop',
+        'performance_level': 'high',
+        'connection_type': '4g'
+    }
+    
+    # Update with detected values if available
+    if device_context:
+        context.update(device_context)
+    
+    # Select appropriate template version
+    if context['screen_size'] == 'mobile' and context['performance_level'] == 'low':
+        template = 'dashboard_minimal.html'
+    elif context['input_method'] == 'touch':
+        template = 'dashboard_touch.html'
+    else:
+        template = 'dashboard.html'
+    
+    return render_template(template, context=context)</code></pre>
+            </div>
+            
+            <h3>JavaScript Client-Side Code</h3>
+            <p>Detect and send context information to the server:</p>
+            
+            <div class="code-example">
+                <pre><code>// device-context.js
+class DeviceContextDetector {
+    constructor() {
+        this.context = {
+            screen_size: this.detectScreenSize(),
+            input_method: this.detectInputMethod(),
+            performance_level: this.detectPerformance(),
+            connection_type: this.detectConnection(),
+            preferences: this.detectPreferences()
+        };
+        
+        // Update context when things change
+        this.setupListeners();
+        
+        // Send initial context to server
+        this.sendToServer();
+    }
+    
+    detectScreenSize() {
+        const width = window.innerWidth;
+        if (width < 576) return 'mobile';
+        if (width < 992) return 'tablet';
+        return 'desktop';
+    }
+    
+    detectInputMethod() {
+        if ('ontouchstart' in window) return 'touch';
+        return 'mouse';
+    }
+    
+    detectPerformance() {
+        // Simple heuristic based on device memory
+        if (navigator.deviceMemory && navigator.deviceMemory < 4) {
+            return 'low';
+        }
+        return 'high';
+    }
+    
+    detectConnection() {
+        if (navigator.connection) {
+            return navigator.connection.effectiveType;
+        }
+        return 'unknown';
+    }
+    
+    detectPreferences() {
+        return {
+            reduced_motion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+            color_scheme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+            contrast: window.matchMedia('(prefers-contrast: more)').matches ? 'high' : 'normal'
+        };
+    }
+    
+    setupListeners() {
+        // Listen for resize events
+        window.addEventListener('resize', this.handleResize.bind(this));
+        
+        // Listen for connection changes
+        if (navigator.connection) {
+            navigator.connection.addEventListener('change', this.handleConnectionChange.bind(this));
+        }
+        
+        // Listen for preference changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', this.handlePreferenceChange.bind(this));
+        window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', this.handlePreferenceChange.bind(this));
+    }
+    
+    handleResize() {
+        this.context.screen_size = this.detectScreenSize();
+        this.sendToServer();
+    }
+    
+    handleConnectionChange() {
+        this.context.connection_type = this.detectConnection();
+        this.sendToServer();
+    }
+    
+    handlePreferenceChange() {
+        this.context.preferences = this.detectPreferences();
+        this.sendToServer();
+    }
+    
+    sendToServer() {
+        fetch('/api/device-context', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(this.context)
+        });
+    }
+}
+
+// Initialize when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    window.deviceContext = new DeviceContextDetector();
+});</code></pre>
+            </div>
+            
+            <p>This collaborative approach allows your Python backend to make intelligent decisions about what content to serve, while your JavaScript frontend adapts the presentation and interaction model based on device context.</p>
+        </section>
+
+        <section class="exercises">
+            <h2>Practice Exercises</h2>
+            <p>Apply these advanced responsive patterns with these exercises:</p>
+            
+            <h3>Exercise 1: Create an Adaptive Navigation Component</h3>
+            <ol>
+                <li>Build a navigation component that transforms between:
+                    <ul>
+                        <li>A traditional horizontal menu on desktop/mouse input</li>
+                        <li>A hamburger menu with large touch targets on mobile/touch input</li>
+                        <li>A keyboard-navigable menu with visible shortcut indicators for keyboard input</li>
+                    </ul>
+                </li>
+                <li>Use feature detection to adapt the behavior based on device capabilities</li>
+                <li>Integrate it with a Flask or Django application</li>
+            </ol>
+            
+            <h3>Exercise 2: Build a Progressive Loading Dashboard</h3>
+            <ol>
+                <li>Create a data dashboard with three levels of content:
+                    <ul>
+                        <li>Essential: Key metrics and simple charts</li>
+                        <li>Enhanced: Additional visualizations and filters</li>
+                        <li>Full: Detailed data tables and interactive features</li>
+                    </ul>
+                </li>
+                <li>Implement progressive loading based on connection speed</li>
+                <li>Integrate with a Python backend that provides the appropriate data endpoints</li>
+            </ol>
+            
+            <h3>Exercise 3: Implement Performance-Aware Animations</h3>
+            <ol>
+                <li>Create a set of UI components with animations that adapt based on:
+                    <ul>
+                        <li>Device performance capabilities</li>
+                        <li>User motion preferences</li>
+                        <li>Battery status (if available)</li>
+                    </ul>
+                </li>
+                <li>Test on different devices to verify adaptation</li>
+                <li>Document the performance differences</li>
+            </ol>
+        </section>
+
+        <section class="conclusion">
+            <h2>Conclusion: From JavaScript to Python Full Stack</h2>
+            <p>As JavaScript developers learning Python full-stack development, you bring valuable expertise in creating dynamic, responsive user interfaces. The patterns explored in this session go beyond basic responsive design techniques to create truly adaptive applications.</p>
+            
+            <p>These advanced patterns are particularly valuable in Python web applications, where the collaboration between backend server logic and frontend adaptation creates experiences optimized for each user's context. Whether you're working with Flask, Django, or other Python frameworks, these patterns help create applications that:</p>
+            
+            <ul>
+                <li>Adapt to device capabilities without sacrificing functionality</li>
+                <li>Provide appropriate interaction models across different input methods</li>
+                <li>Progressively enhance experiences based on network and device performance</li>
+                <li>Respect user preferences for motion, contrast, and other accessibility settings</li>
+            </ul>
+            
+            <p>The transition from JavaScript to Python full-stack development is an opportunity to create truly holistic responsive experiences that leverage the strengths of both client and server technologies. By combining these advanced responsive patterns with Python's powerful backend capabilities, you'll build applications that provide optimal experiences across the entire spectrum of devices and contexts.</p>
+            
+            <div class="next-steps">
+                <p><strong>Next Steps:</strong> In upcoming sessions, we'll continue building on these foundations as we explore how to integrate these responsive patterns with Python data processing and API structures.</p>
+            </div>
+        </section>
+
+        <section class="further-resources">
+            <h2>Further Resources</h2>
+            <ul>
+                <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver" target="_blank">MDN: ResizeObserver API</a></li>
+                <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API" target="_blank">MDN: Web Speech API</a></li>
+                <li><a href="https://developers.google.com/web/fundamentals/performance/rendering/" target="_blank">Google: Rendering Performance</a></li>
+                <li><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion" target="_blank">MDN: prefers-reduced-motion</a></li>
+                <li><a href="https://web.dev/adaptive-loading-cds-2019/" target="_blank">Web.dev: Adaptive Loading</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

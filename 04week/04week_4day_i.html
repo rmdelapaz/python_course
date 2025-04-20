@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Storage (localStorage, sessionStorage)</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Browser Storage (localStorage, sessionStorage)</h1>
+        <h2>Week 4: Web Fundamentals - Thursday Afternoon Session</h2>
+    </header>
+
+    <main>
+        <section class="lecture_intro">
+            <h3>Client-Side Data Persistence</h3>
+            <p>Welcome to our session on browser storage! Now that we've learned how to manipulate the DOM and create interactive web applications, we'll explore how to store and retrieve data directly in the browser. This capability is crucial for creating applications that remember user preferences, maintain state between page refreshes, and function offline.</p>
+            
+            <p>This lecture belongs to Week 4: Web Fundamentals and is part of our Python Full Stack Developer course. You'll find this content in the folder structure: <code>/04week/04week_4day_i.html</code></p>
+            
+            <p>Browser storage APIs provide methods to store data on the client side, reducing the need for constant server requests and enabling a smoother user experience. In this lecture, we'll focus on two key storage mechanisms: <code>localStorage</code> and <code>sessionStorage</code>.</p>
+        </section>
+
+        <section class="web_storage_overview">
+            <h3>Introduction to Web Storage</h3>
+            <p>Web Storage is a standardized API that allows websites to store data in a user's browser. It provides two mechanisms:</p>
+            
+            <ul>
+                <li><strong>localStorage:</strong> Persists data even after the browser is closed and reopened</li>
+                <li><strong>sessionStorage:</strong> Maintains data for the duration of a page session</li>
+            </ul>
+            
+            <p>Both storage types share the same methods and properties but differ in scope and lifetime.</p>
+            
+            <div class="storage_comparison">
+                <h4>localStorage vs. sessionStorage: Key Differences</h4>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>localStorage</th>
+                            <th>sessionStorage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Lifetime</td>
+                            <td>Persists until explicitly deleted</td>
+                            <td>Until tab/window is closed</td>
+                        </tr>
+                        <tr>
+                            <td>Storage Scope</td>
+                            <td>Across all tabs/windows of the same origin</td>
+                            <td>Limited to the tab/window</td>
+                        </tr>
+                        <tr>
+                            <td>Storage Limit</td>
+                            <td>~5-10MB (varies by browser)</td>
+                            <td>~5-10MB (varies by browser)</td>
+                        </tr>
+                        <tr>
+                            <td>Data Format</td>
+                            <td>Strings only</td>
+                            <td>Strings only</td>
+                        </tr>
+                        <tr>
+                            <td>Cross-Tab/Window Access</td>
+                            <td>Yes</td>
+                            <td>No</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="storage_origins">
+                <h4>Origins and Access Restrictions</h4>
+                <p>An important security aspect of Web Storage is that it follows the same-origin policy:</p>
+                
+                <ul>
+                    <li>Storage is isolated by origin (protocol + domain + port)</li>
+                    <li>Data stored by <code>https://example.com</code> cannot be accessed by <code>https://other-site.com</code></li>
+                    <li>Even <code>https://sub.example.com</code> cannot access storage from <code>https://example.com</code></li>
+                </ul>
+                
+                <p><strong>Safety Deposit Box Metaphor:</strong> Think of Web Storage as a set of safety deposit boxes in different bank branches. localStorage is like a permanent box that stays accessible as long as you have the key, while sessionStorage is a temporary box that's automatically emptied when you leave the bank. Each website has its own bank branch, and you can't access boxes from one branch while at another.</p>
+            </div>
+        </section>
+
+        <section class="working_with_localstorage">
+            <h3>Working with localStorage</h3>
+            <p>localStorage is ideal for long-term storage of user preferences, cached data, or application state that should persist across browser sessions.</p>
+            
+            <div class="localstorage_basics">
+                <h4>Basic localStorage Operations</h4>
+                
+                <div class="code_example">
+                    <pre><code>// Storing a value
+localStorage.setItem('username', 'john_doe');
+
+// Retrieving a value
+const username = localStorage.getItem('username');
+console.log(username); // 'john_doe'
+
+// Checking if a key exists
+if (localStorage.getItem('theme') === null) {
+    console.log('Theme preference not found');
+}
+
+// Removing a value
+localStorage.removeItem('temporary_data');
+
+// Clearing all values
+localStorage.clear();
+
+// Getting the number of items
+const itemCount = localStorage.length;
+console.log(`Number of items in localStorage: ${itemCount}`);</code></pre>
+                </div>
+                
+                <p>localStorage provides a simple key-value store where both keys and values must be strings. The API is synchronous, which means operations complete immediately without waiting for callbacks or promises.</p>
+            </div>
+            
+            <div class="storage_limitations">
+                <h4>Handling Complex Data Types</h4>
+                <p>Since localStorage only stores strings, you need to convert complex data types like objects or arrays:</p>
+                
+                <div class="code_example">
+                    <pre><code>// Storing an object
+const userSettings = {
+    theme: 'dark',
+    fontSize: 16,
+    notifications: true,
+    lastLogin: new Date().toISOString()
+};
+
+// Convert object to string with JSON.stringify
+localStorage.setItem('userSettings', JSON.stringify(userSettings));
+
+// Retrieving and parsing the object
+const storedSettings = localStorage.getItem('userSettings');
+const parsedSettings = JSON.parse(storedSettings);
+
+console.log(parsedSettings.theme); // 'dark'
+console.log(parsedSettings.fontSize); // 16
+
+// Updating a property
+parsedSettings.theme = 'light';
+localStorage.setItem('userSettings', JSON.stringify(parsedSettings));</code></pre>
+                </div>
+                
+                <p>Using JSON for serialization works well for most data types, but has limitations:</p>
+                
+                <ul>
+                    <li>JavaScript functions cannot be serialized</li>
+                    <li>Circular references will cause errors</li>
+                    <li>Special objects like Date become strings and lose their methods</li>
+                </ul>
+                
+                <div class="code_example">
+                    <pre><code>// Handling dates properly
+const data = {
+    name: 'Project',
+    createdAt: new Date(),
+    updatedAt: new Date()
+};
+
+// Store with date conversion
+localStorage.setItem('projectData', JSON.stringify(data));
+
+// Retrieve with date conversion
+const retrievedData = JSON.parse(localStorage.getItem('projectData'), (key, value) => {
+    // Check if the value looks like an ISO date string
+    if (typeof value === 'string' && 
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/.test(value)) {
+        return new Date(value);
+    }
+    return value;
+});
+
+console.log(retrievedData.createdAt instanceof Date); // true
+console.log(retrievedData.createdAt.getFullYear()); // Current year</code></pre>
+                </div>
+            </div>
+            
+            <div class="localstorage_patterns">
+                <h4>Common localStorage Patterns</h4>
+                
+                <p><strong>Pattern 1: Persistent Settings</strong></p>
+                <div class="code_example">
+                    <pre><code>// Save user preferences
+function saveUserPreferences(preferences) {
+    localStorage.setItem('userPreferences', JSON.stringify(preferences));
+}
+
+// Load preferences with defaults
+function loadUserPreferences() {
+    const defaultPreferences = {
+        theme: 'light',
+        fontSize: 'medium',
+        notifications: true
+    };
+    
+    const savedPreferences = localStorage.getItem('userPreferences');
+    
+    if (savedPreferences) {
+        // Merge saved preferences with defaults (in case new options were added)
+        return { ...defaultPreferences, ...JSON.parse(savedPreferences) };
+    }
+    
+    return defaultPreferences;
+}
+
+// Apply preferences to UI
+function applyUserPreferences() {
+    const preferences = loadUserPreferences();
+    
+    // Apply theme
+    document.body.className = preferences.theme + '-theme';
+    
+    // Apply font size
+    document.body.style.fontSize = {
+        'small': '14px',
+        'medium': '16px',
+        'large': '18px'
+    }[preferences.fontSize];
+    
+    // Handle notifications
+    if (preferences.notifications) {
+        enableNotifications();
+    } else {
+        disableNotifications();
+    }
+}</code></pre>
+                </div>
+                
+                <p><strong>Pattern 2: Form State Persistence</strong></p>
+                <div class="code_example">
+                    <pre><code>// Save form state as user types
+document.getElementById('contact-form').addEventListener('input', function(event) {
+    // Only save for form controls with names
+    if (event.target.name) {
+        // Create an object for the form if it doesn't exist
+        const formData = JSON.parse(localStorage.getItem('contactFormData') || '{}');
+        
+        // Update the changed field
+        formData[event.target.name] = event.target.value;
+        
+        // Save back to localStorage
+        localStorage.setItem('contactFormData', JSON.stringify(formData));
+    }
+});
+
+// Restore form data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedFormData = localStorage.getItem('contactFormData');
+    
+    if (savedFormData) {
+        const formData = JSON.parse(savedFormData);
+        const form = document.getElementById('contact-form');
+        
+        // Set each form field value
+        Object.keys(formData).forEach(name => {
+            const field = form.elements[name];
+            if (field) {
+                field.value = formData[name];
+            }
+        });
+    }
+});</code></pre>
+                </div>
+                
+                <p><strong>Pattern 3: Data Caching</strong></p>
+                <div class="code_example">
+                    <pre><code>// Cache API data with expiration
+async function fetchProductData(productId) {
+    // Check if we have cached data
+    const cacheKey = `product_${productId}`;
+    const cachedData = localStorage.getItem(cacheKey);
+    
+    if (cachedData) {
+        const { data, timestamp } = JSON.parse(cachedData);
+        const now = new Date().getTime();
+        
+        // Check if cache is still valid (less than 1 hour old)
+        if (now - timestamp < 60 * 60 * 1000) {
+            console.log('Using cached product data');
+            return data;
+        }
+        
+        // Cache expired, remove it
+        localStorage.removeItem(cacheKey);
+    }
+    
+    // No valid cache, fetch from API
+    console.log('Fetching fresh product data');
+    const response = await fetch(`/api/products/${productId}`);
+    const data = await response.json();
+    
+    // Save to cache with timestamp
+    localStorage.setItem(cacheKey, JSON.stringify({
+        data,
+        timestamp: new Date().getTime()
+    }));
+    
+    return data;
+}</code></pre>
+                </div>
+            </div>
+            
+            <div class="storage_events">
+                <h4>Listening for Storage Events</h4>
+                <p>localStorage changes can be detected across tabs/windows using the storage event:</p>
+                
+                <div class="code_example">
+                    <pre><code>// Listen for storage changes in other tabs/windows
+window.addEventListener('storage', function(event) {
+    console.log('Storage changed in another tab/window:');
+    console.log('Key:', event.key);
+    console.log('Old value:', event.oldValue);
+    console.log('New value:', event.newValue);
+    console.log('URL of changing page:', event.url);
+    
+    // Handle specific key changes
+    if (event.key === 'userTheme') {
+        // Update theme based on change from another tab
+        document.body.className = event.newValue + '-theme';
+    }
+});</code></pre>
+                </div>
+                
+                <p><strong>Important Note:</strong> The storage event only fires when localStorage is modified from another tab or window. It doesn't fire for changes in the current tab/window.</p>
+            </div>
+        </section>
+
+        <section class="working_with_sessionstorage">
+            <h3>Working with sessionStorage</h3>
+            <p>sessionStorage works identically to localStorage but has a shorter lifespan and a more limited scope:</p>
+            
+            <div class="sessionstorage_basics">
+                <h4>Basic sessionStorage Operations</h4>
+                
+                <div class="code_example">
+                    <pre><code>// The API is identical to localStorage
+sessionStorage.setItem('current_step', '3');
+sessionStorage.setItem('temp_data', JSON.stringify({ x: 100, y: 200 }));
+
+// Getting values
+const currentStep = sessionStorage.getItem('current_step');
+console.log(`User is on step ${currentStep}`);
+
+// Removing a value
+sessionStorage.removeItem('temp_data');
+
+// Clearing all session data
+sessionStorage.clear();</code></pre>
+                </div>
+                
+                <p>All the methods and patterns we covered for localStorage apply to sessionStorage as well. The key difference is scope and lifetime.</p>
+            </div>
+            
+            <div class="sessionstorage_use_cases">
+                <h4>When to Use sessionStorage</h4>
+                <p>sessionStorage is particularly useful for:</p>
+                
+                <ul>
+                    <li><strong>Wizard or Multi-step Forms:</strong> Preserve data between steps but discard if abandoned</li>
+                    <li><strong>Temporary Session State:</strong> Shopping cart contents, current filters, etc.</li>
+                    <li><strong>Per-Tab State:</strong> When you want independent instances of your app in different tabs</li>
+                    <li><strong>Security-Sensitive Temporary Data:</strong> Data that shouldn't persist beyond the current session</li>
+                </ul>
+                
+                <div class="code_example">
+                    <pre><code>// Example: Multi-step form with sessionStorage
+function saveFormStep(stepNumber, formData) {
+    // Save the data for the current step
+    sessionStorage.setItem(`form_step_${stepNumber}`, JSON.stringify(formData));
+    
+    // Update the last completed step
+    sessionStorage.setItem('last_completed_step', stepNumber.toString());
+}
+
+function loadFormStep(stepNumber) {
+    const savedData = sessionStorage.getItem(`form_step_${stepNumber}`);
+    
+    if (savedData) {
+        return JSON.parse(savedData);
+    }
+    
+    return null; // No saved data for this step
+}
+
+function getLastCompletedStep() {
+    const step = sessionStorage.getItem('last_completed_step');
+    return step ? parseInt(step, 10) : 0;
+}
+
+// Example usage in a multi-step form
+document.getElementById('next-button').addEventListener('click', function() {
+    const currentStep = getCurrentStep();
+    const formData = collectFormData(); // Function to gather current form inputs
+    
+    // Save the current step data
+    saveFormStep(currentStep, formData);
+    
+    // Move to next step
+    navigateToStep(currentStep + 1);
+});</code></pre>
+                </div>
+            </div>
+            
+            <div class="comparing_storages">
+                <h4>Choosing Between localStorage and sessionStorage</h4>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Use Case</th>
+                            <th>Recommended Storage</th>
+                            <th>Explanation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>User preferences (theme, language)</td>
+                            <td>localStorage</td>
+                            <td>These settings should persist across sessions</td>
+                        </tr>
+                        <tr>
+                            <td>Authentication tokens</td>
+                            <td>Depends on security needs</td>
+                            <td>localStorage for "remember me", sessionStorage for standard login</td>
+                        </tr>
+                        <tr>
+                            <td>Shopping cart</td>
+                            <td>localStorage</td>
+                            <td>Users expect cart contents to persist across sessions</td>
+                        </tr>
+                        <tr>
+                            <td>Wizard progress</td>
+                            <td>sessionStorage</td>
+                            <td>Process should reset if user closes the tab/window</td>
+                        </tr>
+                        <tr>
+                            <td>Recently viewed items</td>
+                            <td>localStorage</td>
+                            <td>History should persist across sessions</td>
+                        </tr>
+                        <tr>
+                            <td>Draft messages or content</td>
+                            <td>localStorage</td>
+                            <td>Drafts should persist even if browser is closed</td>
+                        </tr>
+                        <tr>
+                            <td>Form data backup</td>
+                            <td>sessionStorage</td>
+                            <td>Temporary backup that clears after session ends</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <p><strong>Paper Analogy:</strong> Think of localStorage as filing something in a cabinet drawer (persists long-term) while sessionStorage is like writing notes on a whiteboard (useful during the meeting but erased afterward). For some information, you want the permanence of the file cabinet; for others, the temporary nature of the whiteboard is more appropriate.</p>
+            </div>
+        </section>
+
+        <section class="storage_limitations_considerations">
+            <h3>Limitations and Considerations</h3>
+            <p>While Web Storage is powerful, it has several important limitations to be aware of:</p>
+            
+            <div class="storage_limits">
+                <h4>Storage Capacity</h4>
+                <p>Browsers limit how much data can be stored:</p>
+                
+                <ul>
+                    <li>Most browsers allow ~5-10MB per origin</li>
+                    <li>Exceeding limits can cause storage operations to fail</li>
+                    <li>Mobile browsers might have lower limits</li>
+                </ul>
+                
+                <div class="code_example">
+                    <pre><code>// Helper function to check available space
+function getLocalStorageUsage() {
+    let total = 0;
+    
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const value = localStorage.getItem(key);
+        total += key.length + value.length;
+    }
+    
+    // Convert to KB
+    return {
+        used: (total / 1024).toFixed(2) + ' KB',
+        usedBytes: total,
+        approximateLimit: '5-10 MB (varies by browser)'
+    };
+}
+
+// Usage
+console.log(getLocalStorageUsage());</code></pre>
+                </div>
+                
+                <p>Always handle potential storage failures gracefully:</p>
+                
+                <div class="code_example">
+                    <pre><code>// Safe storage function with error handling
+function safelyStoreItem(key, value) {
+    try {
+        localStorage.setItem(key, value);
+        return true;
+    } catch (e) {
+        // Handle QuotaExceededError
+        if (e.name === 'QuotaExceededError' || 
+            e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+            
+            console.error('Storage quota exceeded! Trying to free up space...');
+            
+            // Strategy 1: Remove old items
+            const oldestKey = findOldestStorageItem();
+            if (oldestKey) {
+                localStorage.removeItem(oldestKey);
+                
+                // Try again
+                try {
+                    localStorage.setItem(key, value);
+                    return true;
+                } catch (e) {
+                    console.error('Still not enough space after removing oldest item');
+                }
+            }
+            
+            // Strategy 2: Ask user to clear storage
+            if (confirm('Storage is full. Would you like to clear some data to make room for new information?')) {
+                // Clear non-essential data
+                clearNonEssentialData();
+                
+                // Try one more time
+                try {
+                    localStorage.setItem(key, value);
+                    return true;
+                } catch (e) {
+                    alert('Still unable to store data. Some features may not work properly.');
+                }
+            }
+        }
+        
+        return false;
+    }
+}</code></pre>
+                </div>
+            </div>
+            
+            <div class="performance_concerns">
+                <h4>Performance Considerations</h4>
+                <p>While Web Storage operations are synchronous and generally fast, they can cause performance issues if overused:</p>
+                
+                <ul>
+                    <li>Reading/writing large amounts of data can block the main thread</li>
+                    <li>Frequent storage operations can slow down your application</li>
+                    <li>Parsing/stringifying large JSON objects takes time</li>
+                </ul>
+                
+                <p><strong>Best Practices:</strong></p>
+                <ul>
+                    <li>Batch storage operations when possible</li>
+                    <li>Consider using a debounce pattern for frequent updates</li>
+                    <li>Store only what you need, in the most compact form</li>
+                </ul>
+                
+                <div class="code_example">
+                    <pre><code>// Debounced storage for form fields
+function createDebouncedStorage(delay = 500) {
+    let timeout;
+    return function(key, value) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            localStorage.setItem(key, value);
+        }, delay);
+    };
+}
+
+// Usage
+const debouncedSave = createDebouncedStorage(300);
+
+document.querySelectorAll('.saved-field').forEach(field => {
+    field.addEventListener('input', function() {
+        debouncedSave(`field_${this.name}`, this.value);
+    });
+});</code></pre>
+                </div>
+            </div>
+            
+            <div class="security_concerns">
+                <h4>Security Considerations</h4>
+                <p>Web Storage is not suitable for sensitive data:</p>
+                
+                <ul>
+                    <li>Data is stored unencrypted and accessible to any script on the same origin</li>
+                    <li>Vulnerable to XSS attacks if you render stored data without proper sanitization</li>
+                    <li>Accessible from developer tools by end users</li>
+                </ul>
+                
+                <p><strong>What NOT to Store:</strong></p>
+                <ul>
+                    <li>Authentication tokens with high privileges (use HTTP-only cookies instead)</li>
+                    <li>Personal identifiable information (PII)</li>
+                    <li>Credit card data or financial information</li>
+                    <li>Healthcare information or other sensitive personal data</li>
+                </ul>
+                
+                <div class="code_example">
+                    <pre><code>// Sanitize data before using it in the DOM
+function displayUserComment(commentKey) {
+    const comment = localStorage.getItem(commentKey);
+    
+    if (comment) {
+        // BAD - Direct insertion can lead to XSS attacks
+        // document.getElementById('comment-display').innerHTML = comment;
+        
+        // GOOD - Sanitize by using textContent or a sanitization library
+        document.getElementById('comment-display').textContent = comment;
+        
+        // Or use a sanitization library for rich text
+        // document.getElementById('comment-display').innerHTML = DOMPurify.sanitize(comment);
+    }
+}</code></pre>
+                </div>
+            </div>
+            
+            <div class="private_browsing">
+                <h4>Private Browsing Mode</h4>
+                <p>Storage behavior changes in private/incognito browsing modes:</p>
+                
+                <ul>
+                    <li>Firefox allows localStorage but clears it when the private window closes</li>
+                    <li>Safari may block localStorage entirely in private mode</li>
+                    <li>Chrome creates a temporary in-memory storage that's cleared on closing</li>
+                </ul>
+                
+                <p>Your application should detect and handle these limitations gracefully:</p>
+                
+                <div class="code_example">
+                    <pre><code>// Detect if storage is available
+function isStorageAvailable(type) {
+    try {
+        const storage = window[type];
+        const testKey = '__storage_test__';
+        storage.setItem(testKey, testKey);
+        storage.removeItem(testKey);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+// Usage
+if (isStorageAvailable('localStorage')) {
+    // Use localStorage
+} else {
+    // Fall back to memory storage or inform user
+    alert('Your browser is in private mode or has localStorage disabled. Some features may not work properly.');
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="practical_applications">
+            <h3>Practical Applications</h3>
+            <p>Let's explore some real-world examples of using Web Storage:</p>
+            
+            <div class="theme_switcher">
+                <h4>Example 1: Theme Switcher with localStorage</h4>
+                
+                <div class="code_example">
+                    <pre><code>// HTML:
+// &lt;button id="theme-toggle"&gt;Toggle Dark Mode&lt;/button&gt;
+// &lt;select id="font-size-select"&gt;
+//   &lt;option value="small"&gt;Small&lt;/option&gt;
+//   &lt;option value="medium"&gt;Medium&lt;/option&gt;
+//   &lt;option value="large"&gt;Large&lt;/option&gt;
+// &lt;/select&gt;
+
+// CSS:
+// [data-theme="light"] { --bg-color: #ffffff; --text-color: #333333; }
+// [data-theme="dark"] { --bg-color: #222222; --text-color: #f0f0f0; }
+// [data-font-size="small"] { font-size: 14px; }
+// [data-font-size="medium"] { font-size: 16px; }
+// [data-font-size="large"] { font-size: 18px; }
+
+// JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Get UI elements
+    const themeToggle = document.getElementById('theme-toggle');
+    const fontSizeSelect = document.getElementById('font-size-select');
+    
+    // Load saved preferences or use defaults
+    const savedTheme = localStorage.getItem('user_theme') || 'light';
+    const savedFontSize = localStorage.getItem('user_font_size') || 'medium';
+    
+    // Apply saved preferences
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.documentElement.setAttribute('data-font-size', savedFontSize);
+    
+    // Update UI to match saved preferences
+    themeToggle.textContent = savedTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+    fontSizeSelect.value = savedFontSize;
+    
+    // Handle theme toggle
+    themeToggle.addEventListener('click', function() {
+        // Get current theme
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        
+        // Toggle theme
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        // Update UI
+        document.documentElement.setAttribute('data-theme', newTheme);
+        this.textContent = newTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+        
+        // Save preference
+        localStorage.setItem('user_theme', newTheme);
+    });
+    
+    // Handle font size change
+    fontSizeSelect.addEventListener('change', function() {
+        const newSize = this.value;
+        
+        // Update UI
+        document.documentElement.setAttribute('data-font-size', newSize);
+        
+        // Save preference
+        localStorage.setItem('user_font_size', newSize);
+    });
+});</code></pre>
+                </div>
+                
+                <p>This example creates a theme switcher and font size selector that remembers user preferences using localStorage.</p>
+            </div>
+            
+            <div class="form_persistence">
+                <h4>Example 2: Form State Persistence with sessionStorage</h4>
+                
+                <div class="code_example">
+                    <pre><code>// HTML:
+// &lt;form id="multi-page-form"&gt;
+//   &lt;div class="form-page" data-page="1"&gt;
+//     &lt;h3&gt;Page 1: Personal Details&lt;/h3&gt;
+//     &lt;input type="text" name="fullName" placeholder="Full Name"&gt;
+//     &lt;input type="email" name="email" placeholder="Email Address"&gt;
+//     &lt;button type="button" class="next-btn"&gt;Next&lt;/button&gt;
+//   &lt;/div&gt;
+//   &lt;div class="form-page" data-page="2" style="display: none;"&gt;
+//     &lt;h3&gt;Page 2: Address&lt;/h3&gt;
+//     &lt;input type="text" name="address" placeholder="Street Address"&gt;
+//     &lt;input type="text" name="city" placeholder="City"&gt;
+//     &lt;button type="button" class="prev-btn"&gt;Previous&lt;/button&gt;
+//     &lt;button type="button" class="next-btn"&gt;Next&lt;/button&gt;
+//   &lt;/div&gt;
+//   &lt;div class="form-page" data-page="3" style="display: none;"&gt;
+//     &lt;h3&gt;Page 3: Confirmation&lt;/h3&gt;
+//     &lt;div id="summary"&gt;&lt;/div&gt;
+//     &lt;button type="button" class="prev-btn"&gt;Previous&lt;/button&gt;
+//     &lt;button type="submit"&gt;Submit&lt;/button&gt;
+//   &lt;/div&gt;
+// &lt;/form&gt;
+
+// JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('multi-page-form');
+    const pages = form.querySelectorAll('.form-page');
+    const SESSION_KEY = 'multi_page_form_data';
+    
+    // Load saved form data
+    function loadFormData() {
+        const savedData = sessionStorage.getItem(SESSION_KEY);
+        if (savedData) {
+            const formData = JSON.parse(savedData);
+            
+            // Fill form fields with saved data
+            Object.keys(formData).forEach(fieldName => {
+                const field = form.querySelector(`[name="${fieldName}"]`);
+                if (field) {
+                    field.value = formData[fieldName];
+                }
+            });
+            
+            // Go to saved page
+            const savedPage = sessionStorage.getItem('current_form_page') || '1';
+            showPage(savedPage);
+        }
+    }
+    
+    // Save form data
+    function saveFormData() {
+        const formData = {};
+        const inputs = form.querySelectorAll('input, select, textarea');
+        
+        inputs.forEach(input => {
+            if (input.name) {
+                formData[input.name] = input.value;
+            }
+        });
+        
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(formData));
+    }
+    
+    // Show a specific page
+    function showPage(pageNumber) {
+        pages.forEach(page => {
+            page.style.display = 'none';
+        });
+        
+        const targetPage = form.querySelector(`.form-page[data-page="${pageNumber}"]`);
+        if (targetPage) {
+            targetPage.style.display = 'block';
+            sessionStorage.setItem('current_form_page', pageNumber);
+            
+            // Update summary on last page
+            if (pageNumber === '3') {
+                updateSummary();
+            }
+        }
+    }
+    
+    // Update the summary
+    function updateSummary() {
+        const summaryDiv = document.getElementById('summary');
+        const formData = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
+        
+        let html = '<h4>Please confirm your information:</h4>';
+        html += '<ul>';
+        
+        Object.keys(formData).forEach(key => {
+            if (formData[key]) {
+                html += `<li><strong>${formatLabel(key)}:</strong> ${formData[key]}</li>`;
+            }
+        });
+        
+        html += '</ul>';
+        summaryDiv.innerHTML = html;
+    }
+    
+    // Helper to format field names as labels
+    function formatLabel(fieldName) {
+        return fieldName
+            .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+            .replace(/^./, str => str.toUpperCase()); // Capitalize first letter
+    }
+    
+    // Save data on input changes
+    form.addEventListener('input', function() {
+        saveFormData();
+    });
+    
+    // Handle next button clicks
+    form.querySelectorAll('.next-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const currentPage = this.closest('.form-page');
+            const nextPageNum = (parseInt(currentPage.dataset.page) + 1).toString();
+            showPage(nextPageNum);
+        });
+    });
+    
+    // Handle previous button clicks
+    form.querySelectorAll('.prev-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const currentPage = this.closest('.form-page');
+            const prevPageNum = (parseInt(currentPage.dataset.page) - 1).toString();
+            showPage(prevPageNum);
+        });
+    });
+    
+    // Handle form submission
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        // In a real app, you would send the data to a server here
+        alert('Form submitted successfully!');
+        
+        // Clear the saved data
+        sessionStorage.removeItem(SESSION_KEY);
+        sessionStorage.removeItem('current_form_page');
+        
+        // Reset form and go back to first page
+        form.reset();
+        showPage('1');
+    });
+    
+    // Initialize form
+    loadFormData();
+});</code></pre>
+                </div>
+                
+                <p>This multi-page form example uses sessionStorage to preserve entered data while navigating between form pages, preventing data loss if the user accidentally refreshes or navigates away.</p>
+            </div>
+            
+            <div class="offline_app">
+                <h4>Example 3: Building a Simple Offline-Capable App</h4>
+                
+                <div class="code_example">
+                    <pre><code>// HTML:
+// &lt;div id="notes-app"&gt;
+//   &lt;h2&gt;Quick Notes&lt;/h2&gt;
+//   &lt;div class="status"&gt;&lt;/div&gt;
+//   &lt;div class="note-form"&gt;
+//     &lt;textarea id="note-content" placeholder="Write your note here..."&gt;&lt;/textarea&gt;
+//     &lt;button id="save-note"&gt;Save Note&lt;/button&gt;
+//   &lt;/div&gt;
+//   &lt;div id="notes-list"&gt;&lt;/div&gt;
+// &lt;/div&gt;
+
+// JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    const noteContent = document.getElementById('note-content');
+    const saveNoteBtn = document.getElementById('save-note');
+    const notesList = document.getElementById('notes-list');
+    const statusDiv = document.querySelector('.status');
+    
+    // Storage keys
+    const NOTES_KEY = 'quick_notes';
+    const PENDING_SYNC_KEY = 'notes_pending_sync';
+    
+    // Check online status and update UI
+    function updateOnlineStatus() {
+        if (navigator.onLine) {
+            statusDiv.textContent = 'Online - Changes will sync when possible';
+            statusDiv.className = 'status online';
+            
+            // Try to sync pending changes
+            syncPendingChanges();
+        } else {
+            statusDiv.textContent = 'Offline - Changes saved locally';
+            statusDiv.className = 'status offline';
+        }
+    }
+    
+    // Load notes from localStorage
+    function loadNotes() {
+        const savedNotes = localStorage.getItem(NOTES_KEY);
+        return savedNotes ? JSON.parse(savedNotes) : [];
+    }
+    
+    // Save notes to localStorage
+    function saveNotes(notes) {
+        localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+    }
+    
+    // Render notes to the UI
+    function renderNotes() {
+        const notes = loadNotes();
+        
+        if (notes.length === 0) {
+            notesList.innerHTML = '<p class="empty-state">No notes yet. Create your first note!</p>';
+            return;
+        }
+        
+        let html = '';
+        notes.forEach((note, index) => {
+            html += `
+                <div class="note-item ${note.pendingSync ? 'pending-sync' : ''}" data-index="${index}">
+                    <div class="note-content">${note.content.replace(/\n/g, '<br>')}</div>
+                    <div class="note-meta">
+                        <span class="timestamp">${new Date(note.timestamp).toLocaleString()}</span>
+                        <div class="note-actions">
+                            <button class="edit-note">Edit</button>
+                            <button class="delete-note">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        notesList.innerHTML = html;
+        
+        // Add event listeners to buttons
+        notesList.querySelectorAll('.edit-note').forEach(button => {
+            button.addEventListener('click', handleEditNote);
+        });
+        
+        notesList.querySelectorAll('.delete-note').forEach(button => {
+            button.addEventListener('click', handleDeleteNote);
+        });
+    }
+    
+    // Add a new note
+    function addNote(content) {
+        const notes = loadNotes();
+        
+        const newNote = {
+            id: Date.now().toString(),
+            content: content,
+            timestamp: new Date().toISOString(),
+            pendingSync: true
+        };
+        
+        notes.unshift(newNote);
+        saveNotes(notes);
+        
+        // Add to pending sync if online
+        addToPendingSync('add', newNote);
+        
+        // Clear the input
+        noteContent.value = '';
+        
+        // Render updated notes
+        renderNotes();
+    }
+    
+    // Handle editing a note
+    function handleEditNote(event) {
+        const noteItem = event.target.closest('.note-item');
+        const index = parseInt(noteItem.dataset.index);
+        const notes = loadNotes();
+        
+        if (index >= 0 && index < notes.length) {
+            // Set the textarea content to the note content
+            noteContent.value = notes[index].content;
+            
+            // Change the save button to update mode
+            saveNoteBtn.textContent = 'Update Note';
+            saveNoteBtn.dataset.mode = 'update';
+            saveNoteBtn.dataset.index = index;
+            
+            // Focus the textarea
+            noteContent.focus();
+        }
+    }
+    
+    // Handle deleting a note
+    function handleDeleteNote(event) {
+        const noteItem = event.target.closest('.note-item');
+        const index = parseInt(noteItem.dataset.index);
+        const notes = loadNotes();
+        
+        if (index >= 0 && index < notes.length) {
+            // Confirm deletion
+            if (confirm('Are you sure you want to delete this note?')) {
+                const deletedNote = notes[index];
+                
+                // Remove the note
+                notes.splice(index, 1);
+                saveNotes(notes);
+                
+                // Add to pending sync
+                addToPendingSync('delete', deletedNote);
+                
+                // Render updated notes
+                renderNotes();
+            }
+        }
+    }
+    
+    // Add operation to pending sync
+    function addToPendingSync(operation, note) {
+        if (!navigator.onLine) return;
+        
+        const pendingSync = JSON.parse(localStorage.getItem(PENDING_SYNC_KEY) || '[]');
+        
+        pendingSync.push({
+            operation: operation,
+            note: note,
+            timestamp: new Date().toISOString()
+        });
+        
+        localStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(pendingSync));
+    }
+    
+    // Sync pending changes with server
+    function syncPendingChanges() {
+        if (!navigator.onLine) return;
+        
+        const pendingSync = JSON.parse(localStorage.getItem(PENDING_SYNC_KEY) || '[]');
+        
+        if (pendingSync.length === 0) return;
+        
+        // In a real app, this would make API calls to sync with a server
+        console.log('Syncing changes with server:', pendingSync);
+        
+        // Simulate successful sync after 1 second
+        setTimeout(() => {
+            // Update notes to remove pending sync flag
+            const notes = loadNotes().map(note => {
+                note.pendingSync = false;
+                return note;
+            });
+            
+            saveNotes(notes);
+            
+            // Clear pending sync
+            localStorage.removeItem(PENDING_SYNC_KEY);
+            
+            // Update UI
+            renderNotes();
+            console.log('Sync completed successfully');
+        }, 1000);
+    }
+    
+    // Event Listeners
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    
+    saveNoteBtn.addEventListener('click', function() {
+        const content = noteContent.value.trim();
+        
+        if (!content) {
+            alert('Please enter some content for your note');
+            return;
+        }
+        
+        if (this.dataset.mode === 'update') {
+            // Update existing note
+            const index = parseInt(this.dataset.index);
+            const notes = loadNotes();
+            
+            if (index >= 0 && index < notes.length) {
+                const updatedNote = notes[index];
+                updatedNote.content = content;
+                updatedNote.timestamp = new Date().toISOString();
+                updatedNote.pendingSync = true;
+                
+                saveNotes(notes);
+                
+                // Add to pending sync
+                addToPendingSync('update', updatedNote);
+                
+                // Reset the form
+                this.textContent = 'Save Note';
+                delete this.dataset.mode;
+                delete this.dataset.index;
+                noteContent.value = '';
+            }
+        } else {
+            // Add new note
+            addNote(content);
+        }
+        
+        // Render updated notes
+        renderNotes();
+    });
+    
+    // Initialize
+    updateOnlineStatus();
+    renderNotes();
+});</code></pre>
+                </div>
+                
+                <p>This quick notes app demonstrates a more complex usage of localStorage to create an offline-capable application that can sync changes when online. It uses localStorage for both the data itself and to track pending changes that need to be synchronized with a server.</p>
+            </div>
+        </section>
+
+        <section class="beyond_webstorage">
+            <h3>Beyond Web Storage: Other Client-Side Storage Options</h3>
+            <p>Web Storage is just one of several client-side storage options. Here's a brief overview of alternatives:</p>
+            
+            <div class="storage_comparison">
+                <h4>Comparing Browser Storage Technologies</h4>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Technology</th>
+                            <th>Storage Limit</th>
+                            <th>Complexity</th>
+                            <th>Data Types</th>
+                            <th>Use Cases</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Cookies</td>
+                            <td>~4KB</td>
+                            <td>Simple</td>
+                            <td>String only</td>
+                            <td>Session identifiers, small preferences</td>
+                        </tr>
+                        <tr>
+                            <td>localStorage/sessionStorage</td>
+                            <td>~5-10MB</td>
+                            <td>Simple</td>
+                            <td>String only</td>
+                            <td>User preferences, form data, small app state</td>
+                        </tr>
+                        <tr>
+                            <td>IndexedDB</td>
+                            <td>Practically unlimited*</td>
+                            <td>Complex</td>
+                            <td>Almost any JS type</td>
+                            <td>Large datasets, offline applications</td>
+                        </tr>
+                        <tr>
+                            <td>Cache API</td>
+                            <td>Disk space dependent</td>
+                            <td>Moderate</td>
+                            <td>Response objects</td>
+                            <td>Offline assets, network resource caching</td>
+                        </tr>
+                        <tr>
+                            <td>File System Access API</td>
+                            <td>Depends on user permission</td>
+                            <td>Complex</td>
+                            <td>Files/directories</td>
+                            <td>Document editors, file managers</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>*Subject to user permission and available disk space</p>
+                
+                <p><strong>When to Consider Alternatives:</strong></p>
+                <ul>
+                    <li><strong>IndexedDB:</strong> For large amounts of structured data, complex queries, or storing binary data</li>
+                    <li><strong>Cache API:</strong> For storing complete network responses (HTML, CSS, JS, images) for offline use</li>
+                    <li><strong>Cookies:</strong> When you need data to be automatically sent with HTTP requests</li>
+                    <li><strong>File System Access API:</strong> When you need to read or write files from the user's file system</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="practice_exercises">
+            <h3>Practice Exercises</h3>
+            
+            <div class="exercise">
+                <h4>Exercise 1: Reading List App</h4>
+                <p>Create a simple reading list application with these features:</p>
+                <ul>
+                    <li>Form to add books (title, author, status: read/unread)</li>
+                    <li>Display list of books with status indicator</li>
+                    <li>Allow marking books as read/unread</li>
+                    <li>Allow deleting books from the list</li>
+                    <li>Persist the reading list in localStorage</li>
+                </ul>
+                <p>This exercise will practice basic CRUD operations with localStorage.</p>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 2: Shopping Cart with Expiration</h4>
+                <p>Build a shopping cart that:</p>
+                <ul>
+                    <li>Allows adding/removing products</li>
+                    <li>Displays subtotal and item count</li>
+                    <li>Persists between page refreshes</li>
+                    <li>Expires after 24 hours of inactivity</li>
+                    <li>Shows when the cart was last updated</li>
+                </ul>
+                <p>This exercise will practice working with complex data structures and implementing an expiration mechanism.</p>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 3: Offline Data Synchronization</h4>
+                <p>Create an application that demonstrates offline data synchronization:</p>
+                <ul>
+                    <li>Allow creating and editing "posts" while offline</li>
+                    <li>Store pending changes in localStorage</li>
+                    <li>Detect when the application comes online</li>
+                    <li>Sync pending changes with a simulated server</li>
+                    <li>Handle conflict resolution if necessary</li>
+                </ul>
+                <p>This more advanced exercise will practice building offline-first applications using localStorage as a temporary data store.</p>
+            </div>
+        </section>
+
+        <section class="summary">
+            <h3>Lecture Summary</h3>
+            <p>In this exploration of browser storage, we've covered:</p>
+            
+            <ul>
+                <li>The basics of Web Storage with localStorage and sessionStorage</li>
+                <li>Key differences between localStorage (persistent) and sessionStorage (session-based)</li>
+                <li>Working with strings and handling complex data types using JSON</li>
+                <li>Storage events for cross-tab communication</li>
+                <li>Common patterns and best practices for using browser storage</li>
+                <li>Limitations and security considerations</li>
+                <li>Practical examples of real-world applications</li>
+                <li>Alternatives for more advanced storage needs</li>
+            </ul>
+            
+            <p>Web Storage provides a powerful tool for enhancing web applications with client-side data persistence. Combined with your DOM manipulation skills, it enables you to build applications that are more responsive, personalized, and capable of functioning even when offline.</p>
+            
+            <p>In our next sessions, we'll continue building on these foundations to create increasingly sophisticated web applications by integrating APIs and exploring more advanced JavaScript techniques.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+        <p>This lecture: <code>/04week/04week_4day_i.html</code></p>
+    </footer>
+</body>
+</html>

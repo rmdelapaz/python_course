@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifying Element Styles and Classes</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Modifying Element Styles and Classes</h1>
+        <h2>Week 4: Web Fundamentals - Thursday Afternoon Session</h2>
+    </header>
+
+    <main>
+        <section class="lecture_intro">
+            <h3>Dynamic Styling of Elements</h3>
+            <p>Welcome to our session on modifying element styles and classes! Now that we understand how to select, traverse, create, and remove DOM elements, we'll explore how to dynamically change their appearance and behavior by manipulating their styles and CSS classes.</p>
+            
+            <p>This lecture belongs to Week 4: Web Fundamentals and is part of our Python Full Stack Developer course. You'll find this content in the folder structure: <code>/04week/04week_4day_h.html</code></p>
+            
+            <p>The ability to change an element's appearance dynamically is crucial for creating interactive web applications. Whether it's highlighting a selected item, showing validation states, or creating animations, style manipulation is what brings life and interactivity to your interfaces.</p>
+        </section>
+
+        <section class="why_modify_styles">
+            <h3>Why Modify Styles Dynamically?</h3>
+            <p>Before diving into the techniques, let's understand why dynamic styling is so important:</p>
+            
+            <ul>
+                <li><strong>User Feedback:</strong> Provide visual feedback for user actions (hover states, active states)</li>
+                <li><strong>State Representation:</strong> Visually represent different states of components (selected, disabled, loading)</li>
+                <li><strong>Validation Feedback:</strong> Show users when input is valid or invalid</li>
+                <li><strong>Responsive Design:</strong> Adjust layouts based on screen size or device capabilities</li>
+                <li><strong>Animations:</strong> Create smooth transitions and movements</li>
+                <li><strong>Theming:</strong> Allow users to customize the appearance of your application</li>
+                <li><strong>Accessibility:</strong> Enhance readability or accommodate user preferences</li>
+            </ul>
+            
+            <p><strong>Stage Production Metaphor:</strong> Think of your web page as a stage production. The HTML elements are actors, JavaScript is the director, and CSS styles are the costumes, lighting, and props. By changing styles dynamically, you're essentially directing the show in real-time—changing costumes (classes), adjusting lighting (colors, visibility), and moving props (positioning)—all in response to the audience's (user's) reactions and the flow of the story (application state).</p>
+        </section>
+
+        <section class="inline_styles">
+            <h3>Working with Inline Styles</h3>
+            <p>The most direct way to modify an element's appearance is by changing its inline styles through the <code>style</code> property.</p>
+            
+            <div class="style_object">
+                <h4>The style Object</h4>
+                <p>Each element has a <code>style</code> object that gives you direct access to set inline CSS properties:</p>
+                
+                <div class="code_example">
+                    <pre><code>// Get a reference to an element
+const heading = document.getElementById('main-title');
+
+// Change a single style property
+heading.style.color = 'blue';
+heading.style.fontSize = '24px';  // Note: hyphenated CSS properties (font-size) become camelCase in JS (fontSize)
+heading.style.fontWeight = 'bold';
+heading.style.textTransform = 'uppercase';
+
+// Change positioning
+const box = document.querySelector('.box');
+box.style.position = 'relative';
+box.style.left = '50px';
+box.style.top = '20px';
+
+// Change dimensions
+box.style.width = '200px';
+box.style.height = '150px';
+
+// Change background
+box.style.backgroundColor = '#f0f0f0';
+box.style.backgroundImage = 'url("pattern.png")';
+
+// Change borders
+box.style.border = '1px solid black';
+box.style.borderRadius = '5px';</code></pre>
+                </div>
+                
+                <p><strong>CSS Property Translation:</strong> When working with the <code>style</code> object, CSS property names that contain hyphens are converted to camelCase in JavaScript:</p>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>CSS Property</th>
+                            <th>JavaScript Style Property</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>background-color</code></td>
+                            <td><code>backgroundColor</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>font-size</code></td>
+                            <td><code>fontSize</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>border-radius</code></td>
+                            <td><code>borderRadius</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>margin-left</code></td>
+                            <td><code>marginLeft</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>z-index</code></td>
+                            <td><code>zIndex</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="reading_style">
+                <h4>Reading Current Styles</h4>
+                <p>Reading inline styles works the same way, but it only gives you styles that were set directly on the element's <code>style</code> attribute:</p>
+                
+                <div class="code_example">
+                    <pre><code>const heading = document.getElementById('main-title');
+
+// Read inline styles
+console.log(heading.style.color); // Returns the color if set directly as an inline style
+console.log(heading.style.fontSize); // Returns font size if set directly as an inline style
+
+// IMPORTANT: This doesn't give styles from stylesheets!
+// If the color is set in a CSS file rather than inline, heading.style.color will return ''</code></pre>
+                </div>
+                
+                <p>To read the actual computed style of an element (including styles from stylesheets), you need to use <code>getComputedStyle()</code>:</p>
+                
+                <div class="code_example">
+                    <pre><code>const heading = document.getElementById('main-title');
+
+// Get all computed styles
+const computedStyle = window.getComputedStyle(heading);
+
+// Read specific properties
+console.log(computedStyle.color); // Returns the actual color from any source
+console.log(computedStyle.fontSize); // Returns the actual font size from any source
+
+// For pseudo-elements like ::before or ::after
+const beforeStyle = window.getComputedStyle(heading, '::before');
+console.log(beforeStyle.content);</code></pre>
+                </div>
+                
+                <p><strong>Important note:</strong> Computed styles are read-only. You cannot set properties on the object returned by <code>getComputedStyle()</code>.</p>
+            </div>
+            
+            <div class="setting_multiple_styles">
+                <h4>Setting Multiple Styles at Once</h4>
+                <p>To set multiple styles at once, you can use the <code>cssText</code> property:</p>
+                
+                <div class="code_example">
+                    <pre><code>const box = document.querySelector('.box');
+
+// Set multiple styles in one go
+box.style.cssText = 'color: white; background-color: blue; padding: 10px; border-radius: 5px;';
+
+// Or append to existing inline styles
+box.style.cssText += 'margin-top: 20px; font-weight: bold;';</code></pre>
+                </div>
+                
+                <p>Alternatively, you can use the <code>Object.assign()</code> method to apply multiple styles:</p>
+                
+                <div class="code_example">
+                    <pre><code>const box = document.querySelector('.box');
+
+// Apply multiple styles using Object.assign
+Object.assign(box.style, {
+    color: 'white',
+    backgroundColor: 'blue',
+    padding: '10px',
+    borderRadius: '5px',
+    marginTop: '20px',
+    fontWeight: 'bold'
+});</code></pre>
+                </div>
+            </div>
+            
+            <div class="inline_style_limitations">
+                <h4>Limitations of Inline Styles</h4>
+                <p>While inline styles provide direct control, they have several limitations:</p>
+                
+                <ul>
+                    <li><strong>High Specificity:</strong> Inline styles have very high specificity, which can make them hard to override</li>
+                    <li><strong>No Reusability:</strong> Styles applied to one element cannot be easily reused on other elements</li>
+                    <li><strong>No Media Queries:</strong> Inline styles cannot use media queries for responsive design</li>
+                    <li><strong>No Pseudo-Classes/Elements:</strong> Cannot target states like :hover or elements like ::before</li>
+                    <li><strong>Mixing Concerns:</strong> Puts presentation details in your JavaScript, reducing separation of concerns</li>
+                </ul>
+                
+                <p>For these reasons, changing CSS classes is often a better approach than direct style manipulation.</p>
+            </div>
+        </section>
+
+        <section class="css_classes">
+            <h3>Working with CSS Classes</h3>
+            <p>Manipulating CSS classes is a more powerful and maintainable approach to changing element styling:</p>
+            
+            <div class="class_name_property">
+                <h4>The className Property</h4>
+                <p>The traditional way to work with classes is through the <code>className</code> property, which represents the value of the element's <code>class</code> attribute:</p>
+                
+                <div class="code_example">
+                    <pre><code>const box = document.querySelector('.box');
+
+// Get the current classes
+console.log(box.className); // Returns a space-separated string like "box highlighted large"
+
+// Replace all classes
+box.className = 'box active'; // Completely replaces existing classes
+
+// Add a class by appending to className
+box.className += ' highlighted'; // Careful: easy to add duplicate classes this way
+
+// Check if an element has a specific class (clunky way)
+if (box.className.includes('active')) { // Problematic if 'active' is part of another class name
+    console.log('Box is active');
+}</code></pre>
+                </div>
+                
+                <p>Working with <code>className</code> can be error-prone because it operates on a space-separated string rather than a proper collection of classes. This is why modern browsers provide the <code>classList</code> API.</p>
+            </div>
+            
+            <div class="class_list_api">
+                <h4>The classList API</h4>
+                <p>The <code>classList</code> property provides methods to manipulate an element's classes in a much more convenient way:</p>
+                
+                <div class="code_example">
+                    <pre><code>const box = document.querySelector('.box');
+
+// Add classes (doesn't add if already present)
+box.classList.add('active');
+box.classList.add('highlighted', 'large'); // Add multiple classes at once
+
+// Remove classes
+box.classList.remove('inactive');
+box.classList.remove('small', 'hidden'); // Remove multiple classes at once
+
+// Toggle classes (add if not present, remove if present)
+box.classList.toggle('selected'); // Returns true if the class was added, false if removed
+
+// Conditional toggle (second parameter determines whether to add or remove)
+box.classList.toggle('disabled', isDisabled); // Add if isDisabled is true, remove if false
+
+// Replace one class with another
+box.classList.replace('inactive', 'active');
+
+// Check if an element has a specific class
+if (box.classList.contains('active')) {
+    console.log('Box is active');
+}
+
+// Get the number of classes
+console.log(box.classList.length);
+
+// Access classes by index (classList is array-like)
+console.log(box.classList[0]); // First class
+
+// Iterate over all classes
+for (const className of box.classList) {
+    console.log(className);
+}</code></pre>
+                </div>
+                
+                <p>The <code>classList</code> API is much more robust than <code>className</code> and should be your go-to method for manipulating classes.</p>
+            </div>
+            
+            <div class="class_manipulation_patterns">
+                <h4>Common Class Manipulation Patterns</h4>
+                <p>Here are some common patterns for class manipulation in real-world scenarios:</p>
+                
+                <div class="code_example">
+                    <pre><code>// Toggle active state on click
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        // Remove active class from all tabs
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('active');
+        });
+        
+        // Add active class to clicked tab
+        this.classList.add('active');
+    });
+});
+
+// Toggle panel visibility
+document.querySelectorAll('.toggle-button').forEach(button => {
+    button.addEventListener('click', function() {
+        const panel = this.nextElementSibling;
+        panel.classList.toggle('visible');
+        
+        // Update button text based on panel visibility
+        if (panel.classList.contains('visible')) {
+            this.textContent = 'Hide panel';
+        } else {
+            this.textContent = 'Show panel';
+        }
+    });
+});
+
+// Form validation feedback
+document.querySelectorAll('input').forEach(input => {
+    input.addEventListener('blur', function() {
+        // Remove all state classes
+        this.classList.remove('valid', 'invalid');
+        
+        if (this.checkValidity()) {
+            this.classList.add('valid');
+        } else {
+            this.classList.add('invalid');
+        }
+    });
+});
+
+// Conditional rendering based on state
+function updateUserStatus(userId, isOnline) {
+    const userElement = document.querySelector(`.user[data-id="${userId}"]`);
+    
+    userElement.classList.toggle('online', isOnline);
+    userElement.classList.toggle('offline', !isOnline);
+}</code></pre>
+                </div>
+            </div>
+            
+            <div class="why_classes_over_styles">
+                <h4>Why Classes are Better than Inline Styles</h4>
+                <p>There are several reasons to prefer class manipulation over direct style manipulation:</p>
+                
+                <ul>
+                    <li><strong>Separation of Concerns:</strong> Keep styling definitions in CSS, behavioral logic in JavaScript</li>
+                    <li><strong>Reusability:</strong> Apply the same styles to multiple elements by adding the same class</li>
+                    <li><strong>Maintainability:</strong> Update styles in one place (CSS) rather than throughout your JavaScript</li>
+                    <li><strong>Performance:</strong> Changing classes can be more efficient than setting multiple style properties</li>
+                    <li><strong>Full CSS Power:</strong> Use all CSS features including media queries, pseudo-classes, and CSS animations</li>
+                    <li><strong>Encapsulation:</strong> Group related styles together under a single class name</li>
+                    <li><strong>State Representation:</strong> Class names can semantically represent element states (e.g., 'active', 'disabled')</li>
+                </ul>
+                
+                <p><strong>Chess Metaphor:</strong> If direct style manipulation is like moving individual chess pieces one property at a time (change color, change size, change position), class manipulation is like executing well-defined chess strategies with a single move (e.g., "castle kingside"). Both achieve the goal, but the latter is more efficient, maintainable, and communicates intent more clearly.</p>
+            </div>
+        </section>
+
+        <section class="css_variables">
+            <h3>Manipulating CSS Variables</h3>
+            <p>CSS custom properties (variables) provide another powerful way to modify styles dynamically:</p>
+            
+            <div class="css_variables_basics">
+                <h4>What Are CSS Variables?</h4>
+                <p>CSS variables are custom properties that you define and can reference throughout your stylesheet:</p>
+                
+                <div class="code_example">
+                    <pre><code>/* In your CSS */
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2ecc71;
+    --font-size-base: 16px;
+    --spacing-unit: 8px;
+}
+
+.button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: calc(var(--spacing-unit) * 2);
+    font-size: var(--font-size-base);
+}
+
+.button.secondary {
+    background-color: var(--secondary-color);
+}</code></pre>
+                </div>
+                
+                <p>Unlike traditional CSS properties, CSS variables can be modified using JavaScript, making them ideal for dynamic theming and responsive adjustments.</p>
+            </div>
+            
+            <div class="modify_variables">
+                <h4>Manipulating CSS Variables with JavaScript</h4>
+                <p>You can set and get CSS variables using the <code>setProperty()</code> and <code>getPropertyValue()</code> methods:</p>
+                
+                <div class="code_example">
+                    <pre><code>// Set a CSS variable on the :root (affects the whole document)
+document.documentElement.style.setProperty('--primary-color', '#ff5722');
+
+// Set a CSS variable on a specific element
+const header = document.querySelector('header');
+header.style.setProperty('--header-height', '60px');
+
+// Get the value of a CSS variable
+const primaryColor = getComputedStyle(document.documentElement)
+    .getPropertyValue('--primary-color').trim();
+console.log('Primary color:', primaryColor);
+
+// Using CSS variables for dynamic theming
+function setTheme(theme) {
+    if (theme === 'dark') {
+        document.documentElement.style.setProperty('--background-color', '#222');
+        document.documentElement.style.setProperty('--text-color', '#eee');
+        document.documentElement.style.setProperty('--primary-color', '#5c6bc0');
+    } else {
+        document.documentElement.style.setProperty('--background-color', '#fff');
+        document.documentElement.style.setProperty('--text-color', '#333');
+        document.documentElement.style.setProperty('--primary-color', '#3f51b5');
+    }
+}</code></pre>
+                </div>
+                
+                <p>CSS variables are particularly useful for theme switching, responsive adjustments, and creating components with customizable styles.</p>
+            </div>
+            
+            <div class="variables_advantages">
+                <h4>Advantages of CSS Variables</h4>
+                <p>CSS variables offer several benefits for dynamic styling:</p>
+                
+                <ul>
+                    <li><strong>Cascading Nature:</strong> Changes to variables cascade down to all elements using them</li>
+                    <li><strong>Reduced Redundancy:</strong> Define a value once and use it many places</li>
+                    <li><strong>Scope Control:</strong> Set variables at different levels (root, component, element)</li>
+                    <li><strong>Runtime Updates:</strong> Change appearance across the site by updating a few variables</li>
+                    <li><strong>Better Performance:</strong> More efficient than updating many individual style properties</li>
+                    <li><strong>Contextual Changes:</strong> Variables can be adjusted based on media queries or container context</li>
+                </ul>
+                
+                <div class="code_example">
+                    <pre><code>// Example: Creating a customizable button component with CSS variables
+.custom-button {
+    --button-bg: #3498db;
+    --button-color: white;
+    --button-padding: 10px 20px;
+    --button-radius: 4px;
+    
+    background-color: var(--button-bg);
+    color: var(--button-color);
+    padding: var(--button-padding);
+    border-radius: var(--button-radius);
+    border: none;
+    cursor: pointer;
+}
+
+// JavaScript to customize button instances
+document.querySelectorAll('.custom-button').forEach((button, index) => {
+    // Create different colored buttons
+    const hue = (index * 40) % 360;
+    button.style.setProperty('--button-bg', `hsl(${hue}, 70%, 60%)`);
+    
+    // Make every third button rounded
+    if (index % 3 === 0) {
+        button.style.setProperty('--button-radius', '25px');
+    }
+});</code></pre>
+                </div>
+                
+                <p><strong>Central Heating Metaphor:</strong> CSS variables are like a central heating system in a building. Instead of adjusting the temperature in each room individually (changing multiple style properties), you can simply adjust the thermostat (the CSS variable) and the change propagates throughout the entire building automatically.</p>
+            </div>
+        </section>
+
+        <section class="dynamic_media_queries">
+            <h3>Responding to Viewport and Media Changes</h3>
+            <p>Modern web applications need to adapt to different screen sizes and media preferences:</p>
+            
+            <div class="responsive_classes">
+                <h4>Adding Responsive Classes</h4>
+                <p>One approach is to add or remove classes based on viewport size:</p>
+                
+                <div class="code_example">
+                    <pre><code>// Update classes based on viewport width
+function updateResponsiveClasses() {
+    const viewport = window.innerWidth;
+    const body = document.body;
+    
+    // Remove all responsive classes
+    body.classList.remove('viewport-xs', 'viewport-sm', 'viewport-md', 'viewport-lg', 'viewport-xl');
+    
+    // Add appropriate class
+    if (viewport < 576) {
+        body.classList.add('viewport-xs');
+    } else if (viewport < 768) {
+        body.classList.add('viewport-sm');
+    } else if (viewport < 992) {
+        body.classList.add('viewport-md');
+    } else if (viewport < 1200) {
+        body.classList.add('viewport-lg');
+    } else {
+        body.classList.add('viewport-xl');
+    }
+}
+
+// Initial call
+updateResponsiveClasses();
+
+// Update on window resize
+window.addEventListener('resize', updateResponsiveClasses);</code></pre>
+                </div>
+                
+                <p>This approach allows you to apply different styles based on the current viewport size by targeting these classes in your CSS.</p>
+            </div>
+            
+            <div class="media_queries_js">
+                <h4>JavaScript Media Queries</h4>
+                <p>The <code>matchMedia()</code> API allows you to check media queries directly in JavaScript:</p>
+                
+                <div class="code_example">
+                    <pre><code>// Check if viewport matches a media query
+const isMobile = window.matchMedia('(max-width: 767px)').matches;
+
+if (isMobile) {
+    // Apply mobile-specific behaviors
+    document.querySelector('.navigation').classList.add('collapsed');
+}
+
+// React to media query changes
+const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+function handleDarkModeChange(e) {
+    if (e.matches) {
+        document.body.classList.add('dark-theme');
+    } else {
+        document.body.classList.remove('dark-theme');
+    }
+}
+
+// Initial check
+handleDarkModeChange(darkModeQuery);
+
+// Listen for changes
+darkModeQuery.addEventListener('change', handleDarkModeChange);</code></pre>
+                </div>
+                
+                <p>The <code>matchMedia()</code> API is especially useful for adapting JavaScript behavior based on the same media queries you use in CSS, ensuring consistent responsive behavior.</p>
+            </div>
+            
+            <div class="layout_manipulation">
+                <h4>Dynamic Layout Manipulation</h4>
+                <p>Sometimes you need to reorganize the DOM based on viewport size:</p>
+                
+                <div class="code_example">
+                    <pre><code>// Move elements in the DOM based on viewport size
+function updateLayout() {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    const sidebarContent = document.getElementById('sidebar-content');
+    const mobileSidebarContainer = document.getElementById('mobile-sidebar-container');
+    
+    if (window.innerWidth < 768) {
+        // Mobile layout: Move sidebar content to the mobile container
+        if (sidebarContent.parentNode === sidebar) {
+            mobileSidebarContainer.appendChild(sidebarContent);
+        }
+    } else {
+        // Desktop layout: Move sidebar content back to sidebar
+        if (sidebarContent.parentNode === mobileSidebarContainer) {
+            sidebar.appendChild(sidebarContent);
+        }
+    }
+}
+
+// Initial call and resize listener
+updateLayout();
+window.addEventListener('resize', updateLayout);</code></pre>
+                </div>
+                
+                <p>This approach can be useful for more complex layout changes that cannot be achieved with CSS alone, though CSS should generally be preferred for responsive layouts when possible.</p>
+            </div>
+        </section>
+
+        <section class="animations_transitions">
+            <h3>CSS Transitions and Animations with JavaScript</h3>
+            <p>JavaScript can trigger CSS transitions and animations by changing classes or properties:</p>
+            
+            <div class="css_transitions">
+                <h4>Working with CSS Transitions</h4>
+                <p>CSS transitions provide smooth interpolation between property values:</p>
+                
+                <div class="code_example">
+                    <pre><code>/* CSS */
+.box {
+    width: 100px;
+    height: 100px;
+    background-color: #3498db;
+    transition: all 0.3s ease-in-out;
+}
+
+.box.expanded {
+    width: 200px;
+    height: 200px;
+    background-color: #e74c3c;
+}
+
+/* JavaScript */
+const box = document.querySelector('.box');
+
+box.addEventListener('click', function() {
+    // Toggle the class to trigger the transition
+    this.classList.toggle('expanded');
+});</code></pre>
+                </div>
+                
+                <p>Using classes to trigger transitions is often the most maintainable approach. The transition logic stays in your CSS, while JavaScript simply toggles the state.</p>
+            </div>
+            
+            <div class="transition_events">
+                <h4>Transition Events</h4>
+                <p>You can listen for the completion of a CSS transition:</p>
+                
+                <div class="code_example">
+                    <pre><code>const box = document.querySelector('.box');
+
+box.addEventListener('click', function() {
+    this.classList.add('expanded');
+});
+
+// Listen for the transition end event
+box.addEventListener('transitionend', function(event) {
+    console.log(`Transition for ${event.propertyName} has completed`);
+    
+    // You can perform actions after the transition completes
+    if (event.propertyName === 'width' && this.classList.contains('expanded')) {
+        this.textContent = 'Expanded!';
+    }
+});</code></pre>
+                </div>
+                
+                <p>The <code>transitionend</code> event fires for each CSS property that transitions, so you may need to check which property triggered the event.</p>
+            </div>
+            
+            <div class="css_animations">
+                <h4>Working with CSS Animations</h4>
+                <p>CSS animations allow for more complex multi-step animations:</p>
+                
+                <div class="code_example">
+                    <pre><code>/* CSS */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.box {
+    width: 100px;
+    height: 100px;
+    background-color: #3498db;
+}
+
+.box.animated {
+    animation: pulse 1s ease-in-out infinite;
+}
+
+/* JavaScript */
+const box = document.querySelector('.box');
+
+box.addEventListener('mouseenter', function() {
+    this.classList.add('animated');
+});
+
+box.addEventListener('mouseleave', function() {
+    this.classList.remove('animated');
+});</code></pre>
+                </div>
+                
+                <p>Like with transitions, the best practice is to define animations in CSS and use JavaScript to add/remove classes that apply those animations.</p>
+            </div>
+            
+            <div class="animation_events">
+                <h4>Animation Events</h4>
+                <p>You can listen for animation events to respond to different stages:</p>
+                
+                <div class="code_example">
+                    <pre><code>const box = document.querySelector('.box');
+
+// Animation starts
+box.addEventListener('animationstart', function() {
+    console.log('Animation has started');
+});
+
+// Animation iteration completes (useful for looped animations)
+box.addEventListener('animationiteration', function() {
+    console.log('Animation iteration completed');
+});
+
+// Animation ends (doesn't fire for infinite animations)
+box.addEventListener('animationend', function() {
+    console.log('Animation has ended');
+    
+    // Perhaps remove the class or change state after animation
+    this.classList.remove('animated');
+    this.classList.add('animation-completed');
+});</code></pre>
+                </div>
+            </div>
+            
+            <div class="animation_control">
+                <h4>Dynamic Control of Animations</h4>
+                <p>You can control animation properties dynamically:</p>
+                
+                <div class="code_example">
+                    <pre><code>const box = document.querySelector('.box');
+
+// Start animation on click
+box.addEventListener('click', function() {
+    // Set animation properties directly
+    this.style.animation = 'pulse 1s ease-in-out infinite';
+    
+    // Or using more specific properties
+    this.style.animationName = 'pulse';
+    this.style.animationDuration = '1s';
+    this.style.animationTimingFunction = 'ease-in-out';
+    this.style.animationIterationCount = 'infinite';
+});
+
+// Speed up animation on hover
+box.addEventListener('mouseenter', function() {
+    this.style.animationDuration = '0.5s';
+});
+
+// Slow down animation on mouse leave
+box.addEventListener('mouseleave', function() {
+    this.style.animationDuration = '2s';
+});
+
+// Stop animation
+document.getElementById('stop-button').addEventListener('click', function() {
+    box.style.animation = 'none';
+});</code></pre>
+                </div>
+                
+                <p>Using CSS variables with animations provides even more flexibility:</p>
+                
+                <div class="code_example">
+                    <pre><code>/* CSS */
+.box {
+    --animation-duration: 1s;
+    --animation-scale: 1.2;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(var(--animation-scale)); }
+    100% { transform: scale(1); }
+}
+
+.box.animated {
+    animation: pulse var(--animation-duration) ease-in-out infinite;
+}
+
+/* JavaScript */
+const box = document.querySelector('.box');
+
+document.getElementById('speed-slider').addEventListener('input', function() {
+    // Update animation duration based on slider value (0.1s to 2s)
+    const duration = (this.max - this.value) / 50 + 0.1;
+    box.style.setProperty('--animation-duration', `${duration}s`);
+});
+
+document.getElementById('scale-slider').addEventListener('input', function() {
+    // Update animation scale based on slider value (1.1 to 2.0)
+    const scale = (this.value / 100) + 1.1;
+    box.style.setProperty('--animation-scale', scale);
+});</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="computed_style">
+            <h3>Working with Computed Styles</h3>
+            <p>Sometimes you need to know the actual computed values of styles:</p>
+            
+            <div class="getting_computed">
+                <h4>Getting Computed Styles</h4>
+                <p>The <code>getComputedStyle()</code> method returns all computed styles for an element:</p>
+                
+                <div class="code_example">
+                    <pre><code>const element = document.getElementById('my-element');
+const computedStyle = window.getComputedStyle(element);
+
+// Get specific computed properties
+const width = computedStyle.width;
+const color = computedStyle.color;
+const fontSize = computedStyle.fontSize;
+
+console.log(`Element dimensions: ${width} x ${computedStyle.height}`);
+console.log(`Text styling: ${color} font at ${fontSize}`);
+
+// Converting to actual pixels (computed values often include units)
+// parseFloat removes the 'px' and converts to a number
+const widthInPixels = parseFloat(computedStyle.width);
+const heightInPixels = parseFloat(computedStyle.height);
+
+// Now you can perform calculations
+const area = widthInPixels * heightInPixels;
+console.log(`Element area: ${area} square pixels`);</code></pre>
+                </div>
+                
+                <p>Computed styles are particularly useful when you need to:</p>
+                <ul>
+                    <li>Base animations on current dimensions or positions</li>
+                    <li>Compare actual applied styles to expected values</li>
+                    <li>Make calculations based on element dimensions</li>
+                    <li>Check if styles are being properly applied</li>
+                </ul>
+                
+                <p><strong>Reminder:</strong> Computed style objects are read-only. To change styles, use the <code>style</code> property or change classes.</p>
+            </div>
+            
+            <div class="computed_styles_usage">
+                <h4>Practical Uses for Computed Styles</h4>
+                
+                <div class="code_example">
+                    <pre><code>// Example 1: Dynamic height animation based on content
+function expandElement(element) {
+    // First, get the natural height by temporarily removing constraints
+    element.style.height = 'auto';
+    const autoHeight = element.offsetHeight;
+    
+    // Reset to 0 height for animation starting point
+    element.style.height = '0px';
+    
+    // Trigger reflow to ensure the browser recognizes the change
+    element.offsetHeight; // This line forces a reflow
+    
+    // Now set transition and animate to full height
+    element.style.transition = 'height 0.3s ease-out';
+    element.style.height = autoHeight + 'px';
+    
+    // Remove the fixed height after animation completes
+    element.addEventListener('transitionend', function handler() {
+        element.style.height = 'auto';
+        element.removeEventListener('transitionend', handler);
+    });
+}
+
+// Example 2: Positioning an element relative to another
+function positionTooltip(tooltip, targetElement) {
+    const targetRect = targetElement.getBoundingClientRect();
+    const computedStyle = window.getComputedStyle(targetElement);
+    
+    // Position tooltip centered above the target
+    tooltip.style.left = `${targetRect.left + targetRect.width / 2}px`;
+    tooltip.style.top = `${targetRect.top - parseFloat(computedStyle.marginTop) - 10}px`;
+    tooltip.style.transform = 'translateX(-50%)';
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="style_performance">
+            <h3>Style Manipulation Performance</h3>
+            <p>Style changes can trigger expensive browser operations. Here's how to optimize performance:</p>
+            
+            <div class="reflow_repaint">
+                <h4>Understanding Reflow and Repaint</h4>
+                <ul>
+                    <li><strong>Reflow (Layout):</strong> Recalculating element positions and dimensions</li>
+                    <li><strong>Repaint:</strong> Redrawing pixels on the screen</li>
+                </ul>
+                
+                <p>Changing certain properties triggers both reflow and repaint (expensive):</p>
+                <ul>
+                    <li>width, height, margin, padding</li>
+                    <li>position, top, left, right, bottom</li>
+                    <li>font-size, font-family</li>
+                    <li>display, float, text-align</li>
+                </ul>
+                
+                <p>Other properties only trigger repaint (less expensive):</p>
+                <ul>
+                    <li>color, background-color</li>
+                    <li>visibility, text-decoration</li>
+                    <li>box-shadow, border-radius</li>
+                </ul>
+            </div>
+            
+            <div class="performance_tips">
+                <h4>Performance Best Practices</h4>
+                
+                <ul>
+                    <li><strong>Batch DOM Operations:</strong> Group style changes together to minimize reflows</li>
+                    <li><strong>Use CSS Classes:</strong> Change multiple styles with a single class change</li>
+                    <li><strong>Transform and Opacity:</strong> Use transform and opacity for animations when possible as they're GPU-accelerated</li>
+                    <li><strong>Avoid Inline Styles for Frequent Changes:</strong> Use predefined classes instead</li>
+                    <li><strong>Be Careful with getComputedStyle:</strong> It forces a reflow to get current values</li>
+                    <li><strong>Use requestAnimationFrame for Animations:</strong> Syncs with the browser's rendering cycle</li>
+                </ul>
+                
+                <div class="code_example">
+                    <pre><code>// Bad: Multiple separate style changes
+function updateElementBad(element) {
+    element.style.width = '200px';      // Causes reflow
+    element.style.height = '100px';     // Causes another reflow
+    element.style.marginTop = '20px';   // Yet another reflow
+    element.style.marginLeft = '15px';  // And another reflow
+}
+
+// Better: Batch changes with cssText
+function updateElementBetter(element) {
+    element.style.cssText = 'width: 200px; height: 100px; margin-top: 20px; margin-left: 15px;';
+    // Only one reflow
+}
+
+// Best: Use class changes
+function updateElementBest(element) {
+    element.classList.add('updated-element');
+    // Only one reflow, and style definitions remain in CSS
+}</code></pre>
+                </div>
+                
+                <p>For animations, use <code>requestAnimationFrame</code> to sync with the browser's render cycle:</p>
+                
+                <div class="code_example">
+                    <pre><code>// Smooth animation with requestAnimationFrame
+function animateElement(element, duration) {
+    const startTime = performance.now();
+    
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Calculate current position
+        const translateX = progress * 300; // Move 300px to the right
+        
+        // Update using transform (efficient)
+        element.style.transform = `translateX(${translateX}px)`;
+        
+        // Continue animation if not complete
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        }
+    }
+    
+    requestAnimationFrame(update);
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="practical_applications">
+            <h3>Practical Applications</h3>
+            <p>Let's explore some real-world examples of style and class manipulation:</p>
+            
+            <div class="theme_switcher">
+                <h4>Example 1: Theme Switcher</h4>
+                
+                <div class="code_example">
+                    <pre><code>// HTML:
+// &lt;button id="theme-toggle"&gt;Toggle Dark Mode&lt;/button&gt;
+// &lt;div id="app" class="light-theme"&gt;...content...&lt;/div&gt;
+
+// CSS:
+// :root {
+//   --light-bg: #ffffff;
+//   --light-text: #333333;
+//   --dark-bg: #222222;
+//   --dark-text: #f0f0f0;
+// }
+//
+// .light-theme {
+//   --bg-color: var(--light-bg);
+//   --text-color: var(--light-text);
+// }
+//
+// .dark-theme {
+//   --bg-color: var(--dark-bg);
+//   --text-color: var(--dark-text);
+// }
+//
+// #app {
+//   background-color: var(--bg-color);
+//   color: var(--text-color);
+//   transition: background-color 0.3s, color 0.3s;
+// }
+
+// JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    const themeToggle = document.getElementById('theme-toggle');
+    const app = document.getElementById('app');
+    
+    // Check for saved theme preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        app.className = savedTheme;
+        updateButtonText();
+    }
+    
+    // Handle toggle click
+    themeToggle.addEventListener('click', function() {
+        // Toggle theme class
+        if (app.classList.contains('light-theme')) {
+            app.classList.replace('light-theme', 'dark-theme');
+            localStorage.setItem('theme', 'dark-theme');
+        } else {
+            app.classList.replace('dark-theme', 'light-theme');
+            localStorage.setItem('theme', 'light-theme');
+        }
+        
+        updateButtonText();
+    });
+    
+    // Update button text based on current theme
+    function updateButtonText() {
+        if (app.classList.contains('dark-theme')) {
+            themeToggle.textContent = 'Switch to Light Mode';
+        } else {
+            themeToggle.textContent = 'Switch to Dark Mode';
+        }
+    }
+    
+    // Bonus: Also respect system preference
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    systemPrefersDark.addEventListener('change', function(e) {
+        // Only auto-switch if user hasn't set a preference
+        if (!localStorage.getItem('theme')) {
+            if (e.matches) {
+                app.classList.replace('light-theme', 'dark-theme');
+            } else {
+                app.classList.replace('dark-theme', 'light-theme');
+            }
+            updateButtonText();
+        }
+    });
+});</code></pre>
+                </div>
+                
+                <p>This example demonstrates how to implement a theme switcher using CSS variables and class toggling, with preferences saved to localStorage.</p>
+            </div>
+            
+            <div class="accordion_component">
+                <h4>Example 2: Accordion Component</h4>
+                
+                <div class="code_example">
+                    <pre><code>// HTML:
+// &lt;div class="accordion"&gt;
+//   &lt;div class="accordion-item"&gt;
+//     &lt;button class="accordion-header"&gt;Section 1&lt;/button&gt;
+//     &lt;div class="accordion-content"&gt;Content for section 1...&lt;/div&gt;
+//   &lt;/div&gt;
+//   &lt;div class="accordion-item"&gt;
+//     &lt;button class="accordion-header"&gt;Section 2&lt;/button&gt;
+//     &lt;div class="accordion-content"&gt;Content for section 2...&lt;/div&gt;
+//   &lt;/div&gt;
+// &lt;/div&gt;
+
+// CSS:
+// .accordion-content {
+//   max-height: 0;
+//   overflow: hidden;
+//   transition: max-height 0.3s ease-out;
+// }
+//
+// .accordion-header {
+//   background-color: #f0f0f0;
+//   transition: background-color 0.2s;
+// }
+//
+// .accordion-header.active {
+//   background-color: #e0e0e0;
+// }
+//
+// .accordion-header::after {
+//   content: '+';
+//   float: right;
+//   transition: transform 0.2s;
+// }
+//
+// .accordion-header.active::after {
+//   transform: rotate(45deg);
+// }
+
+// JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    const accordionHeaders = document.querySelectorAll('.accordion-header');
+    
+    accordionHeaders.forEach(header => {
+        header.addEventListener('click', function() {
+            // Toggle active class on the header
+            this.classList.toggle('active');
+            
+            // Get the content panel
+            const content = this.nextElementSibling;
+            
+            // Toggle the panel
+            if (this.classList.contains('active')) {
+                content.style.maxHeight = content.scrollHeight + 'px';
+            } else {
+                content.style.maxHeight = 0;
+            }
+            
+            // Optional: Close other panels
+            if (this.classList.contains('active')) {
+                accordionHeaders.forEach(otherHeader => {
+                    if (otherHeader !== this && otherHeader.classList.contains('active')) {
+                        otherHeader.classList.remove('active');
+                        otherHeader.nextElementSibling.style.maxHeight = 0;
+                    }
+                });
+            }
+        });
+    });
+});</code></pre>
+                </div>
+                
+                <p>This accordion example shows how to combine class toggling with direct style manipulation for animation, while still keeping most styling in CSS.</p>
+            </div>
+            
+            <div class="form_validation">
+                <h4>Example 3: Form Field Validation</h4>
+                
+                <div class="code_example">
+                    <pre><code>// HTML:
+// &lt;form id="registration-form"&gt;
+//   &lt;div class="form-group"&gt;
+//     &lt;label for="username"&gt;Username:&lt;/label&gt;
+//     &lt;input type="text" id="username" required minlength="3" maxlength="20"&gt;
+//     &lt;div class="error-message"&gt;&lt;/div&gt;
+//   &lt;/div&gt;
+//   &lt;div class="form-group"&gt;
+//     &lt;label for="email"&gt;Email:&lt;/label&gt;
+//     &lt;input type="email" id="email" required&gt;
+//     &lt;div class="error-message"&gt;&lt;/div&gt;
+//   &lt;/div&gt;
+//   &lt;div class="form-group"&gt;
+//     &lt;label for="password"&gt;Password:&lt;/label&gt;
+//     &lt;input type="password" id="password" required minlength="8"&gt;
+//     &lt;div class="error-message"&gt;&lt;/div&gt;
+//   &lt;/div&gt;
+//   &lt;button type="submit"&gt;Register&lt;/button&gt;
+// &lt;/form&gt;
+
+// CSS:
+// .form-group {
+//   margin-bottom: 15px;
+//   position: relative;
+// }
+//
+// input {
+//   border: 2px solid #ddd;
+//   transition: border-color 0.3s;
+// }
+//
+// input.valid {
+//   border-color: #2ecc71;
+// }
+//
+// input.invalid {
+//   border-color: #e74c3c;
+// }
+//
+// .error-message {
+//   color: #e74c3c;
+//   font-size: 0.85em;
+//   margin-top: 5px;
+//   height: 0;
+//   overflow: hidden;
+//   transition: height 0.3s;
+// }
+//
+// .error-message.visible {
+//   height: auto;
+//   min-height: 20px;
+// }
+
+// JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registration-form');
+    const inputs = form.querySelectorAll('input');
+    
+    // Validation rules object
+    const validationRules = {
+        username: {
+            pattern: /^[a-zA-Z0-9_]{3,20}$/,
+            message: 'Username must be 3-20 characters and contain only letters, numbers, and underscores.'
+        },
+        email: {
+            pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            message: 'Please enter a valid email address.'
+        },
+        password: {
+            pattern: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
+            message: 'Password must be at least 8 characters long and include at least one letter and one number.'
+        }
+    };
+    
+    // Add validation to each input
+    inputs.forEach(input => {
+        // Validate on blur
+        input.addEventListener('blur', function() {
+            validateInput(this);
+        });
+        
+        // Real-time validation for better UX (with debounce)
+        let debounceTimeout;
+        input.addEventListener('input', function() {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => {
+                validateInput(this);
+            }, 500);
+        });
+    });
+    
+    // Form submission
+    form.addEventListener('submit', function(event) {
+        let isValid = true;
+        
+        // Validate all inputs
+        inputs.forEach(input => {
+            if (!validateInput(input)) {
+                isValid = false;
+            }
+        });
+        
+        // Prevent submission if any input is invalid
+        if (!isValid) {
+            event.preventDefault();
+        }
+    });
+    
+    // Validation function
+    function validateInput(input) {
+        // Remove existing states
+        input.classList.remove('valid', 'invalid');
+        
+        const errorElement = input.nextElementSibling;
+        errorElement.textContent = '';
+        errorElement.classList.remove('visible');
+        
+        // Required field validation
+        if (input.required && !input.value.trim()) {
+            input.classList.add('invalid');
+            errorElement.textContent = 'This field is required.';
+            errorElement.classList.add('visible');
+            return false;
+        }
+        
+        // Skip other validation if field is empty and not required
+        if (!input.value.trim()) {
+            return true;
+        }
+        
+        // Length validation
+        if (input.minLength && input.value.length < input.minLength) {
+            input.classList.add('invalid');
+            errorElement.textContent = `Must be at least ${input.minLength} characters.`;
+            errorElement.classList.add('visible');
+            return false;
+        }
+        
+        // Pattern validation
+        const rule = validationRules[input.id];
+        if (rule && !rule.pattern.test(input.value)) {
+            input.classList.add('invalid');
+            errorElement.textContent = rule.message;
+            errorElement.classList.add('visible');
+            return false;
+        }
+        
+        // Type-specific validation
+        if (input.type === 'email' && !validationRules.email.pattern.test(input.value)) {
+            input.classList.add('invalid');
+            errorElement.textContent = 'Please enter a valid email address.';
+            errorElement.classList.add('visible');
+            return false;
+        }
+        
+        // If we've passed all validations
+        input.classList.add('valid');
+        return true;
+    }
+});</code></pre>
+                </div>
+                
+                <p>This form validation example shows how to manage validation states through classes, with real-time feedback and smooth transitions for error messages.</p>
+            </div>
+        </section>
+
+        <section class="practice_exercises">
+            <h3>Practice Exercises</h3>
+            
+            <div class="exercise">
+                <h4>Exercise 1: Interactive Image Gallery</h4>
+                <p>Create a gallery with these features:</p>
+                <ul>
+                    <li>Thumbnail images that enlarge on click</li>
+                    <li>Navigation buttons to move between images</li>
+                    <li>Smooth transitions between images</li>
+                    <li>Lightbox mode that darkens the rest of the page</li>
+                    <li>Close button to exit lightbox mode</li>
+                </ul>
+                <p>This exercise will practice class manipulation, transitions, and element positioning.</p>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 2: Customizable UI Component</h4>
+                <p>Build a card component with these features:</p>
+                <ul>
+                    <li>UI controls to change appearance (color, size, border radius)</li>
+                    <li>Settings panel that can be toggled open/closed</li>
+                    <li>Option to save configuration to localStorage</li>
+                    <li>Reset button to restore defaults</li>
+                </ul>
+                <p>This exercise will practice CSS variables, inline styles, and local storage.</p>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 3: Animated Navigation Menu</h4>
+                <p>Create a responsive navigation menu with:</p>
+                <ul>
+                    <li>Dropdown submenus that animate open/closed</li>
+                    <li>Highlight effects for the current page</li>
+                    <li>Mobile hamburger menu that transforms into a full menu</li>
+                    <li>Smooth transitions between states</li>
+                </ul>
+                <p>This exercise will practice class toggling, media queries, and animations.</p>
+            </div>
+        </section>
+
+        <section class="summary">
+            <h3>Lecture Summary</h3>
+            <p>In this exploration of modifying element styles and classes, we've covered:</p>
+            
+            <ul>
+                <li>Working with inline styles through the <code>style</code> object</li>
+                <li>Manipulating CSS classes using <code>className</code> and <code>classList</code></li>
+                <li>Using CSS variables for dynamic styling</li>
+                <li>Adapting to viewport size with media queries and responsive classes</li>
+                <li>Triggering CSS transitions and animations</li>
+                <li>Reading computed styles to get actual rendered values</li>
+                <li>Performance considerations and best practices</li>
+                <li>Practical applications like theme switching, accordions, and form validation</li>
+            </ul>
+            
+            <p>With these techniques, you can create dynamic, responsive interfaces that adapt to user interactions and preferences. Combined with element selection, traversal, creation, and event handling, you now have a comprehensive toolkit for DOM manipulation.</p>
+            
+            <p>In our next sessions, we'll explore more advanced techniques for building interactive web applications, including handling browser storage and working with APIs.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+        <p>This lecture: <code>/04week/04week_4day_h.html</code></p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Organization and Best Practices</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>CSS Organization and Best Practices</h1>
+        <h2>Week 4: Tuesday Afternoon Session</h2>
+    </header>
+
+    <main>
+        <section class="lecture_intro">
+            <h3>The Importance of Organized CSS</h3>
+            <p>Welcome to our exploration of CSS organization and best practices! Now that we've covered the fundamentals of CSS, we need to address an equally important aspect: how to structure and maintain your styles as projects grow in complexity.</p>
+            
+            <p>One of the biggest challenges in web development isn't writing CSS that works—it's writing CSS that continues to work as your project evolves. Poorly organized CSS quickly becomes difficult to maintain, leading to inconsistencies, specificity conflicts, and the dreaded "CSS specificity wars" where developers add increasingly specific selectors just to override existing styles.</p>
+            
+            <p>In this session, we'll explore methodologies, techniques, and tools to help you write clean, maintainable CSS. We'll discuss naming conventions, file organization, and best practices that will serve you well in both small personal projects and large team environments.</p>
+        </section>
+
+        <section class="file_locations">
+            <h3>File Organization</h3>
+            <p>For today's session, we'll use the following files:</p>
+            <ul>
+                <li><strong>CSS Folder:</strong> <code>styles/</code> in your project root</li>
+                <li><strong>Example Stylesheet:</strong> <code>styles/organization_examples.css</code></li>
+                <li><strong>HTML File:</strong> <code>css_organization.html</code> in your project root</li>
+            </ul>
+            <p>Make sure to create these files and link them properly before we begin the exercises.</p>
+        </section>
+
+        <section class="css_organization_problems">
+            <h3>Common CSS Organization Problems</h3>
+            <p>Before diving into solutions, let's understand the common problems that arise in CSS codebases:</p>
+            
+            <h4>The Specificity Problem</h4>
+            <p>CSS specificity determines which styles are applied when multiple rules target the same element. When specificity isn't managed well, you end up with:</p>
+            <ul>
+                <li>Overriding styles with increasingly specific selectors</li>
+                <li>Excessive use of <code>!important</code></li>
+                <li>Difficulty predicting which styles will be applied</li>
+                <li>CSS that's hard to refactor or modify</li>
+            </ul>
+            
+            <pre><code>/* Specificity war example */
+.sidebar .nav li a { color: blue; }
+.sidebar .nav li a.active { color: red; }
+
+/* Later in the codebase... */
+.sidebar .nav li a { color: green !important; } /* Now we've broken the active style */
+
+/* And later still... */
+.sidebar .nav li a.active { color: orange !important; } /* Fighting fire with fire */</code></pre>
+            
+            <p><strong>Real-world analogy:</strong> Think of specificity like authority in a workplace. If a manager (class) and a VP (ID) give conflicting instructions, the VP's instructions take precedence. If multiple managers give conflicting instructions, the one with the most specific authority over your role wins. When everyone starts shouting "This is important!" (!important), chaos ensues.</p>
+            
+            <h4>The Global Scope Problem</h4>
+            <p>CSS operates in a global scope by default, which means:</p>
+            <ul>
+                <li>Styles defined for one component can accidentally affect others</li>
+                <li>Class names must be unique across the entire project</li>
+                <li>It's difficult to know if changing a style will have unintended consequences</li>
+            </ul>
+            
+            <pre><code>/* Global scope problem example */
+/* In navigation.css */
+.card {
+    border: 1px solid #ddd;
+    padding: 15px;
+}
+
+/* In features.css - developer doesn't know .card is already used */
+.card {
+    display: flex;
+    background: #f5f5f5;
+    /* Now all cards in the site are affected, not just feature cards */
+}</code></pre>
+            
+            <p><strong>Real-world analogy:</strong> Imagine a city where every resident must have a completely unique name. As the city grows, naming new babies becomes increasingly difficult, and calling out someone's name might accidentally summon multiple people from across town.</p>
+            
+            <h4>The Maintainability Problem</h4>
+            <p>As projects grow, CSS codebases face maintainability challenges:</p>
+            <ul>
+                <li>Developers afraid to remove CSS in case it's still used somewhere</li>
+                <li>"Just in case" CSS that's duplicated rather than reused</li>
+                <li>Growing file sizes that affect performance</li>
+                <li>Inconsistent design patterns implemented differently across the site</li>
+            </ul>
+            
+            <pre><code>/* Maintainability problem example */
+/* Is this used anywhere? Better not delete it... */
+.legacy-component {
+    /* 50 lines of CSS that might be important */
+}
+
+/* New component - not sure if there's a utility for this */
+.new-component {
+    /* Duplicates 30 lines from the legacy component */
+}</code></pre>
+            
+            <p><strong>Real-world analogy:</strong> It's like a garage where nothing gets thrown away because "we might need it someday." Eventually, finding what you actually need becomes impossible, and you start buying duplicates rather than searching through the clutter.</p>
+        </section>
+
+        <section class="css_organization_methodologies">
+            <h3>CSS Organization Methodologies</h3>
+            <p>Over the years, developers have created methodologies to address CSS organization challenges. Let's explore the most influential ones:</p>
+            
+            <h4>OOCSS (Object Oriented CSS)</h4>
+            <p>OOCSS, developed by Nicole Sullivan, focuses on two main principles:</p>
+            <ol>
+                <li><strong>Separation of structure from skin:</strong> Define reusable visual patterns independent of structural ones</li>
+                <li><strong>Separation of container from content:</strong> An element should look the same regardless of its location</li>
+            </ol>
+            
+            <pre><code>/* OOCSS Example */
+/* Structure */
+.btn {
+    display: inline-block;
+    padding: 0.5em 1em;
+    border-radius: 4px;
+}
+
+/* Skin */
+.btn-primary {
+    background-color: #0066cc;
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Usage */
+&lt;button class="btn btn-primary"&gt;Primary Action&lt;/button&gt;
+&lt;button class="btn btn-secondary"&gt;Secondary Action&lt;/button&gt;</code></pre>
+            
+            <p><strong>Key benefit:</strong> Encourages reuse and reduces duplication by creating composable classes. Components can mix and match various "skins" while maintaining the same structure.</p>
+            
+            <h4>BEM (Block, Element, Modifier)</h4>
+            <p>BEM, developed by Yandex, is a naming convention methodology that creates namespaced class names:</p>
+            <ul>
+                <li><strong>Block:</strong> Standalone component that is meaningful on its own (e.g., <code>.card</code>)</li>
+                <li><strong>Element:</strong> A part of a block with no standalone meaning (e.g., <code>.card__title</code>)</li>
+                <li><strong>Modifier:</strong> A variant or extension of a block or element (e.g., <code>.card--featured</code>)</li>
+            </ul>
+            
+            <pre><code>/* BEM Example */
+/* Block */
+.card {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+}
+
+/* Elements */
+.card__title {
+    font-size: 1.2rem;
+    margin-top: 0;
+}
+
+.card__image {
+    width: 100%;
+    height: auto;
+}
+
+.card__content {
+    margin-top: 15px;
+}
+
+/* Modifiers */
+.card--featured {
+    border-color: #0066cc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Usage */
+&lt;div class="card card--featured"&gt;
+    &lt;h2 class="card__title"&gt;Card Title&lt;/h2&gt;
+    &lt;img class="card__image" src="image.jpg" alt=""&gt;
+    &lt;div class="card__content"&gt;
+        Card content here...
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+            
+            <p><strong>Key benefit:</strong> Classes clearly communicate their purpose and relationship, reducing naming conflicts and making the structure of components explicit in the markup.</p>
+            
+            <h4>SMACSS (Scalable and Modular Architecture for CSS)</h4>
+            <p>SMACSS, developed by Jonathan Snook, categorizes CSS rules into five types:</p>
+            <ol>
+                <li><strong>Base:</strong> Default styles for HTML elements (no classes or IDs)</li>
+                <li><strong>Layout:</strong> Major layout components that divide the page into sections</li>
+                <li><strong>Module:</strong> Reusable, modular components</li>
+                <li><strong>State:</strong> Describes how modules or layouts look in a particular state</li>
+                <li><strong>Theme:</strong> Visual appearance that can be swapped (colors, fonts, etc.)</li>
+            </ol>
+            
+            <pre><code>/* SMACSS Example */
+/* Base */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+}
+
+/* Layout */
+.l-header {
+    height: 60px;
+}
+
+.l-sidebar {
+    width: 25%;
+    float: left;
+}
+
+.l-main {
+    width: 75%;
+    float: right;
+}
+
+/* Module */
+.nav {
+    list-style: none;
+}
+
+.nav-item {
+    display: inline-block;
+}
+
+/* State */
+.is-active {
+    font-weight: bold;
+}
+
+.is-hidden {
+    display: none;
+}
+
+/* Theme */
+.theme-dark {
+    background-color: #333;
+    color: white;
+}</code></pre>
+            
+            <p><strong>Key benefit:</strong> Provides a clear structure for organizing CSS files and helps developers decide where new styles should go.</p>
+            
+            <h4>Atomic CSS / Utility-First CSS</h4>
+            <p>Atomic CSS (popularized by frameworks like Tailwind CSS) creates small, single-purpose utility classes:</p>
+            <ul>
+                <li>Each class typically does one thing</li>
+                <li>Composed in HTML rather than in CSS</li>
+                <li>Results in very little CSS but more classes in the HTML</li>
+            </ul>
+            
+            <pre><code>/* Atomic CSS Example */
+/* Utilities */
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.p-4 { padding: 1rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.text-lg { font-size: 1.125rem; }
+.font-bold { font-weight: bold; }
+.bg-blue-500 { background-color: #3b82f6; }
+.text-white { color: white; }
+.rounded { border-radius: 0.25rem; }
+
+/* Usage */
+&lt;div class="flex items-center justify-between p-4 bg-blue-500 text-white rounded"&gt;
+    &lt;h2 class="text-lg font-bold mb-2"&gt;Notification&lt;/h2&gt;
+    &lt;button&gt;Dismiss&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+            
+            <p><strong>Key benefit:</strong> Reduces CSS file size by promoting reuse and eliminates the need to create and name custom components for every UI pattern.</p>
+            
+            <h4>CSS Modules and Scoped CSS</h4>
+            <p>Modern tooling has enabled component-scoped CSS, where styles are automatically namespaced:</p>
+            <ul>
+                <li>Used in component-based frameworks (React, Vue, etc.)</li>
+                <li>Solves the global scope problem by automatically generating unique class names</li>
+                <li>Allows developers to write simple CSS without naming conflicts</li>
+            </ul>
+            
+            <pre><code>/* CSS Modules Example (React) */
+/* In Button.module.css */
+.button {
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.primary {
+    background-color: #0066cc;
+    color: white;
+}
+
+/* In Button.jsx */
+import styles from './Button.module.css';
+
+function Button() {
+    return (
+        &lt;button className={`${styles.button} ${styles.primary}`}&gt;
+            Click Me
+        &lt;/button&gt;
+    );
+}
+
+/* Compiled HTML might look like */
+&lt;button class="Button_button_1a2b3c Button_primary_4d5e6f"&gt;
+    Click Me
+&lt;/button&gt;</code></pre>
+            
+            <p><strong>Key benefit:</strong> Eliminates the global scope problem without requiring complex naming conventions, as the tool handles namespacing automatically.</p>
+        </section>
+
+        <section class="css_file_organization">
+            <h3>CSS File Organization</h3>
+            <p>Beyond code structure, how you organize your CSS files matters too. Here are different approaches:</p>
+            
+            <h4>Single File Approach</h4>
+            <p>For small projects, a single CSS file may be sufficient:</p>
+            <ul>
+                <li><strong>Pros:</strong> Simple to manage, only one HTTP request</li>
+                <li><strong>Cons:</strong> Can become unwieldy as the project grows</li>
+            </ul>
+            
+            <h4>By Page/Template</h4>
+            <p>Organize CSS by the pages or templates that use them:</p>
+            <ul>
+                <li><strong>Pros:</strong> Clear connection between files and views</li>
+                <li><strong>Cons:</strong> Potential for duplication, unclear where shared styles should go</li>
+            </ul>
+            
+            <pre><code>/* File organization by page */
+/styles
+    /main.css        /* Shared styles */
+    /home.css        /* Homepage-specific styles */
+    /about.css       /* About page styles */
+    /product.css     /* Product page styles */
+    /contact.css     /* Contact page styles */</code></pre>
+            
+            <h4>By Component</h4>
+            <p>Each UI component gets its own CSS file:</p>
+            <ul>
+                <li><strong>Pros:</strong> Modular, easy to find component styles</li>
+                <li><strong>Cons:</strong> Can lead to many small files, harder to see the big picture</li>
+            </ul>
+            
+            <pre><code>/* File organization by component */
+/styles
+    /components
+        /button.css
+        /card.css
+        /navigation.css
+        /form.css
+        /modal.css
+    /layouts
+        /header.css
+        /footer.css
+        /sidebar.css
+    /main.css        /* Base styles */</code></pre>
+            
+            <h4>By Function (SMACSS-inspired)</h4>
+            <p>Group CSS files by their functional role:</p>
+            <ul>
+                <li><strong>Pros:</strong> Clear separation of concerns, scalable</li>
+                <li><strong>Cons:</strong> May not align with component-based development</li>
+            </ul>
+            
+            <pre><code>/* Function-based organization */
+/styles
+    /base            /* Base element styles */
+        /reset.css
+        /typography.css
+    /layout          /* Major layout components */
+        /grid.css
+        /header.css
+        /footer.css
+    /modules         /* Reusable components */
+        /buttons.css
+        /forms.css
+        /cards.css
+    /state           /* State modifications */
+        /states.css
+    /themes          /* Theme variations */
+        /light.css
+        /dark.css
+    /utilities       /* Utility classes */
+        /spacing.css
+        /colors.css
+    /vendor          /* Third-party styles */
+        /normalize.css
+        /plugin.css
+    /main.css        /* Imports all files */</code></pre>
+            
+            <h4>Using a Preprocessor</h4>
+            <p>CSS preprocessors like Sass or LESS allow more flexible file organization with partials and imports:</p>
+            
+            <pre><code>/* Sass partial structure example */
+/scss
+    /abstracts
+        /_variables.scss    /* Variables */
+        /_mixins.scss       /* Mixins and functions */
+    /base
+        /_reset.scss        /* Reset/normalize */
+        /_typography.scss   /* Typography rules */
+    /components
+        /_buttons.scss      /* Buttons */
+        /_cards.scss        /* Cards */
+    /layout
+        /_header.scss       /* Header */
+        /_grid.scss         /* Grid system */
+        /_footer.scss       /* Footer */
+    /pages
+        /_home.scss         /* Home-specific styles */
+        /_about.scss        /* About-specific styles */
+    /themes
+        /_theme.scss        /* Default theme */
+        /_admin.scss        /* Admin theme */
+    /vendors
+        /_bootstrap.scss    /* Bootstrap customizations */
+    main.scss               /* Main file that imports all partials */</code></pre>
+            
+            <p><strong>Real-world analogy:</strong> Think of a well-organized filing cabinet. You want to be able to find what you need quickly, but you also want to store related documents together. Different projects might need different organizational systems based on their size and complexity.</p>
+        </section>
+
+        <section class="css_best_practices">
+            <h3>CSS Best Practices</h3>
+            <p>Regardless of which methodology you choose, these best practices will help keep your CSS maintainable:</p>
+            
+            <h4>Follow a Consistent Naming Convention</h4>
+            <p>Consistent naming makes code more predictable and easier to understand:</p>
+            <ul>
+                <li>Choose a naming convention (BEM, SMACSS, etc.) and stick with it</li>
+                <li>Use meaningful, descriptive names</li>
+                <li>Consider using prefixes for different types of classes</li>
+            </ul>
+            
+            <pre><code>/* Examples of good naming */
+/* Component */
+.user-profile { }
+
+/* State */
+.is-active { }
+.has-error { }
+
+/* JavaScript hooks */
+.js-dropdown-toggle { }
+
+/* Utilities */
+.u-text-center { }
+.u-margin-top { }</code></pre>
+            
+            <h4>Avoid Deep Nesting</h4>
+            <p>Deep selector nesting creates overly specific CSS that's hard to override:</p>
+            
+            <pre><code>/* Bad: Deep nesting */
+.header .nav ul li a {
+    color: blue;
+}
+
+/* Better: Flatter selectors */
+.nav-link {
+    color: blue;
+}</code></pre>
+            
+            <p><strong>Rule of thumb:</strong> If you're nesting more than 2-3 levels deep, you probably need to reconsider your approach.</p>
+            
+            <h4>Use Classes, Not IDs for Styling</h4>
+            <p>IDs have higher specificity, which can lead to specificity issues:</p>
+            <ul>
+                <li>Use classes for styling elements</li>
+                <li>Reserve IDs for JavaScript hooks and anchor links</li>
+            </ul>
+            
+            <pre><code>/* Avoid: Using IDs for styling */
+#header {
+    background-color: #333;
+}
+
+/* Better: Using classes for styling */
+.header {
+    background-color: #333;
+}</code></pre>
+            
+            <h4>Create Consistent Patterns</h4>
+            <p>Consistent patterns make your CSS more predictable:</p>
+            <ul>
+                <li>Use the same approach for similar components</li>
+                <li>Create design tokens for colors, spacing, typography, etc.</li>
+                <li>Establish naming patterns for related classes</li>
+            </ul>
+            
+            <pre><code>/* Design tokens for consistency */
+:root {
+    /* Colors */
+    --color-primary: #0066cc;
+    --color-secondary: #6c757d;
+    --color-success: #28a745;
+    --color-danger: #dc3545;
+    
+    /* Spacing */
+    --spacing-xs: 0.25rem;  /* 4px */
+    --spacing-sm: 0.5rem;   /* 8px */
+    --spacing-md: 1rem;     /* 16px */
+    --spacing-lg: 1.5rem;   /* 24px */
+    --spacing-xl: 2rem;     /* 32px */
+    
+    /* Typography */
+    --font-size-xs: 0.75rem;   /* 12px */
+    --font-size-sm: 0.875rem;  /* 14px */
+    --font-size-md: 1rem;      /* 16px */
+    --font-size-lg: 1.25rem;   /* 20px */
+    --font-size-xl: 1.5rem;    /* 24px */
+    
+    /* Border radius */
+    --border-radius-sm: 0.25rem;  /* 4px */
+    --border-radius-md: 0.5rem;   /* 8px */
+    --border-radius-lg: 1rem;     /* 16px */
+}</code></pre>
+            
+            <h4>Mobile-First Approach</h4>
+            <p>Write your base styles for mobile devices, then use media queries to enhance for larger screens:</p>
+            
+            <pre><code>/* Mobile-first approach */
+.card {
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+/* Tablet and larger */
+@media (min-width: 768px) {
+    .card {
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+    }
+}</code></pre>
+            
+            <h4>DRY (Don't Repeat Yourself)</h4>
+            <p>Avoid duplicate code by creating reusable components and utilities:</p>
+            
+            <pre><code>/* Instead of repeating this everywhere */
+.feature-title {
+    font-weight: bold;
+    color: #0066cc;
+    margin-bottom: 1rem;
+}
+
+.sidebar-title {
+    font-weight: bold;
+    color: #0066cc;
+    margin-bottom: 1rem;
+}
+
+/* Create a reusable class */
+.heading {
+    font-weight: bold;
+    color: #0066cc;
+    margin-bottom: 1rem;
+}</code></pre>
+            
+            <h4>Avoid !important</h4>
+            <p><code>!important</code> breaks the natural cascading of styles and leads to specificity wars:</p>
+            <ul>
+                <li>Use proper selector specificity instead</li>
+                <li>Refactor overly specific selectors</li>
+                <li>Reserve !important for utility classes that must always win</li>
+            </ul>
+            
+            <pre><code>/* Avoid this */
+.element { color: red !important; }
+
+/* Instead, use more specific selectors */
+.parent .element { color: red; }
+
+/* Or better yet, use class combinations */
+.element.highlight { color: red; }</code></pre>
+            
+            <h4>Use Shorthand Properties Wisely</h4>
+            <p>Shorthand properties can inadvertently override other styles:</p>
+            
+            <pre><code>/* Might accidentally reset other properties */
+.element {
+    background: blue;  /* Resets background-image, background-position, etc. */
+    margin: 20px;      /* Sets all four margins */
+}
+
+/* More explicit and safer */
+.element {
+    background-color: blue;
+    margin-top: 20px;
+}</code></pre>
+            
+            <h4>Consider Print Styles</h4>
+            <p>Don't forget about print styles for documents that may be printed:</p>
+            
+            <pre><code>/* Basic print styles */
+@media print {
+    /* Hide navigation and interactive elements */
+    .navigation, .sidebar, .footer, button, .ad {
+        display: none;
+    }
+    
+    /* Ensure text is readable */
+    body {
+        font-size: 12pt;
+        color: #000;
+        background: #fff;
+    }
+    
+    /* Make links more useful in print */
+    a[href]:after {
+        content: " (" attr(href) ")";
+    }
+}</code></pre>
+        </section>
+
+        <section class="css_documentation">
+            <h3>Documenting Your CSS</h3>
+            <p>Documentation is a key part of maintainable CSS, especially for team projects:</p>
+            
+            <h4>Comment Your Code</h4>
+            <p>Well-commented CSS helps other developers (including your future self) understand your intentions:</p>
+            
+            <pre><code>/* 
+ * Primary Button
+ * Used for primary actions throughout the site
+ * Usage: &lt;button class="btn btn-primary"&gt;Button Text&lt;/button&gt;
+ */
+.btn {
+    display: inline-block;
+    padding: 0.5em 1em;
+    border-radius: 4px;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+}
+
+/* Primary variant with brand colors */
+.btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+/* Secondary variant with muted appearance */
+.btn-secondary {
+    background-color: var(--color-secondary);
+    color: white;
+}</code></pre>
+            
+            <h4>Create a Style Guide or Pattern Library</h4>
+            <p>A living style guide documents all your components and design patterns in one place:</p>
+            <ul>
+                <li>Shows all UI components with examples and code</li>
+                <li>Documents usage guidelines and variations</li>
+                <li>Serves as a single source of truth for the design system</li>
+                <li>Can be built with tools like Storybook, Pattern Lab, or custom solutions</li>
+            </ul>
+            
+            <h4>Document Your Methodology</h4>
+            <p>Document your CSS approach for team members:</p>
+            <ul>
+                <li>Explain the chosen methodology and why it was selected</li>
+                <li>Provide naming conventions with examples</li>
+                <li>Document the file structure and organization</li>
+                <li>Include guidelines for adding new styles</li>
+            </ul>
+            
+            <pre><code>/* Example of a CSS methodology documentation comment */
+/**
+ * PROJECT CSS METHODOLOGY
+ * 
+ * This project uses BEM (Block Element Modifier) for CSS organization.
+ * 
+ * NAMING CONVENTION:
+ * .block {}                    /* Standalone component */
+ * .block__element {}           /* Child of the block */
+ * .block--modifier {}          /* Variant of the block */
+ * 
+ * EXAMPLES:
+ * .card {}                     /* A card component */
+ * .card__title {}              /* The title within a card */
+ * .card--featured {}           /* A featured variant of the card */
+ * 
+ * FILE ORGANIZATION:
+ * - base/            Base styles and resets
+ * - components/      Individual UI components
+ * - layouts/         Major layout components
+ * - utilities/       Helper classes
+ * - pages/           Page-specific styles
+ */</code></pre>
+        </section>
+
+        <section class="css_maintenance">
+            <h3>Maintaining CSS Over Time</h3>
+            <p>CSS maintenance becomes crucial as projects evolve:</p>
+            
+            <h4>Regular Code Reviews</h4>
+            <p>Regular CSS code reviews help maintain quality:</p>
+            <ul>
+                <li>Check that new CSS follows project conventions</li>
+                <li>Look for potential duplications or optimization opportunities</li>
+                <li>Ensure responsive behavior works as expected</li>
+                <li>Review for accessibility considerations</li>
+            </ul>
+            
+            <h4>Refactoring Strategies</h4>
+            <p>Approaches to refactoring existing CSS codebases:</p>
+            <ol>
+                <li><strong>Strangler Pattern:</strong> Gradually replace old CSS with new patterns, one component at a time</li>
+                <li><strong>Parallel Stylesheets:</strong> Create new stylesheets alongside legacy ones, with clear boundaries</li>
+                <li><strong>CSS Modules/Scoped CSS:</strong> Isolate new components with modern tooling</li>
+                <li><strong>Utility-First Conversion:</strong> Gradually adopt utility classes for new components</li>
+            </ol>
+            
+            <pre><code>/* Example of strangler pattern with namespacing */
+/* Legacy CSS (untouched) */
+.button {
+    /* Old button styles */
+}
+
+/* New CSS (with namespace to avoid conflicts) */
+.new-button {
+    /* New button styles */
+}</code></pre>
+            
+            <h4>Managing CSS Size</h4>
+            <p>As projects grow, managing CSS file size becomes important:</p>
+            <ul>
+                <li>Remove unused CSS with tools like PurgeCSS</li>
+                <li>Consider code splitting to load only necessary CSS</li>
+                <li>Avoid duplicating styles across files</li>
+                <li>Use minification and compression in production</li>
+            </ul>
+            
+            <h4>Deprecated Styles</h4>
+            <p>Handling deprecated styles helps with transitions:</p>
+            
+            <pre><code>/* Marking deprecated styles */
+/**
+ * @deprecated Since version 2.0.0
+ * Use .new-component instead.
+ * Will be removed in version 3.0.0
+ */
+.old-component {
+    /* Styles maintained for backward compatibility */
+}</code></pre>
+        </section>
+
+        <section class="css_performance">
+            <h3>CSS Performance Considerations</h3>
+            <p>CSS organization affects not just maintainability but also performance:</p>
+            
+            <h4>Selector Performance</h4>
+            <p>While modern browsers have optimized CSS selector performance, best practices still matter:</p>
+            <ul>
+                <li>Avoid unnecessarily complex selectors</li>
+                <li>Be cautious with universal selectors (*) and expensive pseudo-classes</li>
+                <li>Remember that browsers read selectors from right to left</li>
+            </ul>
+            
+            <pre><code>/* Less efficient selector (browser must check all div elements) */
+div.specific-class { }
+
+/* More efficient selector (browser can quickly identify by class) */
+.specific-class { }</code></pre>
+            
+            <h4>Critical CSS</h4>
+            <p>Critical CSS is the minimum CSS needed to render above-the-fold content:</p>
+            <ul>
+                <li>Inline critical CSS in the <code>&lt;head&gt;</code> for faster initial render</li>
+                <li>Load non-critical CSS asynchronously</li>
+                <li>Tools like Critical or CriticalCSS can help extract critical CSS</li>
+            </ul>
+            
+            <pre><code>/* Critical CSS approach */
+&lt;head&gt;
+    &lt;style&gt;
+        /* Critical CSS inlined */
+        body { font-family: sans-serif; margin: 0; }
+        .header { background: white; height: 60px; }
+        .hero { height: 500px; background: #f5f5f5; }
+    &lt;/style&gt;
+    
+    &lt;link rel="preload" href="/styles/main.css" as="style" onload="this.onload=null;this.rel='stylesheet'"&gt;
+    &lt;noscript&gt;&lt;link rel="stylesheet" href="/styles/main.css"&gt;&lt;/noscript&gt;
+&lt;/head&gt;</code></pre>
+            
+            <h4>CSS File Size and Loading</h4>
+            <p>Optimize CSS delivery for better performance:</p>
+            <ul>
+                <li>Minify CSS files to remove comments and whitespace</li>
+                <li>Consider code splitting to load CSS per page or component</li>
+                <li>Use HTTP/2 to load multiple small files efficiently</li>
+                <li>Enable compression (gzip or Brotli) on your server</li>
+            </ul>
+            
+            <pre><code>/* Example CSS code splitting (conceptual) */
+// Base CSS loaded on all pages
+import '../styles/base.css';
+
+// Component CSS loaded only when needed
+if (document.querySelector('.carousel')) {
+    import('../styles/components/carousel.css');
+}</code></pre>
+            
+            <h4>Animation Performance</h4>
+            <p>Certain CSS properties are more performance-friendly for animations:</p>
+            <ul>
+                <li>Stick to <code>transform</code> and <code>opacity</code> for smooth animations</li>
+                <li>Avoid animating properties that trigger layout recalculations (like width, height, or position)</li>
+                <li>Use <code>will-change</code> judiciously for important animations</li>
+            </ul>
+            
+            <pre><code>/* Performance-friendly animation */
+.menu {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+.menu.open {
+    transform: translateX(0);
+}
+
+/* Less performant animation */
+.menu {
+    left: -100%;
+    transition: left 0.3s ease;
+}
+
+.menu.open {
+    left: 0;
+}</code></pre>
+        </section>
+
+        <section class="css_tools">
+            <h3>Tools for Better CSS Organization</h3>
+            <p>Modern tools can help you maintain clean, organized CSS:</p>
+            
+            <h4>CSS Preprocessors</h4>
+            <p>Preprocessors like Sass, LESS, and Stylus enhance CSS capabilities:</p>
+            <ul>
+                <li>Variables for consistent values</li>
+                <li>Nesting for more intuitive selector organization</li>
+                <li>Mixins and functions for reusable code</li>
+                <li>Partials and imports for better file organization</li>
+            </ul>
+            
+            <pre><code>/* Sass example */
+// Variables
+$primary-color: #0066cc;
+$border-radius: 4px;
+
+// Mixin
+@mixin button-style($bg-color, $text-color) {
+    background-color: $bg-color;
+    color: $text-color;
+    padding: 0.5em 1em;
+    border-radius: $border-radius;
+    border: none;
+    cursor: pointer;
+    
+    &:hover {
+        background-color: darken($bg-color, 10%);
+    }
+}
+
+// Usage
+.button-primary {
+    @include button-style($primary-color, white);
+}
+
+.button-secondary {
+    @include button-style(#6c757d, white);
+}</code></pre>
+            
+            <h4>PostCSS</h4>
+            <p>PostCSS is a tool for transforming CSS with JavaScript plugins:</p>
+            <ul>
+                <li>Autoprefixer for automatic vendor prefixes</li>
+                <li>PostCSS Preset Env for using future CSS features</li>
+                <li>CSS Modules for component-scoped styles</li>
+                <li>PurgeCSS for removing unused CSS</li>
+            </ul>
+            
+            <pre><code>/* postcss.config.js example */
+module.exports = {
+    plugins: [
+        require('autoprefixer'),
+        require('postcss-preset-env')({
+            stage: 3,
+            features: {
+                'nesting-rules': true,
+                'custom-properties': true,
+                'color-mod-function': true
+            }
+        }),
+        process.env.NODE_ENV === 'production' 
+            ? require('@fullhuman/postcss-purgecss')({
+                content: ['./src/**/*.html', './src/**/*.js'],
+                defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || []
+            })
+            : false
+    ]
+}</code></pre>
+            
+            <h4>CSS-in-JS</h4>
+            <p>CSS-in-JS solutions like styled-components, Emotion, and JSS:</p>
+            <ul>
+                <li>Component-scoped styles with no naming conflicts</li>
+                <li>Dynamic styling based on props or state</li>
+                <li>Automatic critical CSS extraction</li>
+                <li>Style sharing and reuse through JavaScript</li>
+            </ul>
+            
+            <pre><code>/* styled-components example (React) */
+import styled from 'styled-components';
+
+const Button = styled.button`
+    background-color: ${props => props.primary ? '#0066cc' : '#6c757d'};
+    color: white;
+    padding: 0.5em 1em;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    
+    &:hover {
+        background-color: ${props => props.primary ? '#0055aa' : '#5a6268'};
+    }
+`;
+
+// Usage
+function App() {
+    return (
+        &lt;div&gt;
+            &lt;Button primary&gt;Primary Button&lt;/Button&gt;
+            &lt;Button&gt;Secondary Button&lt;/Button&gt;
+        &lt;/div&gt;
+    );
+}</code></pre>
+            
+            <h4>Linting and Formatting</h4>
+            <p>CSS linters and formatters help maintain code quality:</p>
+            <ul>
+                <li>Stylelint for identifying and fixing CSS issues</li>
+                <li>Prettier for consistent formatting</li>
+                <li>CSS Stats for analyzing CSS complexity</li>
+            </ul>
+            
+            <pre><code>/* .stylelintrc example */
+{
+    "extends": "stylelint-config-standard",
+    "plugins": ["stylelint-order"],
+    "rules": {
+        "indentation": 4,
+        "color-hex-case": "lower",
+        "color-hex-length": "short",
+        "max-empty-lines": 1,
+        "order/properties-alphabetical-order": true
+    }
+}</code></pre>
+        </section>
+
+        <section class="practical_exercise">
+            <h3>Hands-On Exercise: Refactoring CSS</h3>
+            <p>Let's apply what we've learned by refactoring some disorganized CSS into a more maintainable structure.</p>
+            
+            <h4>Starting CSS (Problematic)</h4>
+            <pre><code>/* Disorganized CSS to refactor */
+#header {
+    background-color: #333;
+    padding: 10px;
+}
+
+#header .logo {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+#header ul {
+    list-style: none;
+    float: right;
+}
+
+#header ul li {
+    display: inline-block;
+    margin-left: 20px;
+}
+
+#header ul li a {
+    color: white;
+    text-decoration: none;
+}
+
+#header ul li a:hover {
+    color: #ddd;
+}
+
+.box {
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+}
+
+.box.blue {
+    background-color: #e6f7ff;
+    border-color: #91d5ff;
+}
+
+.box.green {
+    background-color: #f6ffed;
+    border-color: #b7eb8f;
+}
+
+.box h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #0066cc;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+.large-button {
+    display: inline-block;
+    padding: 15px 30px;
+    background-color: #0066cc;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+.secondary-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #6c757d;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+}</code></pre>
+            
+            <h4>Refactored CSS (Using BEM)</h4>
+            <pre><code>/* Refactored with BEM methodology */
+/* Variables */
+:root {
+    --color-primary: #0066cc;
+    --color-secondary: #6c757d;
+    --color-text: #333;
+    --color-border: #ddd;
+    --color-white: white;
+    --color-light-bg: #f9f9f9;
+    --color-blue-light: #e6f7ff;
+    --color-blue-border: #91d5ff;
+    --color-green-light: #f6ffed;
+    --color-green-border: #b7eb8f;
+    
+    --spacing-sm: 10px;
+    --spacing-md: 20px;
+    --spacing-lg: 30px;
+    
+    --border-radius: 4px;
+}
+
+/* Header component */
+.header {
+    background-color: var(--color-text);
+    padding: var(--spacing-sm);
+}
+
+.header__logo {
+    color: var(--color-white);
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.header__nav {
+    float: right;
+    list-style: none;
+}
+
+.header__nav-item {
+    display: inline-block;
+    margin-left: var(--spacing-md);
+}
+
+.header__nav-link {
+    color: var(--color-white);
+    text-decoration: none;
+}
+
+.header__nav-link:hover {
+    color: #ddd;
+}
+
+/* Card component */
+.card {
+    border: 1px solid var(--color-border);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    background-color: var(--color-light-bg);
+}
+
+.card__heading {
+    margin-top: 0;
+    color: var(--color-text);
+}
+
+/* Card modifiers */
+.card--blue {
+    background-color: var(--color-blue-light);
+    border-color: var(--color-blue-border);
+}
+
+.card--green {
+    background-color: var(--color-green-light);
+    border-color: var(--color-green-border);
+}
+
+/* Button component */
+.button {
+    display: inline-block;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border-radius: var(--border-radius);
+    text-decoration: none;
+}
+
+/* Button modifiers */
+.button--secondary {
+    background-color: var(--color-secondary);
+}
+
+.button--large {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: 18px;
+}</code></pre>
+            
+            <h4>Refactored CSS (Using Utility Classes)</h4>
+            <pre><code>/* Refactored with utility approach */
+/* Variables */
+:root {
+    --color-primary: #0066cc;
+    --color-secondary: #6c757d;
+    --color-text: #333;
+    --color-border: #ddd;
+    --color-white: white;
+    --color-light-bg: #f9f9f9;
+    --color-blue-light: #e6f7ff;
+    --color-blue-border: #91d5ff;
+    --color-green-light: #f6ffed;
+    --color-green-border: #b7eb8f;
+}
+
+/* Layout utilities */
+.d-inline-block { display: inline-block; }
+.d-flex { display: flex; }
+.justify-between { justify-content: space-between; }
+.float-right { float: right; }
+.list-none { list-style: none; }
+
+/* Spacing utilities */
+.p-1 { padding: 10px; }
+.p-2 { padding: 20px; }
+.px-2 { padding-left: 20px; padding-right: 20px; }
+.py-1 { padding-top: 10px; padding-bottom: 10px; }
+.py-2 { padding-top: 15px; padding-bottom: 15px; }
+.m-0 { margin: 0; }
+.ml-2 { margin-left: 20px; }
+.mb-2 { margin-bottom: 20px; }
+
+/* Typography utilities */
+.text-white { color: white; }
+.text-dark { color: #333; }
+.font-bold { font-weight: bold; }
+.text-lg { font-size: 18px; }
+.text-xl { font-size: 24px; }
+.no-underline { text-decoration: none; }
+
+/* Border utilities */
+.border { border: 1px solid #ddd; }
+.border-blue { border-color: #91d5ff; }
+.border-green { border-color: #b7eb8f; }
+.rounded { border-radius: 4px; }
+
+/* Background utilities */
+.bg-dark { background-color: #333; }
+.bg-primary { background-color: #0066cc; }
+.bg-secondary { background-color: #6c757d; }
+.bg-light { background-color: #f9f9f9; }
+.bg-blue-light { background-color: #e6f7ff; }
+.bg-green-light { background-color: #f6ffed; }
+
+/* Component classes (minimal) */
+.header {
+    background-color: #333;
+    padding: 10px;
+}
+
+.card {
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+}
+
+.button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #0066cc;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+}</code></pre>
+            
+            <h4>Corresponding HTML Example</h4>
+            <pre><code>&lt;!-- HTML for BEM approach --&gt;
+&lt;header class="header"&gt;
+    &lt;div class="header__logo"&gt;Site Name&lt;/div&gt;
+    &lt;ul class="header__nav"&gt;
+        &lt;li class="header__nav-item"&gt;&lt;a href="#" class="header__nav-link"&gt;Home&lt;/a&gt;&lt;/li&gt;
+        &lt;li class="header__nav-item"&gt;&lt;a href="#" class="header__nav-link"&gt;About&lt;/a&gt;&lt;/li&gt;
+        &lt;li class="header__nav-item"&gt;&lt;a href="#" class="header__nav-link"&gt;Contact&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/header&gt;
+
+&lt;div class="card"&gt;
+    &lt;h3 class="card__heading"&gt;Standard Card&lt;/h3&gt;
+    &lt;p&gt;This is a standard card component.&lt;/p&gt;
+    &lt;a href="#" class="button"&gt;Learn More&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;div class="card card--blue"&gt;
+    &lt;h3 class="card__heading"&gt;Blue Card&lt;/h3&gt;
+    &lt;p&gt;This is a blue variant of the card.&lt;/p&gt;
+    &lt;a href="#" class="button button--large"&gt;Learn More&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;div class="card card--green"&gt;
+    &lt;h3 class="card__heading"&gt;Green Card&lt;/h3&gt;
+    &lt;p&gt;This is a green variant of the card.&lt;/p&gt;
+    &lt;a href="#" class="button button--secondary"&gt;Learn More&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;!-- HTML for utility approach --&gt;
+&lt;header class="bg-dark p-1 d-flex justify-between"&gt;
+    &lt;div class="text-white text-xl font-bold"&gt;Site Name&lt;/div&gt;
+    &lt;ul class="list-none d-flex"&gt;
+        &lt;li class="ml-2"&gt;&lt;a href="#" class="text-white no-underline"&gt;Home&lt;/a&gt;&lt;/li&gt;
+        &lt;li class="ml-2"&gt;&lt;a href="#" class="text-white no-underline"&gt;About&lt;/a&gt;&lt;/li&gt;
+        &lt;li class="ml-2"&gt;&lt;a href="#" class="text-white no-underline"&gt;Contact&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/header&gt;
+
+&lt;div class="border rounded p-2 mb-2 bg-light"&gt;
+    &lt;h3 class="text-dark m-0"&gt;Standard Card&lt;/h3&gt;
+    &lt;p&gt;This is a standard card component.&lt;/p&gt;
+    &lt;a href="#" class="d-inline-block py-1 px-2 bg-primary text-white rounded no-underline"&gt;Learn More&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;div class="border border-blue rounded p-2 mb-2 bg-blue-light"&gt;
+    &lt;h3 class="text-dark m-0"&gt;Blue Card&lt;/h3&gt;
+    &lt;p&gt;This is a blue variant of the card.&lt;/p&gt;
+    &lt;a href="#" class="d-inline-block py-2 px-2 bg-primary text-white rounded no-underline text-lg"&gt;Learn More&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;div class="border border-green rounded p-2 mb-2 bg-green-light"&gt;
+    &lt;h3 class="text-dark m-0"&gt;Green Card&lt;/h3&gt;
+    &lt;p&gt;This is a green variant of the card.&lt;/p&gt;
+    &lt;a href="#" class="d-inline-block py-1 px-2 bg-secondary text-white rounded no-underline"&gt;Learn More&lt;/a&gt;
+&lt;/div&gt;</code></pre>
+        </section>
+
+        <section class="assignment">
+            <h3>Today's Assignment: CSS Organization Project</h3>
+            <p>Now it's your turn to apply what you've learned about CSS organization and best practices.</p>
+            
+            <h4>Assignment Requirements:</h4>
+            <ol>
+                <li>Choose a CSS organization methodology (BEM, SMACSS, utility-first, etc.) for this project</li>
+                <li>Create a new directory structure for your CSS based on your chosen methodology</li>
+                <li>Build a simple website with the following components:
+                    <ul>
+                        <li>A header with navigation</li>
+                        <li>A hero section</li>
+                        <li>A features section with 3-4 feature cards</li>
+                        <li>A testimonial section</li>
+                        <li>A contact form</li>
+                        <li>A footer</li>
+                    </ul>
+                </li>
+                <li>Implement your CSS following these principles:
+                    <ul>
+                        <li>Create a variables/design tokens system</li>
+                        <li>Follow a consistent naming convention</li>
+                        <li>Use appropriate CSS organization techniques</li>
+                        <li>Make the site responsive for mobile, tablet, and desktop</li>
+                        <li>Add comprehensive comments explaining your organization approach</li>
+                    </ul>
+                </li>
+                <li>Create a simple style guide page that documents:
+                    <ul>
+                        <li>Your color system</li>
+                        <li>Typography styles</li>
+                        <li>Common components and variations</li>
+                        <li>Layout patterns</li>
+                    </ul>
+                </li>
+            </ol>
+            
+            <p><strong>Bonus challenges:</strong></p>
+            <ul>
+                <li>Implement multiple themes (light/dark mode)</li>
+                <li>Create a utility class system</li>
+                <li>Refactor an existing CSS codebase using your chosen methodology</li>
+                <li>Implement print styles for your pages</li>
+                <li>Create a documentation page explaining your CSS approach</li>
+            </ul>
+            
+            <p>Submit your completed assignment by pushing your HTML and CSS files to your course repository.</p>
+        </section>
+
+        <section class="conclusion">
+            <h3>Wrapping Up</h3>
+            <p>Congratulations! You've now explored the principles and practices of CSS organization and maintainability.</p>
+            
+            <p>Key takeaways from today's session:</p>
+            <ul>
+                <li>CSS organization is crucial for maintainable projects, especially as they grow</li>
+                <li>Different methodologies (BEM, SMACSS, utility-first, etc.) offer different approaches to solving the same problems</li>
+                <li>Consistent naming, documentation, and structure make CSS more predictable and easier to work with</li>
+                <li>Modern tools and techniques can help enforce good practices and prevent common issues</li>
+                <li>There's no one-size-fits-all solution—choose approaches that fit your project's needs</li>
+                <li>Organization affects not just maintainability but also performance and collaboration</li>
+            </ul>
+            
+            <p>As your projects grow in complexity, the organization patterns you establish early on will pay dividends in maintainability and developer efficiency. While it might seem like extra work initially, well-organized CSS will save you countless hours of debugging and refactoring in the future.</p>
+            
+            <p>In our next session, we'll dive into the powerful world of CSS Flexbox, a modern layout system that makes creating complex arrangements much more intuitive.</p>
+            
+            <p>Any questions before we wrap up?</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

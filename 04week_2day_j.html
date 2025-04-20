@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Architecture Approaches for JavaScript Developers</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>CSS Architecture Approaches for JavaScript Developers</h1>
+        <h2>Week 4: Tuesday Afternoon Session</h2>
+    </header>
+
+    <main>
+        <section class="lecture_intro">
+            <h3>Bridging JavaScript and CSS Architectures</h3>
+            <p>Welcome, JavaScript developers! As you transition into full-stack Python development, understanding CSS architecture is crucial for building maintainable web applications. Your background in JavaScript has already equipped you with many important concepts that translate well to CSS organization—modular thinking, separation of concerns, and state management.</p>
+            
+            <p>In this session, we'll explore CSS architecture with a focus on approaches that will feel familiar to JavaScript developers. We'll draw parallels between JavaScript patterns and their CSS counterparts, examine component-based CSS strategies that align with modern JavaScript frameworks, and look at tools that bring programming-like features to your stylesheets.</p>
+            
+            <p>By the end of this session, you'll understand how to structure CSS in ways that complement your JavaScript knowledge and create cohesive, maintainable codebases that bridge both languages effectively.</p>
+        </section>
+
+        <section class="file_locations">
+            <h3>File Organization</h3>
+            <p>For today's session, we'll use the following files:</p>
+            <ul>
+                <li><strong>CSS Folder:</strong> <code>styles/</code> in your project root</li>
+                <li><strong>Example Files:</strong> <code>styles/css_architecture_examples.css</code></li>
+                <li><strong>HTML File:</strong> <code>css_architecture_for_js_devs.html</code> in your project root</li>
+            </ul>
+            <p>Make sure to create these files and link them properly before we begin the exercises.</p>
+        </section>
+
+        <section class="mental_models">
+            <h3>Mental Models: From JavaScript to CSS</h3>
+            <p>JavaScript developers often face challenges with CSS because the mental models differ. Let's bridge that gap by comparing familiar JavaScript concepts with their CSS counterparts:</p>
+            
+            <h4>Modularity and Encapsulation</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>JavaScript Concept</th>
+                        <th>CSS Counterpart</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Modules (ES modules, CommonJS)</td>
+                        <td>CSS Modules, Scoped CSS, BEM namespacing</td>
+                    </tr>
+                    <tr>
+                        <td>Private variables/methods</td>
+                        <td>Encapsulated styles with Shadow DOM or CSS Modules</td>
+                    </tr>
+                    <tr>
+                        <td>Export/import system</td>
+                        <td>Sass @import, CSS @import, or bundler imports</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <pre><code>/* JavaScript module */
+// math.js
+export function add(a, b) {
+  return a + b;
+}
+
+// app.js
+import { add } from './math.js';
+console.log(add(2, 3)); // 5
+
+/* CSS "module" with BEM */
+/* button.css */
+.button {
+  padding: 10px 15px;
+  border-radius: 4px;
+}
+.button--primary {
+  background-color: #0066cc;
+  color: white;
+}
+
+/* Using CSS Modules in React */
+import styles from './Button.module.css';
+
+function Button() {
+  return (
+    &lt;button className={styles.button}&gt;Click me&lt;/button&gt;
+  );
+}</code></pre>
+            
+            <p><strong>Key mindset shift:</strong> Just as you wouldn't pollute the global JavaScript scope with variables, avoid global CSS classes. Namespace your styles to create "modules" that don't interfere with each other.</p>
+            
+            <h4>State Management</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>JavaScript Concept</th>
+                        <th>CSS Counterpart</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>State (React state, Redux)</td>
+                        <td>CSS classes for state (.is-active, .is-disabled)</td>
+                    </tr>
+                    <tr>
+                        <td>Conditional rendering</td>
+                        <td>State-based classes and CSS selectors</td>
+                    </tr>
+                    <tr>
+                        <td>Reactive updates</td>
+                        <td>CSS transitions and animations triggered by class changes</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <pre><code>/* JavaScript state */
+// React component with state
+const [isActive, setIsActive] = useState(false);
+
+return (
+  &lt;button 
+    className={isActive ? 'button active' : 'button'}
+    onClick={() => setIsActive(!isActive)}
+  &gt;
+    Toggle
+  &lt;/button&gt;
+);
+
+/* CSS state representation */
+.button {
+  background-color: #f8f9fa;
+  transition: background-color 0.3s;
+}
+
+.button.active {
+  background-color: #0066cc;
+  color: white;
+}</code></pre>
+            
+            <p><strong>Key mindset shift:</strong> Think of CSS classes as state indicators. Just as you manage state in JavaScript, use classes to reflect UI state in your styles.</p>
+            
+            <h4>Composition vs Inheritance</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>JavaScript Concept</th>
+                        <th>CSS Counterpart</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Composition over inheritance</td>
+                        <td>Utility classes, CSS composition, multiple classes</td>
+                    </tr>
+                    <tr>
+                        <td>Higher-order functions</td>
+                        <td>Mixins in Sass, custom properties as parameters</td>
+                    </tr>
+                    <tr>
+                        <td>Functional composition</td>
+                        <td>Combining utility classes or CSS functions</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <pre><code>/* JavaScript composition */
+// Composition of functions
+const double = x => x * 2;
+const increment = x => x + 1;
+const transform = compose(double, increment);
+transform(5); // double(increment(5)) = double(6) = 12
+
+/* CSS composition with utility classes */
+&lt;button class="btn rounded shadow-sm text-primary"&gt;Click Me&lt;/button&gt;
+
+/* CSS composition with Sass mixins */
+@mixin rounded {
+  border-radius: 4px;
+}
+
+@mixin shadowed {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.button {
+  @include rounded;
+  @include shadowed;
+  background-color: white;
+}</code></pre>
+            
+            <p><strong>Key mindset shift:</strong> Instead of creating deeply nested hierarchies of styles (inheritance), compose functionality by combining smaller, focused style modules (composition).</p>
+        </section>
+
+        <section class="component_based_css">
+            <h3>Component-Based CSS Architectures</h3>
+            <p>Modern JavaScript development is heavily component-oriented. Let's explore CSS approaches that align well with component-based thinking:</p>
+            
+            <h4>BEM for Component-Based Structure</h4>
+            <p>BEM (Block, Element, Modifier) provides a naming convention that maps perfectly to component thinking:</p>
+            <ul>
+                <li><strong>Block</strong>: The component itself (e.g., <code>.card</code>)</li>
+                <li><strong>Element</strong>: A part of the component (e.g., <code>.card__title</code>)</li>
+                <li><strong>Modifier</strong>: A variant or state (e.g., <code>.card--featured</code>)</li>
+            </ul>
+            
+            <pre><code>/* BEM with a React-like component structure */
+/* Card.css */
+.card {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 20px;
+}
+
+.card__title {
+  font-size: 1.2rem;
+  margin-top: 0;
+}
+
+.card__content {
+  color: #666;
+}
+
+.card__footer {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.card--featured {
+  border-color: #0066cc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Equivalent React component structure */
+function Card({ title, children, featured }) {
+  return (
+    &lt;div className={`card ${featured ? 'card--featured' : ''}`}&gt;
+      &lt;h2 className="card__title"&gt;{title}&lt;/h2&gt;
+      &lt;div className="card__content"&gt;{children}&lt;/div&gt;
+      &lt;div className="card__footer"&gt;
+        &lt;button className="card__button"&gt;Read more&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+            
+            <p><strong>Why it works for JS devs:</strong> BEM creates a visual mapping between your CSS classes and your component structure, making the relationship between markup, styles, and components explicit.</p>
+            
+            <h4>CSS Modules for Component Isolation</h4>
+            <p>CSS Modules automatically scope CSS to components, similar to JavaScript modules:</p>
+            
+            <pre><code>/* CSS Module example */
+/* Button.module.css */
+.button {
+  padding: 10px 15px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.primary {
+  background-color: #0066cc;
+  color: white;
+}
+
+/* React component using CSS Module */
+import styles from './Button.module.css';
+
+function Button({ primary, children }) {
+  return (
+    &lt;button 
+      className={`${styles.button} ${primary ? styles.primary : ''}`}
+    &gt;
+      {children}
+    &lt;/button&gt;
+  );
+}
+
+/* Compiled HTML might look like */
+&lt;button class="Button_button_ax7yz Button_primary_bc8u3"&gt;
+  Click me
+&lt;/button&gt;</code></pre>
+            
+            <p><strong>Why it works for JS devs:</strong> CSS Modules bring true encapsulation to CSS, eliminating global scope issues just like ES modules do for JavaScript. The tooling handles unique class names automatically.</p>
+            
+            <h4>Styled Components and CSS-in-JS</h4>
+            <p>CSS-in-JS approaches let you write styles directly in your JavaScript components:</p>
+            
+            <pre><code>/* Styled-components example */
+import styled from 'styled-components';
+
+const Button = styled.button`
+  padding: 10px 15px;
+  border-radius: 4px;
+  font-weight: bold;
+  background-color: ${props => props.primary ? '#0066cc' : 'transparent'};
+  color: ${props => props.primary ? 'white' : '#0066cc'};
+  border: 1px solid #0066cc;
+  
+  &:hover {
+    background-color: ${props => props.primary ? '#0055aa' : '#e6f7ff'};
+  }
+`;
+
+function App() {
+  return (
+    &lt;div&gt;
+      &lt;Button primary&gt;Primary Button&lt;/Button&gt;
+      &lt;Button&gt;Secondary Button&lt;/Button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+            
+            <p><strong>Why it works for JS devs:</strong> CSS-in-JS brings styles directly into your JavaScript code, eliminating context switching and allowing you to use JavaScript features (variables, functions, conditions) to generate styles.</p>
+            
+            <h4>Utility-First CSS (Tailwind CSS)</h4>
+            <p>Utility-first approaches use small, single-purpose classes composed directly in HTML, similar to functional composition in JavaScript:</p>
+            
+            <pre><code>/* Utility-first approach (Tailwind CSS) */
+&lt;button class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors"&gt;
+  Click me
+&lt;/button&gt;
+
+/* Equivalent in traditional CSS */
+.button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  background-color: #2563eb;
+  color: white;
+  transition: background-color 0.3s;
+}
+
+.button:hover {
+  background-color: #1d4ed8;
+}</code></pre>
+            
+            <p><strong>Why it works for JS devs:</strong> Utility-first CSS focuses on composition over inheritance and moves styling decisions into the markup, similar to how props control component appearance in React. This approach creates a tight feedback loop between markup and styling.</p>
+        </section>
+
+        <section class="css_and_js_frameworks">
+            <h3>CSS Architecture in JavaScript Framework Contexts</h3>
+            <p>Let's examine CSS architecture approaches optimized for specific JavaScript frameworks:</p>
+            
+            <h4>React and CSS</h4>
+            <p>React's component model works well with several CSS approaches:</p>
+            <ul>
+                <li><strong>CSS Modules:</strong> Scoped CSS files imported directly into components</li>
+                <li><strong>Styled-components/Emotion:</strong> CSS-in-JS libraries that create styled React components</li>
+                <li><strong>Tailwind CSS:</strong> Utility classes composed in JSX</li>
+                <li><strong>CSS-in-JS with hooks:</strong> Libraries like useStyling or styled-hook</li>
+            </ul>
+            
+            <pre><code>/* React with multiple styling approaches */
+
+// 1. CSS Modules
+import styles from './Button.module.css';
+function CSSModuleButton({ primary, children }) {
+  return (
+    &lt;button className={`${styles.button} ${primary ? styles.primary : ''}`}&gt;
+      {children}
+    &lt;/button&gt;
+  );
+}
+
+// 2. Styled-components
+import styled from 'styled-components';
+const StyledButton = styled.button`
+  /* styles here */
+`;
+function StyledComponentButton({ primary, children }) {
+  return (
+    &lt;StyledButton primary={primary}&gt;{children}&lt;/StyledButton&gt;
+  );
+}
+
+// 3. Tailwind CSS
+function TailwindButton({ primary, children }) {
+  return (
+    &lt;button 
+      className={`px-4 py-2 rounded ${
+        primary ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border border-blue-600'
+      }`}
+    &gt;
+      {children}
+    &lt;/button&gt;
+  );
+}</code></pre>
+            
+            <p><strong>Key consideration:</strong> With React, choose an approach that keeps styles close to your components. React's virtual DOM works best when style changes are localized to the components being updated.</p>
+            
+            <h4>Vue and CSS</h4>
+            <p>Vue offers built-in component-scoped CSS:</p>
+            <ul>
+                <li><strong>Scoped CSS:</strong> Vue's <code>&lt;style scoped&gt;</code> feature automatically namespaces CSS</li>
+                <li><strong>CSS Modules:</strong> Vue supports CSS Modules with <code>&lt;style module&gt;</code></li>
+                <li><strong>Single-File Components:</strong> Keep HTML, CSS, and JS in one .vue file</li>
+            </ul>
+            
+            <pre><code>/* Vue Single-File Component with scoped CSS */
+&lt;template&gt;
+  &lt;button :class="['button', { 'button--primary': primary }]"&gt;
+    &lt;slot&gt;&lt;/slot&gt;
+  &lt;/button&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default {
+  props: {
+    primary: Boolean
+  }
+}
+&lt;/script&gt;
+
+&lt;style scoped&gt;
+.button {
+  padding: 10px 15px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.button--primary {
+  background-color: #0066cc;
+  color: white;
+}
+&lt;/style&gt;</code></pre>
+            
+            <p><strong>Key consideration:</strong> Vue's built-in scoping makes CSS organization more straightforward. Take advantage of Single-File Components to keep component code and styles together.</p>
+            
+            <h4>Angular and CSS</h4>
+            <p>Angular provides component-level style encapsulation:</p>
+            <ul>
+                <li><strong>Component Styles:</strong> Styles defined in the @Component decorator</li>
+                <li><strong>View Encapsulation:</strong> Angular's emulated encapsulation adds unique attributes</li>
+                <li><strong>NgClass and NgStyle:</strong> Directives for dynamic styling</li>
+            </ul>
+            
+            <pre><code>/* Angular component with encapsulated styles */
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-button',
+  template: `
+    &lt;button [class.primary]="isPrimary" (click)="togglePrimary()"&gt;
+      Click me
+    &lt;/button&gt;
+  `,
+  styles: [`
+    button {
+      padding: 10px 15px;
+      border-radius: 4px;
+      font-weight: bold;
+      background-color: transparent;
+      border: 1px solid #0066cc;
+      color: #0066cc;
+    }
+    
+    button.primary {
+      background-color: #0066cc;
+      color: white;
+    }
+  `]
+})
+export class ButtonComponent {
+  isPrimary = false;
+  
+  togglePrimary() {
+    this.isPrimary = !this.isPrimary;
+  }
+}</code></pre>
+            
+            <p><strong>Key consideration:</strong> Angular's ViewEncapsulation ensures styles don't leak between components. Structure your CSS according to Angular's component architecture for the best results.</p>
+        </section>
+
+        <section class="state_in_css">
+            <h3>Managing State with CSS</h3>
+            <p>JavaScript developers are accustomed to state management. Here's how to apply similar concepts in CSS:</p>
+            
+            <h4>CSS Classes as State Indicators</h4>
+            <p>Use consistent class naming for states, following patterns from JavaScript state management:</p>
+            
+            <pre><code>/* State classes for UI components */
+.dropdown {
+  /* Default/closed state */
+}
+
+.dropdown.is-open {
+  /* Open state */
+}
+
+.button {
+  /* Default state */
+}
+
+.button.is-loading {
+  /* Loading state */
+}
+
+.button.is-disabled {
+  /* Disabled state */
+}
+
+.form-field {
+  /* Default state */
+}
+
+.form-field.has-error {
+  /* Error state */
+}</code></pre>
+            
+            <p><strong>JavaScript integration:</strong></p>
+            
+            <pre><code>// Toggle state with JavaScript
+function toggleDropdown(dropdownId) {
+  const dropdown = document.getElementById(dropdownId);
+  dropdown.classList.toggle('is-open');
+}
+
+// React state to CSS class mapping
+function Button({ isLoading, isDisabled, children }) {
+  const buttonClasses = [
+    'button',
+    isLoading ? 'is-loading' : '',
+    isDisabled ? 'is-disabled' : ''
+  ].filter(Boolean).join(' ');
+  
+  return (
+    &lt;button className={buttonClasses} disabled={isDisabled}&gt;
+      {isLoading ? 'Loading...' : children}
+    &lt;/button&gt;
+  );
+}</code></pre>
+            
+            <p><strong>Parallel to JavaScript:</strong> Just as you might have an isLoading state in JavaScript, use an .is-loading class in CSS. This creates a clear relationship between your JavaScript state and visual representation.</p>
+            
+            <h4>CSS Custom Properties for Dynamic State</h4>
+            <p>CSS Custom Properties (variables) can act like reactive state in your styles:</p>
+            
+            <pre><code>/* CSS Custom Properties for theme state */
+:root {
+  /* Default theme */
+  --primary-color: #0066cc;
+  --text-color: #333;
+  --background-color: #fff;
+}
+
+/* Theme state changes */
+.theme-dark {
+  --primary-color: #5cbbff;
+  --text-color: #f8f9fa;
+  --background-color: #222;
+}
+
+/* Using the dynamic state */
+.button {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+body {
+  color: var(--text-color);
+  background-color: var(--background-color);
+}</code></pre>
+            
+            <p><strong>JavaScript integration:</strong></p>
+            
+            <pre><code>// Toggle theme with JavaScript
+function toggleDarkMode() {
+  document.documentElement.classList.toggle('theme-dark');
+}
+
+// Setting custom property values directly with JS
+function setCustomAccentColor(color) {
+  document.documentElement.style.setProperty('--accent-color', color);
+}</code></pre>
+            
+            <p><strong>Parallel to JavaScript:</strong> CSS Custom Properties function like reactive variables in JavaScript frameworks. Changing the value updates all instances where the variable is used, similar to reactive state.</p>
+            
+            <h4>State Machines in CSS</h4>
+            <p>For complex UI components, you can implement state machine patterns with CSS:</p>
+            
+            <pre><code>/* CSS state machine for a multi-step form */
+.form-container {
+  /* Common styles */
+}
+
+/* State: Step 1 active */
+.form-container[data-step="1"] .step-1 {
+  display: block;
+}
+.form-container[data-step="1"] .step-2,
+.form-container[data-step="1"] .step-3 {
+  display: none;
+}
+.form-container[data-step="1"] .progress-indicator {
+  width: 33.33%;
+}
+
+/* State: Step 2 active */
+.form-container[data-step="2"] .step-2 {
+  display: block;
+}
+.form-container[data-step="2"] .step-1,
+.form-container[data-step="2"] .step-3 {
+  display: none;
+}
+.form-container[data-step="2"] .progress-indicator {
+  width: 66.66%;
+}
+
+/* State: Step 3 active */
+.form-container[data-step="3"] .step-3 {
+  display: block;
+}
+.form-container[data-step="3"] .step-1,
+.form-container[data-step="3"] .step-2 {
+  display: none;
+}
+.form-container[data-step="3"] .progress-indicator {
+  width: 100%;
+}</code></pre>
+            
+            <p><strong>JavaScript integration:</strong></p>
+            
+            <pre><code>// State machine in JavaScript
+const formStateMachine = {
+  currentState: 1,
+  
+  nextStep() {
+    if (this.currentState < 3) {
+      this.currentState++;
+      this.updateDOM();
+    }
+  },
+  
+  prevStep() {
+    if (this.currentState > 1) {
+      this.currentState--;
+      this.updateDOM();
+    }
+  },
+  
+  updateDOM() {
+    document.querySelector('.form-container')
+      .setAttribute('data-step', this.currentState);
+  }
+};</code></pre>
+            
+            <p><strong>Parallel to JavaScript:</strong> This approach mirrors state machine concepts in JavaScript, where distinct states trigger specific UI representations. The data-* attributes act as the interface between JavaScript state and CSS styling.</p>
+        </section>
+
+        <section class="scaling_css">
+            <h3>Scaling CSS Architecture for Large Applications</h3>
+            <p>JavaScript developers working on large applications need CSS architecture patterns that scale:</p>
+            
+            <h4>ITCSS (Inverted Triangle CSS)</h4>
+            <p>ITCSS organizes CSS by specificity and reach, creating layers from generic to explicit:</p>
+            
+            <pre><code>/* ITCSS Layer Structure */
+/* 1. Settings - Variables, config */
+:root {
+  --primary-color: #0066cc;
+  --spacing-unit: 8px;
+}
+
+/* 2. Tools - Mixins, functions */
+@mixin center-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 3. Generic - Resets, normalize */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* 4. Elements - Bare HTML elements */
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+}
+
+h1, h2, h3 {
+  margin-bottom: calc(var(--spacing-unit) * 2);
+}
+
+/* 5. Objects - Structural patterns, no cosmetics */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 calc(var(--spacing-unit) * 2);
+}
+
+.grid {
+  display: grid;
+  gap: calc(var(--spacing-unit) * 2);
+}
+
+/* 6. Components - Specific UI components */
+.card {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: calc(var(--spacing-unit) * 2);
+}
+
+.button {
+  display: inline-block;
+  padding: var(--spacing-unit) calc(var(--spacing-unit) * 2);
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 4px;
+}
+
+/* 7. Utilities - Helpers, overrides */
+.text-center { text-align: center; }
+.mt-1 { margin-top: var(--spacing-unit); }
+.mt-2 { margin-top: calc(var(--spacing-unit) * 2); }</code></pre>
+            
+            <p><strong>Why it works for JS devs:</strong> ITCSS creates a clear mental model for where different types of styles belong, similar to the separation of concerns in JavaScript architecture.</p>
+            
+            <h4>Atomic Design</h4>
+            <p>Atomic Design structures components from simple to complex, similar to component composition in JS frameworks:</p>
+            <ul>
+                <li><strong>Atoms:</strong> Basic building blocks (buttons, inputs, labels)</li>
+                <li><strong>Molecules:</strong> Simple combinations of atoms (search form, menu item)</li>
+                <li><strong>Organisms:</strong> More complex components (header, product grid)</li>
+                <li><strong>Templates:</strong> Page-level component arrangements</li>
+                <li><strong>Pages:</strong> Specific instances of templates with real content</li>
+            </ul>
+            
+            <pre><code>/* Atomic Design structure in CSS organization */
+/* atoms/_buttons.css */
+.button {
+  padding: 10px 15px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.button--primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* atoms/_inputs.css */
+.input {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* molecules/_search-form.css */
+.search-form {
+  display: flex;
+}
+
+.search-form__input {
+  flex: 1;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.search-form__button {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* organisms/_header.css */
+.header {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header__logo {
+  font-weight: bold;
+}
+
+.header__search {
+  width: 300px;
+}</code></pre>
+            
+            <p><strong>Why it works for JS devs:</strong> Atomic Design's component hierarchy mirrors how you'd structure components in React or Vue, providing a familiar mental model for building complex interfaces from smaller parts.</p>
+            
+            <h4>Feature-Based Organization</h4>
+            <p>Organize CSS by feature or domain rather than by technical type, similar to feature folders in JavaScript applications:</p>
+            
+            <pre><code>/* Feature-based CSS organization */
+/* features/authentication/_login-form.css */
+.login-form { /* styles */ }
+.login-form__input { /* styles */ }
+.login-form__button { /* styles */ }
+
+/* features/products/_product-card.css */
+.product-card { /* styles */ }
+.product-card__image { /* styles */ }
+.product-card__title { /* styles */ }
+.product-card__price { /* styles */ }
+
+/* features/checkout/_payment-form.css */
+.payment-form { /* styles */ }
+.payment-form__section { /* styles */ }
+.payment-form__submit { /* styles */ }</code></pre>
+            
+            <p><strong>Why it works for JS devs:</strong> This organization mirrors modern JavaScript feature-based architecture, aligning your CSS structure with your application's domain concepts rather than technical concerns.</p>
+        </section>
+
+        <section class="css_in_js">
+            <h3>CSS-in-JS Approaches for JavaScript Developers</h3>
+            <p>CSS-in-JS solutions bring styling directly into your JavaScript workflow, eliminating the context switch between languages:</p>
+            
+            <h4>Styled-components</h4>
+            <p>Create React components with attached styles using template literals:</p>
+            
+            <pre><code>/* Styled-components example */
+import styled from 'styled-components';
+
+// Creating a styled component
+const Button = styled.button`
+  padding: 10px 15px;
+  border-radius: 4px;
+  background-color: ${props => props.primary ? '#0066cc' : 'transparent'};
+  color: ${props => props.primary ? 'white' : '#0066cc'};
+  border: 1px solid #0066cc;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  
+  &:hover {
+    background-color: ${props => props.primary ? '#0055aa' : '#e6f7ff'};
+  }
+  
+  ${props => props.large && `
+    font-size: 18px;
+    padding: 12px 20px;
+  `}
+`;
+
+// Using the styled component
+function App() {
+  return (
+    &lt;div&gt;
+      &lt;Button primary&gt;Primary Button&lt;/Button&gt;
+      &lt;Button&gt;Secondary Button&lt;/Button&gt;
+      &lt;Button primary large&gt;Large Primary Button&lt;/Button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+            
+            <p><strong>Benefits for JS devs:</strong></p>
+            <ul>
+                <li>Write styles in JavaScript directly</li>
+                <li>Component props can control styling</li>
+                <li>Styles are scoped to components automatically</li>
+                <li>Use JavaScript variables, functions, and logic in your styles</li>
+                <li>Only the styles needed are included in the bundle</li>
+            </ul>
+            
+            <h4>Emotion</h4>
+            <p>Similar to styled-components but with more flexibility:</p>
+            
+            <pre><code>/* Emotion example */
+/** @jsx jsx */
+import { css, jsx } from '@emotion/react';
+
+const buttonBase = css`
+  padding: 10px 15px;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+`;
+
+const primaryStyle = css`
+  background-color: #0066cc;
+  color: white;
+  border: 1px solid #0066cc;
+  
+  &:hover {
+    background-color: #0055aa;
+  }
+`;
+
+const secondaryStyle = css`
+  background-color: transparent;
+  color: #0066cc;
+  border: 1px solid #0066cc;
+  
+  &:hover {
+    background-color: #e6f7ff;
+  }
+`;
+
+function Button({ primary, children }) {
+  return (
+    &lt;button
+      css={[
+        buttonBase,
+        primary ? primaryStyle : secondaryStyle
+      ]}
+    &gt;
+      {children}
+    &lt;/button&gt;
+  );
+}</code></pre>
+            
+            <p><strong>Benefits for JS devs:</strong></p>
+            <ul>
+                <li>Composition-based approach using arrays of styles</li>
+                <li>Works with and without React</li>
+                <li>Can be used with the css prop, styled API, or as plain objects</li>
+                <li>Good integration with TypeScript</li>
+            </ul>
+            
+            <h4>JSS (JavaScript Style Sheets)</h4>
+            <p>Write styles as JavaScript objects:</p>
+            
+            <pre><code>/* JSS example */
+import { createUseStyles } from 'react-jss';
+
+// Define styles as JavaScript objects
+const useStyles = createUseStyles({
+  button: {
+    padding: '10px 15px',
+    borderRadius: 4,
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    transition: 'all 0.3s',
+  },
+  primaryButton: {
+    backgroundColor: '#0066cc',
+    color: 'white',
+    border: '1px solid #0066cc',
+    '&:hover': {
+      backgroundColor: '#0055aa',
+    },
+  },
+  secondaryButton: {
+    backgroundColor: 'transparent',
+    color: '#0066cc',
+    border: '1px solid #0066cc',
+    '&:hover': {
+      backgroundColor: '#e6f7ff',
+    },
+  },
+});
+
+function Button({ primary, children }) {
+  const classes = useStyles();
+  
+  return (
+    &lt;button className={`${classes.button} ${primary ? classes.primaryButton : classes.secondaryButton}`}&gt;
+      {children}
+    &lt;/button&gt;
+  );
+}</code></pre>
+            
+            <p><strong>Benefits for JS devs:</strong></p>
+            <ul>
+                <li>Pure JavaScript object syntax for styles</li>
+                <li>Works well with TypeScript for type-checking styles</li>
+                <li>Framework-agnostic with adapters for various libraries</li>
+                <li>Good performance with built-in caching</li>
+            </ul>
+            
+            <h4>Choosing a CSS-in-JS Approach</h4>
+            <p>Consider these factors when selecting a CSS-in-JS library:</p>
+            <ul>
+                <li><strong>Runtime vs. build time:</strong> Some solutions inject styles at runtime, others extract CSS at build time</li>
+                <li><strong>Bundle size:</strong> Runtime libraries add to your JavaScript bundle size</li>
+                <li><strong>Framework integration:</strong> Some solutions are tightly coupled to specific frameworks</li>
+                <li><strong>Developer experience:</strong> Syntax and workflow preferences matter</li>
+                <li><strong>Type safety:</strong> TypeScript integration varies between libraries</li>
+            </ul>
+        </section>
+
+        <section class="css_preprocessors">
+            <h3>CSS Preprocessors for JavaScript Developers</h3>
+            <p>CSS preprocessors add programming features to CSS, making it more familiar to JavaScript developers:</p>
+            
+            <h4>Sass/SCSS</h4>
+            <p>Sass adds variables, nesting, mixins, and more to CSS:</p>
+            
+            <pre><code>/* Sass example */
+// Variables
+$primary-color: #0066cc;
+$border-radius: 4px;
+$spacing: 8px;
+
+// Mixins (like JS functions)
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin button-variant($bg-color, $text-color) {
+  background-color: $bg-color;
+  color: $text-color;
+  
+  &:hover {
+    background-color: darken($bg-color, 10%);
+  }
+}
+
+// Nesting (like component hierarchy)
+.card {
+  border: 1px solid #ddd;
+  border-radius: $border-radius;
+  padding: $spacing * 2;
+  
+  &__header {
+    margin-bottom: $spacing;
+    
+    h2 {
+      margin: 0;
+    }
+  }
+  
+  &__content {
+    color: #666;
+  }
+  
+  &__footer {
+    margin-top: $spacing * 2;
+    @include flex-center;
+  }
+  
+  // Modifiers (like component props)
+  &--featured {
+    border-color: $primary-color;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Button component with variants
+.button {
+  padding: $spacing ($spacing * 2);
+  border-radius: $border-radius;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  
+  &--primary {
+    @include button-variant($primary-color, white);
+  }
+  
+  &--secondary {
+    @include button-variant(transparent, $primary-color);
+    border: 1px solid $primary-color;
+  }
+}</code></pre>
+            
+            <p><strong>JavaScript parallels:</strong></p>
+            <ul>
+                <li>Variables are like JavaScript constants</li>
+                <li>Mixins are like JavaScript functions</li>
+                <li>Nesting is like scoping in JavaScript</li>
+                <li>@import is like JavaScript imports</li>
+                <li>Mathematical operations similar to JavaScript expressions</li>
+            </ul>
+            
+            <h4>PostCSS</h4>
+            <p>PostCSS is a tool for transforming CSS with JavaScript plugins, making it highly configurable:</p>
+            
+            <pre><code>/* PostCSS example with plugins */
+/* Using cssNext features */
+:root {
+  --primary-color: #0066cc;
+  --spacing: 8px;
+}
+
+/* Nesting plugin */
+.card {
+  border-radius: 4px;
+  padding: calc(var(--spacing) * 2);
+  
+  & .card__title {
+    color: var(--primary-color);
+  }
+}
+
+/* Autoprefixer plugin automatically adds vendor prefixes */
+.container {
+  display: flex;
+  user-select: none;
+}
+
+/* postcss.config.js */
+module.exports = {
+  plugins: [
+    require('postcss-preset-env')({
+      features: {
+        'nesting-rules': true
+      }
+    }),
+    require('autoprefixer'),
+    require('cssnano')
+  ]
+}</code></pre>
+            
+            <p><strong>Why it works for JS devs:</strong> PostCSS uses JavaScript for processing CSS, allowing you to create custom transformations using familiar JavaScript syntax. You can add only the features you need through plugins.</p>
+        </section>
+
+        <section class="testing_css">
+            <h3>Testing CSS Architecture</h3>
+            <p>JavaScript developers are familiar with testing concepts that can be applied to CSS:</p>
+            
+            <h4>Visual Regression Testing</h4>
+            <p>Capture screenshots and compare them to detect unwanted visual changes:</p>
+            
+            <pre><code>/* Using Jest and Puppeteer for visual regression testing */
+// visual.test.js
+const puppeteer = require('puppeteer');
+const { toMatchImageSnapshot } = require('jest-image-snapshot');
+
+expect.extend({ toMatchImageSnapshot });
+
+describe('Button Component', () => {
+  let browser;
+  let page;
+  
+  beforeAll(async () => {
+    browser = await puppeteer.launch();
+    page = await browser.newPage();
+    await page.goto('http://localhost:3000/components/button');
+  });
+  
+  afterAll(async () => {
+    await browser.close();
+  });
+  
+  it('renders primary button correctly', async () => {
+    const button = await page.$('.button--primary');
+    const image = await button.screenshot();
+    expect(image).toMatchImageSnapshot();
+  });
+  
+  it('renders secondary button correctly', async () => {
+    const button = await page.$('.button--secondary');
+    const image = await button.screenshot();
+    expect(image).toMatchImageSnapshot();
+  });
+});</code></pre>
+            
+            <p><strong>Why it works for JS devs:</strong> This approach integrates with JavaScript testing frameworks like Jest, providing a familiar testing workflow for component styling.</p>
+            
+            <h4>CSS Unit Testing</h4>
+            <p>Test specific CSS properties with tools like Jest and JSDOM:</p>
+            
+            <pre><code>/* CSS unit testing with Jest */
+// button.test.js
+import { render } from '@testing-library/react';
+import Button from './Button';
+
+describe('Button', () => {
+  it('has correct base styles', () => {
+    const { getByRole } = render(&lt;Button&gt;Click me&lt;/Button&gt;);
+    const button = getByRole('button');
+    
+    const styles = window.getComputedStyle(button);
+    expect(styles.padding).toBe('10px 15px');
+    expect(styles.borderRadius).toBe('4px');
+    expect(styles.fontWeight).toBe('bold');
+  });
+  
+  it('has primary styles when primary prop is true', () => {
+    const { getByRole } = render(&lt;Button primary&gt;Click me&lt;/Button&gt;);
+    const button = getByRole('button');
+    
+    const styles = window.getComputedStyle(button);
+    expect(styles.backgroundColor).toBe('#0066cc');
+    expect(styles.color).toBe('white');
+  });
+});</code></pre>
+            
+            <p><strong>Why it works for JS devs:</strong> This approach lets you test CSS as part of your JavaScript component tests, ensuring that style changes don't break component appearance.</p>
+            
+            <h4>Style Linting</h4>
+            <p>Enforce CSS best practices with linting tools:</p>
+            
+            <pre><code>/* Stylelint configuration */
+// .stylelintrc.js
+module.exports = {
+  extends: ['stylelint-config-standard', 'stylelint-config-prettier'],
+  plugins: ['stylelint-order'],
+  rules: {
+    'color-hex-case': 'lower',
+    'color-hex-length': 'short',
+    'selector-class-pattern': '^[a-z][a-zA-Z0-9_-]+$',
+    'selector-max-id': 0,
+    'order/properties-alphabetical-order': true
+  }
+};
+
+// Command line usage
+// npx stylelint "src/**/*.css" --fix</code></pre>
+            
+            <p><strong>Why it works for JS devs:</strong> Stylelint works similar to ESLint for JavaScript, providing automated checks and fixes for CSS code quality issues.</p>
+        </section>
+
+        <section class="performance_optimization">
+            <h3>CSS Performance Optimization for JavaScript Developers</h3>
+            <p>Apply JavaScript performance optimization thinking to CSS:</p>
+            
+            <h4>Code Splitting for CSS</h4>
+            <p>Load CSS only when needed, similar to JavaScript code splitting:</p>
+            
+            <pre><code>/* CSS code splitting with Webpack */
+// JavaScript entry points
+// home.js
+import './styles/common.css';
+import './styles/home.css';
+
+// product.js
+import './styles/common.css';
+import './styles/product.css';
+
+// Webpack configuration
+// webpack.config.js
+module.exports = {
+  entry: {
+    home: './src/home.js',
+    product: './src/product.js'
+  },
+  output: {
+    filename: '[name].bundle.js',
+    path: path.resolve(__dirname, 'dist')
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [
+          MiniCssExtractPlugin.loader,
+          'css-loader'
+        ]
+      }
+    ]
+  },
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: '[name].css'
+    })
+  ]
+};</code></pre>
+            
+            <p><strong>Why it works for JS devs:</strong> This approach lets you bundle CSS with your JavaScript modules, loading styles only when they're needed just like lazy-loaded JavaScript.</p>
+            
+            <h4>Critical CSS</h4>
+            <p>Inline critical styles and defer non-critical styles for faster initial render:</p>
+            
+            <pre><code>/* Critical CSS implementation */
+// Using the critical package with Gulp
+const gulp = require('gulp');
+const critical = require('critical');
+
+gulp.task('critical', () => {
+  return critical.generate({
+    inline: true,
+    base: 'dist/',
+    src: 'index.html',
+    target: {
+      html: 'index-critical.html',
+      css: 'critical.css'
+    },
+    width: 1300,
+    height: 900,
+    minify: true
+  });
+});
+
+/* Result in HTML */
+&lt;head&gt;
+  &lt;style&gt;
+    /* Critical CSS inlined here */
+    body{font-family:sans-serif}
+    .header{height:60px;background:#fff}
+    .hero{height:500px}
+  &lt;/style&gt;
+  &lt;link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'"&gt;
+  &lt;noscript&gt;&lt;link rel="stylesheet" href="styles.css"&gt;&lt;/noscript&gt;
+&lt;/head&gt;</code></pre>
+            
+            <p><strong>Why it works for JS devs:</strong> This approach is similar to JavaScript performance optimization techniques like code splitting and prefetching, focusing on delivering essential code first and deferring the rest.</p>
+            
+            <h4>Reducing Specificity and Selector Performance</h4>
+            <p>Optimize CSS selectors for better rendering performance:</p>
+            
+            <pre><code>/* Inefficient selectors */
+.header ul li a.nav-link {
+  color: blue;
+}
+
+/* More efficient selectors */
+.nav-link {
+  color: blue;
+}</code></pre>
+            
+            <p><strong>Why it matters:</strong> While modern browsers have optimized CSS performance, keeping selectors simple still provides benefits for maintainability and reduces style conflicts.</p>
+        </section>
+
+        <section class="practical_exercise">
+            <h3>Hands-On Exercise: Component-Based CSS Architecture</h3>
+            <p>Let's apply what we've learned by building a small component library with a thoughtful CSS architecture.</p>
+            
+            <h4>Component Structure</h4>
+            <p>We'll build the following components:</p>
+            <ul>
+                <li>Button (primary, secondary, large variants)</li>
+                <li>Card (standard, featured variants)</li>
+                <li>Form input (standard, error states)</li>
+                <li>Navigation bar</li>
+            </ul>
+            
+            <h4>CSS Architecture Approach</h4>
+            <p>We'll use a BEM-based component architecture with a few key principles:</p>
+            <ul>
+                <li>Each component has its own CSS file</li>
+                <li>Design tokens stored as CSS custom properties</li>
+                <li>State classes to manage component states</li>
+                <li>Consistent naming conventions</li>
+            </ul>
+            
+            <h4>Design Tokens (variables.css)</h4>
+            <pre><code>/* variables.css */
+:root {
+  /* Colors */
+  --color-primary: #0066cc;
+  --color-primary-dark: #0055aa;
+  --color-secondary: #6c757d;
+  --color-secondary-dark: #5a6268;
+  --color-success: #28a745;
+  --color-danger: #dc3545;
+  --color-warning: #ffc107;
+  --color-info: #17a2b8;
+  --color-light: #f8f9fa;
+  --color-dark: #343a40;
+  --color-white: #ffffff;
+  
+  /* Text colors */
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-light: #f8f9fa;
+  
+  /* Border colors */
+  --border-color: #dee2e6;
+  --border-color-focus: #80bdff;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* Typography */
+  --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-size-base: 16px;
+  --font-size-sm: 14px;
+  --font-size-lg: 18px;
+  --font-weight-normal: 400;
+  --font-weight-bold: 700;
+  --line-height-base: 1.5;
+  
+  /* Borders */
+  --border-radius: 4px;
+  --border-radius-lg: 8px;
+  --border-width: 1px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  
+  /* Animation */
+  --transition-base: all 0.2s ease-in-out;
+}</code></pre>
+            
+            <h4>Component CSS Files</h4>
+            
+            <pre><code>/* components/button.css */
+.button {
+  display: inline-block;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-base);
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius);
+  border: var(--border-width) solid transparent;
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+/* Variants */
+.button--primary {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.button--primary:hover {
+  background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+.button--secondary {
+  background-color: var(--color-secondary);
+  border-color: var(--color-secondary);
+  color: var(--color-white);
+}
+
+.button--secondary:hover {
+  background-color: var(--color-secondary-dark);
+  border-color: var(--color-secondary-dark);
+}
+
+.button--outline {
+  background-color: transparent;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.button--outline:hover {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+/* Sizes */
+.button--large {
+  font-size: var(--font-size-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.button--small {
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+/* States */
+.button.is-disabled,
+.button:disabled {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.button.is-loading {
+  position: relative;
+  color: transparent;
+}
+
+.button.is-loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1em;
+  height: 1em;
+  margin-top: -0.5em;
+  margin-left: -0.5em;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: button-loading-spinner 0.75s linear infinite;
+}
+
+@keyframes button-loading-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* components/card.css */
+.card {
+  background-color: var(--color-white);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.card__header {
+  padding: var(--spacing-md);
+  border-bottom: var(--border-width) solid var(--border-color);
+  background-color: var(--color-light);
+}
+
+.card__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.card__content {
+  padding: var(--spacing-md);
+}
+
+.card__footer {
+  padding: var(--spacing-md);
+  border-top: var(--border-width) solid var(--border-color);
+  background-color: var(--color-light);
+}
+
+/* Variants */
+.card--featured {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.card--featured .card__header {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+/* components/form.css */
+.form-group {
+  margin-bottom: var(--spacing-md);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-weight: var(--font-weight-bold);
+}
+
+.form-input {
+  display: block;
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  color: var(--text-primary);
+  background-color: var(--color-white);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius);
+  transition: var(--transition-base);
+}
+
+.form-input:focus {
+  border-color: var(--border-color-focus);
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* States */
+.form-input.has-error {
+  border-color: var(--color-danger);
+}
+
+.form-input.has-error:focus {
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.form-error-message {
+  margin-top: var(--spacing-xs);
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+}
+
+/* components/navbar.css */
+.navbar {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background-color: var(--color-dark);
+  color: var(--color-white);
+}
+
+.navbar__brand {
+  margin-right: var(--spacing-xl);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-white);
+  text-decoration: none;
+}
+
+.navbar__nav {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar__item {
+  margin-right: var(--spacing-md);
+}
+
+.navbar__link {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  transition: var(--transition-base);
+}
+
+.navbar__link:hover,
+.navbar__link.is-active {
+  color: var(--color-white);
+}</code></pre>
+            
+            <h4>Main CSS File</h4>
+            <pre><code>/* main.css */
+/* Import variables first */
+@import 'variables.css';
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  color: var(--text-primary);
+  background-color: var(--color-light);
+}
+
+/* Container utility */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+/* Import components */
+@import 'components/button.css';
+@import 'components/card.css';
+@import 'components/form.css';
+@import 'components/navbar.css';</code></pre>
+            
+            <h4>HTML Implementation</h4>
+            <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Component Library&lt;/title&gt;
+    &lt;link rel="stylesheet" href="main.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;nav class="navbar"&gt;
+        &lt;a href="#" class="navbar__brand"&gt;Component Library&lt;/a&gt;
+        &lt;ul class="navbar__nav"&gt;
+            &lt;li class="navbar__item"&gt;
+                &lt;a href="#buttons" class="navbar__link"&gt;Buttons&lt;/a&gt;
+            &lt;/li&gt;
+            &lt;li class="navbar__item"&gt;
+                &lt;a href="#cards" class="navbar__link"&gt;Cards&lt;/a&gt;
+            &lt;/li&gt;
+            &lt;li class="navbar__item"&gt;
+                &lt;a href="#forms" class="navbar__link"&gt;Forms&lt;/a&gt;
+            &lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/nav&gt;
+
+    &lt;div class="container"&gt;
+        &lt;section id="buttons" style="margin: 2rem 0;"&gt;
+            &lt;h2&gt;Buttons&lt;/h2&gt;
+            &lt;div style="margin: 1rem 0;"&gt;
+                &lt;button class="button button--primary"&gt;Primary Button&lt;/button&gt;
+                &lt;button class="button button--secondary"&gt;Secondary Button&lt;/button&gt;
+                &lt;button class="button button--outline"&gt;Outline Button&lt;/button&gt;
+            &lt;/div&gt;
+            &lt;div style="margin: 1rem 0;"&gt;
+                &lt;button class="button button--primary button--large"&gt;Large Button&lt;/button&gt;
+                &lt;button class="button button--primary button--small"&gt;Small Button&lt;/button&gt;
+            &lt;/div&gt;
+            &lt;div style="margin: 1rem 0;"&gt;
+                &lt;button class="button button--primary is-disabled"&gt;Disabled Button&lt;/button&gt;
+                &lt;button class="button button--primary is-loading"&gt;Loading Button&lt;/button&gt;
+            &lt;/div&gt;
+        &lt;/section&gt;
+
+        &lt;section id="cards" style="margin: 2rem 0;"&gt;
+            &lt;h2&gt;Cards&lt;/h2&gt;
+            &lt;div style="display: flex; gap: 1rem; margin: 1rem 0;"&gt;
+                &lt;div class="card" style="width: 300px;"&gt;
+                    &lt;div class="card__header"&gt;
+                        &lt;h3 class="card__title"&gt;Standard Card&lt;/h3&gt;
+                    &lt;/div&gt;
+                    &lt;div class="card__content"&gt;
+                        &lt;p&gt;This is a standard card component with header, content, and footer sections.&lt;/p&gt;
+                    &lt;/div&gt;
+                    &lt;div class="card__footer"&gt;
+                        &lt;button class="button button--primary"&gt;Action&lt;/button&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+
+                <div class="card card--featured" style="width: 300px;">
+                  <div class="card__header">
+                      <h3 class="card__title">Featured Card</h3>
+                  </div>
+                  <div class="card__content">
+                      <p>This is a featured card with a highlighted appearance to draw attention.</p>
+                  </div>
+                  <div class="card__footer">
+                      <button class="button button--primary">Action</button>
+                  </div>
+              </div>
+          </div>
+      </section>
+
+      <section id="forms" style="margin: 2rem 0;">
+          <h2>Forms</h2>
+          <div style="max-width: 500px; margin: 1rem 0;">
+              <div class="form-group">
+                  <label class="form-label" for="name">Name</label>
+                  <input type="text" id="name" class="form-input" placeholder="Enter your name">
+              </div>
+              
+              <div class="form-group">
+                  <label class="form-label" for="email">Email</label>
+                  <input type="email" id="email" class="form-input" placeholder="Enter your email">
+              </div>
+              
+              <div class="form-group">
+                  <label class="form-label" for="password">Password</label>
+                  <input type="password" id="password" class="form-input has-error" placeholder="Enter your password">
+                  <div class="form-error-message">Password must be at least 8 characters long</div>
+              </div>
+              
+              <button class="button button--primary">Submit</button>
+          </div>
+      </section>
+  </div>
+
+  <script>
+      // JavaScript for component interactions
+      document.querySelectorAll('.navbar__link').forEach(link => {
+          link.addEventListener('click', () => {
+              // Remove active class from all links
+              document.querySelectorAll('.navbar__link').forEach(el => {
+                  el.classList.remove('is-active');
+              });
+              
+              // Add active class to clicked link
+              link.classList.add('is-active');
+          });
+      });
+  </script>
+</body>
+</html>

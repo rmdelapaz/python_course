@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Standard Library: Working with datetime</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Standard Library: Working with datetime</h1>
+        <h2>Understanding Date and Time Handling in Python</h2>
+    </header>
+
+    <main>
+        <section class="lecture-intro">
+            <h3>Introduction to Date and Time in Programming</h3>
+            <p>Time is a fundamental concept in both our everyday lives and in programming. From scheduling events to calculating durations, recording timestamps, or handling timezone differences, working with dates and times is an essential skill for any developer.</p>
+            
+            <p>Think of date and time handling like the coordination of a global train system: precise, standardized, yet requiring careful synchronization across different parts of the world. In this lecture, we'll explore how Python's <code>datetime</code> module gives us the tools to be the conductors of this complex system.</p>
+        </section>
+
+        <section class="module-overview">
+            <h3>The datetime Module: Your Time Management Toolkit</h3>
+            <p>The <code>datetime</code> module is Python's built-in solution for handling dates, times, and time intervals. Think of it as a Swiss Army knife for all your temporal needs—providing specialized tools for different time-related operations.</p>
+            
+            <p>The module consists of several key classes:</p>
+            <ul>
+                <li><strong>datetime</strong>: Combines date and time information (like "January 15, 2025, 3:30 PM")</li>
+                <li><strong>date</strong>: Handles date without time (like "January 15, 2025")</li>
+                <li><strong>time</strong>: Manages time independent of date (like "3:30 PM")</li>
+                <li><strong>timedelta</strong>: Represents time differences or durations (like "3 days, 4 hours")</li>
+                <li><strong>tzinfo</strong>: Abstract base class for timezone information</li>
+                <li><strong>timezone</strong>: Implementation of tzinfo with fixed offset from UTC</li>
+            </ul>
+            
+            <p>Let's import the module and start exploring these powerful tools:</p>
+            
+            <pre><code>
+# Import the entire module
+import datetime
+
+# Or import specific classes (more common approach)
+from datetime import datetime, date, time, timedelta, timezone
+            </code></pre>
+        </section>
+
+        <section class="working-with-date">
+            <h3>Working with Dates</h3>
+            <p>The <code>date</code> class represents calendar dates (year, month, day) without time information. Think of it as the page of a calendar—it shows you a specific day, but not what time of day it is.</p>
+            
+            <h4>Creating Date Objects</h4>
+            <pre><code>
+# Import the date class
+from datetime import date
+
+# Create a date object for a specific date
+independence_day = date(2025, 7, 4)
+print(independence_day)  # Output: 2025-07-04
+
+# Get today's date
+today = date.today()
+print(today)  # Output: Current date in YYYY-MM-DD format
+            </code></pre>
+            
+            <h4>Accessing Date Components</h4>
+            <pre><code>
+# Extract components from a date object
+print(f"Year: {today.year}")
+print(f"Month: {today.month}")
+print(f"Day: {today.day}")
+
+# Get day of week (0 = Monday, 6 = Sunday)
+print(f"Weekday: {today.weekday()}")  # 0-6 (Monday to Sunday)
+print(f"ISO Weekday: {today.isoweekday()}")  # 1-7 (Monday to Sunday)
+            </code></pre>
+            
+            <h4>Formatting Dates</h4>
+            <pre><code>
+# Format dates as strings
+print(today.strftime("%A, %B %d, %Y"))  # Example: "Monday, April 19, 2025"
+print(today.strftime("%m/%d/%Y"))  # Example: "04/19/2025"
+print(today.strftime("%d-%m-%Y"))  # Example: "19-04-2025"
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Due Date Calculator</h4>
+                <p>Imagine you're building a library management system and need to calculate when books are due:</p>
+                <pre><code>
+from datetime import date, timedelta
+
+def calculate_due_date(checkout_date, loan_period_days=14):
+    """Calculate when a book is due based on checkout date."""
+    return checkout_date + timedelta(days=loan_period_days)
+
+# Example usage
+today = date.today()
+due_date = calculate_due_date(today)
+print(f"Book checked out today is due: {due_date.strftime('%A, %B %d, %Y')}")
+
+# For books with extended loan periods (e.g., textbooks)
+textbook_due = calculate_due_date(today, loan_period_days=30)
+print(f"Textbook checked out today is due: {textbook_due.strftime('%A, %B %d, %Y')}")
+                </code></pre>
+            </div>
+        </section>
+
+        <section class="working-with-time">
+            <h3>Working with Time</h3>
+            <p>The <code>time</code> class represents time independent of any date—think of it like a clock showing the current time without telling you what day it is.</p>
+            
+            <h4>Creating Time Objects</h4>
+            <pre><code>
+from datetime import time
+
+# Create time objects (hour, minute, second, microsecond)
+morning_meeting = time(9, 30, 0)
+print(morning_meeting)  # Output: 09:30:00
+
+lunch_time = time(12, 0, 0)
+print(lunch_time)  # Output: 12:00:00
+
+precise_time = time(17, 45, 30, 500000)  # With microseconds
+print(precise_time)  # Output: 17:45:30.500000
+            </code></pre>
+            
+            <h4>Accessing Time Components</h4>
+            <pre><code>
+# Extract components from a time object
+print(f"Hour: {morning_meeting.hour}")
+print(f"Minute: {morning_meeting.minute}")
+print(f"Second: {morning_meeting.second}")
+print(f"Microsecond: {morning_meeting.microsecond}")
+            </code></pre>
+            
+            <h4>Formatting Times</h4>
+            <pre><code>
+# Format times as strings
+print(morning_meeting.strftime("%I:%M %p"))  # Output: "09:30 AM"
+print(lunch_time.strftime("%H:%M"))  # Output: "12:00" (24-hour format)
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Time Slot Availability</h4>
+                <p>Consider a scheduling system that checks if a proposed meeting time falls within business hours:</p>
+                <pre><code>
+from datetime import time
+
+def is_during_business_hours(meeting_time):
+    """Check if a meeting time is during business hours (9 AM - 5 PM)."""
+    business_start = time(9, 0)
+    business_end = time(17, 0)
+    
+    return business_start <= meeting_time < business_end
+
+# Example usage
+proposed_meeting_1 = time(14, 30)  # 2:30 PM
+proposed_meeting_2 = time(8, 0)    # 8:00 AM
+proposed_meeting_3 = time(17, 30)  # 5:30 PM
+
+print(f"2:30 PM meeting is during business hours: {is_during_business_hours(proposed_meeting_1)}")
+print(f"8:00 AM meeting is during business hours: {is_during_business_hours(proposed_meeting_2)}")
+print(f"5:30 PM meeting is during business hours: {is_during_business_hours(proposed_meeting_3)}")
+                </code></pre>
+            </div>
+        </section>
+
+        <section class="working-with-datetime">
+            <h3>Working with Combined Date and Time</h3>
+            <p>The <code>datetime</code> class combines date and time information, giving you a complete temporal snapshot. Think of it as both a calendar and a clock, working together to give you the exact moment in time.</p>
+            
+            <h4>Creating Datetime Objects</h4>
+            <pre><code>
+from datetime import datetime
+
+# Create a specific datetime
+new_years = datetime(2026, 1, 1, 0, 0, 0)
+print(new_years)  # Output: 2026-01-01 00:00:00
+
+# Get current datetime
+now = datetime.now()
+print(now)  # Current datetime with microsecond precision
+
+# Get current UTC datetime
+utc_now = datetime.utcnow()
+print(utc_now)  # Current UTC datetime
+            </code></pre>
+            
+            <h4>Converting Between Dates and Datetimes</h4>
+            <pre><code>
+from datetime import date, datetime
+
+# Convert date to datetime (midnight)
+today = date.today()
+today_midnight = datetime.combine(today, datetime.min.time())
+print(today_midnight)  # Today's date at 00:00:00
+
+# Extract date from datetime
+just_date = now.date()
+print(just_date)  # Just the date portion
+
+# Extract time from datetime
+just_time = now.time()
+print(just_time)  # Just the time portion
+            </code></pre>
+            
+            <h4>Formatting Datetime Objects</h4>
+            <pre><code>
+# Format datetime as string
+print(now.strftime("%Y-%m-%d %H:%M:%S"))  # ISO format
+print(now.strftime("%A, %B %d, %Y at %I:%M %p"))  # Readable format
+            </code></pre>
+
+            <h4>Parsing Datetime Strings</h4>
+            <p>Converting string representations back to datetime objects is a common task in real-world applications:</p>
+            <pre><code>
+# Parse string to datetime
+date_string = "2025-12-25 07:30:00"
+christmas = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
+print(christmas)  # Output: 2025-12-25 07:30:00
+
+# Another example with different format
+event_string = "Apr 20, 2025 - 14:30"
+event_date = datetime.strptime(event_string, "%b %d, %Y - %H:%M")
+print(event_date)  # Output: 2025-04-20 14:30:00
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Event Reminder System</h4>
+                <p>Imagine building a reminder system that alerts users before important events:</p>
+                <pre><code>
+from datetime import datetime, timedelta
+
+def should_send_reminder(event_datetime):
+    """Determine if we should send a reminder (24 hours before event)."""
+    now = datetime.now()
+    reminder_threshold = event_datetime - timedelta(days=1)
+    
+    # If current time is within a 30 minute window of the 24-hour mark
+    return reminder_threshold <= now < reminder_threshold + timedelta(minutes=30)
+
+# Example events
+conference_call = datetime(2025, 4, 21, 10, 0, 0)  # April 21, 2025 at 10:00 AM
+team_lunch = datetime(2025, 4, 20, 12, 30, 0)      # April 20, 2025 at 12:30 PM
+
+# Check if reminders should be sent (this would run in a scheduled task)
+events = [
+    {"name": "Conference Call", "datetime": conference_call},
+    {"name": "Team Lunch", "datetime": team_lunch}
+]
+
+for event in events:
+    if should_send_reminder(event["datetime"]):
+        print(f"REMINDER: '{event['name']}' is happening tomorrow at {event['datetime'].strftime('%I:%M %p')}")
+                </code></pre>
+            </div>
+        </section>
+
+        <section class="working-with-timedeltas">
+            <h3>Working with Time Intervals: timedelta</h3>
+            <p>The <code>timedelta</code> class represents a duration or difference between two dates, times, or datetimes. Think of it as a measuring tape for time—it tells you the distance between two temporal points.</p>
+            
+            <h4>Creating and Using Timedeltas</h4>
+            <pre><code>
+from datetime import datetime, timedelta
+
+# Create timedeltas
+one_day = timedelta(days=1)
+one_week = timedelta(days=7)
+one_hour = timedelta(hours=1)
+complex_duration = timedelta(days=2, hours=3, minutes=30, seconds=15)
+
+# Current datetime
+now = datetime.now()
+
+# Date arithmetic
+tomorrow = now + one_day
+print(f"Tomorrow: {tomorrow}")
+
+next_week = now + one_week
+print(f"Next week: {next_week}")
+
+hour_ago = now - one_hour
+print(f"One hour ago: {hour_ago}")
+            </code></pre>
+            
+            <h4>Extracting Information from Timedeltas</h4>
+            <pre><code>
+# Total duration in seconds
+print(f"One week in seconds: {one_week.total_seconds()}")
+
+# Complex calculation
+duration = complex_duration
+print(f"Days: {duration.days}")
+print(f"Seconds: {duration.seconds}")  # Remaining seconds (not including days)
+print(f"Microseconds: {duration.microseconds}")
+print(f"Total seconds: {duration.total_seconds()}")
+            </code></pre>
+            
+            <h4>Calculating Time Differences</h4>
+            <pre><code>
+# Calculate age
+birth_date = datetime(1990, 5, 15)
+now = datetime.now()
+age = now - birth_date
+
+print(f"Age in days: {age.days}")
+print(f"Age in years (approximate): {age.days / 365.25:.2f}")
+
+# Calculate time between events
+event_start = datetime(2025, 6, 15, 10, 0, 0)
+event_end = datetime(2025, 6, 15, 16, 30, 0)
+event_duration = event_end - event_start
+
+hours = event_duration.seconds / 3600
+minutes = (event_duration.seconds % 3600) / 60
+print(f"Event duration: {hours:.0f} hours and {minutes:.0f} minutes")
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Project Deadline Tracker</h4>
+                <p>Consider a project management tool that tracks approaching deadlines:</p>
+                <pre><code>
+from datetime import datetime, timedelta
+
+def get_deadline_status(deadline):
+    """Return status of a deadline relative to current time."""
+    now = datetime.now()
+    time_left = deadline - now
+    
+    if time_left.total_seconds() < 0:
+        return "OVERDUE"
+    
+    # Convert to days/hours for human-readable format
+    days_left = time_left.days
+    hours_left = time_left.seconds // 3600
+    
+    if days_left > 7:
+        return f"{days_left} days left"
+    elif days_left > 0:
+        return f"{days_left} days, {hours_left} hours left - APPROACHING"
+    elif hours_left > 0:
+        return f"{hours_left} hours left - URGENT"
+    else:
+        minutes_left = (time_left.seconds % 3600) // 60
+        return f"{minutes_left} minutes left - CRITICAL"
+
+# Example projects with deadlines
+projects = [
+    {"name": "Website Redesign", "deadline": datetime.now() + timedelta(days=12)},
+    {"name": "Quarterly Report", "deadline": datetime.now() + timedelta(days=2, hours=8)},
+    {"name": "Client Presentation", "deadline": datetime.now() + timedelta(hours=18)},
+    {"name": "Bug Fix", "deadline": datetime.now() + timedelta(minutes=45)},
+    {"name": "Legacy System Migration", "deadline": datetime.now() - timedelta(days=1)}
+]
+
+# Display status of each project
+for project in projects:
+    status = get_deadline_status(project["deadline"])
+    print(f"Project: {project['name']} - Status: {status}")
+                </code></pre>
+            </div>
+        </section>
+
+        <section class="working-with-timezones">
+            <h3>Working with Time Zones</h3>
+            <p>Time zones add a layer of complexity to datetime handling. Think of them as different regions on a global clock, each spinning at its own offset from the universal reference point (UTC).</p>
+            
+            <h4>Using timezone and UTC</h4>
+            <pre><code>
+from datetime import datetime, timezone, timedelta
+
+# Create a timezone-aware datetime (UTC)
+now_utc = datetime.now(timezone.utc)
+print(f"Current UTC time: {now_utc}")
+
+# Create a specific timezone
+eastern_tz = timezone(timedelta(hours=-5))  # UTC-5 (EST)
+now_eastern = datetime.now(eastern_tz)
+print(f"Current Eastern time: {now_eastern}")
+
+# Convert between timezones
+utc_time = datetime.now(timezone.utc)
+pacific_tz = timezone(timedelta(hours=-8))  # UTC-8 (PST)
+pacific_time = utc_time.astimezone(pacific_tz)
+print(f"Pacific time: {pacific_time}")
+            </code></pre>
+            
+            <p>While the built-in timezone support is useful, it's limited to fixed offsets. For more comprehensive timezone handling, including daylight saving time transitions, the third-party <code>pytz</code> or <code>zoneinfo</code> (Python 3.9+) modules are recommended.</p>
+            
+            <h4>Using zoneinfo (Python 3.9+)</h4>
+            <pre><code>
+# Python 3.9+ only
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+# Create timezone-aware datetimes
+nyc_time = datetime.now(ZoneInfo("America/New_York"))
+tokyo_time = datetime.now(ZoneInfo("Asia/Tokyo"))
+
+print(f"New York: {nyc_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+print(f"Tokyo: {tokyo_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+
+# Convert between timezones
+meeting_in_nyc = datetime(2025, 6, 15, 10, 0, 0, tzinfo=ZoneInfo("America/New_York"))
+meeting_in_tokyo = meeting_in_nyc.astimezone(ZoneInfo("Asia/Tokyo"))
+
+print(f"Meeting time in New York: {meeting_in_nyc.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+print(f"Meeting time in Tokyo: {meeting_in_tokyo.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Global Conference Scheduler</h4>
+                <p>Imagine building a system to schedule global virtual conference sessions across different time zones:</p>
+                <pre><code>
+from datetime import datetime
+from zoneinfo import ZoneInfo  # Python 3.9+
+
+def format_conference_schedule(main_event_time, attendee_timezone):
+    """Convert conference time to an attendee's local timezone."""
+    local_time = main_event_time.astimezone(ZoneInfo(attendee_timezone))
+    return local_time.strftime("%A, %B %d at %I:%M %p %Z")
+
+# Main conference event in UTC
+conference_start = datetime(2025, 9, 15, 14, 0, 0, tzinfo=ZoneInfo("UTC"))
+
+# Attendees in different timezones
+attendees = [
+    {"name": "Emma", "timezone": "America/New_York"},
+    {"name": "Juan", "timezone": "America/Mexico_City"},
+    {"name": "Sophie", "timezone": "Europe/Paris"},
+    {"name": "Raj", "timezone": "Asia/Kolkata"},
+    {"name": "Yuki", "timezone": "Asia/Tokyo"}
+]
+
+# Send personalized schedule information to each attendee
+print(f"Global Conference starts at: {conference_start.strftime('%H:%M UTC on %B %d, %Y')}")
+print("Local times for attendees:")
+
+for attendee in attendees:
+    local_schedule = format_conference_schedule(conference_start, attendee["timezone"])
+    print(f"  {attendee['name']} ({attendee['timezone']}): {local_schedule}")
+                </code></pre>
+            </div>
+        </section>
+
+        <section class="common-operations">
+            <h3>Common Datetime Operations</h3>
+            
+            <h4>Finding the First/Last Day of Month</h4>
+            <pre><code>
+from datetime import datetime, timedelta
+import calendar
+
+def get_month_bounds(year, month):
+    """Get the first and last day of a given month."""
+    # First day is easy
+    first_day = datetime(year, month, 1)
+    
+    # Last day: Go to first day of next month and subtract one day
+    if month == 12:
+        next_month = datetime(year + 1, 1, 1)
+    else:
+        next_month = datetime(year, month + 1, 1)
+    
+    last_day = next_month - timedelta(days=1)
+    
+    return first_day, last_day
+
+# Example: Get bounds for April 2025
+first, last = get_month_bounds(2025, 4)
+print(f"First day: {first.strftime('%A, %B %d, %Y')}")  # Thursday, April 01, 2025
+print(f"Last day: {last.strftime('%A, %B %d, %Y')}")    # Wednesday, April 30, 2025
+
+# Alternative using calendar module
+def get_month_bounds_alt(year, month):
+    """Alternative implementation using calendar module."""
+    last_day = calendar.monthrange(year, month)[1]
+    return datetime(year, month, 1), datetime(year, month, last_day)
+
+first_alt, last_alt = get_month_bounds_alt(2025, 4)
+print(f"First day (alt): {first_alt.strftime('%A, %B %d, %Y')}")
+print(f"Last day (alt): {last_alt.strftime('%A, %B %d, %Y')}")
+            </code></pre>
+            
+            <h4>Working with Week Numbers</h4>
+            <pre><code>
+from datetime import datetime, timedelta
+
+def get_week_dates(year, week_number):
+    """Get start and end dates for a specific ISO week number."""
+    # Create a date for January 1st of the given year
+    jan1 = datetime(year, 1, 1)
+    
+    # Get the day of week for January 1st (1-7, where 1 is Monday)
+    jan1_weekday = jan1.isoweekday()
+    
+    # Calculate how many days to add to get to the first Monday
+    days_to_monday = (8 - jan1_weekday) % 7
+    
+    # Find the first Monday of the year
+    first_monday = jan1 + timedelta(days=days_to_monday)
+    
+    # Calculate the Monday of the requested week
+    target_monday = first_monday + timedelta(weeks=week_number - 1)
+    target_sunday = target_monday + timedelta(days=6)
+    
+    return target_monday, target_sunday
+
+# Example: Get dates for the 16th week of 2025
+week_start, week_end = get_week_dates(2025, 16)
+print(f"Week 16 of 2025 starts on {week_start.strftime('%A, %B %d')}")
+print(f"Week 16 of 2025 ends on {week_end.strftime('%A, %B %d')}")
+
+# Alternative using ISO calendar
+def get_dates_for_iso_week(year, week):
+    """Get date range for an ISO week using isocalendar."""
+    # Find a day in the requested week
+    # This approach requires trying days until we find one in the target week
+    jan1 = datetime(year, 1, 1)
+    
+    # Create a date that we know is in the requested week
+    # We add (week-1) * 7 days to January 1, which might overshoot
+    # but will get us in the ballpark
+    target_day = jan1 + timedelta(days=(week-1)*7)
+    
+    # Adjust until we're in the correct week
+    iso_year, iso_week, _ = target_day.isocalendar()
+    while iso_week != week or iso_year != year:
+        if iso_week < week:
+            target_day += timedelta(days=7)
+        else:
+            target_day -= timedelta(days=7)
+        iso_year, iso_week, _ = target_day.isocalendar()
+    
+    # Find Monday (day 1) of this week
+    weekday = target_day.isoweekday()
+    monday = target_day - timedelta(days=weekday-1)
+    sunday = monday + timedelta(days=6)
+    
+    return monday, sunday
+
+week_start_alt, week_end_alt = get_dates_for_iso_week(2025, 16)
+print(f"ISO Week 16 of 2025 starts on {week_start_alt.strftime('%A, %B %d')}")
+print(f"ISO Week 16 of 2025 ends on {week_end_alt.strftime('%A, %B %d')}")
+            </code></pre>
+            
+            <h4>Age Calculation</h4>
+            <pre><code>
+from datetime import datetime, date
+
+def calculate_age(birth_date):
+    """Calculate age from birth date to today."""
+    today = date.today()
+    
+    # Calculate the age
+    age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+    
+    # Determine if birthday has occurred this year
+    has_had_birthday = (today.month, today.day) >= (birth_date.month, birth_date.day)
+    
+    return age, has_had_birthday
+
+# Example usage
+birth_date = date(1990, 6, 15)
+age, has_had_birthday = calculate_age(birth_date)
+
+print(f"Age: {age}")
+if has_had_birthday:
+    print("Birthday has already occurred this year.")
+else:
+    # Calculate days until next birthday
+    today = date.today()
+    next_birthday_year = today.year
+    
+    # If birthday hasn't occurred yet this year, use current year
+    # Otherwise, use next year
+    if (birth_date.month, birth_date.day) < (today.month, today.day):
+        next_birthday_year += 1
+        
+    next_birthday = date(next_birthday_year, birth_date.month, birth_date.day)
+    days_until_birthday = (next_birthday - today).days
+    
+    print(f"Birthday is coming up in {days_until_birthday} days.")
+            </code></pre>
+        </section>
+
+        <section class="advanced-topics">
+            <h3>Advanced Topics</h3>
+            
+            <h4>Performance Considerations</h4>
+            <p>Working with date and time operations can sometimes be performance-intensive. Here are some tips:</p>
+            <ul>
+                <li>Cache timezone conversions when processing multiple dates</li>
+                <li>Use the most appropriate class for your needs (e.g., use <code>date</code> instead of <code>datetime</code> if you don't need time precision)</li>
+                <li>For high-performance applications with many datetime operations, consider the <code>pendulum</code> or <code>arrow</code> third-party libraries</li>
+            </ul>
+            
+            <h4>Working with Recurring Events</h4>
+            <pre><code>
+from datetime import datetime, timedelta
+
+def generate_recurring_events(start_date, end_date, interval_days):
+    """Generate a series of recurring events."""
+    current_date = start_date
+    events = []
+    
+    while current_date <= end_date:
+        events.append(current_date)
+        current_date += timedelta(days=interval_days)
+    
+    return events
+
+# Example: Weekly team meetings for the next 2 months
+today = datetime.now()
+two_months_later = today + timedelta(days=60)
+
+# Weekly meetings (every 7 days)
+team_meetings = generate_recurring_events(today, two_months_later, 7)
+
+print("Upcoming team meetings:")
+for i, meeting in enumerate(team_meetings, 1):
+    print(f"Meeting #{i}: {meeting.strftime('%A, %B %d, %Y')}")
+
+# More complex example: Monthly meetings (on the 15th of each month)
+def generate_monthly_events(start_date, num_months, day_of_month=1):
+    """Generate monthly events on a specific day of the month."""
+    events = []
+    current_date = start_date.replace(day=day_of_month)
+    
+    # If we've already passed this day in the starting month, move to next month
+    if current_date < start_date:
+        current_month = current_date.month % 12 + 1
+        current_year = current_date.year + (current_date.month == 12)
+        current_date = current_date.replace(year=current_year, month=current_month)
+    
+    # Generate the events
+    for _ in range(num_months):
+        events.append(current_date)
+        
+        # Move to next month
+        current_month = current_date.month % 12 + 1
+        current_year = current_date.year + (current_date.month == 12)
+        
+        # Handle cases where the target day doesn't exist in the next month
+        try:
+            current_date = current_date.replace(year=current_year, month=current_month)
+        except ValueError:
+            # We're trying to create an invalid date (e.g., February 30)
+            # In this case, use the last day of the month
+            if current_month == 2:
+                # Special handling for February
+                if (current_year % 4 == 0 and current_year % 100 != 0) or (current_year % 400 == 0):
+                    # Leap year
+                    current_date = current_date.replace(year=current_year, month=current_month, day=29)
+                else:
+                    current_date = current_date.replace(year=current_year, month=current_month, day=28)
+            else:
+                # For other months, find the last day
+                if current_month in [4, 6, 9, 11]:
+                    current_date = current_date.replace(year=current_year, month=current_month, day=30)
+                else:
+                    current_date = current_date.replace(year=current_year, month=current_month, day=31)
+    
+    return events
+
+# Example: Monthly finance meetings on the 15th for a year
+monthly_meetings = generate_monthly_events(datetime.now(), 12, 15)
+
+print("\nUpcoming monthly finance meetings:")
+for i, meeting in enumerate(monthly_meetings, 1):
+    print(f"Meeting #{i}: {meeting.strftime('%A, %B %d, %Y')}")
+            </code></pre>
+        </section>
+
+        <section class="practical-applications">
+            <h3>Practical Applications</h3>
+            
+            <h4>Building a Simple Calendar Application</h4>
+            <pre><code>
+from datetime import datetime, timedelta
+import calendar
+
+def display_month_calendar(year, month):
+    """Display a text-based calendar for a specific month."""
+    # Get the calendar for the month
+    cal = calendar.monthcalendar(year, month)
+    
+    # Get the month name
+    month_name = calendar.month_name[month]
+    
+    # Display the header
+    print(f"\n{month_name} {year}".center(20))
+    print("Mo Tu We Th Fr Sa Su".center(20))
+    
+    # Display the calendar
+    for week in cal:
+        week_str = ""
+        for day in week:
+            if day == 0:
+                week_str += "   "  # Empty day
+            else:
+                week_str += f"{day:2d} "
+        print(week_str.center(20))
+
+# Display calendar for April 2025
+display_month_calendar(2025, 4)
+
+def display_upcoming_events(events, days=30):
+    """Display upcoming events within a specified number of days."""
+    now = datetime.now()
+    end_date = now + timedelta(days=days)
+    
+    # Filter events within the date range and sort them
+    upcoming = [e for e in events if now <= e['date'] <= end_date]
+    upcoming.sort(key=lambda x: x['date'])
+    
+    if not upcoming:
+        print(f"No events in the next {days} days.")
+        return
+    
+    print(f"\nUpcoming events in the next {days} days:")
+    for event in upcoming:
+        date_str = event['date'].strftime('%A, %B %d, %Y')
+        print(f"{date_str} - {event['title']}")
+
+# Example events
+events = [
+    {'title': 'Team Meeting', 'date': datetime(2025, 4, 21, 10, 0)},
+    {'title': 'Project Deadline', 'date': datetime(2025, 4, 30, 17, 0)},
+    {'title': 'Quarterly Review', 'date': datetime(2025, 5, 15, 14, 0)},
+    {'title': 'Training Session', 'date': datetime(2025, 4, 25, 9, 0)},
+    {'title': 'Conference', 'date': datetime(2025, 5, 5, 8, 0)}
+]
+
+# Display upcoming events in the next 30 days
+display_upcoming_events(events)
+            </code></pre>
+            
+            <h4>Working with Business Days</h4>
+            <pre><code>
+from datetime import datetime, timedelta
+
+def is_weekend(date):
+    """Check if a date falls on a weekend (Saturday or Sunday)."""
+    return date.weekday() >= 5  # 5=Saturday, 6=Sunday
+
+def is_holiday(date, holidays):
+    """Check if a date is a holiday."""
+    # Convert date to date only (no time) for comparison
+    date_only = date.date() if isinstance(date, datetime) else date
+    return date_only in holidays
+
+def add_business_days(start_date, num_days, holidays=[]):
+    """Add a specific number of business days to a date."""
+    # Convert to datetime if date is provided
+    if not isinstance(start_date, datetime):
+        start_date = datetime.combine(start_date, datetime.min.time())
+    
+    # Initialize variables
+    current_date = start_date
+    remaining_days = num_days
+    
+    while remaining_days > 0:
+        # Move to next day
+        current_date += timedelta(days=1)
+        
+        # Skip weekends and holidays
+        if not is_weekend(current_date) and not is_holiday(current_date, holidays):
+            remaining_days -= 1
+    
+    return current_date
+
+# Example: Calculate delivery date for an order (5 business days)
+order_date = datetime(2025, 4, 19)  # Saturday
+holidays = [datetime(2025, 4, 21).date()]  # Example holiday on Monday
+
+delivery_date = add_business_days(order_date, 5, holidays)
+print(f"Order placed on: {order_date.strftime('%A, %B %d, %Y')}")
+print(f"Estimated delivery on: {delivery_date.strftime('%A, %B %d, %Y')}")
+
+# Calculate business days between dates
+def business_days_between(start_date, end_date, holidays=[]):
+    """Calculate the number of business days between two dates."""
+    # Ensure start_date comes before end_date
+    if start_date > end_date:
+        start_date, end_date = end_date, start_date
+    
+    # Convert to datetime if dates are provided
+    if not isinstance(start_date, datetime):
+        start_date = datetime.combine(start_date, datetime.min.time())
+    if not isinstance(end_date, datetime):
+        end_date = datetime.combine(end_date, datetime.min.time())
+    
+    # Initialize counter
+    business_days = 0
+    current_date = start_date
+    
+    while current_date <= end_date:
+        # Only count business days
+        if not is_weekend(current_date) and not is_holiday(current_date, holidays):
+            business_days += 1
+        
+        # Move to next day
+        current_date += timedelta(days=1)
+    
+    return business_days
+
+# Example: Calculate business days in a project timeline
+project_start = datetime(2025, 4, 15)
+project_end = datetime(2025, 5, 10)
+company_holidays = [datetime(2025, 5, 1).date()]  # May Day
+
+days = business_days_between(project_start, project_end, company_holidays)
+print(f"\nProject duration: {days} business days")
+            </code></pre>
+        </section>
+
+        <section class="best-practices">
+            <h3>Best Practices for Working with Dates and Times</h3>
+            
+            <ol>
+                <li><strong>Always Be Timezone-Aware</strong> - Store datetimes in UTC and convert to local time only for display.</li>
+                <li><strong>Use ISO Format for Storage</strong> - When storing dates as strings, prefer ISO 8601 format (YYYY-MM-DD).</li>
+                <li><strong>Be Explicit with Formats</strong> - Always explicitly specify format strings when parsing datetime strings.</li>
+                <li><strong>Watch for Edge Cases</strong> - Be careful with month boundaries, leap years, DST transitions, etc.</li>
+                <li><strong>Consider Libraries for Complex Cases</strong> - For complex timezone handling or date arithmetic, consider specialized libraries like <code>pytz</code>, <code>dateutil</code>, or <code>pendulum</code>.</li>
+                <li><strong>Use Appropriate Granularity</strong> - Don't use <code>datetime</code> when <code>date</code> is sufficient.</li>
+                <li><strong>Never Compare Naive and Aware Datetimes</strong> - This leads to errors; ensure all datetimes have consistent timezone information.</li>
+            </ol>
+            
+            <div class="gotchas">
+                <h4>Common Pitfalls and Gotchas</h4>
+                <ul>
+                    <li><strong>Month/Day Order Confusion</strong> - Different countries use different date formats (MM/DD/YYYY vs. DD/MM/YYYY).</li>
+                    <li><strong>Leap Year Surprises</strong> - February 29 only exists in leap years.</li>
+                    <li><strong>DST Transitions</strong> - Some hours don't exist or happen twice during daylight saving time transitions.</li>
+                    <li><strong>Timedelta Limitations</strong> - <code>timedelta</code> doesn't handle months or years well since they vary in length.</li>
+                    <li><strong>Timezone Abbreviation Ambiguity</strong> - Some abbreviations like "CST" could refer to different timezones.</li>
+                    <li><strong>Calendar Differences</strong> - Different cultures have different calendar systems.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="exercise">
+            <h3>Practice Exercises</h3>
+            
+            <div class="exercise-item">
+                <h4>Exercise 1: Date Formatter</h4>
+                <p>Create a function that takes a date string in various formats and returns a standardized ISO format (YYYY-MM-DD).</p>
+                <pre><code>
+# Challenge: Write a function that can parse these date formats:
+# - "April 19, 2025"
+# - "04/19/2025"
+# - "19-04-2025"
+# - "2025.04.19"
+# And return them in ISO format (YYYY-MM-DD)
+
+def standardize_date(date_string):
+    """Try to parse a date string in various formats and return ISO format."""
+    formats = [
+        "%B %d, %Y",     # "April 19, 2025"
+        "%m/%d/%Y",      # "04/19/2025" (US format)
+        "%d-%m-%Y",      # "19-04-2025" (European format)
+        "%Y.%m.%d"       # "2025.04.19" (ISO-like)
+    ]
+    
+    for fmt in formats:
+        try:
+            parsed_date = datetime.strptime(date_string, fmt)
+            return parsed_date.strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+            
+    # If we get here, none of the formats matched
+    return "Could not parse date: " + date_string
+
+# Test with various formats
+test_dates = [
+    "April 19, 2025",
+    "04/19/2025",
+    "19-04-2025",
+    "2025.04.19"
+]
+
+for date_str in test_dates:
+    print(f"{date_str} → {standardize_date(date_str)}")
+                </code></pre>
+            </div>
+            
+            <div class="exercise-item">
+                <h4>Exercise 2: Meeting Scheduler</h4>
+                <p>Create a function that finds the next available meeting slot given a list of existing meetings and working hours.</p>
+                <pre><code>
+from datetime import datetime, timedelta
+
+def find_next_meeting_slot(existing_meetings, duration_minutes=30, 
+                          working_hours_start=9, working_hours_end=17):
+    """
+    Find the next available meeting slot.
+    
+    Args:
+        existing_meetings: List of (start, end) datetime tuples for scheduled meetings
+        duration_minutes: Length of the meeting to schedule
+        working_hours_start: Start of working hours (24-hour format)
+        working_hours_end: End of working hours (24-hour format)
+    
+    Returns:
+        Tuple of (start_time, end_time) for the next available slot
+    """
+    # Sort existing meetings by start time
+    existing_meetings = sorted(existing_meetings, key=lambda x: x[0])
+    
+    # Start with current time
+    now = datetime.now()
+    
+    # Round up to the nearest half hour
+    minutes = now.minute
+    if minutes % 30 != 0:
+        minutes = ((minutes // 30) + 1) * 30
+    
+    potential_start = now.replace(minute=minutes, second=0, microsecond=0)
+    
+    # If we're outside working hours, adjust to the next working day
+    while (potential_start.hour < working_hours_start or 
+           potential_start.hour >= working_hours_end or
+           potential_start.weekday() >= 5):  # Weekend
+        
+        if potential_start.hour < working_hours_start:
+            # Same day, but before working hours
+            potential_start = potential_start.replace(hour=working_hours_start, minute=0)
+        elif potential_start.hour >= working_hours_end or potential_start.weekday() >= 5:
+            # After working hours or weekend, move to next working day
+            potential_start = potential_start + timedelta(days=1)
+            if potential_start.weekday() >= 5:  # Still weekend
+                days_to_add = 7 - potential_start.weekday()
+                potential_start = potential_start + timedelta(days=days_to_add)
+            potential_start = potential_start.replace(hour=working_hours_start, minute=0)
+    
+    # Calculate potential end time
+    potential_end = potential_start + timedelta(minutes=duration_minutes)
+    
+    # Check if this slot works or overlaps with existing meetings
+    slot_found = False
+    
+    while not slot_found:
+        # Check if we've gone beyond working hours
+        if potential_end.hour >= working_hours_end or potential_end.day > potential_start.day:
+            # Move to start of next working day
+            potential_start = potential_start + timedelta(days=1)
+            if potential_start.weekday() >= 5:  # Weekend
+                days_to_add = 7 - potential_start.weekday() + 1
+                potential_start = potential_start + timedelta(days=days_to_add)
+            potential_start = potential_start.replace(hour=working_hours_start, minute=0)
+            potential_end = potential_start + timedelta(minutes=duration_minutes)
+            continue
+        
+        # Check for overlaps with existing meetings
+        overlap = False
+        for meeting_start, meeting_end in existing_meetings:
+            # If our slot overlaps with this meeting
+            if (potential_start < meeting_end and 
+                potential_end > meeting_start):
+                overlap = True
+                # Skip ahead to end of this meeting
+                potential_start = meeting_end
+                potential_end = potential_start + timedelta(minutes=duration_minutes)
+                break
+        
+        if not overlap:
+            slot_found = True
+    
+    return potential_start, potential_end
+
+# Example usage
+meetings = [
+    (datetime(2025, 4, 19, 10, 0), datetime(2025, 4, 19, 11, 0)),   # 10:00 - 11:00
+    (datetime(2025, 4, 19, 13, 0), datetime(2025, 4, 19, 14, 30)),  # 13:00 - 14:30
+    (datetime(2025, 4, 20, 9, 30), datetime(2025, 4, 20, 10, 30)),  # 9:30 - 10:30 next day
+]
+
+next_slot_start, next_slot_end = find_next_meeting_slot(meetings)
+print(f"Next available meeting slot: {next_slot_start.strftime('%A, %B %d at %H:%M')} - {next_slot_end.strftime('%H:%M')}")
+                </code></pre>
+            </div>
+        </section>
+
+        <section class="further-resources">
+            <h3>Further Resources</h3>
+            
+            <h4>Standard Library Documentation</h4>
+            <ul>
+                <li><a href="https://docs.python.org/3/library/datetime.html" target="_blank">Python datetime module</a></li>
+                <li><a href="https://docs.python.org/3/library/calendar.html" target="_blank">Python calendar module</a></li>
+                <li><a href="https://docs.python.org/3/library/time.html" target="_blank">Python time module</a></li>
+                <li><a href="https://docs.python.org/3/library/zoneinfo.html" target="_blank">Python zoneinfo module (Python 3.9+)</a></li>
+            </ul>
+            
+            <h4>Third-Party Libraries</h4>
+            <ul>
+                <li><a href="https://pendulum.eustace.io/" target="_blank">Pendulum</a> - A more intuitive datetime library</li>
+                <li><a href="https://arrow.readthedocs.io/" target="_blank">Arrow</a> - Better datetime for Python</li>
+                <li><a href="https://pythonhosted.org/pytz/" target="_blank">pytz</a> - Timezone library (still useful for Python &lt; 3.9)</li>
+                <li><a href="https://dateutil.readthedocs.io/" target="_blank">dateutil</a> - Extensions to the standard datetime module</li>
+            </ul>
+            
+            <h4>Tutorials and Articles</h4>
+            <ul>
+                <li><a href="https://realpython.com/python-datetime/" target="_blank">Real Python: Using Python datetime</a></li>
+                <li><a href="https://blog.ganssle.io/articles/2018/03/datetime-handling-timezone-automation.html" target="_blank">Handling Timezones in Python</a></li>
+                <li><a href="https://www.programiz.com/python-programming/datetime" target="_blank">Python datetime Tutorial</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Python Full Stack Developer Course &copy; 2025. All rights reserved.</p>
+    </footer>
+</body>
+</html>

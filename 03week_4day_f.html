@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Standard Library: pathlib for File System Paths</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Standard Library: pathlib for File System Paths</h1>
+        <h2>Object-Oriented Filesystem Paths in Python</h2>
+    </header>
+
+    <main>
+        <section class="lecture-intro">
+            <h3>Introduction to File Path Handling</h3>
+            <p>Working with files and directories is a fundamental aspect of programming. Whether you're reading and writing data, organizing files, or navigating directory structures, you need a reliable way to handle file paths.</p>
+            
+            <p>Traditionally, Python developers used string operations and the <code>os.path</code> module to manipulate file paths. While functional, this approach had several drawbacks:</p>
+            
+            <ul>
+                <li>Paths were just strings, lacking specific methods for path operations</li>
+                <li>Different operations were scattered across various modules (<code>os</code>, <code>os.path</code>, <code>glob</code>)</li>
+                <li>Cross-platform compatibility required careful handling</li>
+                <li>Code was often verbose and error-prone</li>
+            </ul>
+            
+            <p>The <code>pathlib</code> module, introduced in Python 3.4 (and significantly enhanced in Python 3.6), provides an elegant, object-oriented approach to file path handling. It treats file paths as objects rather than strings, offering a comprehensive set of methods and properties specifically designed for path manipulation.</p>
+            
+            <p>Think of <code>pathlib</code> as a Swiss Army knife for path handling—it brings together functionality previously scattered across multiple modules into a cohesive, intuitive interface.</p>
+        </section>
+
+        <section class="module-overview">
+            <h3>The pathlib Module: Object-Oriented Path Manipulation</h3>
+            
+            <p>The <code>pathlib</code> module introduces a hierarchy of path classes that represent file system paths with different characteristics. Let's import the module and explore its structure:</p>
+            
+            <pre><code>
+from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath, PosixPath, WindowsPath
+            </code></pre>
+            
+            <p>The module's class hierarchy is designed to separate pure path manipulation (operations that don't access the file system) from concrete path manipulation (operations that do access the file system):</p>
+            
+            <ul>
+                <li><strong>Pure Path Classes</strong> (don't access the file system)
+                    <ul>
+                        <li><code>PurePath</code>: Base class for pure paths</li>
+                        <li><code>PurePosixPath</code>: Pure path for POSIX systems (Unix, Linux, macOS)</li>
+                        <li><code>PureWindowsPath</code>: Pure path for Windows systems</li>
+                    </ul>
+                </li>
+                <li><strong>Concrete Path Classes</strong> (access the file system)
+                    <ul>
+                        <li><code>Path</code>: Base class for concrete paths</li>
+                        <li><code>PosixPath</code>: Concrete path for POSIX systems</li>
+                        <li><code>WindowsPath</code>: Concrete path for Windows systems</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <p>When you create a <code>Path</code> object, Python automatically chooses the appropriate concrete class based on your operating system:</p>
+            
+            <pre><code>
+# Import the main Path class
+from pathlib import Path
+
+# Create a path object
+p = Path('some/path/to/file.txt')
+
+# See what class was instantiated
+print(type(p))  # Will be PosixPath on Unix-like systems, WindowsPath on Windows
+            </code></pre>
+            
+            <p>This automatic selection makes your code more portable across different operating systems.</p>
+        </section>
+
+        <section class="creating-paths">
+            <h3>Creating Path Objects</h3>
+            
+            <p>There are several ways to create <code>Path</code> objects:</p>
+            
+            <h4>From a String</h4>
+            <pre><code>
+from pathlib import Path
+
+# Create a path from a string
+path1 = Path('folder/subfolder/file.txt')
+print(path1)
+
+# Absolute path
+path2 = Path('/home/user/documents/file.txt')
+print(path2)
+
+# Windows path (will work even on non-Windows systems)
+win_path = Path('C:/Users/Username/Documents/file.txt')
+print(win_path)
+            </code></pre>
+            
+            <h4>From Path Parts</h4>
+            <pre><code>
+# Create a path by joining parts
+path3 = Path('folder', 'subfolder', 'file.txt')
+print(path3)
+
+# Mix strings and other Path objects
+base_dir = Path('project')
+config_file = base_dir / 'config' / 'settings.json'
+print(config_file)
+
+# Using the joinpath method
+data_file = base_dir.joinpath('data', 'dataset.csv')
+print(data_file)
+            </code></pre>
+            
+            <h4>From Environment Variables or Special Paths</h4>
+            <pre><code>
+import os
+
+# Using environment variables
+home_dir = Path(os.environ['HOME'])  # Linux/Mac
+# home_dir = Path(os.environ['USERPROFILE'])  # Windows
+
+# Home directory using Path.home()
+home = Path.home()
+print(f"Home directory: {home}")
+
+# Current working directory
+cwd = Path.cwd()
+print(f"Current directory: {cwd}")
+            </code></pre>
+            
+            <h4>Using Path Operators</h4>
+            <pre><code>
+# The / operator joins paths (no need for os.path.join)
+photos_dir = Path.home() / 'Pictures' / 'Photos'
+print(photos_dir)
+
+# You can also use the / operator with strings
+document = Path.home() / 'Documents' / 'report.docx'
+print(document)
+            </code></pre>
+            
+            <p>The ability to use the <code>/</code> operator to join paths is one of <code>pathlib</code>'s most elegant features, making the code more readable and intuitive.</p>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Project Directory Structure</h4>
+                <p>Here's how you might use <code>pathlib</code> to manage a project's directory structure:</p>
+                
+                <pre><code>
+from pathlib import Path
+import shutil
+
+def create_project_structure(base_dir, project_name):
+    """
+    Create a standard project directory structure.
+    
+    Args:
+        base_dir: The base directory where the project will be created
+        project_name: Name of the project
+        
+    Returns:
+        Dictionary of Path objects for important project directories
+    """
+    # Create the main project directory
+    project_dir = Path(base_dir) / project_name
+    
+    # Create standard subdirectories
+    src_dir = project_dir / 'src'
+    tests_dir = project_dir / 'tests'
+    docs_dir = project_dir / 'docs'
+    data_dir = project_dir / 'data'
+    
+    # Define all directories to create
+    directories = {
+        'project': project_dir,
+        'src': src_dir,
+        'tests': tests_dir,
+        'docs': docs_dir,
+        'data': data_dir,
+        'data_raw': data_dir / 'raw',
+        'data_processed': data_dir / 'processed',
+        'config': project_dir / 'config',
+    }
+    
+    # Create each directory
+    for name, dir_path in directories.items():
+        dir_path.mkdir(parents=True, exist_ok=True)
+        print(f"Created directory: {dir_path}")
+    
+    # Create basic files
+    readme = project_dir / 'README.md'
+    readme.write_text(f"# {project_name}\n\nDescription of {project_name}.")
+    
+    gitignore = project_dir / '.gitignore'
+    gitignore.write_text("__pycache__/\n*.py[cod]\n*.so\n.env\nvenv/\n.idea/\n")
+    
+    main_py = src_dir / '__init__.py'
+    main_py.touch()
+    
+    tests_init = tests_dir / '__init__.py'
+    tests_init.touch()
+    
+    print(f"\nProject structure for '{project_name}' created at {project_dir}")
+    return directories
+
+# Example usage
+project_dirs = create_project_structure('/tmp', 'my_awesome_project')
+
+# You can now easily reference any project directory
+print(f"\nSome project paths:")
+print(f"Main directory: {project_dirs['project']}")
+print(f"Source code: {project_dirs['src']}")
+print(f"Raw data: {project_dirs['data_raw']}")
+
+# Clean up (for demo purposes)
+# shutil.rmtree(project_dirs['project'])
+                </code></pre>
+                
+                <p>This example demonstrates how <code>pathlib</code> makes it easy to create and manage complex directory structures. Notice how the code is more readable with the <code>/</code> operator for path joining, and how the <code>Path</code> objects provide methods like <code>mkdir()</code> and <code>write_text()</code> that work directly on the path.</p>
+            </div>
+        </section>
+
+        <section class="path-properties">
+            <h3>Path Properties and Components</h3>
+            
+            <p><code>Path</code> objects provide various properties to access path components:</p>
+            
+            <pre><code>
+from pathlib import Path
+
+path = Path('/home/user/documents/project/report.pdf')
+
+# Path components
+print(f"Path: {path}")
+print(f"Parts: {path.parts}")
+print(f"Root: {path.root}")
+print(f"Anchor: {path.anchor}")  # Root and first directory
+print(f"Parent: {path.parent}")  # /home/user/documents/project
+print(f"Name: {path.name}")  # report.pdf
+print(f"Stem: {path.stem}")  # report
+print(f"Suffix: {path.suffix}")  # .pdf
+print(f"Suffixes: {path.suffixes}")  # List of all extensions, e.g., ['.tar', '.gz']
+
+# Parent directories
+print(f"Parent: {path.parent}")
+print(f"Parent of parent: {path.parent.parent}")  # /home/user/documents
+
+# All parents as a list
+parents = list(path.parents)
+print(f"All parents: {parents}")
+print(f"First parent: {path.parents[0]}")  # Same as path.parent
+print(f"Second parent: {path.parents[1]}")  # /home/user/documents
+print(f"Third parent: {path.parents[2]}")  # /home/user
+            </code></pre>
+            
+            <h4>Path Types</h4>
+            <pre><code>
+# Check if the path is absolute
+print(f"Is absolute: {path.is_absolute()}")
+
+# Check if the path is relative
+rel_path = Path('docs/report.pdf')
+print(f"Is relative: {rel_path.is_relative_to('docs')}")
+            </code></pre>
+            
+            <h4>Drive and UNC Path Information (Windows-specific)</h4>
+            <pre><code>
+# Windows path examples (work on any platform)
+win_path = Path('C:/Users/Username/Documents/file.txt')
+print(f"Drive: {win_path.drive}")  # 'C:'
+
+# UNC path (Universal Naming Convention, used for network shares)
+unc_path = Path('//server/share/file.txt')
+print(f"Drive for UNC path: {unc_path.drive}")  # '//server/share'
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: File Type Analyzer</h4>
+                <p>Here's a practical example that organizes files by their extension:</p>
+                
+                <pre><code>
+from pathlib import Path
+from collections import defaultdict
+import pprint
+
+def analyze_directory(directory_path):
+    """
+    Analyze files in a directory, grouping them by extension.
+    
+    Args:
+        directory_path: Path to the directory to analyze
+        
+    Returns:
+        Dictionary mapping file extensions to lists of file paths
+    """
+    dir_path = Path(directory_path)
+    
+    # Check if the path exists and is a directory
+    if not dir_path.exists():
+        raise FileNotFoundError(f"Directory not found: {dir_path}")
+    if not dir_path.is_dir():
+        raise NotADirectoryError(f"Not a directory: {dir_path}")
+    
+    # Group files by extension
+    files_by_extension = defaultdict(list)
+    
+    # Walk through all files, including subdirectories
+    for file_path in dir_path.glob('**/*'):
+        if file_path.is_file():
+            # Get the extension (lowercase to group .jpg and .JPG together)
+            # If no extension, use '[no extension]' as the key
+            extension = file_path.suffix.lower() or '[no extension]'
+            files_by_extension[extension].append(file_path)
+    
+    # Calculate statistics
+    stats = {
+        'total_files': sum(len(files) for files in files_by_extension.values()),
+        'total_extensions': len(files_by_extension),
+        'extension_counts': {ext: len(files) for ext, files in files_by_extension.items()},
+    }
+    
+    return {
+        'files_by_extension': dict(files_by_extension),
+        'stats': stats
+    }
+
+# Example usage (using the current directory)
+# result = analyze_directory(Path.cwd())
+# print("Directory Analysis Results:")
+# print(f"Total Files: {result['stats']['total_files']}")
+# print(f"Total Extensions: {result['stats']['total_extensions']}")
+# print("\nFiles per Extension:")
+# for ext, count in sorted(result['stats']['extension_counts'].items(), 
+#                          key=lambda x: x[1], reverse=True):
+#     print(f"  {ext}: {count}")
+# 
+# # For a specific extension, print the first few files
+# extension_to_show = '.py'  # Change to any extension you want to see
+# if extension_to_show in result['files_by_extension']:
+#     files = result['files_by_extension'][extension_to_show]
+#     print(f"\nSample of {extension_to_show} files:")
+#     for file in files[:5]:  # Show the first 5 files
+#         print(f"  {file}")
+                </code></pre>
+                
+                <p>This example shows how to use <code>pathlib</code> to recursively find files, extract their extensions, and organize them into categories. The <code>glob()</code> method and path properties like <code>suffix</code> make this task much simpler compared to using the traditional <code>os</code> module.</p>
+            </div>
+        </section>
+
+        <section class="path-operations">
+            <h3>Path Operations and Manipulations</h3>
+            
+            <p><code>pathlib</code> provides many methods for manipulating paths without actually accessing the file system:</p>
+            
+            <h4>Joining Paths</h4>
+            <pre><code>
+from pathlib import Path
+
+# Using the / operator
+base_dir = Path('/home/user/projects')
+project_dir = base_dir / 'my_project'
+config_file = project_dir / 'config.json'
+
+print(f"Base directory: {base_dir}")
+print(f"Project directory: {project_dir}")
+print(f"Config file: {config_file}")
+
+# Using joinpath method
+logs_dir = base_dir.joinpath('my_project', 'logs')
+log_file = logs_dir.joinpath('app.log')
+
+print(f"Logs directory: {logs_dir}")
+print(f"Log file: {log_file}")
+            </code></pre>
+            
+            <h4>Changing Path Components</h4>
+            <pre><code>
+path = Path('/home/user/documents/report.pdf')
+
+# Change the name (keeping the same directory)
+new_name = path.with_name('summary.pdf')
+print(f"With new name: {new_name}")
+
+# Change the extension (keeping the same directory and stem)
+with_docx = path.with_suffix('.docx')
+print(f"With new extension: {with_docx}")
+
+# Change both name and extension
+new_file = path.with_name('presentation.pptx')
+print(f"With new name and extension: {new_file}")
+
+# Replace a part of the path (Python 3.9+)
+if hasattr(path, 'with_stem'):  # Check if with_stem is available (Python 3.9+)
+    with_new_stem = path.with_stem('annual_report')
+    print(f"With new stem: {with_new_stem}")
+            </code></pre>
+            
+            <h4>Normalizing Paths</h4>
+            <pre><code>
+# Resolve a path to its absolute form, resolving symlinks and references
+path = Path('docs/../projects/./project1')
+resolved = path.resolve()
+print(f"Original: {path}")
+print(f"Resolved: {resolved}")
+
+# Get absolute path without resolving symlinks
+absolute = path.absolute()
+print(f"Absolute: {absolute}")
+            </code></pre>
+            
+            <h4>Relative Paths</h4>
+            <pre><code>
+# Get a relative path from one path to another
+path1 = Path('/home/user/projects/project1')
+path2 = Path('/home/user/documents/file.txt')
+
+# Relative path from path1 to path2
+relative = path2.relative_to('/home/user')
+print(f"Relative path: {relative}")  # documents/file.txt
+
+# Check if a path is relative to another
+try:
+    is_relative = path2.relative_to('/home/user/projects')
+    print(f"Is relative: {is_relative}")
+except ValueError as e:
+    print(f"Not relative: {e}")
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Building Import Statements</h4>
+                <p>Here's an example that generates Python import statements based on file locations:</p>
+                
+                <pre><code>
+from pathlib import Path
+import importlib.util
+
+def generate_import_statement(file_path, project_root):
+    """
+    Generate a Python import statement for a file relative to the project root.
+    
+    Args:
+        file_path: Path to the Python file
+        project_root: Path to the project root directory
+        
+    Returns:
+        A string with the appropriate import statement
+    """
+    file_path = Path(file_path).resolve()
+    project_root = Path(project_root).resolve()
+    
+    # Check if the file is within the project
+    try:
+        relative_path = file_path.relative_to(project_root)
+    except ValueError:
+        raise ValueError(f"File {file_path} is not within project root {project_root}")
+    
+    # Check if it's a Python file
+    if file_path.suffix != '.py':
+        raise ValueError(f"File {file_path} is not a Python file")
+    
+    # Convert path to import format (replace / with . and remove .py)
+    if relative_path.name == '__init__.py':
+        # For __init__.py files, import the package
+        import_path = str(relative_path.parent).replace('/', '.')
+        import_statement = f"import {import_path}"
+    else:
+        # For regular Python files
+        import_path = str(relative_path.with_suffix('')).replace('/', '.')
+        
+        # Check if the file has a specific function or class to import
+        spec = importlib.util.spec_from_file_location("module", file_path)
+        if spec:
+            module = importlib.util.module_from_spec(spec)
+            try:
+                spec.loader.exec_module(module)
+                # Find public classes and functions (not starting with _)
+                public_members = [name for name in dir(module) 
+                                 if not name.startswith('_') and 
+                                 callable(getattr(module, name))]
+                
+                if public_members:
+                    # Create an import statement with from ... import ...
+                    imports = ', '.join(public_members[:3])  # Limit to first 3
+                    import_statement = f"from {import_path} import {imports}"
+                    if len(public_members) > 3:
+                        import_statement += f"  # and {len(public_members) - 3} more"
+                else:
+                    import_statement = f"import {import_path}"
+            except Exception:
+                # If we can't load the module, fall back to simple import
+                import_statement = f"import {import_path}"
+        else:
+            import_statement = f"import {import_path}"
+    
+    return import_statement
+
+# Example usage
+# project_root = Path.cwd()  # Use current directory as project root
+# python_files = list(project_root.glob('**/*.py'))
+# 
+# print(f"Found {len(python_files)} Python files")
+# for file in python_files[:5]:  # Show first 5 files
+#     try:
+#         import_stmt = generate_import_statement(file, project_root)
+#         rel_path = file.relative_to(project_root)
+#         print(f"{rel_path} -> {import_stmt}")
+#     except ValueError as e:
+#         print(f"Skipped {file}: {e}")
+                </code></pre>
+                
+                <p>This example demonstrates how to use <code>pathlib</code> to work with project structure and generate import statements. It converts file paths to Python package/module paths by manipulating path components and uses <code>relative_to()</code> to ensure files are within the project.</p>
+            </div>
+        </section>
+
+        <section class="filesystem-access">
+            <h3>File System Access Operations</h3>
+            
+            <p>In addition to pure path manipulation, <code>pathlib</code> provides methods to interact with the file system:</p>
+            
+            <h4>Checking Path Status</h4>
+            <pre><code>
+from pathlib import Path
+
+path = Path('/path/to/check')
+
+# Check if path exists
+print(f"Exists: {path.exists()}")
+
+# Check if path is a file
+print(f"Is file: {path.is_file()}")
+
+# Check if path is a directory
+print(f"Is directory: {path.is_dir()}")
+
+# Check if path is a symbolic link
+print(f"Is symlink: {path.is_symlink()}")
+
+# Check if path is an absolute path
+print(f"Is absolute: {path.is_absolute()}")
+
+# Other useful checks
+print(f"Is socket: {path.is_socket()}")
+print(f"Is block device: {path.is_block_device()}")
+print(f"Is char device: {path.is_char_device()}")
+print(f"Is FIFO: {path.is_fifo()}")
+            </code></pre>
+            
+            <h4>File Metadata</h4>
+            <pre><code>
+# Get file size
+file_path = Path('example.txt')
+if file_path.exists() and file_path.is_file():
+    size = file_path.stat().st_size
+    print(f"File size: {size} bytes")
+
+# Get file modification time
+import datetime
+if file_path.exists():
+    mtime = file_path.stat().st_mtime
+    mod_time = datetime.datetime.fromtimestamp(mtime)
+    print(f"Last modified: {mod_time}")
+    
+    # Get file owner (Unix-like systems)
+    import pwd, grp
+    try:
+        stat = file_path.stat()
+        owner = pwd.getpwuid(stat.st_uid).pw_name
+        group = grp.getgrgid(stat.st_gid).gr_name
+        print(f"Owner: {owner}, Group: {group}")
+    except (ImportError, KeyError):
+        print("Owner information not available")
+            </code></pre>
+            
+            <h4>Directory Operations</h4>
+            <pre><code>
+# Create a directory
+new_dir = Path('new_directory')
+new_dir.mkdir(exist_ok=True)
+
+# Create nested directories
+nested_dir = Path('parent/child/grandchild')
+nested_dir.mkdir(parents=True, exist_ok=True)
+
+# Iterate through directory contents
+for item in Path('.').iterdir():
+    print(f"{'Directory' if item.is_dir() else 'File'}: {item}")
+
+# Get all Python files in the current directory
+python_files = list(Path('.').glob('*.py'))
+print(f"Python files: {python_files}")
+
+# Recursively get all Python files
+all_python_files = list(Path('.').glob('**/*.py'))
+print(f"Total Python files (including subdirectories): {len(all_python_files)}")
+
+# Using rglob (equivalent to glob('**/*.py'))
+all_python_files_alternative = list(Path('.').rglob('*.py'))
+print(f"Same result with rglob: {len(all_python_files_alternative)}")
+            </code></pre>
+            
+            <h4>File Operations</h4>
+            <pre><code>
+# Create a new empty file
+new_file = Path('new_file.txt')
+new_file.touch(exist_ok=True)
+
+# Write text to a file
+text_file = Path('hello.txt')
+text_file.write_text('Hello, pathlib!')
+print(f"Wrote to {text_file}")
+
+# Read text from a file
+content = text_file.read_text()
+print(f"Content: {content}")
+
+# Write bytes to a file
+bytes_file = Path('bytes_file.bin')
+bytes_file.write_bytes(b'\x00\x01\x02\x03')
+print(f"Wrote bytes to {bytes_file}")
+
+# Read bytes from a file
+binary_content = bytes_file.read_bytes()
+print(f"Binary content: {binary_content}")
+
+# Open a file and read line by line
+with Path('hello.txt').open() as f:
+    for line in f:
+        print(f"Line: {line.strip()}")
+            </code></pre>
+            
+            <h4>Path Modifications</h4>
+            <pre><code>
+# Rename a file
+source = Path('source.txt')
+source.touch()  # Create the file if it doesn't exist
+target = Path('target.txt')
+source.rename(target)
+print(f"Renamed {source} to {target}")
+
+# Move to a different directory
+new_location = Path('new_directory/target.txt')
+new_location.parent.mkdir(exist_ok=True)  # Ensure directory exists
+target.replace(new_location)
+print(f"Moved to {new_location}")
+
+# Delete a file
+if new_location.exists():
+    new_location.unlink()
+    print(f"Deleted {new_location}")
+
+# Delete an empty directory
+empty_dir = Path('empty_directory')
+empty_dir.mkdir(exist_ok=True)
+empty_dir.rmdir()
+print(f"Removed directory {empty_dir}")
+
+# For non-empty directories, use shutil.rmtree
+import shutil
+non_empty_dir = Path('non_empty_directory')
+non_empty_dir.mkdir(exist_ok=True)
+(non_empty_dir / 'file.txt').touch()
+shutil.rmtree(non_empty_dir)
+print(f"Removed directory tree {non_empty_dir}")
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: File Backup System</h4>
+                <p>Here's a practical example of a simple file backup system using <code>pathlib</code>:</p>
+                
+                <pre><code>
+from pathlib import Path
+import shutil
+import datetime
+import zipfile
+
+def backup_directory(source_dir, backup_dir=None, backup_name=None, use_zip=True):
+    """
+    Create a backup of a directory.
+    
+    Args:
+        source_dir: Directory to backup
+        backup_dir: Where to store the backup (default: source_dir/../backups)
+        backup_name: Name for the backup (default: source_dir_YYYYMMDD_HHMMSS)
+        use_zip: Whether to create a zip archive (default: True)
+        
+    Returns:
+        Path to the created backup
+    """
+    # Resolve paths
+    source = Path(source_dir).resolve()
+    
+    # Verify source exists
+    if not source.exists():
+        raise FileNotFoundError(f"Source directory not found: {source}")
+    if not source.is_dir():
+        raise NotADirectoryError(f"Source must be a directory: {source}")
+    
+    # Generate default backup directory if not provided
+    if backup_dir is None:
+        backup_dir = source.parent / 'backups'
+    else:
+        backup_dir = Path(backup_dir).resolve()
+    
+    # Create the backup directory if it doesn't exist
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Generate timestamp for the backup
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    
+    # Generate default backup name if not provided
+    if backup_name is None:
+        backup_name = f"{source.name}_{timestamp}"
+    
+    # Create the full backup path
+    if use_zip:
+        backup_path = backup_dir / f"{backup_name}.zip"
+        
+        # Create a zip archive
+        with zipfile.ZipFile(backup_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            # Walk through all files in the source directory
+            for file_path in source.rglob('*'):
+                if file_path.is_file():
+                    # Calculate the relative path for the archive
+                    relative_path = file_path.relative_to(source)
+                    # Add the file to the zip archive
+                    zipf.write(file_path, relative_path)
+                    print(f"Added to backup: {relative_path}")
+    else:
+        # Create a directory backup
+        backup_path = backup_dir / backup_name
+        shutil.copytree(source, backup_path)
+        print(f"Created directory backup at {backup_path}")
+    
+    print(f"Backup completed: {backup_path}")
+    return backup_path
+
+def restore_backup(backup_path, target_dir=None, overwrite=False):
+    """
+    Restore a backup.
+    
+    Args:
+        backup_path: Path to the backup (zip file or directory)
+        target_dir: Where to restore (default: parent of backup_path)
+        overwrite: Whether to overwrite existing files/directories
+        
+    Returns:
+        Path to the restored directory
+    """
+    # Resolve paths
+    backup = Path(backup_path).resolve()
+    
+    # Verify backup exists
+    if not backup.exists():
+        raise FileNotFoundError(f"Backup not found: {backup}")
+    
+    # Determine if it's a zip backup
+    is_zip = backup.suffix.lower() == '.zip'
+    
+    # Generate default target directory if not provided
+    if target_dir is None:
+        if is_zip:
+            # For zip backups, use backup name without extension
+            target_dir = backup.parent / backup.stem
+        else:
+            # For directory backups, use parent directory
+            target_dir = backup.parent / 'restored'
+    else:
+        target_dir = Path(target_dir).resolve()
+    
+    # Check if target exists and handle overwrite
+    if target_dir.exists():
+        if not overwrite:
+            raise FileExistsError(f"Target directory already exists: {target_dir}")
+        if target_dir.is_dir():
+            shutil.rmtree(target_dir)
+        else:
+            target_dir.unlink()
+    
+    # Perform the restore
+    if is_zip:
+        # Create target directory
+        target_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Extract the zip archive
+        with zipfile.ZipFile(backup, 'r') as zipf:
+            zipf.extractall(target_dir)
+            print(f"Extracted {len(zipf.namelist())} files to {target_dir}")
+    else:
+        # Copy the directory
+        shutil.copytree(backup, target_dir)
+        print(f"Restored directory from {backup} to {target_dir}")
+    
+    print(f"Restore completed: {target_dir}")
+    return target_dir
+
+# Example usage
+if __name__ == "__main__":
+    # Create a sample directory structure for backup
+    sample_dir = Path('sample_data')
+    sample_dir.mkdir(exist_ok=True)
+    
+    # Create some sample files
+    (sample_dir / 'file1.txt').write_text('This is file 1')
+    (sample_dir / 'file2.txt').write_text('This is file 2')
+    
+    # Create a subdirectory with files
+    subdir = sample_dir / 'subdir'
+    subdir.mkdir(exist_ok=True)
+    (subdir / 'file3.txt').write_text('This is file 3')
+    
+    print(f"Created sample directory structure at {sample_dir}")
+    
+    # Backup the directory
+    backup_path = backup_directory(sample_dir)
+    
+    # Modify the original directory
+    (sample_dir / 'file1.txt').write_text('This is modified file 1')
+    (sample_dir / 'new_file.txt').write_text('This is a new file')
+    
+    print(f"\nModified original directory")
+    
+    # Restore the backup
+    restored_path = restore_backup(backup_path, overwrite=True)
+    
+    print("\nVerifying restore...")
+    for file_path in restored_path.rglob('*.txt'):
+        relative_path = file_path.relative_to(restored_path)
+        content = file_path.read_text()
+        print(f"{relative_path}: {content}")
+    
+    # Clean up (comment out to inspect the results)
+    # shutil.rmtree(sample_dir)
+    # shutil.rmtree(restored_path)
+    # backup_path.unlink()
+                </code></pre>
+                
+                <p>This example demonstrates a complete backup and restore system using <code>pathlib</code>. It showcases many file operations, including creating directories, reading and writing files, traversing directory trees, and working with zip archives.</p>
+            </div>
+        </section>
+
+        <section class="compatibility">
+            <h3>Compatibility with Other Modules</h3>
+            
+            <p>While <code>pathlib</code> provides a comprehensive interface, you might need to interact with code or libraries that still use the traditional string-based path representation.</p>
+            
+            <h4>Converting Between Path Objects and Strings</h4>
+            <pre><code>
+from pathlib import Path
+
+# Create a Path object
+path = Path('/home/user/documents/file.txt')
+
+# Convert to string using str()
+path_str = str(path)
+print(f"As string: {path_str}")
+
+# Convert string back to Path
+path_again = Path(path_str)
+print(f"Back to Path: {path_again}")
+            </code></pre>
+            
+            <h4>Using Path Objects with os Functions</h4>
+            <p>Since Python 3.6, <code>os</code> functions automatically accept <code>Path</code> objects through the <a href="https://www.python.org/dev/peps/pep-0519/" target="_blank">os.PathLike</a> interface:</p>
+            
+            <pre><code>
+import os
+from pathlib import Path
+
+path = Path('/path/to/file.txt')
+
+# These now work directly with Path objects (Python 3.6+)
+if os.path.exists(path):
+    print(f"{path} exists")
+
+os.makedirs(Path('new/nested/directory'), exist_ok=True)
+
+# Getting absolute path
+abs_path = os.path.abspath(path)
+print(f"Absolute path: {abs_path}")
+            </code></pre>
+            
+            <h4>Using Path Objects with open()</h4>
+            <p>The built-in <code>open()</code> function also accepts <code>Path</code> objects:</p>
+            
+            <pre><code>
+from pathlib import Path
+
+# Create a file using open() with a Path object
+path = Path('example_file.txt')
+
+with open(path, 'w') as f:
+    f.write('Hello from open() with Path object!')
+
+# Read the file back
+with open(path, 'r') as f:
+    content = f.read()
+    print(f"Content: {content}")
+            </code></pre>
+            
+            <h4>Using Path with Other Libraries</h4>
+            <pre><code>
+from pathlib import Path
+import shutil
+import glob
+import json
+
+# Using with shutil
+source = Path('source_file.txt')
+target = Path('target_file.txt')
+source.touch()  # Create the source file
+
+shutil.copy2(source, target)  # Works with Path objects
+print(f"Copied {source} to {target}")
+
+# Using with json
+data = {'key': 'value'}
+json_path = Path('data.json')
+
+with open(json_path, 'w') as f:
+    json.dump(data, f)
+
+with open(json_path, 'r') as f:
+    loaded_data = json.load(f)
+    print(f"Loaded JSON: {loaded_data}")
+
+# With some libraries that don't support Path directly
+# you may need to convert to string
+import glob
+for file in glob.glob(str(Path.cwd() / '*.py')):
+    print(f"Python file: {file}")
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Batch Image Processor</h4>
+                <p>This example shows how to use <code>pathlib</code> with the PIL (Pillow) library for image processing:</p>
+                
+                <pre><code>
+from pathlib import Path
+from PIL import Image, ImageOps, ImageEnhance
+import concurrent.futures
+
+def process_image(image_path, output_dir, operation, **kwargs):
+    """
+    Process an image using PIL/Pillow.
+    
+    Args:
+        image_path: Path to the input image
+        output_dir: Directory to save the processed image
+        operation: Operation to perform ('resize', 'convert', 'enhance', etc.)
+        **kwargs: Additional operation-specific parameters
+        
+    Returns:
+        Path to the processed image
+    """
+    # Convert to Path objects
+    img_path = Path(image_path)
+    out_dir = Path(output_dir)
+    
+    # Ensure output directory exists
+    out_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Construct output path (same filename but in output directory)
+    output_path = out_dir / img_path.name
+    
+    try:
+        # Open the image
+        with Image.open(img_path) as img:
+            # Process based on operation
+            if operation == 'resize':
+                width = kwargs.get('width')
+                height = kwargs.get('height')
+                
+                # Calculate height to maintain aspect ratio if only width is provided
+                if width and not height:
+                    ratio = width / img.width
+                    height = int(img.height * ratio)
+                
+                # Calculate width to maintain aspect ratio if only height is provided
+                elif height and not width:
+                    ratio = height / img.height
+                    width = int(img.width * ratio)
+                
+                # Resize the image
+                processed_img = img.resize((width, height), Image.LANCZOS)
+                
+            elif operation == 'convert':
+                mode = kwargs.get('mode', 'L')  # Default to grayscale
+                processed_img = img.convert(mode)
+                
+            elif operation == 'enhance':
+                factor = kwargs.get('factor', 1.5)
+                method = kwargs.get('method', 'contrast')
+                
+                if method == 'contrast':
+                    enhancer = ImageEnhance.Contrast(img)
+                elif method == 'brightness':
+                    enhancer = ImageEnhance.Brightness(img)
+                elif method == 'color':
+                    enhancer = ImageEnhance.Color(img)
+                elif method == 'sharpness':
+                    enhancer = ImageEnhance.Sharpness(img)
+                else:
+                    raise ValueError(f"Unknown enhancement method: {method}")
+                
+                processed_img = enhancer.enhance(factor)
+                
+            elif operation == 'crop':
+                left = kwargs.get('left', 0)
+                top = kwargs.get('top', 0)
+                right = kwargs.get('right', img.width)
+                bottom = kwargs.get('bottom', img.height)
+                
+                processed_img = img.crop((left, top, right, bottom))
+                
+            elif operation == 'rotate':
+                angle = kwargs.get('angle', 90)
+                processed_img = img.rotate(angle, expand=True)
+                
+            elif operation == 'flip':
+                direction = kwargs.get('direction', 'horizontal')
+                
+                if direction == 'horizontal':
+                    processed_img = ImageOps.mirror(img)
+                elif direction == 'vertical':
+                    processed_img = ImageOps.flip(img)
+                else:
+                    raise ValueError(f"Unknown flip direction: {direction}")
+                
+            else:
+                raise ValueError(f"Unknown operation: {operation}")
+            
+            # Adjust output format if specified
+            format_name = kwargs.get('format')
+            if format_name:
+                # Update the output path with the new extension
+                output_path = output_path.with_suffix(f".{format_name.lower()}")
+            else:
+                # Use original format
+                format_name = img.format
+            
+            # Save the processed image
+            processed_img.save(output_path, format=format_name)
+            print(f"Processed: {img_path} -> {output_path}")
+            
+            return output_path
+            
+    except Exception as e:
+        print(f"Error processing {img_path}: {e}")
+        return None
+
+def batch_process_images(input_dir, output_dir, operation, recursive=False, **kwargs):
+    """
+    Process all images in a directory.
+    
+    Args:
+        input_dir: Directory containing input images
+        output_dir: Directory to save processed images
+        operation: Operation to perform
+        recursive: Whether to process subdirectories
+        **kwargs: Additional operation-specific parameters
+        
+    Returns:
+        List of paths to processed images
+    """
+    # Convert to Path objects
+    in_dir = Path(input_dir)
+    out_dir = Path(output_dir)
+    
+    # Find all image files
+    image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff'}
+    
+    # Use glob pattern based on recursion setting
+    pattern = '**/*' if recursive else '*'
+    
+    # Find all image files in the input directory
+    image_files = [p for p in in_dir.glob(pattern) 
+                  if p.is_file() and p.suffix.lower() in image_extensions]
+    
+    print(f"Found {len(image_files)} images to process")
+    
+    # Process images in parallel using a thread pool
+    processed_files = []
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # Create a set of future tasks
+        future_to_path = {
+            executor.submit(process_image, img_path, out_dir, operation, **kwargs): img_path
+            for img_path in image_files
+        }
+        
+        # Process as they complete
+        for future in concurrent.futures.as_completed(future_to_path):
+            img_path = future_to_path[future]
+            try:
+                result = future.result()
+                if result:
+                    processed_files.append(result)
+            except Exception as e:
+                print(f"Failed to process {img_path}: {e}")
+    
+    print(f"Successfully processed {len(processed_files)} images")
+    return processed_files
+
+# Example usage
+if __name__ == "__main__":
+    # Define input and output directories
+    input_directory = Path("input_images")
+    output_directory = Path("output_images")
+    
+    # Create sample input directory with images if it doesn't exist
+    # (In a real application, you would already have images to process)
+    input_directory.mkdir(exist_ok=True)
+    
+    # Check if we have sample images to process
+    image_files = list(input_directory.glob('*.jpg'))
+    
+    if not image_files:
+        print("No sample images found. Creating a test image...")
+        
+        # Create a test image using PIL
+        from PIL import Image, ImageDraw
+        
+        # Create a simple test image
+        test_img = Image.new('RGB', (800, 600), color='white')
+        draw = ImageDraw.Draw(test_img)
+        
+        # Draw some shapes
+        draw.rectangle([50, 50, 750, 550], outline='blue', width=5)
+        draw.ellipse([200, 150, 600, 450], fill='red')
+        draw.line([50, 50, 750, 550], fill='green', width=5)
+        
+        # Save the test image
+        test_image_path = input_directory / 'test_image.jpg'
+        test_img.save(test_image_path)
+        print(f"Created test image at: {test_image_path}")
+        image_files = [test_image_path]
+    
+    # Process the images in various ways
+    
+    # 1. Resize all images to 50% of their original size
+    print("\nResizing images...")
+    batch_process_images(
+        input_directory, 
+        output_directory / 'resized',
+        'resize',
+        width=400  # This will maintain aspect ratio
+    )
+    
+    # 2. Convert images to grayscale
+    print("\nConverting images to grayscale...")
+    batch_process_images(
+        input_directory, 
+        output_directory / 'grayscale',
+        'convert',
+        mode='L'
+    )
+    
+    # 3. Enhance contrast
+    print("\nEnhancing image contrast...")
+    batch_process_images(
+        input_directory, 
+        output_directory / 'enhanced',
+        'enhance',
+        method='contrast',
+        factor=1.5
+    )
+    
+    # 4. Rotate images
+    print("\nRotating images...")
+    batch_process_images(
+        input_directory, 
+        output_directory / 'rotated',
+        'rotate',
+        angle=90
+    )
+    
+    print("\nAll batch processing operations completed.")
+                </code></pre>
+                
+                <p>This example demonstrates using <code>pathlib</code> with the PIL/Pillow image processing library. It shows how <code>Path</code> objects integrate well with file operations and other libraries, making the code cleaner and more maintainable. The example includes features like parallel processing with the <code>concurrent.futures</code> module, flexible output path handling, and directory management.</p>
+            </div>
+        </section>
+
+        <section class="best-practices">
+            <h3>Best Practices and Tips</h3>
+            
+            <h4>Prefer Path.home() and Path.cwd() Over os.environ and os.getcwd()</h4>
+            <pre><code>
+from pathlib import Path
+
+# Better approach
+home_dir = Path.home()
+current_dir = Path.cwd()
+
+# Instead of
+# import os
+# home_dir = os.environ['HOME']  # Or os.environ['USERPROFILE'] on Windows
+# current_dir = os.getcwd()
+            </code></pre>
+            
+            <h4>Use the / Operator for Path Joining</h4>
+            <pre><code>
+# More readable
+config_path = Path.home() / '.config' / 'myapp' / 'settings.json'
+
+# Instead of
+# import os
+# config_path = os.path.join(os.environ['HOME'], '.config', 'myapp', 'settings.json')
+            </code></pre>
+            
+            <h4>Use with_name(), with_suffix(), and with_stem() for Path Modifications</h4>
+            <pre><code>
+path = Path('/path/to/file.txt')
+
+# Generate related paths
+backup_path = path.with_name(path.name + '.bak')
+html_version = path.with_suffix('.html')
+new_name = path.with_name('newfile.txt')
+
+# Instead of
+# import os
+# backup_path = os.path.join(os.path.dirname(path), os.path.basename(path) + '.bak')
+# html_version = os.path.splitext(path)[0] + '.html'
+# new_name = os.path.join(os.path.dirname(path), 'newfile.txt')
+            </code></pre>
+            
+            <h4>Use glob() and rglob() for File Finding</h4>
+            <pre><code>
+# Find all Python files recursively
+python_files = list(Path.cwd().rglob('*.py'))
+
+# Instead of
+# import os
+# import glob
+# python_files = glob.glob(os.path.join(os.getcwd(), '**/*.py'), recursive=True)
+            </code></pre>
+            
+            <h4>Use read_text() and write_text() for Simple File I/O</h4>
+            <pre><code>
+# Quick file operations
+path = Path('example.txt')
+path.write_text('Hello, pathlib!')
+content = path.read_text()
+
+# Instead of
+# with open('example.txt', 'w') as f:
+#     f.write('Hello, pathlib!')
+# with open('example.txt', 'r') as f:
+#     content = f.read()
+            </code></pre>
+            
+            <h4>Handle Path Existence Properly</h4>
+            <pre><code>
+# Check first, then act
+path = Path('file.txt')
+if not path.exists():
+    path.touch()
+
+# Or use exist_ok for directories
+output_dir = Path('output')
+output_dir.mkdir(exist_ok=True)
+
+# Using parents=True for nested directories
+nested_dir = Path('a/b/c')
+nested_dir.mkdir(parents=True, exist_ok=True)
+            </code></pre>
+            
+            <h4>Use Appropriate Path Properties</h4>
+            <pre><code>
+path = Path('/home/user/documents/report.pdf')
+
+# Use name for the filename
+filename = path.name  # 'report.pdf'
+
+# Use stem for filename without extension
+basename = path.stem  # 'report'
+
+# Use suffix for the extension
+extension = path.suffix  # '.pdf'
+
+# Use parent for the directory
+directory = path.parent  # Path('/home/user/documents')
+            </code></pre>
+            
+            <h4>Be Careful with Relative Paths</h4>
+            <pre><code>
+# To ensure consistency, resolve relative paths when needed
+relative_path = Path('../data/file.txt')
+absolute_path = relative_path.resolve()
+
+# Or use absolute() to get absolute path without resolving symlinks
+absolute_path_2 = relative_path.absolute()
+            </code></pre>
+            
+            <h4>Test Operations Using is_* Methods</h4>
+            <pre><code>
+path = Path('file_or_directory')
+
+# Check what it is before performing operations
+if path.is_file():
+    # Perform file operations
+    content = path.read_text()
+elif path.is_dir():
+    # Perform directory operations
+    files = list(path.iterdir())
+            </code></pre>
+            
+            <div class="gotchas">
+                <h4>Common Pitfalls and Gotchas</h4>
+                <ul>
+                    <li><strong>Path is Not a String</strong> - Some libraries might not accept Path objects directly; if so, convert to string with <code>str(path)</code></li>
+                    <li><strong>Path Comparison</strong> - Be careful when comparing paths, especially on Windows where case sensitivity differs</li>
+                    <li><strong>/tmp in Windows</strong> - The path <code>/tmp</code> might not exist on Windows; use <code>tempfile.gettempdir()</code> for a cross-platform temp directory</li>
+                    <li><strong>glob() Patterns</strong> - The pattern for <code>glob()</code> is not a regular expression; it uses shell-style wildcards</li>
+                    <li><strong>Open Mode</strong> - <code>path.open()</code> defaults to text mode; specify <code>mode='rb'</code> for binary files</li>
+                    <li><strong>resolve() vs absolute()</strong> - <code>resolve()</code> resolves symlinks, while <code>absolute()</code> doesn't</li>
+                    <li><strong>Path Equality</strong> - Two different path objects may point to the same file but not be equal (<code>==</code>)</li>
+                </ul>
+                
+                <h5>Example: Path Comparison Issues</h5>
+                <pre><code>
+# Path equality is based on the path string, not the file it points to
+path1 = Path('file.txt')
+path2 = Path('./file.txt')
+
+print(f"Paths equal? {path1 == path2}")  # False
+print(f"Resolved paths equal? {path1.resolve() == path2.resolve()}")  # True
+
+# Windows case sensitivity
+if Path('FILE.txt').exists() and not Path('file.txt').exists():
+    print("Windows detected different files due to case sensitivity")
+else:
+    print("Files are the same regardless of case")
+                </code></pre>
+                
+                <h5>Example: Safe Cross-Platform Temp Directory</h5>
+                <pre><code>
+from pathlib import Path
+import tempfile
+
+# Cross-platform temporary directory
+temp_dir = Path(tempfile.gettempdir())
+temp_file = temp_dir / 'myapp_temp.txt'
+
+print(f"Temporary directory: {temp_dir}")
+print(f"Temporary file: {temp_file}")
+                </code></pre>
+            </div>
+        </section>
+
+        <section class="pathlib-vs-os">
+            <h3>Comparison: pathlib vs. os.path</h3>
+            
+            <p>To fully appreciate <code>pathlib</code>, let's compare it with the traditional <code>os.path</code> approach:</p>
+            
+            <h4>Creating and Joining Paths</h4>
+            <pre><code>
+# Using pathlib
+from pathlib import Path
+path = Path('dir') / 'subdir' / 'file.txt'
+
+# Using os.path
+import os
+path = os.path.join('dir', 'subdir', 'file.txt')
+            </code></pre>
+            
+            <h4>Getting File Components</h4>
+            <pre><code>
+# Using pathlib
+path = Path('/home/user/documents/file.txt')
+directory = path.parent
+filename = path.name
+stem = path.stem
+extension = path.suffix
+
+# Using os.path
+path = '/home/user/documents/file.txt'
+directory = os.path.dirname(path)
+filename = os.path.basename(path)
+stem, extension = os.path.splitext(filename)
+            </code></pre>
+            
+            <h4>Checking File Existence</h4>
+            <pre><code>
+# Using pathlib
+if Path('file.txt').exists():
+    print("File exists")
+    
+if Path('directory').is_dir():
+    print("Directory exists")
+
+# Using os.path
+if os.path.exists('file.txt'):
+    print("File exists")
+    
+if os.path.isdir('directory'):
+    print("Directory exists")
+            </code></pre>
+            
+            <h4>Reading and Writing Files</h4>
+            <pre><code>
+# Using pathlib
+path = Path('file.txt')
+path.write_text('Hello, World!')
+content = path.read_text()
+
+# Using os with open
+with open('file.txt', 'w') as f:
+    f.write('Hello, World!')
+    
+with open('file.txt', 'r') as f:
+    content = f.read()
+            </code></pre>
+            
+            <h4>Finding Files</h4>
+            <pre><code>
+# Using pathlib
+python_files = list(Path.cwd().glob('*.py'))
+all_py_files = list(Path.cwd().rglob('*.py'))
+
+# Using os and glob
+import glob
+python_files = glob.glob('*.py')
+all_py_files = glob.glob('**/*.py', recursive=True)
+            </code></pre>
+            
+            <h4>Creating Directories</h4>
+            <pre><code>
+# Using pathlib
+Path('new_directory').mkdir(exist_ok=True)
+Path('nested/directories').mkdir(parents=True, exist_ok=True)
+
+# Using os
+if not os.path.exists('new_directory'):
+    os.mkdir('new_directory')
+    
+os.makedirs('nested/directories', exist_ok=True)  # Python 3.2+
+            </code></pre>
+            
+            <h4>Getting Absolute Paths</h4>
+            <pre><code>
+# Using pathlib
+abs_path = Path('relative/path').resolve()
+
+# Using os.path
+abs_path = os.path.abspath('relative/path')
+            </code></pre>
+            
+            <h4>Handling Home Directory</h4>
+            <pre><code>
+# Using pathlib
+home = Path.home()
+
+# Using os
+import os
+home = os.path.expanduser('~')
+            </code></pre>
+            
+            <table class="comparison-table">
+                <tr>
+                    <th>Feature</th>
+                    <th>pathlib</th>
+                    <th>os.path</th>
+                </tr>
+                <tr>
+                    <td>Paradigm</td>
+                    <td>Object-oriented</td>
+                    <td>Functional</td>
+                </tr>
+                <tr>
+                    <td>Readability</td>
+                    <td>High (method chaining, / operator)</td>
+                    <td>Moderate (multiple function calls)</td>
+                </tr>
+                <tr>
+                    <td>Functionality</td>
+                    <td>Comprehensive (paths, I/O, filesystem)</td>
+                    <td>Split across multiple modules (os, os.path, glob)</td>
+                </tr>
+                <tr>
+                    <td>Platform Abstraction</td>
+                    <td>Automatic (Path uses appropriate subclass)</td>
+                    <td>Manual (need to use the right functions)</td>
+                </tr>
+                <tr>
+                    <td>Type Safety</td>
+                    <td>Strong (Path objects)</td>
+                    <td>Weak (strings)</td>
+                </tr>
+                <tr>
+                    <td>Code Verbosity</td>
+                    <td>Concise</td>
+                    <td>More verbose</td>
+                </tr>
+                <tr>
+                    <td>Backward Compatibility</td>
+                    <td>New in Python 3.4, enhanced in 3.6+</td>
+                    <td>Available in all Python versions</td>
+                </tr>
+            </table>
+        </section>
+
+        <section class="exercises">
+            <h3>Practice Exercises</h3>
+            
+            <div class="exercise-item">
+                <h4>Exercise 1: File Search and Organization</h4>
+                <p>Create a script that searches for files of specific types and organizes them into categorized directories.</p>
+                
+                <pre><code>
+from pathlib import Path
+import shutil
+from datetime import datetime
+
+def organize_files(source_dir, target_dir, categorize_by='extension', recursive=True):
+    """
+    Search for files and organize them into categories.
+    
+    Args:
+        source_dir: Directory to search for files
+        target_dir: Directory to place organized files
+        categorize_by: How to categorize files ('extension', 'date', 'size')
+        recursive: Whether to search subdirectories
+    
+    Returns:
+        Dictionary with statistics about the organization
+    """
+    # Convert to Path objects
+    source = Path(source_dir)
+    target = Path(target_dir)
+    
+    # Check if source directory exists
+    if not source.exists() or not source.is_dir():
+        raise FileNotFoundError(f"Source directory not found: {source}")
+    
+    # Create target directory if it doesn't exist
+    target.mkdir(parents=True, exist_ok=True)
+    
+    # Find all files
+    pattern = '**/*' if recursive else '*'
+    all_files = [f for f in source.glob(pattern) if f.is_file()]
+    
+    # Initialize statistics
+    stats = {
+        'total_files': len(all_files),
+        'copied_files': 0,
+        'categories': set(),
+        'skipped_files': 0,
+    }
+    
+    # Process each file
+    for file_path in all_files:
+        try:
+            # Determine category based on categorization method
+            if categorize_by == 'extension':
+                # Use file extension (without the dot) or 'no_extension'
+                category = file_path.suffix[1:] if file_path.suffix else 'no_extension'
+                
+            elif categorize_by == 'date':
+                # Use modification date (YYYY-MM format)
+                mtime = datetime.fromtimestamp(file_path.stat().st_mtime)
+                category = mtime.strftime('%Y-%m')
+                
+            elif categorize_by == 'size':
+                # Categorize by file size
+                size = file_path.stat().st_size
+                if size < 1024:
+                    category = 'tiny'  # < 1 KB
+                elif size < 1024 * 1024:
+                    category = 'small'  # < 1 MB
+                elif size < 10 * 1024 * 1024:
+                    category = 'medium'  # < 10 MB
+                else:
+                    category = 'large'  # >= 10 MB
+                    
+            else:
+                raise ValueError(f"Unknown categorization method: {categorize_by}")
+            
+            # Create category directory
+            category_dir = target / category
+            category_dir.mkdir(exist_ok=True)
+            
+            # Determine target file path, handling duplicates
+            target_file = category_dir / file_path.name
+            if target_file.exists():
+                # Append a number to the filename to make it unique
+                counter = 1
+                while True:
+                    new_name = f"{file_path.stem}_{counter}{file_path.suffix}"
+                    target_file = category_dir / new_name
+                    if not target_file.exists():
+                        break
+                    counter += 1
+            
+            # Copy the file
+            shutil.copy2(file_path, target_file)
+            
+            # Update statistics
+            stats['copied_files'] += 1
+            stats['categories'].add(category)
+            
+        except Exception as e:
+            print(f"Error processing {file_path}: {e}")

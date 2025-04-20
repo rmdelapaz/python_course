@@ -1,0 +1,1998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Standard Library: os and sys for System Operations</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Standard Library: os and sys for System Operations</h1>
+        <h2>Mastering System Interaction in Python</h2>
+    </header>
+
+    <main>
+        <section class="lecture-intro">
+            <h3>Introduction to System Operations in Python</h3>
+            <p>In the world of programming, applications rarely exist in isolation. They need to interact with the underlying operating system, access environment variables, read command-line arguments, manage files and directories, and more. This is where Python's <code>os</code> and <code>sys</code> modules come into play.</p>
+            
+            <p>Think of these modules as your application's diplomatic corps—they handle all communications and interactions with the operating system and runtime environment. Without them, your Python programs would be isolated islands, unable to effectively communicate with the outside world.</p>
+            
+            <p>In this lecture, we'll explore how these two powerful modules give you the tools to interact with and control the environment your code runs in, regardless of whether that's Windows, macOS, Linux, or another platform.</p>
+        </section>
+
+        <section class="module-overview">
+            <h3>The os and sys Modules: Your System Interface Toolkit</h3>
+            
+            <div class="module-comparison">
+                <h4>Understanding the Difference</h4>
+                <p>Though both modules deal with system operations, they serve different purposes:</p>
+                
+                <ul>
+                    <li><strong>os module</strong>: Primarily focused on operating system functionality like file operations, process management, and environment variables. Think of it as your gateway to the operating system itself.</li>
+                    <li><strong>sys module</strong>: More concerned with the Python interpreter and its environment. Think of it as your gateway to the Python runtime.</li>
+                </ul>
+                
+                <p>Let's import these modules and begin our exploration:</p>
+                
+                <pre><code>
+# Import the modules
+import os
+import sys
+                </code></pre>
+            </div>
+        </section>
+
+        <section class="os-module">
+            <h3>The os Module: Interacting with the Operating System</h3>
+            
+            <p>The <code>os</code> module provides a portable way to use operating system-dependent functionality. Think of it as a universal translator that allows your Python code to communicate with any operating system in its native language.</p>
+            
+            <h4>Operating System Information</h4>
+            <pre><code>
+# Get the name of the operating system
+print(f"Operating System: {os.name}")  # Returns 'posix' for Unix/Linux/Mac, 'nt' for Windows
+
+# Get more detailed platform information (using the platform module)
+import platform
+print(f"Detailed Platform: {platform.platform()}")
+print(f"System: {platform.system()}")
+print(f"Release: {platform.release()}")
+print(f"Version: {platform.version()}")
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Cross-Platform Application Behavior</h4>
+                <p>Consider a scenario where you need to store application data in the appropriate location for each operating system:</p>
+                <pre><code>
+def get_app_data_directory(app_name):
+    """
+    Returns the appropriate directory for storing application data
+    based on the current operating system.
+    """
+    home = os.path.expanduser("~")
+    
+    if os.name == 'nt':  # Windows
+        return os.path.join(home, "AppData", "Local", app_name)
+    elif os.name == 'posix':  # Unix/Linux/Mac
+        # macOS
+        if platform.system() == 'Darwin':
+            return os.path.join(home, "Library", "Application Support", app_name)
+        # Linux/Unix
+        else:
+            return os.path.join(home, ".local", "share", app_name)
+    else:
+        # Fallback for other operating systems
+        return os.path.join(home, app_name)
+
+# Example usage
+app_data_dir = get_app_data_directory("MyAwesomeApp")
+print(f"Application data should be stored in: {app_data_dir}")
+                </code></pre>
+                <p>This function demonstrates how to handle platform-specific behavior elegantly, following each operating system's conventions.</p>
+            </div>
+            
+            <h4>Working with Environment Variables</h4>
+            <p>Environment variables are a set of dynamic named values that can affect the way running processes behave on a computer. They're like global settings for your operating system.</p>
+            
+            <pre><code>
+# Get an environment variable
+python_path = os.environ.get('PYTHONPATH')
+print(f"PYTHONPATH: {python_path}")
+
+# List all environment variables
+print("All Environment Variables:")
+for key, value in os.environ.items():
+    print(f"  {key} = {value}")
+
+# Set an environment variable
+os.environ['MY_CUSTOM_VARIABLE'] = 'Hello, World!'
+print(f"Custom Variable: {os.environ.get('MY_CUSTOM_VARIABLE')}")
+
+# Temporary environment variables for child processes only
+my_env = os.environ.copy()
+my_env['ANOTHER_VARIABLE'] = 'Just for child processes'
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Configuration Through Environment Variables</h4>
+                <p>Environment variables are commonly used for configuration in production environments. Here's how you might configure a database connection:</p>
+                <pre><code>
+def get_database_config():
+    """
+    Get database configuration from environment variables,
+    with fallbacks to default values for development.
+    """
+    return {
+        'host': os.environ.get('DB_HOST', 'localhost'),
+        'port': int(os.environ.get('DB_PORT', 5432)),
+        'user': os.environ.get('DB_USER', 'dev_user'),
+        'password': os.environ.get('DB_PASSWORD', 'dev_password'),
+        'database': os.environ.get('DB_NAME', 'dev_database'),
+        'ssl': os.environ.get('DB_SSL', 'false').lower() == 'true'
+    }
+
+# Example usage
+db_config = get_database_config()
+print("Database Configuration:")
+for key, value in db_config.items():
+    # Mask the password for security
+    if key == 'password':
+        print(f"  {key} = {'*' * len(value)}")
+    else:
+        print(f"  {key} = {value}")
+                </code></pre>
+                <p>This pattern is widely used in containerized applications (like Docker) where environment variables are the standard way to configure applications across different environments.</p>
+            </div>
+            
+            <h4>File and Directory Operations</h4>
+            <p>One of the most common uses of the <code>os</code> module is to work with files and directories. Think of it as your file manager within Python.</p>
+            
+            <h5>Directory Operations</h5>
+            <pre><code>
+# Get current working directory
+current_dir = os.getcwd()
+print(f"Current Directory: {current_dir}")
+
+# Change directory
+# os.chdir('/path/to/new/directory')  # Uncomment to use
+
+# List files and directories
+files = os.listdir(current_dir)
+print("Files and Directories:")
+for file in files[:5]:  # Show just the first 5 to keep the output manageable
+    print(f"  {file}")
+
+# Create a new directory
+try:
+    os.mkdir('example_dir')
+    print("Created directory: example_dir")
+except FileExistsError:
+    print("Directory already exists")
+
+# Create nested directories
+try:
+    os.makedirs('nested/directory/structure', exist_ok=True)
+    print("Created nested directories")
+except Exception as e:
+    print(f"Error creating directories: {e}")
+
+# Remove a directory
+try:
+    os.rmdir('example_dir')
+    print("Removed directory: example_dir")
+except FileNotFoundError:
+    print("Directory doesn't exist")
+except OSError as e:
+    print(f"Error removing directory: {e}")  # If directory isn't empty
+            </code></pre>
+            
+            <h5>File Path Operations</h5>
+            <pre><code>
+# Join path components (handles different OS path separators)
+data_file = os.path.join('data', 'user_profiles', 'user1.json')
+print(f"Data file path: {data_file}")
+
+# Get absolute path
+abs_path = os.path.abspath(data_file)
+print(f"Absolute path: {abs_path}")
+
+# Get the directory name and base filename
+dirname = os.path.dirname(abs_path)
+basename = os.path.basename(abs_path)
+print(f"Directory: {dirname}")
+print(f"Filename: {basename}")
+
+# Split file extension
+filename, ext = os.path.splitext(basename)
+print(f"Base filename: {filename}")
+print(f"Extension: {ext}")
+
+# Check if a path exists
+if os.path.exists(current_dir):
+    print(f"{current_dir} exists")
+
+# Check if a path is a file or directory
+path_to_check = __file__  # Current script file
+if os.path.isfile(path_to_check):
+    print(f"{path_to_check} is a file")
+elif os.path.isdir(path_to_check):
+    print(f"{path_to_check} is a directory")
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Recursive File Search</h4>
+                <p>Here's a practical example of recursively searching for files with a specific extension:</p>
+                <pre><code>
+def find_files_with_extension(start_dir, extension):
+    """
+    Recursively find all files with a given extension starting from start_dir.
+    
+    Args:
+        start_dir (str): Directory to start searching from
+        extension (str): File extension to search for (e.g., '.py')
+        
+    Returns:
+        list: List of full paths to matching files
+    """
+    matching_files = []
+    
+    # Ensure extension starts with a dot
+    if not extension.startswith('.'):
+        extension = '.' + extension
+    
+    # Walk the directory tree
+    for root, dirs, files in os.walk(start_dir):
+        for file in files:
+            if file.endswith(extension):
+                # Join the root path with the filename to get the full path
+                full_path = os.path.join(root, file)
+                matching_files.append(full_path)
+    
+    return matching_files
+
+# Example usage
+python_files = find_files_with_extension(os.getcwd(), '.py')
+print(f"Found {len(python_files)} Python files")
+for file in python_files[:5]:  # Show the first 5 files
+    print(f"  {file}")
+                </code></pre>
+                <p>This function is similar to how code editors find all files of a certain type for indexing or how build systems locate source files to compile.</p>
+            </div>
+            
+            <h4>Process Management</h4>
+            <p>The <code>os</code> module also allows you to interact with system processes, run commands, and manage your program's execution.</p>
+            
+            <pre><code>
+# Get the current process ID
+pid = os.getpid()
+print(f"Current process ID: {pid}")
+
+# Run a system command
+try:
+    # Simple command
+    exit_code = os.system('echo "Hello from the system shell"')
+    print(f"Command exit code: {exit_code}")
+    
+    # More complex commands with subprocess (preferred over os.system)
+    import subprocess
+    result = subprocess.run(['python', '--version'], 
+                           capture_output=True, 
+                           text=True, 
+                           check=True)
+    print(f"Python version: {result.stdout.strip()}")
+except Exception as e:
+    print(f"Error running command: {e}")
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Batch Processing with External Tools</h4>
+                <p>Imagine a scenario where you need to process multiple images using an external command-line tool:</p>
+                <pre><code>
+import subprocess
+import os
+
+def batch_process_images(input_dir, output_dir, operation='resize', options=None):
+    """
+    Process all images in input_dir using an external image processing tool.
+    
+    Args:
+        input_dir (str): Directory containing source images
+        output_dir (str): Directory for processed images
+        operation (str): Operation to perform (resize, crop, etc.)
+        options (dict): Additional options for the operation
+    """
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Default options
+    if options is None:
+        options = {}
+    
+    # Set default resize dimensions
+    size = options.get('size', '800x600')
+    
+    # Get all image files
+    image_extensions = ('.jpg', '.jpeg', '.png', '.gif')
+    image_files = [f for f in os.listdir(input_dir) 
+                  if os.path.isfile(os.path.join(input_dir, f)) 
+                  and f.lower().endswith(image_extensions)]
+    
+    # Process each image
+    for image in image_files:
+        input_path = os.path.join(input_dir, image)
+        output_path = os.path.join(output_dir, image)
+        
+        try:
+            if operation == 'resize':
+                # Using ImageMagick's convert command as an example
+                cmd = ['convert', input_path, '-resize', size, output_path]
+                subprocess.run(cmd, check=True, capture_output=True)
+                print(f"Resized: {image}")
+            elif operation == 'crop':
+                geometry = options.get('geometry', '640x480+0+0')
+                cmd = ['convert', input_path, '-crop', geometry, output_path]
+                subprocess.run(cmd, check=True, capture_output=True)
+                print(f"Cropped: {image}")
+            else:
+                print(f"Unsupported operation: {operation}")
+                continue
+        except subprocess.CalledProcessError as e:
+            print(f"Error processing {image}: {e}")
+            print(f"Error details: {e.stderr}")
+        except Exception as e:
+            print(f"Unexpected error with {image}: {e}")
+
+# Example usage (commented out as it depends on ImageMagick being installed)
+# batch_process_images('source_images', 'processed_images', 'resize', {'size': '400x300'})
+                </code></pre>
+                <p>This example demonstrates how Python can serve as a coordination layer between your data and external specialized tools—a common pattern in data processing pipelines.</p>
+            </div>
+        </section>
+
+        <section class="sys-module">
+            <h3>The sys Module: Python Runtime Environment</h3>
+            
+            <p>While the <code>os</code> module connects your code to the operating system, the <code>sys</code> module connects it to the Python interpreter itself. Think of it as your direct line to the Python runtime environment.</p>
+            
+            <h4>Command-Line Arguments</h4>
+            <p>One of the most common uses of <code>sys</code> is to access command-line arguments passed to your script.</p>
+            
+            <pre><code>
+# Access command-line arguments
+print(f"Script name: {sys.argv[0]}")
+print(f"Number of arguments: {len(sys.argv) - 1}")
+print(f"All arguments: {sys.argv}")
+
+# Example usage in a script (save as cli_example.py)
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python cli_example.py [name]")
+        sys.exit(1)  # Exit with an error code
+    
+    name = sys.argv[1]
+    print(f"Hello, {name}!")
+
+# Call main() if this script is run directly (not imported)
+if __name__ == "__main__":
+    main()
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Simple Command-Line Tool</h4>
+                <p>Let's create a more practical command-line tool for file operations:</p>
+                <pre><code>
+import sys
+import os
+import shutil
+import argparse
+
+def create_argparser():
+    """Create an argument parser for our file utility."""
+    parser = argparse.ArgumentParser(
+        description="File Utility Tool",
+        epilog="Example: python file_util.py copy source.txt destination.txt"
+    )
+    
+    # Add the command argument
+    parser.add_argument('command', choices=['copy', 'move', 'delete', 'info'],
+                        help='Operation to perform')
+    
+    # Add file path arguments
+    parser.add_argument('source', help='Source file path')
+    parser.add_argument('destination', nargs='?', default=None,
+                        help='Destination file path (for copy/move operations)')
+    
+    # Add optional arguments
+    parser.add_argument('-f', '--force', action='store_true',
+                        help='Force operation without confirmation')
+    
+    return parser
+
+def main():
+    """Main function for the file utility."""
+    parser = create_argparser()
+    args = parser.parse_args()
+    
+    # Check if source exists
+    if not os.path.exists(args.source):
+        print(f"Error: Source file '{args.source}' does not exist")
+        sys.exit(1)
+    
+    # Process the command
+    if args.command == 'copy':
+        if not args.destination:
+            print("Error: Destination is required for copy operation")
+            sys.exit(1)
+        
+        # Confirm overwrite if destination exists and not in force mode
+        if os.path.exists(args.destination) and not args.force:
+            confirm = input(f"'{args.destination}' already exists. Overwrite? (y/n): ")
+            if confirm.lower() != 'y':
+                print("Operation cancelled.")
+                sys.exit(0)
+        
+        try:
+            shutil.copy2(args.source, args.destination)
+            print(f"Copied '{args.source}' to '{args.destination}'")
+        except Exception as e:
+            print(f"Error during copy: {e}")
+            sys.exit(1)
+            
+    elif args.command == 'move':
+        if not args.destination:
+            print("Error: Destination is required for move operation")
+            sys.exit(1)
+            
+        # Confirm overwrite if destination exists and not in force mode
+        if os.path.exists(args.destination) and not args.force:
+            confirm = input(f"'{args.destination}' already exists. Overwrite? (y/n): ")
+            if confirm.lower() != 'y':
+                print("Operation cancelled.")
+                sys.exit(0)
+        
+        try:
+            shutil.move(args.source, args.destination)
+            print(f"Moved '{args.source}' to '{args.destination}'")
+        except Exception as e:
+            print(f"Error during move: {e}")
+            sys.exit(1)
+            
+    elif args.command == 'delete':
+        # Confirm deletion if not in force mode
+        if not args.force:
+            confirm = input(f"Are you sure you want to delete '{args.source}'? (y/n): ")
+            if confirm.lower() != 'y':
+                print("Operation cancelled.")
+                sys.exit(0)
+        
+        try:
+            if os.path.isdir(args.source):
+                shutil.rmtree(args.source)
+                print(f"Deleted directory '{args.source}' and all its contents")
+            else:
+                os.remove(args.source)
+                print(f"Deleted file '{args.source}'")
+        except Exception as e:
+            print(f"Error during deletion: {e}")
+            sys.exit(1)
+            
+    elif args.command == 'info':
+        # Get file information
+        try:
+            stat_info = os.stat(args.source)
+            
+            print(f"File Information for '{args.source}':")
+            print(f"  Type: {'Directory' if os.path.isdir(args.source) else 'File'}")
+            print(f"  Size: {stat_info.st_size} bytes")
+            print(f"  Created: {datetime.datetime.fromtimestamp(stat_info.st_ctime)}")
+            print(f"  Modified: {datetime.datetime.fromtimestamp(stat_info.st_mtime)}")
+            print(f"  Accessed: {datetime.datetime.fromtimestamp(stat_info.st_atime)}")
+            print(f"  Permissions: {oct(stat_info.st_mode)[-3:]}")
+            print(f"  Owner ID: {stat_info.st_uid}")
+            print(f"  Group ID: {stat_info.st_gid}")
+            
+            if os.path.isfile(args.source):
+                _, ext = os.path.splitext(args.source)
+                print(f"  Extension: {ext}")
+        except Exception as e:
+            print(f"Error retrieving file information: {e}")
+            sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+                </code></pre>
+                <p>This example demonstrates a more sophisticated approach to command-line parsing using the <code>argparse</code> module, which is a higher-level tool built on top of <code>sys.argv</code>. The tool supports file operations that might be part of a data processing pipeline or administrative script.</p>
+            </div>
+            
+            <h4>Standard Streams</h4>
+            <p>The <code>sys</code> module gives you access to the three standard streams—input, output, and error:</p>
+            
+            <pre><code>
+# Standard output and error streams
+sys.stdout.write("This goes to standard output\n")
+sys.stderr.write("This goes to standard error\n")
+
+# Redirect stdout temporarily
+original_stdout = sys.stdout
+try:
+    with open('output.log', 'w') as f:
+        sys.stdout = f
+        print("This will be written to the log file")
+finally:
+    # Restore stdout
+    sys.stdout = original_stdout
+
+print("This will be displayed in the console again")
+
+# Reading from stdin (interactive example)
+# Uncomment to try
+# print("Enter your name:")
+# name = sys.stdin.readline().strip()
+# print(f"Hello, {name}!")
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Log Redirection</h4>
+                <p>Here's how you might implement a simple logging system with the ability to redirect output:</p>
+                <pre><code>
+import sys
+import datetime
+import os
+
+class Logger:
+    """Simple logging class with output redirection capabilities."""
+    
+    def __init__(self, log_file=None, log_level='INFO'):
+        self.log_level = log_level
+        self.log_file = log_file
+        self.log_handle = None
+        
+        # Map log levels to numeric values for comparison
+        self.level_map = {
+            'DEBUG': 10,
+            'INFO': 20,
+            'WARNING': 30,
+            'ERROR': 40,
+            'CRITICAL': 50
+        }
+        
+        self.current_level_value = self.level_map.get(self.log_level, 0)
+        
+        # Open log file if specified
+        if self.log_file:
+            try:
+                log_dir = os.path.dirname(self.log_file)
+                if log_dir and not os.path.exists(log_dir):
+                    os.makedirs(log_dir)
+                self.log_handle = open(self.log_file, 'a')
+            except Exception as e:
+                sys.stderr.write(f"Error opening log file: {e}\n")
+    
+    def log(self, message, level='INFO'):
+        """Log a message at the specified level."""
+        level_value = self.level_map.get(level, 0)
+        
+        # Skip messages below current log level
+        if level_value < self.current_level_value:
+            return
+        
+        # Format the log message
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        formatted_message = f"[{timestamp}] {level}: {message}\n"
+        
+        # Write to console
+        if level in ('ERROR', 'CRITICAL'):
+            sys.stderr.write(formatted_message)
+        else:
+            sys.stdout.write(formatted_message)
+        
+        # Write to log file if available
+        if self.log_handle:
+            self.log_handle.write(formatted_message)
+            self.log_handle.flush()
+    
+    def debug(self, message):
+        """Log a debug message."""
+        self.log(message, 'DEBUG')
+    
+    def info(self, message):
+        """Log an info message."""
+        self.log(message, 'INFO')
+    
+    def warning(self, message):
+        """Log a warning message."""
+        self.log(message, 'WARNING')
+    
+    def error(self, message):
+        """Log an error message."""
+        self.log(message, 'ERROR')
+    
+    def critical(self, message):
+        """Log a critical message."""
+        self.log(message, 'CRITICAL')
+    
+    def close(self):
+        """Close the log file if open."""
+        if self.log_handle:
+            self.log_handle.close()
+            self.log_handle = None
+
+# Example usage
+logger = Logger(log_file='application.log', log_level='DEBUG')
+
+logger.debug("This is a debug message")
+logger.info("Application started")
+logger.warning("Configuration file not found, using defaults")
+logger.error("Failed to connect to database")
+logger.critical("Unhandled exception, application shutting down")
+
+logger.close()
+                </code></pre>
+                <p>This example demonstrates a common pattern in applications where logging is directed to both the console (using standard streams) and a file for persistence. The logger respects log levels to control verbosity and uses the appropriate stream (stdout/stderr) based on message severity.</p>
+            </div>
+            
+            <h4>Python Path and Module Management</h4>
+            <p>The <code>sys</code> module also controls the Python module search path and lets you interact with loaded modules.</p>
+            
+            <pre><code>
+# See the Python path (where modules are searched for)
+print("Python module search paths:")
+for path in sys.path:
+    print(f"  {path}")
+
+# Add a new directory to the Python path
+# sys.path.append('/path/to/your/modules')
+
+# List all loaded modules
+print("\nLoaded modules:")
+for name, module in sorted(sys.modules.items())[:10]:  # Show first 10 for brevity
+    print(f"  {name}")
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Dynamic Module Loading</h4>
+                <p>Here's how you might implement a plugin system using dynamic module loading:</p>
+                <pre><code>
+import sys
+import os
+import importlib.util
+
+def load_plugins(plugins_dir):
+    """
+    Load all Python modules in the plugins directory as plugins.
+    
+    Args:
+        plugins_dir (str): Directory containing plugin modules
+        
+    Returns:
+        dict: Dictionary mapping plugin names to loaded plugin modules
+    """
+    plugins = {}
+    
+    # Ensure the plugins directory exists
+    if not os.path.exists(plugins_dir):
+        print(f"Plugins directory not found: {plugins_dir}")
+        return plugins
+    
+    # Add the plugins directory to the Python path
+    sys.path.insert(0, plugins_dir)
+    
+    # Find all potential plugin files
+    for filename in os.listdir(plugins_dir):
+        # Check if it's a Python file
+        if filename.endswith('.py') and not filename.startswith('__'):
+            # Get the module name (file name without .py extension)
+            module_name = filename[:-3]
+            
+            try:
+                # Find the path to the file
+                file_path = os.path.join(plugins_dir, filename)
+                
+                # Load the module
+                spec = importlib.util.spec_from_file_location(module_name, file_path)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                
+                # Check if it's a valid plugin by looking for required attributes/methods
+                if hasattr(module, 'plugin_name') and hasattr(module, 'run'):
+                    plugins[module.plugin_name] = module
+                    print(f"Loaded plugin: {module.plugin_name}")
+                else:
+                    print(f"Skipping {filename}: missing required plugin interface")
+            except Exception as e:
+                print(f"Error loading plugin {filename}: {e}")
+    
+    # Remove the plugins directory from the path to avoid conflicts
+    if plugins_dir in sys.path:
+        sys.path.remove(plugins_dir)
+    
+    return plugins
+
+# Example usage (assuming you have plugin modules in a 'plugins' directory)
+# plugins = load_plugins('plugins')
+# 
+# # Run all loaded plugins
+# for name, plugin in plugins.items():
+#     try:
+#         result = plugin.run()
+#         print(f"Plugin '{name}' returned: {result}")
+#     except Exception as e:
+#         print(f"Error running plugin '{name}': {e}")
+                </code></pre>
+                <p>This example demonstrates how to use <code>sys.path</code> and module loading to implement a plugin architecture—a common pattern in extensible applications. Each plugin is a separate Python module that can be developed independently and discovered at runtime.</p>
+            </div>
+            
+            <h4>Python Interpreter Information</h4>
+            <p>The <code>sys</code> module provides information about the Python interpreter itself:</p>
+            
+            <pre><code>
+# Python version information
+print(f"Python Version: {sys.version}")
+print(f"Version Info: {sys.version_info}")
+print(f"Python Implementation: {sys.implementation}")
+
+# Platform information
+print(f"Platform: {sys.platform}")
+
+# Interpreter paths
+print(f"Executable: {sys.executable}")
+print(f"Prefix: {sys.prefix}")
+
+# Check if running as a script or in interactive mode
+if sys.flags.interactive:
+    print("Running in interactive mode")
+else:
+    print("Running as a script")
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Version Compatibility Check</h4>
+                <p>Here's how you might ensure your script is running on a compatible Python version:</p>
+                <pre><code>
+def check_python_compatibility():
+    """
+    Check if the current Python version is compatible with this application.
+    Requires Python 3.6+ for f-strings, and 3.8+ for walrus operator.
+    """
+    python_version = sys.version_info
+    
+    if python_version.major < 3:
+        print("Error: This application requires Python 3")
+        sys.exit(1)
+    
+    if python_version.major == 3 and python_version.minor < 6:
+        print("Error: This application requires Python 3.6 or higher")
+        print(f"Current Python version: {sys.version}")
+        sys.exit(1)
+    
+    if python_version.major == 3 and python_version.minor < 8:
+        print("Warning: Some features may not work correctly on Python < 3.8")
+        print(f"Current Python version: {sys.version}")
+    
+    print(f"Python version check passed: {sys.version}")
+
+# Example usage
+check_python_compatibility()
+                </code></pre>
+                <p>This function demonstrates a common pattern in Python applications that need specific language features only available in certain versions. It provides clear error messages to users who might be running an incompatible Python version.</p>
+            </div>
+            
+            <h4>Memory Management and Performance</h4>
+            <p>The <code>sys</code> module gives you some visibility into Python's memory usage and performance:</p>
+            
+            <pre><code>
+# Get current memory usage of objects
+print(f"Object size of an integer: {sys.getsizeof(0)} bytes")
+print(f"Object size of a string: {sys.getsizeof('hello')} bytes")
+print(f"Object size of a list: {sys.getsizeof([1, 2, 3])} bytes")
+print(f"Object size of a dictionary: {sys.getsizeof({'a': 1, 'b': 2})} bytes")
+
+# Reference counting (how Python manages memory)
+import ctypes
+
+def ref_count(obj):
+    """Get the reference count of an object."""
+    return ctypes.c_long.from_address(id(obj)).value
+
+# Create an object and check its reference count
+x = [1, 2, 3]
+print(f"Reference count: {ref_count(x)}")  # At least 1 (the variable x)
+
+# Create another reference
+y = x
+print(f"Reference count after assignment: {ref_count(x)}")  # Should be 2
+
+# Delete one reference
+del y
+print(f"Reference count after deletion: {ref_count(x)}")  # Should be 1 again
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Memory Usage Monitoring</h4>
+                <p>Here's a simple utility to monitor memory usage during processing:</p>
+                <pre><code>
+import sys
+import gc
+import time
+import resource  # Unix-specific module, not available on Windows
+
+def memory_usage():
+    """Get current memory usage in MB (Unix-specific)."""
+    try:
+        # This works on Unix/Linux/Mac
+        usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        
+        # Convert to MB (different units on different platforms)
+        if sys.platform == 'darwin':  # macOS returns bytes
+            return usage / 1024 / 1024
+        else:  # Linux returns kilobytes
+            return usage / 1024
+    except (ImportError, AttributeError):
+        # Fallback for Windows or other platforms
+        return "Memory usage information not available on this platform"
+
+def process_large_data(data_size, chunk_size):
+    """
+    Process a large amount of data in chunks to manage memory usage.
+    
+    Args:
+        data_size (int): Total number of items to process
+        chunk_size (int): Number of items to process in each chunk
+    """
+    print(f"Starting with memory usage: {memory_usage():.2f} MB")
+    
+    # Process data in chunks
+    total_chunks = (data_size + chunk_size - 1) // chunk_size  # Ceiling division
+    
+    for chunk_idx in range(total_chunks):
+        start_idx = chunk_idx * chunk_size
+        end_idx = min(start_idx + chunk_size, data_size)
+        
+        print(f"Processing chunk {chunk_idx + 1}/{total_chunks} (items {start_idx}-{end_idx - 1})")
+        
+        # Simulate data processing by creating a large list
+        chunk_data = ["x" * 1000 for _ in range(start_idx, end_idx)]
+        
+        # Do something with the chunk_data...
+        result = sum(len(x) for x in chunk_data)
+        
+        print(f"  Chunk result: {result}")
+        print(f"  Memory usage: {memory_usage():.2f} MB")
+        
+        # Explicitly delete the chunk data and collect garbage
+        del chunk_data
+        gc.collect()
+        
+        print(f"  After cleanup: {memory_usage():.2f} MB")
+        time.sleep(0.1)  # Small pause to see the output
+
+# Example usage
+# process_large_data(1000000, 100000)
+                </code></pre>
+                <p>This example demonstrates techniques for managing memory when processing large datasets—a common challenge in data analysis and processing applications. It uses chunking to control memory usage and explicit garbage collection to release memory as soon as possible.</p>
+            </div>
+            
+            <h4>Exit Handling</h4>
+            <p>The <code>sys</code> module allows you to control how your program exits and perform cleanup tasks:</p>
+            
+            <pre><code>
+# Register an exit handler
+def exit_handler():
+    print("Performing cleanup tasks...")
+    print("Closing resources...")
+    print("Goodbye!")
+
+# Register the handler to be called when program is about to exit
+import atexit
+atexit.register(exit_handler)
+
+# Exit the program with a specific status code
+def exit_program(status=0):
+    print(f"Exiting with status code: {status}")
+    sys.exit(status)  # 0 means successful execution, non-zero indicates an error
+
+# Demonstrate exit (this would normally be called in response to some condition)
+# exit_program(0)  # Uncomment to test
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Graceful Shutdown Handler</h4>
+                <p>Here's how you might implement a more comprehensive shutdown system for a server application:</p>
+                <pre><code>
+import sys
+import signal
+import time
+import threading
+
+class ServerApplication:
+    """Example server application with graceful shutdown handling."""
+    
+    def __init__(self):
+        self.running = False
+        self.connections = {}  # Simulate active connections
+        self.connection_lock = threading.Lock()
+        self.shutdown_event = threading.Event()
+    
+    def add_connection(self, client_id, connection):
+        """Add a new client connection."""
+        with self.connection_lock:
+            self.connections[client_id] = connection
+            print(f"Client {client_id} connected. Total clients: {len(self.connections)}")
+    
+    def remove_connection(self, client_id):
+        """Remove a client connection."""
+        with self.connection_lock:
+            if client_id in self.connections:
+                del self.connections[client_id]
+                print(f"Client {client_id} disconnected. Total clients: {len(self.connections)}")
+    
+    def handle_client(self, client_id):
+        """Simulate handling a client connection."""
+        # Create a "connection" object
+        connection = {"id": client_id, "connected_at": time.time()}
+        self.add_connection(client_id, connection)
+        
+        # Simulate client activity
+        try:
+            while self.running and not self.shutdown_event.is_set():
+                # Simulate some processing
+                time.sleep(0.5)
+                
+                # Exit the loop early in 10% of cases
+                if time.time() % 10 < 1:
+                    break
+        finally:
+            # Ensure connection is closed properly
+            self.remove_connection(client_id)
+    
+    def start(self):
+        """Start the server."""
+        self.running = True
+        print("Server starting...")
+        
+        # Register signal handlers for graceful shutdown
+        signal.signal(signal.SIGINT, self.handle_shutdown)
+        signal.signal(signal.SIGTERM, self.handle_shutdown)
+        
+        # Register exit handler for final cleanup
+        atexit.register(self.final_cleanup)
+        
+        # Main server loop
+        client_id = 0
+        while self.running:
+            # Simulate accepting new clients
+            time.sleep(0.2)
+            client_id += 1
+            
+            # Start a new thread for each client
+            thread = threading.Thread(target=self.handle_client, args=(client_id,))
+            thread.daemon = True  # Daemon threads will exit when main thread exits
+            thread.start()
+            
+            # Simulate random server activity
+            if client_id % 5 == 0:
+                print(f"Server stats: {len(self.connections)} active connections")
+    
+    def stop(self, timeout=5):
+        """Stop the server with a grace period for clients to disconnect."""
+        if not self.running:
+            return
+        
+        print(f"Server stopping, giving clients {timeout} seconds to disconnect...")
+        self.running = False
+        self.shutdown_event.set()
+        
+        # Wait for connections to close gracefully
+        end_time = time.time() + timeout
+        while time.time() < end_time and self.connections:
+            remaining = end_time - time.time()
+            print(f"Waiting for {len(self.connections)} connections to close ({remaining:.1f}s remaining)")
+            time.sleep(0.5)
+        
+        # Force close any remaining connections
+        if self.connections:
+            print(f"Forcefully closing {len(self.connections)} connections")
+            self.connections.clear()
+        
+        print("Server stopped")
+    
+    def handle_shutdown(self, signum, frame):
+        """Signal handler for SIGINT and SIGTERM."""
+        signal_name = 'SIGTERM' if signum == signal.SIGTERM else 'SIGINT'
+        print(f"\nReceived {signal_name} signal, initiating graceful shutdown...")
+        self.stop()
+        
+        # Exit with appropriate code for the signal
+        if signum == signal.SIGINT:
+            sys.exit(130)  # Standard exit code for SIGINT
+        else:
+            sys.exit(143)  # Standard exit code for SIGTERM
+    
+    def final_cleanup(self):
+        """Final cleanup before the process exits."""
+        print("Performing final cleanup...")
+        print("Closing log files...")
+        print("Releasing system resources...")
+        print("Cleanup complete")
+
+# Example usage
+# server = ServerApplication()
+# try:
+#     server.start()
+# except KeyboardInterrupt:
+#     # This will be caught by the signal handler
+#     pass
+                </code></pre>
+                <p>This example demonstrates a comprehensive approach to graceful shutdown handling in a server application—a critical aspect of robust systems. It uses signals to catch termination requests and implements a grace period to allow ongoing operations to complete cleanly.</p>
+            </div>
+        </section>
+
+        <section class="combining-modules">
+            <h3>Combining os and sys for Powerful System Operations</h3>
+            
+            <p>While the <code>os</code> and <code>sys</code> modules are useful individually, they truly shine when used together to create sophisticated system interactions.</p>
+            
+            <h4>Cross-Platform Application Architecture</h4>
+            <pre><code>
+import os
+import sys
+import platform
+
+def setup_application_environment():
+    """
+    Set up the application environment based on the current platform,
+    Python version, and runtime context.
+    """
+    # Application information
+    app_name = "ExampleApp"
+    app_version = "1.0.0"
+    
+    # Detect operating system
+    if sys.platform.startswith('win'):
+        system = 'Windows'
+    elif sys.platform == 'darwin':
+        system = 'macOS'
+    elif sys.platform.startswith('linux'):
+        system = 'Linux'
+    else:
+        system = 'Unknown'
+    
+    print(f"Initializing {app_name} v{app_version} on {system}")
+    
+    # Set up application directories
+    if system == 'Windows':
+        app_data = os.path.join(os.environ.get('APPDATA', ''), app_name)
+        config_dir = app_data
+        cache_dir = os.path.join(os.environ.get('LOCALAPPDATA', ''), app_name, 'Cache')
+        log_dir = os.path.join(app_data, 'Logs')
+    elif system == 'macOS':
+        home = os.path.expanduser('~')
+        app_data = os.path.join(home, 'Library', 'Application Support', app_name)
+        config_dir = app_data
+        cache_dir = os.path.join(home, 'Library', 'Caches', app_name)
+        log_dir = os.path.join(home, 'Library', 'Logs', app_name)
+    else:  # Linux/Unix
+        home = os.path.expanduser('~')
+        app_data = os.path.join(home, '.local', 'share', app_name.lower())
+        config_dir = os.path.join(home, '.config', app_name.lower())
+        cache_dir = os.path.join(home, '.cache', app_name.lower())
+        log_dir = os.path.join(home, '.local', 'state', app_name.lower(), 'logs')
+    
+    # Create directories if they don't exist
+    for directory in (app_data, config_dir, cache_dir, log_dir):
+        if not os.path.exists(directory):
+            try:
+                os.makedirs(directory)
+                print(f"Created directory: {directory}")
+            except Exception as e:
+                print(f"Error creating directory {directory}: {e}")
+    
+    # Set up Python module search paths
+    module_dirs = [
+        # App-specific modules directory
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modules'),
+        # User modules directory
+        os.path.join(app_data, 'modules')
+    ]
+    
+    for directory in module_dirs:
+        if os.path.exists(directory) and directory not in sys.path:
+            sys.path.insert(0, directory)
+            print(f"Added to Python path: {directory}")
+    
+    # Return the directory configuration
+    return {
+        'system': system,
+        'app_data': app_data,
+        'config_dir': config_dir,
+        'cache_dir': cache_dir,
+        'log_dir': log_dir
+    }
+
+# Example usage
+# app_dirs = setup_application_environment()
+# print("Application directories:")
+# for key, value in app_dirs.items():
+#     print(f"  {key}: {value}")
+            </code></pre>
+            
+            <h4>System Information Utility</h4>
+            <div class="real-world-example">
+                <h4>Real-World Example: Comprehensive System Information Tool</h4>
+                <p>Here's a practical utility that combines various aspects of the <code>os</code> and <code>sys</code> modules to gather detailed system information:</p>
+                <pre><code>
+import os
+import sys
+import platform
+import socket
+import psutil  # Third-party library for system monitoring
+import datetime
+import json
+
+def get_system_info():
+    """Collect comprehensive system information."""
+    info = {
+        "timestamp": datetime.datetime.now().isoformat(),
+        "system": {
+            "platform": sys.platform,
+            "os_name": os.name,
+            "system": platform.system(),
+            "release": platform.release(),
+            "version": platform.version(),
+            "architecture": platform.architecture(),
+            "machine": platform.machine(),
+            "processor": platform.processor(),
+            "hostname": socket.gethostname(),
+        },
+        "python": {
+            "version": sys.version,
+            "version_info": {
+                "major": sys.version_info.major,
+                "minor": sys.version_info.minor,
+                "micro": sys.version_info.micro,
+            },
+            "implementation": sys.implementation.name,
+            "executable": sys.executable,
+            "path": sys.path,
+        },
+        "environment": {
+            "user": os.environ.get('USER') or os.environ.get('USERNAME'),
+            "home": os.path.expanduser('~'),
+            "cwd": os.getcwd(),
+            "env_vars": dict(os.environ),
+        },
+    }
+    
+    # Add hardware information using psutil
+    try:
+        import psutil
+        
+        # CPU information
+        cpu_info = {
+            "physical_cores": psutil.cpu_count(logical=False),
+            "total_cores": psutil.cpu_count(logical=True),
+            "max_frequency": psutil.cpu_freq().max if psutil.cpu_freq() else None,
+            "current_frequency": psutil.cpu_freq().current if psutil.cpu_freq() else None,
+            "usage_per_core": [round(percentage, 2) for percentage in psutil.cpu_percent(percpu=True, interval=1)],
+            "total_usage": psutil.cpu_percent(interval=1),
+        }
+        
+        # Memory information
+        memory = psutil.virtual_memory()
+        memory_info = {
+            "total": bytes_to_human_readable(memory.total),
+            "available": bytes_to_human_readable(memory.available),
+            "used": bytes_to_human_readable(memory.used),
+            "percentage": memory.percent,
+        }
+        
+        # Disk information
+        disk_info = []
+        for partition in psutil.disk_partitions():
+            try:
+                partition_usage = psutil.disk_usage(partition.mountpoint)
+                disk_info.append({
+                    "device": partition.device,
+                    "mountpoint": partition.mountpoint,
+                    "file_system": partition.fstype,
+                    "total": bytes_to_human_readable(partition_usage.total),
+                    "used": bytes_to_human_readable(partition_usage.used),
+                    "free": bytes_to_human_readable(partition_usage.free),
+                    "percentage": partition_usage.percent,
+                })
+            except PermissionError:
+                # Some partitions may not be accessible
+                continue
+        
+        # Network information
+        network_info = {
+            "interfaces": {},
+            "connections": len(psutil.net_connections()),
+        }
+        
+        for nic, addrs in psutil.net_if_addrs().items():
+            nic_info = {
+                "addresses": [],
+                "stats": {},
+            }
+            
+            for addr in addrs:
+                addr_info = {
+                    "family": str(addr.family),
+                    "address": addr.address,
+                    "netmask": addr.netmask,
+                    "broadcast": addr.broadcast,
+                }
+                nic_info["addresses"].append(addr_info)
+            
+            if nic in psutil.net_if_stats():
+                stats = psutil.net_if_stats()[nic]
+                nic_info["stats"] = {
+                    "isup": stats.isup,
+                    "speed": stats.speed,
+                    "mtu": stats.mtu,
+                }
+            
+            network_info["interfaces"][nic] = nic_info
+        
+        # Add this information to the main dict
+        info.update({
+            "hardware": {
+                "cpu": cpu_info,
+                "memory": memory_info,
+                "disk": disk_info,
+                "network": network_info,
+            }
+        })
+    except (ImportError, Exception) as e:
+        info["hardware"] = {"error": f"Could not collect hardware information: {str(e)}"}
+    
+    return info
+
+def bytes_to_human_readable(bytes_value, precision=2):
+    """Convert bytes to a human-readable string."""
+    suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+    suffix_index = 0
+    value = bytes_value
+    
+    while value > 1024 and suffix_index < len(suffixes) - 1:
+        suffix_index += 1
+        value /= 1024.0
+    
+    return f"{value:.{precision}f} {suffixes[suffix_index]}"
+
+def print_system_info(info=None, format_json=False):
+    """Print the system information in a readable format."""
+    if info is None:
+        info = get_system_info()
+    
+    if format_json:
+        # Create a serializable copy of the info
+        # (some objects might not be JSON serializable)
+        serializable_info = {}
+        for key, value in info.items():
+            if isinstance(value, dict):
+                # Handle potentially non-serializable values in nested dicts
+                serializable_value = {}
+                for k, v in value.items():
+                    try:
+                        # Test JSON serialization
+                        json.dumps({k: v})
+                        serializable_value[k] = v
+                    except (TypeError, OverflowError):
+                        # If not serializable, convert to string
+                        serializable_value[k] = str(v)
+                serializable_info[key] = serializable_value
+            else:
+                try:
+                    # Test JSON serialization
+                    json.dumps({key: value})
+                    serializable_info[key] = value
+                except (TypeError, OverflowError):
+                    # If not serializable, convert to string
+                    serializable_info[key] = str(value)
+        
+        # Print as formatted JSON
+        print(json.dumps(serializable_info, indent=2))
+    else:
+        # Print in a more human-readable format
+        print("SYSTEM INFORMATION")
+        print("=" * 80)
+        
+        print("\nSystem:")
+        print(f"  Platform: {info['system']['platform']}")
+        print(f"  OS: {info['system']['system']} {info['system']['release']} {info['system']['version']}")
+        print(f"  Architecture: {info['system']['architecture'][0]} ({info['system']['machine']})")
+        print(f"  Processor: {info['system']['processor']}")
+        print(f"  Hostname: {info['system']['hostname']}")
+        
+        print("\nPython:")
+        print(f"  Version: {info['python']['version'].split()[0]}")
+        print(f"  Implementation: {info['python']['implementation']}")
+        print(f"  Executable: {info['python']['executable']}")
+        
+        print("\nEnvironment:")
+        print(f"  User: {info['environment']['user']}")
+        print(f"  Home Directory: {info['environment']['home']}")
+        print(f"  Current Directory: {info['environment']['cwd']}")
+        
+        if 'hardware' in info:
+            if 'error' in info['hardware']:
+                print(f"\nHardware: {info['hardware']['error']}")
+            else:
+                print("\nHardware:")
+                
+                print("\n  CPU:")
+                cpu = info['hardware']['cpu']
+                print(f"    Physical Cores: {cpu['physical_cores']}")
+                print(f"    Total Cores: {cpu['total_cores']}")
+                if cpu['max_frequency']:
+                    print(f"    Max Frequency: {cpu['max_frequency']:.2f} MHz")
+                print(f"    Current Usage: {cpu['total_usage']}%")
+                
+                print("\n  Memory:")
+                memory = info['hardware']['memory']
+                print(f"    Total: {memory['total']}")
+                print(f"    Available: {memory['available']}")
+                print(f"    Used: {memory['used']} ({memory['percentage']}%)")
+                
+                print("\n  Disk:")
+                for disk in info['hardware']['disk']:
+                    print(f"    {disk['device']} ({disk['mountpoint']}):")
+                    print(f"      Total: {disk['total']}")
+                    print(f"      Used: {disk['used']} ({disk['percentage']}%)")
+                    print(f"      Free: {disk['free']}")
+                
+                print("\n  Network Interfaces:")
+                for name, nic in info['hardware']['network']['interfaces'].items():
+                    print(f"    {name}:")
+                    for addr in nic['addresses']:
+                        if addr['family'] == 'AddressFamily.AF_INET':
+                            print(f"      IPv4: {addr['address']}")
+                        elif addr['family'] == 'AddressFamily.AF_INET6':
+                            print(f"      IPv6: {addr['address']}")
+                    if 'stats' in nic and nic['stats']:
+                        status = "Up" if nic['stats'].get('isup') else "Down"
+                        print(f"      Status: {status}")
+                        if 'speed' in nic['stats']:
+                            print(f"      Speed: {nic['stats']['speed']} Mbps")
+
+# Example usage
+# info = get_system_info()
+# print_system_info(info)
+# 
+# # Save to file
+# with open('system_info.json', 'w') as f:
+#     f.write(json.dumps(info, indent=2, default=str))
+                </code></pre>
+                <p>This example demonstrates a practical application that combines various OS and system operations to create a comprehensive system information tool. Such tools are valuable for system administrators, debugging applications, and generating diagnostic reports.</p>
+            </div>
+        </section>
+
+        <section class="best-practices">
+            <h3>Best Practices for Using os and sys</h3>
+            
+            <ol>
+                <li><strong>Use Platform-Agnostic Functions</strong> - Prefer <code>os.path.join()</code> over string concatenation with slashes to ensure cross-platform compatibility.</li>
+                <li><strong>Error Handling</strong> - Always include proper error handling for system operations, as they interact with external resources that can fail in unpredictable ways.</li>
+                <li><strong>Security Considerations</strong> - Be cautious when using functions like <code>os.system()</code> or <code>subprocess</code> with user input to avoid command injection vulnerabilities.</li>
+                <li><strong>Resource Management</strong> - Always close resources (files, connections) properly, preferably using context managers (<code>with</code> statements).</li>
+                <li><strong>Prefer Newer APIs</strong> - Use <code>pathlib</code> (Python 3.4+) over <code>os.path</code> for more object-oriented path manipulation.</li>
+                <li><strong>Environment Variables</strong> - Don't modify <code>os.environ</code> directly for global changes; use <code>os.environ.copy()</code> for local modifications.</li>
+                <li><strong>Command-Line Arguments</strong> - Use <code>argparse</code> instead of directly accessing <code>sys.argv</code> for more sophisticated argument parsing.</li>
+                <li><strong>Standard Streams</strong> - Be cautious when redirecting <code>sys.stdout</code> or <code>sys.stderr</code>; always restore them after use.</li>
+                <li><strong>Exit Codes</strong> - Use appropriate exit codes with <code>sys.exit()</code> to indicate success (0) or specific error conditions (non-zero).</li>
+                <li><strong>Portable Code</strong> - Always check for platform-specific behavior and provide alternatives for different operating systems.</li>
+            </ol>
+            
+            <div class="gotchas">
+                <h4>Common Pitfalls and Gotchas</h4>
+                <ul>
+                    <li><strong>Path Separator Issues</strong> - Using hardcoded path separators (e.g., backslashes or forward slashes) instead of <code>os.path.join()</code> or <code>pathlib</code>.</li>
+                    <li><strong>Forgetting to Close Resources</strong> - Not properly closing files or connections, leading to resource leaks.</li>
+                    <li><strong>Assuming Root Access</strong> - Code that requires administrative privileges without checking or handling permission errors.</li>
+                    <li><strong>Command Injection</strong> - Using <code>os.system()</code> with unvalidated user input, creating security vulnerabilities.</li>
+                    <li><strong>Platform Assumptions</strong> - Assuming specific operating system behavior without checking <code>sys.platform</code> or <code>os.name</code>.</li>
+                    <li><strong>Silent Failures</strong> - Not checking return codes from system operations, leading to undetected errors.</li>
+                    <li><strong>Environment Variable Case Sensitivity</strong> - Environment variables are case-sensitive on Unix but case-insensitive on Windows.</li>
+                    <li><strong>Recursive Operations</strong> - Using functions like <code>os.rmdir()</code> on directories with contents, causing errors (use <code>shutil.rmtree()</code> instead).</li>
+                    <li><strong>Python Path Modifications</strong> - Permanently modifying <code>sys.path</code> can lead to hard-to-debug import issues.</li>
+                    <li><strong>Encoding Issues</strong> - Not handling file encoding properly, especially when working with non-ASCII filenames or content.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="comparison">
+            <h3>os vs. sys: When to Use Which</h3>
+            
+            <table class="module-comparison-table">
+                <tr>
+                    <th>Task</th>
+                    <th>os Module</th>
+                    <th>sys Module</th>
+                </tr>
+                <tr>
+                    <td>File and Directory Operations</td>
+                    <td>✓ (Primary choice)</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Path Manipulation</td>
+                    <td>✓ (via os.path)</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Environment Variables</td>
+                    <td>✓ (via os.environ)</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Process Management</td>
+                    <td>✓ (Basic functionality)</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Command-Line Arguments</td>
+                    <td></td>
+                    <td>✓ (via sys.argv)</td>
+                </tr>
+                <tr>
+                    <td>Standard Streams (stdin, stdout, stderr)</td>
+                    <td></td>
+                    <td>✓ (Primary choice)</td>
+                </tr>
+                <tr>
+                    <td>Python Interpreter Information</td>
+                    <td></td>
+                    <td>✓ (Primary choice)</td>
+                </tr>
+                <tr>
+                    <td>Module Search Path</td>
+                    <td></td>
+                    <td>✓ (via sys.path)</td>
+                </tr>
+                <tr>
+                    <td>Exit Program</td>
+                    <td>✓ (via os._exit, for special cases)</td>
+                    <td>✓ (via sys.exit, preferred)</td>
+                </tr>
+                <tr>
+                    <td>Platform Detection</td>
+                    <td>✓ (via os.name)</td>
+                    <td>✓ (via sys.platform, more detailed)</td>
+                </tr>
+            </table>
+            
+            <p>In general:</p>
+            <ul>
+                <li>Use <code>os</code> when you need to interact with the operating system: files, directories, processes, environment variables.</li>
+                <li>Use <code>sys</code> when you need to interact with the Python interpreter itself: command-line arguments, standard streams, module paths, exit handling.</li>
+                <li>Use both together when building comprehensive system utilities or ensuring cross-platform compatibility.</li>
+            </ul>
+        </section>
+
+        <section class="modern-alternatives">
+            <h3>Modern Alternatives and Related Modules</h3>
+            
+            <p>While <code>os</code> and <code>sys</code> are fundamental modules, Python offers several more specialized or modern alternatives for some of their functionality:</p>
+            
+            <h4>Alternative to os.path: pathlib</h4>
+            <pre><code>
+# Traditional os.path approach
+import os
+path = os.path.join('data', 'users', 'profile.json')
+parent_dir = os.path.dirname(path)
+file_name = os.path.basename(path)
+exists = os.path.exists(path)
+
+print(f"Path: {path}")
+print(f"Parent directory: {parent_dir}")
+print(f"File name: {file_name}")
+print(f"Exists: {exists}")
+
+# Modern pathlib approach (Python 3.4+)
+from pathlib import Path
+
+# Create a path
+path = Path('data') / 'users' / 'profile.json'
+parent_dir = path.parent
+file_name = path.name
+exists = path.exists()
+
+print(f"\nPath: {path}")
+print(f"Parent directory: {parent_dir}")
+print(f"File name: {file_name}")
+print(f"Exists: {exists}")
+
+# Other useful pathlib features
+print(f"Stem (name without extension): {path.stem}")
+print(f"Suffix (extension): {path.suffix}")
+print(f"Absolute path: {path.absolute()}")
+            </code></pre>
+            
+            <h4>Alternative to os.system: subprocess</h4>
+            <pre><code>
+# Traditional os.system approach (not recommended)
+import os
+status = os.system('echo "Hello, World!"')
+
+# Better approach with subprocess
+import subprocess
+
+# Run a simple command
+result = subprocess.run(['echo', 'Hello, World!'], 
+                        capture_output=True, 
+                        text=True)
+print(f"Output: {result.stdout}")
+print(f"Exit code: {result.returncode}")
+
+# More complex example with input/output
+try:
+    # Run a process with input and capture output
+    result = subprocess.run(['grep', 'pattern'],
+                           input='This contains a pattern\nThis does not\n',
+                           capture_output=True,
+                           text=True,
+                           check=True)
+    print(f"Matching lines: {result.stdout}")
+except subprocess.CalledProcessError as e:
+    print(f"Error: {e}")
+    print(f"Error output: {e.stderr}")
+            </code></pre>
+            
+            <h4>Alternative to manual path manipulation: shutil</h4>
+            <pre><code>
+# For higher-level file operations
+import shutil
+
+# Copy a file
+try:
+    shutil.copy2('source.txt', 'destination.txt')  # Preserves metadata
+    print("File copied")
+except FileNotFoundError:
+    print("Source file not found")
+
+# Copy a directory recursively
+try:
+    shutil.copytree('source_dir', 'destination_dir')
+    print("Directory copied")
+except FileExistsError:
+    print("Destination directory already exists")
+
+# Move a file or directory
+try:
+    shutil.move('old_path', 'new_path')
+    print("File/directory moved")
+except FileNotFoundError:
+    print("Source path not found")
+
+# Remove a directory and all its contents
+try:
+    shutil.rmtree('directory_to_remove')
+    print("Directory removed")
+except FileNotFoundError:
+    print("Directory not found")
+            </code></pre>
+            
+            <h4>Alternative to sys.argv: argparse</h4>
+            <pre><code>
+# Traditional sys.argv approach
+import sys
+
+def process_args_manually():
+    if len(sys.argv) < 2:
+        print("Usage: script.py [command] [options]")
+        sys.exit(1)
+    
+    command = sys.argv[1]
+    options = sys.argv[2:]
+    
+    print(f"Command: {command}")
+    print(f"Options: {options}")
+
+# Modern argparse approach
+import argparse
+
+def process_args_with_argparse():
+    parser = argparse.ArgumentParser(
+        description="Example command-line application",
+        epilog="For more information, visit example.com"
+    )
+    
+    # Add positional arguments
+    parser.add_argument("command", choices=["create", "update", "delete"],
+                        help="Operation to perform")
+    
+    # Add optional arguments
+    parser.add_argument("-f", "--file", required=True,
+                        help="File to operate on")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="Enable verbose output")
+    parser.add_argument("-o", "--output", default="output.txt",
+                        help="Output file (default: output.txt)")
+    parser.add_argument("-n", "--number", type=int, default=1,
+                        help="Number of operations to perform")
+    
+    # Parse the arguments
+    args = parser.parse_args()
+    
+    # Use the parsed arguments
+    print(f"Command: {args.command}")
+    print(f"File: {args.file}")
+    print(f"Verbose: {args.verbose}")
+    print(f"Output: {args.output}")
+    print(f"Number: {args.number}")
+    
+    return args
+
+# Example usage
+# process_args_with_argparse()
+            </code></pre>
+        </section>
+
+        <section class="exercises">
+            <h3>Practice Exercises</h3>
+            
+            <div class="exercise-item">
+                <h4>Exercise 1: File System Explorer</h4>
+                <p>Create a simple command-line file explorer that allows navigating directories and viewing file information.</p>
+                <pre><code>
+import os
+import sys
+import datetime
+
+def format_size(size_bytes):
+    """Format file size in a human-readable format."""
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if size_bytes < 1024.0:
+            return f"{size_bytes:.2f} {unit}"
+        size_bytes /= 1024.0
+    return f"{size_bytes:.2f} PB"
+
+def list_directory(path='.'):
+    """List contents of a directory with details."""
+    try:
+        # Get all items in the directory
+        items = os.listdir(path)
+        
+        # Count files and directories
+        num_dirs = sum(os.path.isdir(os.path.join(path, item)) for item in items)
+        num_files = len(items) - num_dirs
+        
+        # Sort items (directories first, then files)
+        items.sort()
+        items.sort(key=lambda x: 0 if os.path.isdir(os.path.join(path, x)) else 1)
+        
+        # Print header
+        print(f"\nContents of: {os.path.abspath(path)}")
+        print(f"{num_dirs} directories, {num_files} files")
+        print("-" * 80)
+        print(f"{'Type':<10} {'Size':<10} {'Modified':<20} Name")
+        print("-" * 80)
+        
+        # Print each item with details
+        for item in items:
+            item_path = os.path.join(path, item)
+            
+            # Get item details
+            try:
+                stat_info = os.stat(item_path)
+                modified = datetime.datetime.fromtimestamp(stat_info.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+                
+                if os.path.isdir(item_path):
+                    item_type = "DIR"
+                    size = ""
+                else:
+                    item_type = "FILE"
+                    size = format_size(stat_info.st_size)
+                
+                print(f"{item_type:<10} {size:<10} {modified:<20} {item}")
+            except Exception as e:
+                print(f"{'':<10} {'ERROR':<10} {'':20} {item} - {str(e)}")
+        
+        return True
+    except Exception as e:
+        print(f"Error listing directory: {e}")
+        return False
+
+def navigate_filesystem():
+    """Interactive file system navigator."""
+    current_path = os.getcwd()
+    
+    print("Simple File System Explorer")
+    print("Commands:")
+    print("  cd <dir> - Change to directory")
+    print("  cd .. - Go up one directory")
+    print("  ls - List current directory")
+    print("  pwd - Show current path")
+    print("  exit/quit - Exit the program")
+    
+    while True:
+        # List the current directory
+        list_directory(current_path)
+        
+        # Get user command
+        try:
+            command = input("\n> ").strip()
+        except KeyboardInterrupt:
+            print("\nExiting...")
+            break
+        except EOFError:
+            print("\nExiting...")
+            break
+        
+        # Process command
+        if not command:
+            continue
+        
+        parts = command.split(maxsplit=1)
+        cmd = parts[0].lower()
+        arg = parts[1] if len(parts) > 1 else ""
+        
+        if cmd in ('exit', 'quit'):
+            break
+        elif cmd == 'ls':
+            # Already displayed above
+            pass
+        elif cmd == 'pwd':
+            print(f"Current directory: {current_path}")
+        elif cmd == 'cd':
+            if not arg:
+                # Default to home directory
+                new_path = os.path.expanduser("~")
+            else:
+                # Construct new path (handle absolute and relative paths)
+                if os.path.isabs(arg):
+                    new_path = arg
+                else:
+                    new_path = os.path.join(current_path, arg)
+            
+            # Try to change to the new directory
+            try:
+                if os.path.isdir(new_path):
+                    current_path = os.path.abspath(new_path)
+                else:
+                    print(f"Error: {new_path} is not a directory")
+            except Exception as e:
+                print(f"Error changing directory: {e}")
+        else:
+            print(f"Unknown command: {cmd}")
+
+# Run the interactive file system explorer
+# navigate_filesystem()
+                </code></pre>
+            </div>
+            
+            <div class="exercise-item">
+                <h4>Exercise 2: Environment Variable Manager</h4>
+                <p>Create a utility to view, set, and manage environment variables.</p>
+                <pre><code>
+import os
+import sys
+import json
+import tempfile
+import subprocess
+
+class EnvironmentManager:
+    """Tool for viewing and managing environment variables."""
+    
+    def __init__(self):
+        """Initialize the environment manager."""
+        self.env = dict(os.environ)
+    
+    def list_variables(self, filter_str=None):
+        """List environment variables, optionally filtered."""
+        # Sort variables by name
+        sorted_vars = sorted(self.env.items())
+        
+        # Apply filter if provided
+        if filter_str:
+            sorted_vars = [(name, value) for name, value in sorted_vars 
+                           if filter_str.lower() in name.lower() or 
+                           filter_str.lower() in value.lower()]
+        
+        # Display the variables
+        if not sorted_vars:
+            print("No matching environment variables found.")
+            return
+        
+        print(f"\nEnvironment Variables ({len(sorted_vars)}):")
+        print("-" * 80)
+        for name, value in sorted_vars:
+            # Truncate long values for display
+            display_value = value
+            if len(display_value) > 60:
+                display_value = display_value[:57] + "..."
+            
+            print(f"{name} = {display_value}")
+    
+    def get_variable(self, name):
+        """Get the value of a specific environment variable."""
+        if name in self.env:
+            print(f"\n{name} = {self.env[name]}")
+        else:
+            print(f"\nEnvironment variable '{name}' not found.")
+    
+    def set_variable(self, name, value, permanent=False):
+        """Set an environment variable."""
+        try:
+            # Update in memory
+            self.env[name] = value
+            os.environ[name] = value
+            print(f"Set {name} = {value}")
+            
+            # Make permanent if requested
+            if permanent:
+                self._set_permanent_variable(name, value)
+        except Exception as e:
+            print(f"Error setting environment variable: {e}")
+    
+    def _set_permanent_variable(self, name, value):
+        """Set a permanent environment variable (platform-specific)."""
+        try:
+            if sys.platform == 'win32':
+                # For Windows, use setx command
+                subprocess.run(['setx', name, value], check=True, capture_output=True)
+                print(f"Permanently set {name} for future sessions")
+            else:
+                # For Unix-like systems, suggest profile file update
+                if os.path.expanduser("~/.bashrc"):
+                    profile = "~/.bashrc"
+                elif os.path.expanduser("~/.bash_profile"):
+                    profile = "~/.bash_profile"
+                elif os.path.expanduser("~/.zshrc"):
+                    profile = "~/.zshrc"
+                else:
+                    profile = "your shell profile"
+                
+                print(f"Note: To make this change permanent, add the following line to {profile}:")
+                print(f"export {name}=\"{value}\"")
+        except Exception as e:
+            print(f"Error setting permanent variable: {e}")
+    
+    def delete_variable(self, name):
+        """Delete an environment variable."""
+        if name in self.env:
+            try:
+                del self.env[name]
+                del os.environ[name]
+                print(f"Deleted environment variable: {name}")
+            except Exception as e:
+                print(f"Error deleting environment variable: {e}")
+        else:
+            print(f"Environment variable '{name}' not found.")
+    
+    def export_variables(self, filename):
+        """Export environment variables to a JSON file."""
+        try:
+            with open(filename, 'w') as f:
+                json.dump(self.env, f, indent=2)
+            print(f"Environment variables exported to {filename}")
+        except Exception as e:
+            print(f"Error exporting environment variables: {e}")
+    
+    def import_variables(self, filename):
+        """Import environment variables from a JSON file."""
+        try:
+            with open(filename, 'r') as f:
+                imported_env = json.load(f)
+            
+            # Confirm import
+            print(f"Found {len(imported_env)} variables in {filename}")
+            confirm = input("Import these variables? (y/n): ").strip().lower()
+            
+            if confirm == 'y':
+                for name, value in imported_env.items():
+                    self.set_variable(name, value)
+                print(f"Imported {len(imported_env)} environment variables")
+            else:
+                print("Import cancelled")
+        except Exception as e:
+            print(f"Error importing environment variables: {e}")
+    
+    def interactive(self):
+        """Start an interactive environment variable manager."""
+        print("Environment Variable Manager")
+        print("Commands:")
+        print("  list [filter] - List all environment variables, optionally filtered")
+        print("  get <name> - Get a specific environment variable")
+        print("  set <name> <value> - Set an environment variable")
+        print("  delete <name> - Delete an environment variable")
+        print("  export <filename> - Export variables to a JSON file")
+        print("  import <filename> - Import variables from a JSON file")
+        print("  exit/quit - Exit the program")
+        
+        while True:
+            try:
+                command = input("\n> ").strip()
+            except (KeyboardInterrupt, EOFError):
+                print("\nExiting...")
+                break
+            
+            if not command:
+                continue
+            
+            parts = command.split(maxsplit=2)
+            cmd = parts[0].lower() if parts else ""
+            
+            if cmd in ('exit', 'quit'):
+                break
+            elif cmd == 'list':
+                filter_str = parts[1] if len(parts) > 1 else None
+                self.list_variables(filter_str)
+            elif cmd == 'get':
+                if len(parts) > 1:
+                    self.get_variable(parts[1])
+                else:
+                    print("Error: Missing variable name")
+            elif cmd == 'set':
+                if len(parts) > 2:
+                    name, value = parts[1], parts[2]
+                    permanent = input("Make permanent? (y/n): ").strip().lower() == 'y'
+                    self.set_variable(name, value, permanent)
+                else:
+                    print("Error: Missing name or value")
+            elif cmd == 'delete':
+                if len(parts) > 1:
+                    self.delete_variable(parts[1])
+                else:
+                    print("Error: Missing variable name")
+            elif cmd == 'export':
+                if len(parts) > 1:
+                    self.export_variables(parts[1])
+                else:
+                    print("Error: Missing filename")
+            elif cmd == 'import':
+                if len(parts) > 1:
+                    self.import_variables(parts[1])
+                else:
+                    print("Error: Missing filename")
+            else:
+                print(f"Unknown command: {cmd}")
+
+# Run the interactive environment manager
+# env_manager = EnvironmentManager()
+# env_manager.interactive()
+                </code></pre>
+            </div>
+        </section>
+
+        <section class="further-resources">
+            <h3>Further Resources</h3>
+            
+            <h4>Standard Library Documentation</h4>
+            <ul>
+                <li><a href="https://docs.python.org/3/library/os.html" target="_blank">Python os module</a></li>
+                <li><a href="https://docs.python.org/3/library/sys.html" target="_blank">Python sys module</a></li>
+                <li><a href="https://docs.python.org/3/library/pathlib.html" target="_blank">Python pathlib module</a></li>
+                <li><a href="https://docs.python.org/3/library/subprocess.html" target="_blank">Python subprocess module</a></li>
+                <li><a href="https://docs.python.org/3/library/shutil.html" target="_blank">Python shutil module</a></li>
+                <li><a href="https://docs.python.org/3/library/argparse.html" target="_blank">Python argparse module</a></li>
+            </ul>
+            
+            <h4>Books and Tutorials</h4>
+            <ul>
+                <li><a href="https://realpython.com/python-os-module/" target="_blank">Real Python: The Python os Module</a></li>
+                <li><a href="https://realpython.com/python-pathlib/" target="_blank">Real Python: Python 3's pathlib Module</a></li>
+                <li><a href="https://pymotw.com/3/os/" target="_blank">Python Module of the Week: os</a></li>
+                <li><a href="https://pymotw.com/3/sys/" target="_blank">Python Module of the Week: sys</a></li>
+            </ul>
+            
+            <h4>Related Tools and Libraries</h4>
+            <ul>
+                <li><a href="https://www.pyfilesystem.org/" target="_blank">PyFilesystem</a> - A Python filesystem abstraction layer</li>
+                <li><a href="https://click.palletsprojects.com/" target="_blank">Click</a> - A Python package for creating command-line interfaces</li>
+                <li><a href="https://github.com/psf/black" target="_blank">Black</a> - The uncompromising Python code formatter</li>
+                <li><a href="https://www.psutil.org/" target="_blank">psutil</a> - Cross-platform library for retrieving system information</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Python Full Stack Developer Course &copy; 2025. All rights reserved.</p>
+    </footer>
+</body>
+</html>

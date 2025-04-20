@@ -1,0 +1,3693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Standard Library: re for Regular Expressions</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Standard Library: re for Regular Expressions</h1>
+        <h2>Mastering Pattern Matching and Text Processing in Python</h2>
+    </header>
+
+    <main>
+        <section class="lecture-intro">
+            <h3>Introduction to Regular Expressions</h3>
+            <p>Imagine you're searching through a vast library of texts, looking for specific patterns or structures rather than exact content. You might need to find all email addresses, phone numbers with various formats, or extract specific information from structured text. This is where regular expressions come in.</p>
+            
+            <p>Regular expressions (or "regex" for short) are powerful sequences of characters that define search patterns. Think of them as a specialized mini-language for pattern matching within text. They allow you to:</p>
+            
+            <ul>
+                <li>Search for patterns in text</li>
+                <li>Validate that strings match a certain pattern</li>
+                <li>Extract information from structured text</li>
+                <li>Replace text based on patterns</li>
+                <li>Split text into segments using pattern boundaries</li>
+            </ul>
+            
+            <p>Python's <code>re</code> module implements regular expression operations, giving you access to this powerful pattern-matching tool. While the syntax might seem cryptic at first, mastering regular expressions will dramatically enhance your text processing capabilities.</p>
+            
+            <p>In this lecture, we'll explore the <code>re</code> module and learn how to harness the power of regular expressions for various text processing tasks.</p>
+        </section>
+
+        <section class="module-overview">
+            <h3>The re Module: Pattern Matching Toolkit</h3>
+            
+            <p>The <code>re</code> module provides functions and classes for working with regular expressions in Python. Let's import it and explore what it offers:</p>
+            
+            <pre><code>
+# Import the module
+import re
+            </code></pre>
+            
+            <p>The <code>re</code> module functions can be broadly categorized into several groups:</p>
+            <ul>
+                <li><strong>Pattern matching functions</strong>: Functions like <code>search()</code>, <code>match()</code>, and <code>findall()</code> for finding patterns in text</li>
+                <li><strong>Modification functions</strong>: Functions like <code>sub()</code> and <code>subn()</code> for replacing patterns</li>
+                <li><strong>Splitting function</strong>: <code>split()</code> for dividing strings based on pattern matches</li>
+                <li><strong>Compilation function</strong>: <code>compile()</code> for creating reusable pattern objects</li>
+            </ul>
+            
+            <p>Let's start by understanding the basic syntax of regular expressions before diving into these functions.</p>
+        </section>
+
+        <section class="regex-syntax">
+            <h3>Regular Expression Syntax</h3>
+            
+            <p>Regular expressions use a combination of literal characters and special metacharacters to define patterns. Here's an introduction to the most common elements:</p>
+            
+            <h4>Basic Characters</h4>
+            <ul>
+                <li><strong>Literal characters</strong>: Most characters match themselves (e.g., <code>a</code> matches the character "a")</li>
+                <li><strong>Metacharacters</strong>: Characters with special meanings: <code>. ^ $ * + ? { } [ ] \ | ( )</code></li>
+                <li><strong>Escape character</strong>: Backslash (<code>\</code>) is used to escape metacharacters (e.g., <code>\.</code> matches a literal period)</li>
+            </ul>
+            
+            <h4>Character Classes</h4>
+            <ul>
+                <li><strong>Period (.)</strong>: Matches any character except newline</li>
+                <li><strong>Character sets [...]</strong>: Match any one of the characters inside the brackets
+                    <ul>
+                        <li><code>[abc]</code>: Matches 'a', 'b', or 'c'</li>
+                        <li><code>[a-z]</code>: Matches any lowercase letter</li>
+                        <li><code>[0-9]</code>: Matches any digit</li>
+                        <li><code>[^abc]</code>: Matches any character EXCEPT 'a', 'b', or 'c'</li>
+                    </ul>
+                </li>
+                <li><strong>Predefined character classes</strong>:
+                    <ul>
+                        <li><code>\d</code>: Matches any digit (equivalent to <code>[0-9]</code>)</li>
+                        <li><code>\D</code>: Matches any non-digit (equivalent to <code>[^0-9]</code>)</li>
+                        <li><code>\w</code>: Matches any alphanumeric character or underscore (equivalent to <code>[a-zA-Z0-9_]</code>)</li>
+                        <li><code>\W</code>: Matches any non-word character</li>
+                        <li><code>\s</code>: Matches any whitespace character (space, tab, newline, etc.)</li>
+                        <li><code>\S</code>: Matches any non-whitespace character</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h4>Anchors and Boundaries</h4>
+            <ul>
+                <li><strong>Start of string (^)</strong>: Matches the start of a string</li>
+                <li><strong>End of string ($)</strong>: Matches the end of a string</li>
+                <li><strong>Word boundary (\b)</strong>: Matches the boundary between a word and a non-word character</li>
+                <li><strong>Non-word boundary (\B)</strong>: Matches any position that is not a word boundary</li>
+            </ul>
+            
+            <h4>Quantifiers</h4>
+            <ul>
+                <li><strong>Zero or more (*)</strong>: Matches 0 or more occurrences of the preceding character</li>
+                <li><strong>One or more (+)</strong>: Matches 1 or more occurrences of the preceding character</li>
+                <li><strong>Zero or one (?)</strong>: Matches 0 or 1 occurrence of the preceding character</li>
+                <li><strong>Exactly n {n}</strong>: Matches exactly n occurrences</li>
+                <li><strong>At least n {n,}</strong>: Matches n or more occurrences</li>
+                <li><strong>Between n and m {n,m}</strong>: Matches between n and m occurrences</li>
+            </ul>
+            
+            <h4>Groups and Alternation</h4>
+            <ul>
+                <li><strong>Grouping (...)</strong>: Groups patterns together and captures matches</li>
+                <li><strong>Non-capturing group (?:...)</strong>: Groups patterns but doesn't capture matches</li>
+                <li><strong>Alternation (|)</strong>: Matches either the pattern before or after the | (like OR)</li>
+            </ul>
+            
+            <h4>Examples of Simple Patterns</h4>
+            <pre><code>
+# Match any 3-letter word
+pattern = r'\b[a-zA-Z]{3}\b'
+
+# Match a US phone number (e.g., 123-456-7890)
+pattern = r'\d{3}-\d{3}-\d{4}'
+
+# Match an email address (simple version)
+pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+
+# Match words that start with 'py' (e.g., 'python', 'pyenv')
+pattern = r'\bpy[a-zA-Z0-9_]*\b'
+            </code></pre>
+            
+            <p>Note that in Python, it's a good practice to use raw strings (prefixed with <code>r</code>) for regular expressions to avoid unintended backslash escaping.</p>
+        </section>
+
+        <section class="pattern-matching">
+            <h3>Basic Pattern Matching Functions</h3>
+            
+            <p>The <code>re</code> module provides several functions for finding patterns in text. Let's explore the most commonly used ones.</p>
+            
+            <h4>re.search(): Find First Match Anywhere</h4>
+            <pre><code>
+# re.search(pattern, string) - Returns a Match object for the first match or None
+import re
+
+text = "Python is amazing and python is easy to learn."
+pattern = r'python'  # Case-sensitive search for 'python'
+
+# Search for the pattern
+match = re.search(pattern, text)
+
+if match:
+    print(f"Found '{match.group()}' at position {match.start()}-{match.end()}")
+else:
+    print("Pattern not found")
+
+# Case-insensitive search with flags
+match = re.search(pattern, text, re.IGNORECASE)
+if match:
+    print(f"Found '{match.group()}' at position {match.start()}-{match.end()}")
+            </code></pre>
+            
+            <h4>re.match(): Match Only at the Beginning</h4>
+            <pre><code>
+# re.match(pattern, string) - Matches only at the start of the string
+text1 = "Python is a great language"
+text2 = "I love Python programming"
+
+# Try to match 'Python' at the beginning
+match1 = re.match(r'Python', text1)
+match2 = re.match(r'Python', text2)
+
+print(f"Text 1 starts with 'Python': {match1 is not None}")
+print(f"Text 2 starts with 'Python': {match2 is not None}")
+            </code></pre>
+            
+            <h4>re.findall(): Find All Non-overlapping Matches</h4>
+            <pre><code>
+# re.findall(pattern, string) - Returns a list of all matching strings
+text = "The rain in Spain falls mainly in the plain."
+pattern = r'\b\w*ain\b'  # Words ending with 'ain'
+
+matches = re.findall(pattern, text)
+print(f"Words ending with 'ain': {matches}")
+
+# Finding all email addresses in text
+text = """
+Contact us at support@example.com or sales@example.com.
+For billing inquiries, email billing@example.com.
+"""
+
+email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+emails = re.findall(email_pattern, text)
+print(f"Found email addresses: {emails}")
+            </code></pre>
+            
+            <h4>re.finditer(): Iterator Over Matches</h4>
+            <pre><code>
+# re.finditer(pattern, string) - Returns an iterator over Match objects
+text = "Python was created in 1991 by Guido van Rossum."
+pattern = r'\d+'  # Match sequences of digits
+
+# Find all numbers
+for match in re.finditer(pattern, text):
+    print(f"Found number '{match.group()}' at position {match.start()}-{match.end()}")
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Advanced Data Extraction from Structured Text</h4>
+                <p>Here's an example of using advanced regex techniques to extract data from a complex structured text format:</p>
+                
+                <pre><code>
+import re
+
+class DataExtractor:
+    """
+    A class for extracting structured data from complex text formats
+    using advanced regular expression techniques.
+    """
+    
+    def __init__(self):
+        """Initialize with compiled regex patterns."""
+        # Pattern for extracting key-value pairs with nested structures
+        # This handles nested parentheses in values
+        self.kvp_pattern = re.compile(
+            r'(\w+)=\s*' +           # Key followed by equals sign
+            r'(?:' +                  # Start of value alternatives
+            r'"((?:[^"\\]|\\.)*)"' +  # Quoted value with escape handling
+            r'|' +                    # OR
+            r'\'((?:[^\'\\]|\\.)*)\'' + # Single-quoted value
+            r'|' +                    # OR
+            r'\(((?:[^()]|\([^()]*\))*)\)' + # Parenthesized value (with one level of nesting)
+            r'|' +                    # OR
+            r'([^,;()]+)' +           # Unquoted, non-special value
+            r')'                      # End of value alternatives
+        )
+        
+        # Pattern for nested lists [item1, item2, [subitem1, subitem2], item3]
+        self.list_pattern = re.compile(
+            r'\[' +                  # Opening bracket
+            r'((?:' +                # Start of list content
+            r'[^\[\]]*' +            # Non-bracket content
+            r'|' +                   # OR
+            r'\[(?:[^\[\]]*)\]' +    # Nested list with non-bracket content
+            r')*)' +                 # End of list content
+            r'\]'                    # Closing bracket
+        )
+        
+        # Pattern for list items (accounting for nesting)
+        self.list_item_pattern = re.compile(
+            r'(?:' +                 # Start of item alternatives
+            r'"((?:[^"\\]|\\.)*)"' + # Quoted item
+            r'|' +                   # OR
+            r'\'((?:[^\'\\]|\\.)*)\'' + # Single-quoted item
+            r'|' +                   # OR
+            r'\[((?:[^\[\]]|\[(?:[^\[\]]*)\])*)\]' + # Nested list
+            r'|' +                   # OR
+            r'([^,\[\]]+)' +         # Unquoted, non-special item
+            r')'                     # End of item alternatives
+        )
+    
+    def extract_key_value_pairs(self, text):
+        """
+        Extract key-value pairs from structured text.
+        
+        Args:
+            text: Text containing key-value pairs
+            
+        Returns:
+            Dictionary of key-value pairs
+        """
+        result = {}
+        
+        # Find all key-value pairs
+        for match in self.kvp_pattern.finditer(text):
+            key = match.group(1)
+            
+            # Determine which value alternative matched
+            if match.group(2) is not None:
+                # Double-quoted value
+                value = match.group(2)
+            elif match.group(3) is not None:
+                # Single-quoted value
+                value = match.group(3)
+            elif match.group(4) is not None:
+                # Parenthesized value
+                value = match.group(4)
+            else:
+                # Unquoted value
+                value = match.group(5).strip()
+            
+            # Handle nested lists in values
+            if value.startswith('[') and value.endswith(']'):
+                value = self.parse_list(value)
+            
+            result[key] = value
+        
+        return result
+    
+    def parse_list(self, list_text):
+        """
+        Parse a text representation of a list.
+        
+        Args:
+            list_text: Text of list with square brackets
+            
+        Returns:
+            List of parsed items
+        """
+        # Remove outer brackets
+        if list_text.startswith('[') and list_text.endswith(']'):
+            list_text = list_text[1:-1].strip()
+        
+        items = []
+        
+        # Split on commas that aren't inside quotes, brackets, or parentheses
+        depth = 0
+        quote_char = None
+        current_item = ""
+        
+        for char in list_text:
+            if quote_char:
+                # Inside quotes
+                if char == quote_char and not (current_item and current_item[-1] == '\\'):
+                    quote_char = None
+                current_item += char
+            elif char == '"' or char == "'":
+                # Start of quote
+                quote_char = char
+                current_item += char
+            elif char == '[' or char == '(':
+                # Opening bracket or parenthesis
+                depth += 1
+                current_item += char
+            elif char == ']' or char == ')':
+                # Closing bracket or parenthesis
+                depth -= 1
+                current_item += char
+            elif char == ',' and depth == 0:
+                # Comma at top level
+                items.append(current_item.strip())
+                current_item = ""
+            else:
+                current_item += char
+        
+        # Add the last item
+        if current_item.strip():
+            items.append(current_item.strip())
+        
+        # Process each item
+        processed_items = []
+        for item in items:
+            # Check for nested lists
+            if item.startswith('[') and item.endswith(']'):
+                processed_items.append(self.parse_list(item))
+            # Check for quoted items
+            elif (item.startswith('"') and item.endswith('"')) or (item.startswith("'") and item.endswith("'")):
+                processed_items.append(item[1:-1])
+            else:
+                processed_items.append(item)
+        
+        return processed_items
+    
+    def extract_structured_data(self, text):
+        """
+        Extract structured data from text containing multiple formats.
+        
+        Args:
+            text: Text to parse
+            
+        Returns:
+            Dictionary of extracted data
+        """
+        data = {}
+        
+        # Extract key-value pairs
+        kvp_data = self.extract_key_value_pairs(text)
+        data.update(kvp_data)
+        
+        # Extract lists
+        list_matches = self.list_pattern.findall(text)
+        if list_matches:
+            data['lists'] = [self.parse_list(f"[{match}]") for match in list_matches]
+        
+        return data
+
+# Example usage
+extractor = DataExtractor()
+
+# Example of complex structured text
+data_text = """
+user_info=(name="John Smith", age=30, interests=["programming", "music", "hiking"])
+settings=(theme="dark", font_size=12, notification=true)
+permissions=["read", "write", ["create", "delete"], "execute"]
+raw_data="This is some \"raw\" data with escaped quotes"
+complex_value=(nested=(level=2, type="advanced"), format="special")
+"""
+
+# Extract data
+extracted_data = extractor.extract_structured_data(data_text)
+
+# Print the results
+print("Extracted data:")
+import json
+print(json.dumps(extracted_data, indent=2))
+
+# Access specific values
+if 'user_info' in extracted_data:
+    user_info = extracted_data['user_info']
+    print(f"\nUser info: {user_info}")
+    
+    # Parsing nested structures manually if needed
+    if 'interests=' in user_info:
+        # Further extraction might be needed
+        interests_match = re.search(r'interests=\[(.*?)\]', user_info)
+        if interests_match:
+            interests_text = interests_match.group(1)
+            interests = [i.strip('"') for i in interests_text.split(',')]
+            print(f"User interests: {interests}")
+                </code></pre>
+                
+                <p>This example demonstrates advanced regular expression techniques for parsing complex structured text with nested elements, quoted strings, lists, and more. It uses techniques like capturing groups, non-capturing groups, lookaheads, and complex alternation patterns to extract structured information from text that might be difficult to parse with simple regex patterns.</p>
+            </div>
+        </section>
+
+        <section class="regex-pitfalls">
+            <h3>Common Pitfalls and Best Practices</h3>
+            
+            <h4>Performance Considerations</h4>
+            <ul>
+                <li><strong>Catastrophic Backtracking</strong> - Certain regex patterns can cause exponential performance degradation on some inputs</li>
+                <li><strong>Greedy vs. Lazy Quantifiers</strong> - Be mindful of which one you use, as it affects both matching behavior and performance</li>
+                <li><strong>Anchoring</strong> - Use anchors (^ and $) when appropriate to limit the search space</li>
+                <li><strong>Compile Patterns</strong> - Use <code>re.compile()</code> for patterns you'll use multiple times</li>
+            </ul>
+            
+            <pre><code>
+# Example of potential catastrophic backtracking
+import re
+import time
+
+# A problematic pattern for nested tags - can lead to exponential backtracking
+bad_pattern = re.compile(r'<([^>]*)>.*</\1>')
+
+# A better pattern for the same purpose
+better_pattern = re.compile(r'<([^>]*)>.*?</\1>')
+
+# Test string with deeply nested content
+test_string = '<a>' + '<b>' * 10 + 'content' + '</b>' * 10 + '</a>'
+
+# Time the bad pattern
+start_time = time.time()
+bad_match = bad_pattern.search(test_string)
+bad_time = time.time() - start_time
+print(f"Bad pattern time: {bad_time:.6f} seconds")
+
+# Time the better pattern
+start_time = time.time()
+better_match = better_pattern.search(test_string)
+better_time = time.time() - start_time
+print(f"Better pattern time: {better_time:.6f} seconds")
+print(f"Improvement factor: {bad_time / better_time:.1f}x")
+            </code></pre>
+            
+            <h4>Common Mistakes</h4>
+            <ul>
+                <li><strong>Forgetting to Escape Special Characters</strong> - Characters like <code>. ^ $ * + ? { } [ ] \ | ( )</code> need to be escaped with \ to match literally</li>
+                <li><strong>Not Using Raw Strings</strong> - Forgetting the <code>r</code> prefix can cause issues with backslashes</li>
+                <li><strong>Using <code>.*</code> Greedily</strong> - Can match more than intended; use <code>.*?</code> for non-greedy matching</li>
+                <li><strong>Overusing Regular Expressions</strong> - Sometimes simple string methods are more appropriate</li>
+            </ul>
+            
+            <pre><code>
+# Example of escaping special characters
+text = "How much is $5.99?"
+
+# Wrong pattern (missing escape for $ and .)
+wrong_pattern = re.compile(r'$5.99')
+if not wrong_pattern.search(text):
+    print("Wrong pattern didn't match due to unescaped special characters")
+
+# Correct pattern (with escapes)
+correct_pattern = re.compile(r'\$5\.99')
+if correct_pattern.search(text):
+    print("Correct pattern matched with escaped special characters")
+
+# Example of raw string importance
+windows_path = "C:\\Users\\John\\Documents"
+
+# Without raw string, \U would be interpreted as a Unicode escape
+try:
+    bad_pattern = re.compile('\\Users')  # This actually becomes '\Users'
+    print("Matches without raw string:", bool(bad_pattern.search(windows_path)))
+except re.error as e:
+    print(f"Error without raw string: {e}")
+
+# With raw string, backslashes are treated literally
+good_pattern = re.compile(r'\\Users')
+print("Matches with raw string:", bool(good_pattern.search(windows_path)))
+            </code></pre>
+            
+            <h4>Best Practices</h4>
+            <ul>
+                <li><strong>Start Simple</strong> - Build and test regex patterns incrementally</li>
+                <li><strong>Use Tools</strong> - Regex testing tools like regex101.com help visualize and debug patterns</li>
+                <li><strong>Document Complex Patterns</strong> - Use comments (with <code>re.VERBOSE</code>) or separate documentation</li>
+                <li><strong>Consider Alternatives</strong> - For complex parsing, consider specialized parsers instead of regex</li>
+                <li><strong>Test Edge Cases</strong> - Test with empty strings, unexpected input, and boundary conditions</li>
+            </ul>
+            
+            <pre><code>
+# Example of a well-documented complex pattern using VERBOSE flag
+email_pattern = re.compile(r"""
+    # Local part
+    (?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*
+    |"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]
+      |\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")
+      
+    # @ symbol
+    @
+    
+    # Domain
+    (?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?
+    |\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}
+       (?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9])
+       (?::[0-9]+)?(?:/[\w-]*)?\])
+""", re.VERBOSE | re.IGNORECASE)
+
+# Test the pattern
+test_emails = [
+    "simple@example.com",
+    "very.common@example.com",
+    "disposable.style.email.with+symbol@example.com",
+    "other.email-with-hyphen@example.com",
+    "fully-qualified-domain@example.com",
+    "user.name+tag+sorting@example.com",
+    "x@example.com",
+    "example-indeed@strange-example.com",
+    "example@s.example",
+    "invalid@example",
+    "A@b@c@example.com",
+    "a\"b(c)d,e:f;g<h>i[j\\k]l@example.com"
+]
+
+for email in test_emails:
+    print(f"{email}: {'Valid' if email_pattern.match(email) else 'Invalid'}")
+            </code></pre>
+        </section>
+
+        <section class="third-party-libraries">
+            <h3>Beyond the re Module: Third-Party Alternatives</h3>
+            
+            <p>While the <code>re</code> module is powerful, there are third-party libraries that offer additional features or better performance for specific use cases.</p>
+            
+            <h4>regex Module</h4>
+            <p>The <code>regex</code> module is a drop-in replacement for <code>re</code> that offers additional features like Unicode property support, recursive patterns, and more.</p>
+            
+            <pre><code>
+# Install with: pip install regex
+import regex
+
+# Example: Matching balanced parentheses (a recursive pattern)
+text = "((a+b)*(c+d)) + (e*(f+g))"
+
+# This pattern would be difficult with re, but regex supports recursion
+pattern = regex.compile(r'\((?:[^()]++|(?R))*\)')
+matches = pattern.findall(text)
+print(f"Balanced parentheses expressions: {matches}")
+
+# Unicode properties
+pattern = regex.compile(r'\p{Greek}+')  # Match Greek letters
+matches = pattern.findall("This contains Greek: αβγδε and Latin: abcde")
+print(f"Greek words: {matches}")
+
+# Fuzzy matching
+pattern = regex.compile(r'(?:fuzzy){e<=1}')  # Allow up to 1 error
+matches = pattern.findall("fizzy fussy fuzzi")
+print(f"Fuzzy matches for 'fuzzy': {matches}")
+            </code></pre>
+            
+            <h4>re2 Module</h4>
+            <p>The <code>re2</code> module provides bindings to Google's RE2 regular expression library, which guarantees linear-time matching, avoiding the catastrophic backtracking issues that can occur with <code>re</code>.</p>
+            
+            <pre><code>
+# Install with: pip install re2
+# Note: For this to work, you need the RE2 C++ library installed
+try:
+    import re2
+    
+    # Example usage (similar to re)
+    pattern = re2.compile(r'\b\w+ing\b')
+    matches = pattern.findall("Running jumping swimming walking")
+    print(f"Words ending in 'ing': {matches}")
+except ImportError:
+    print("re2 module not installed or RE2 C++ library missing")
+            </code></pre>
+            
+            <h4>Specialized Parsing Libraries</h4>
+            <p>For more complex text processing, consider these alternatives:</p>
+            <ul>
+                <li><strong>BeautifulSoup</strong> - For HTML/XML parsing</li>
+                <li><strong>PyParsing</strong> - For creating parsers for complex language syntax</li>
+                <li><strong>NLTK</strong> - For natural language processing</li>
+            </ul>
+            
+            <pre><code>
+# BeautifulSoup example for HTML parsing
+try:
+    from bs4 import BeautifulSoup
+    
+    html = """
+    <div class="content">
+        <h1>Title</h1>
+        <p>First paragraph</p>
+        <p>Second paragraph with <a href="https://example.com">link</a>.</p>
+    </div>
+    """
+    
+    soup = BeautifulSoup(html, 'html.parser')
+    
+    # Extract all paragraphs
+    paragraphs = soup.find_all('p')
+    print(f"Paragraphs: {[p.get_text() for p in paragraphs]}")
+    
+    # Extract all links
+    links = soup.find_all('a')
+    print(f"Links: {[a['href'] for a in links]}")
+except ImportError:
+    print("BeautifulSoup not installed")
+            </code></pre>
+        </section>
+
+        <section class="exercises">
+            <h3>Practice Exercises</h3>
+            
+            <div class="exercise-item">
+                <h4>Exercise 1: Create a Pattern Validator</h4>
+                <p>Create a validator for common data patterns like phone numbers, postal codes, and IP addresses.</p>
+                
+                <pre><code>
+import re
+
+class PatternValidator:
+    """Validator for common data patterns using regular expressions."""
+    
+    def __init__(self):
+        """Initialize with compiled regex patterns."""
+        # Phone number pattern (US format) with various formats
+        self.phone_pattern = re.compile(r'''
+            (?:
+                # (123) 456-7890
+                \(\d{3}\)\s*\d{3}[-.\s]?\d{4} |
+                
+                # 123-456-7890
+                \d{3}[-.\s]?\d{3}[-.\s]?\d{4} |
+                
+                # +1 123-456-7890
+                \+\d{1,2}\s*\d{3}[-.\s]?\d{3}[-.\s]?\d{4}
+            )
+        ''', re.VERBOSE)
+        
+        # US Zip code pattern (12345 or 12345-6789)
+        self.zipcode_pattern = re.compile(r'\b\d{5}(?:-\d{4})?\b')
+        
+        # IP address pattern (IPv4)
+        self.ipv4_pattern = re.compile(r'''
+            \b
+            (?:
+                # Ensure each octet is between 0-255
+                (?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.
+                (?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.
+                (?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.
+                (?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)
+            )
+            \b
+        ''', re.VERBOSE)
+        
+        # Email pattern
+        self.email_pattern = re.compile(r'''
+            \b
+            [a-zA-Z0-9._%+-]+
+            @
+            [a-zA-Z0-9.-]+
+            \.[a-zA-Z]{2,}
+            \b
+        ''', re.VERBOSE)
+        
+        # URL pattern
+        self.url_pattern = re.compile(r'''
+            \b
+            (?:
+                https?://                   # http:// or https://
+                (?:
+                    [a-zA-Z0-9]             # Domain parts
+                    [a-zA-Z0-9-]*           # Domain parts (with hyphens)
+                    [a-zA-Z0-9]
+                    \.
+                )+
+                [a-zA-Z]{2,}                # TLD
+                (?:/[a-zA-Z0-9._~:/?#[\]@!            <div class="real-world-example">'()*+,;=%-]*)?    # Path
+            )
+            \b
+        ''', re.VERBOSE)
+        
+        # Credit card pattern
+        self.cc_pattern = re.compile(r'''
+            \b
+            (?:
+                4[0-9]{12}(?:[0-9]{3})?                # Visa
+                |
+                5[1-5][0-9]{14}                        # MasterCard
+                |
+                3[47][0-9]{13}                         # American Express
+                |
+                3(?:0[0-5]|[68][0-9])[0-9]{11}         # Diners Club
+                |
+                6(?:011|5[0-9]{2})[0-9]{12}            # Discover
+                |
+                (?:2131|1800|35\d{3})\d{11}            # JCB
+            )
+            \b
+        ''', re.VERBOSE)
+    
+    def validate_phone(self, phone):
+        """Validate a phone number."""
+        return bool(self.phone_pattern.match(phone))
+    
+    def validate_zipcode(self, zipcode):
+        """Validate a US zip code."""
+        return bool(self.zipcode_pattern.match(zipcode))
+    
+    def validate_ipv4(self, ip):
+        """Validate an IPv4 address."""
+        return bool(self.ipv4_pattern.match(ip))
+    
+    def validate_email(self, email):
+        """Validate an email address."""
+        return bool(self.email_pattern.match(email))
+    
+    def validate_url(self, url):
+        """Validate a URL."""
+        return bool(self.url_pattern.match(url))
+    
+    def validate_credit_card(self, cc_number):
+        """Validate a credit card number (format only)."""
+        # Remove spaces and dashes
+        cc_number = re.sub(r'[\s-]', '', cc_number)
+        
+        # Check pattern
+        if not self.cc_pattern.match(cc_number):
+            return False
+        
+        # Luhn algorithm (checksum) - used for credit card validation
+        def luhn_checksum(card_number):
+            def digits_of(n):
+                return [int(d) for d in str(n)]
+            
+            digits = digits_of(card_number)
+            odd_digits = digits[-1::-2]
+            even_digits = digits[-2::-2]
+            checksum = sum(odd_digits)
+            for d in even_digits:
+                checksum += sum(digits_of(d*2))
+            return checksum % 10 == 0
+        
+        # Perform Luhn check
+        return luhn_checksum(cc_number)
+    
+    def find_all_patterns(self, text):
+        """Find all supported patterns in the text."""
+        results = {
+            'phones': self.phone_pattern.findall(text),
+            'zipcodes': self.zipcode_pattern.findall(text),
+            'ips': self.ipv4_pattern.findall(text),
+            'emails': self.email_pattern.findall(text),
+            'urls': self.url_pattern.findall(text),
+            'credit_cards': self.cc_pattern.findall(text)
+        }
+        return results
+
+# Example usage
+validator = PatternValidator()
+
+# Test phone validation
+print("Phone Validation:")
+test_phones = [
+    "(123) 456-7890",
+    "123-456-7890",
+    "123.456.7890",
+    "+1 123-456-7890",
+    "1234567890",
+    "123-45-6789",  # SSN format, should fail
+    "(123) 456-789"  # Missing digit
+]
+
+for phone in test_phones:
+    print(f"  {phone}: {'Valid' if validator.validate_phone(phone) else 'Invalid'}")
+
+# Test zip code validation
+print("\nZip Code Validation:")
+test_zips = [
+    "12345",
+    "12345-6789",
+    "123456",
+    "1234",
+    "12345-67890"
+]
+
+for zipcode in test_zips:
+    print(f"  {zipcode}: {'Valid' if validator.validate_zipcode(zipcode) else 'Invalid'}")
+
+# Test IP validation
+print("\nIP Address Validation:")
+test_ips = [
+    "192.168.1.1",
+    "10.0.0.1",
+    "255.255.255.255",
+    "256.1.1.1",
+    "192.168.1",
+    "a.b.c.d"
+]
+
+for ip in test_ips:
+    print(f"  {ip}: {'Valid' if validator.validate_ipv4(ip) else 'Invalid'}")
+
+# Test credit card validation
+print("\nCredit Card Validation:")
+test_cards = [
+    "4111 1111 1111 1111",  # Visa
+    "5500 0000 0000 0004",  # MasterCard
+    "340000000000009",      # American Express
+    "6011000000000004",     # Discover
+    "1234567812345678",     # Invalid
+    "4111111111111112"      # Invalid checksum
+]
+
+for card in test_cards:
+    print(f"  {card}: {'Valid' if validator.validate_credit_card(card) else 'Invalid'}")
+
+# Find all patterns in a text
+sample_text = """
+Contact us at support@example.com or call (123) 456-7890.
+Our office is located at 123 Main St, New York, NY 12345-6789.
+For technical issues, connect to 192.168.1.1 or visit https://help.example.org.
+For payment, we accept Visa (4111 1111 1111 1111) and MasterCard.
+"""
+
+patterns = validator.find_all_patterns(sample_text)
+print("\nPatterns found in sample text:")
+for pattern_type, matches in patterns.items():
+    if matches:
+        print(f"  {pattern_type.capitalize()}: {matches}")
+                </code></pre>
+            </div>
+            
+            <div class="exercise-item">
+                <h4>Exercise 2: Build a Text Template Engine</h4>
+                <p>Create a simple template engine that replaces placeholders with values.</p>
+                
+                <pre><code>
+import re
+
+class TemplateEngine:
+    """
+    A simple template engine that replaces placeholders in a template
+    with actual values.
+    
+    Supports:
+    - Simple placeholders: {{variable}}
+    - Nested attributes: {{user.name}}
+    - Default values: {{variable|default}}
+    - Filters: {{variable|uppercase}}
+    - Conditional blocks: {% if condition %} ... {% endif %}
+    - Loop blocks: {% for item in items %} ... {% endfor %}
+    """
+    
+    def __init__(self):
+        """Initialize the template engine with compiled regex patterns."""
+        # Simple variable pattern: {{variable}} or {{variable|filter}}
+        self.var_pattern = re.compile(r'{{(\s*[\w.]+\s*(?:\|[\w]+\s*)?)}}')
+        
+        # If block pattern: {% if condition %} ... {% endif %}
+        self.if_pattern = re.compile(
+            r'{%\s*if\s+([\w.]+)\s*%}(.*?)(?:{%\s*else\s*%}(.*?))?{%\s*endif\s*%}',
+            re.DOTALL
+        )
+        
+        # For loop pattern: {% for item in items %} ... {% endfor %}
+        self.for_pattern = re.compile(
+            r'{%\s*for\s+([\w]+)\s+in\s+([\w.]+)\s*%}(.*?){%\s*endfor\s*%}',
+            re.DOTALL
+        )
+    
+    def render(self, template, context):
+        """
+        Render a template with the given context.
+        
+        Args:
+            template: Template string with placeholders
+            context: Dictionary of values to replace placeholders
+            
+        Returns:
+            Rendered template with placeholders replaced
+        """
+        # Process conditional blocks first
+        template = self._process_conditionals(template, context)
+        
+        # Process loops
+        template = self._process_loops(template, context)
+        
+        # Process variables
+        template = self._process_variables(template, context)
+        
+        return template
+    
+    def _get_value_from_context(self, var_name, context):
+        """
+        Get a value from the context, supporting nested attributes.
+        
+        Args:
+            var_name: Variable name, possibly with dots (e.g., 'user.name')
+            context: Context dictionary
+            
+        Returns:
+            Value from context or None if not found
+        """
+        parts = var_name.strip().split('.')
+        value = context
+        
+        try:
+            for part in parts:
+                value = value[part]
+            return value
+        except (KeyError, TypeError):
+            return None
+    
+    def _process_variables(self, template, context):
+        """
+        Replace all variable placeholders with their values.
+        
+        Args:
+            template: Template string
+            context: Context dictionary
+            
+        Returns:
+            Template with variables replaced
+        """
+        def replace_var(match):
+            var_expr = match.group(1).strip()
+            
+            # Check for filters
+            if '|' in var_expr:
+                var_name, filter_name = var_expr.split('|', 1)
+                var_name = var_name.strip()
+                filter_name = filter_name.strip()
+                
+                # Get the base value
+                value = self._get_value_from_context(var_name, context)
+                
+                # Apply the filter
+                if filter_name == 'uppercase':
+                    return str(value).upper() if value is not None else ''
+                elif filter_name == 'lowercase':
+                    return str(value).lower() if value is not None else ''
+                elif filter_name.startswith('default:'):
+                    default_value = filter_name.split(':', 1)[1]
+                    return str(value) if value is not None else default_value
+                else:
+                    # Unknown filter
+                    return str(value) if value is not None else ''
+            else:
+                # No filter
+                value = self._get_value_from_context(var_expr, context)
+                return str(value) if value is not None else ''
+        
+        return self.var_pattern.sub(replace_var, template)
+    
+    def _process_conditionals(self, template, context):
+        """
+        Process if/else conditional blocks.
+        
+        Args:
+            template: Template string
+            context: Context dictionary
+            
+        Returns:
+            Template with conditional blocks processed
+        """
+        def replace_if(match):
+            condition_var = match.group(1).strip()
+            if_body = match.group(2)
+            else_body = match.group(3) if match.group(3) else ''
+            
+            # Evaluate the condition
+            condition_value = self._get_value_from_context(condition_var, context)
+            
+            if condition_value:
+                return if_body
+            else:
+                return else_body
+        
+        return self.if_pattern.sub(replace_if, template)
+    
+    def _process_loops(self, template, context):
+        """
+        Process for loop blocks.
+        
+        Args:
+            template: Template string
+            context: Context dictionary
+            
+        Returns:
+            Template with loop blocks processed
+        """
+        def replace_for(match):
+            item_var = match.group(1).strip()
+            items_var = match.group(2).strip()
+            loop_body = match.group(3)
+            
+            # Get the items to iterate over
+            items = self._get_value_from_context(items_var, context)
+            
+            if not items:
+                return ''
+            
+            # Render the loop body for each item
+            result = []
+            for item in items:
+                # Create a new context with the loop variable
+                loop_context = dict(context)
+                loop_context[item_var] = item
+                
+                # Render the loop body with this context
+                rendered_body = loop_body
+                
+                # Process nested loops and conditionals
+                rendered_body = self._process_conditionals(rendered_body, loop_context)
+                rendered_body = self._process_loops(rendered_body, loop_context)
+                
+                # Process variables
+                rendered_body = self._process_variables(rendered_body, loop_context)
+                
+                result.append(rendered_body)
+            
+            return ''.join(result)
+        
+        return self.for_pattern.sub(replace_for, template)
+
+# Example usage
+template_engine = TemplateEngine()
+
+# Simple template
+template = """
+Hello, {{name}}!
+
+{% if is_admin %}
+You have admin privileges.
+{% else %}
+You have regular user privileges.
+{% endif %}
+
+Your profile information:
+- Email: {{email|lowercase}}
+- Joined: {{join_date|default:N/A}}
+
+{% if has_friends %}
+Your friends:
+{% for friend in friends %}
+- {{friend.name}} ({{friend.email}})
+{% endfor %}
+{% else %}
+You don't have any friends yet.
+{% endif %}
+"""
+
+# Context for the template
+context = {
+    'name': 'John Smith',
+    'email': 'JOHN@EXAMPLE.COM',
+    'is_admin': True,
+    'has_friends': True,
+    'friends': [
+        {'name': 'Alice', 'email': 'alice@example.com'},
+        {'name': 'Bob', 'email': 'bob@example.com'},
+        {'name': 'Charlie', 'email': 'charlie@example.com'}
+    ]
+}
+
+# Render the template
+rendered = template_engine.render(template, context)
+print(rendered)
+
+# Another example with different context
+context2 = {
+    'name': 'Jane Doe',
+    'email': 'jane@example.com',
+    'is_admin': False,
+    'has_friends': False
+}
+
+rendered2 = template_engine.render(template, context2)
+print("\nSecond rendering:")
+print(rendered2)
+                </code></pre>
+            </div>
+            
+            <div class="exercise-item">
+                <h4>Exercise 3: Create a Custom Log Parser and Analyzer</h4>
+                <p>Build a log parser that extracts and analyzes information from different log formats.</p>
+                
+                <pre><code>
+import re
+from collections import defaultdict, Counter
+from datetime import datetime
+
+class LogAnalyzer:
+    """
+    A class for parsing and analyzing various log formats
+    using regular expressions.
+    """
+    
+    def __init__(self):
+        """Initialize with regex patterns for different log formats."""
+        # Common log format (CLF) pattern
+        # Example: 127.0.0.1 - - [02/Jan/2022:03:05:07 +0000] "GET /page.html HTTP/1.1" 200 1234
+        self.clf_pattern = re.compile(
+            r'(\S+)\s+-\s+-\s+\[(.*?)\]\s+"(\S+)\s+(\S+)\s+([^"]*)"\s+(\d+)\s+(\d+|-)'
+        )
+        
+        # Combined log format pattern (CLF + referer and user agent)
+        self.combined_pattern = re.compile(
+            r'(\S+)\s+-\s+-\s+\[(.*?)\]\s+"(\S+)\s+(\S+)\s+([^"]*)"\s+(\d+)\s+(\d+|-)\s+"([^"]*)"\s+"([^"]*)"'
+        )
+        
+        # Error log pattern
+        # Example: [Fri Jan 02 03:05:07 2022] [error] [client 127.0.0.1] File does not exist: /path/to/file
+        self.error_pattern = re.compile(
+            r'\[(.*?)\]\s+\[(\w+)\]\s+(?:\[client\s+(\S+)\]\s+)?(.+)'
+        )
+        
+        # Custom application log pattern
+        # Example: 2022-01-02 03:05:07 INFO [module] User logged in: user123
+        self.app_pattern = re.compile(
+            r'(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+(\w+)\s+\[([^\]]+)\]\s+(.*)'
+        )
+        
+        # JSON log pattern
+        self.json_pattern = re.compile(r'(\{.*\})')
+    
+    def parse_line(self, line):
+        """
+        Parse a single log line and determine its format.
+        
+        Args:
+            line: A string containing a log entry
+            
+        Returns:
+            A dictionary with parsed log information or None if format is unknown
+        """
+        # Try each pattern
+        for format_name, pattern, parser in [
+            ('clf', self.clf_pattern, self._parse_clf),
+            ('combined', self.combined_pattern, self._parse_combined),
+            ('error', self.error_pattern, self._parse_error),
+            ('application', self.app_pattern, self._parse_app),
+            ('json', self.json_pattern, self._parse_json)
+        ]:
+            match = pattern.match(line)
+            if match:
+                parsed = parser(match)
+                parsed['format'] = format_name
+                return parsed
+        
+        # Unknown format
+        return None
+    
+    def _parse_clf(self, match):
+        """Parse Common Log Format (CLF) match."""
+        ip, date_str, method, path, protocol, status, size = match.groups()
+        
+        # Parse timestamp
+        timestamp = self._parse_clf_date(date_str)
+        
+        return {
+            'ip': ip,
+            'timestamp': timestamp,
+            'datetime': date_str,
+            'method': method,
+            'path': path,
+            'protocol': protocol,
+            'status': int(status),
+            'size': int(size) if size != '-' else 0
+        }
+    
+    def _parse_combined(self, match):
+        """Parse Combined Log Format match."""
+        ip, date_str, method, path, protocol, status, size, referer, user_agent = match.groups()
+        
+        # Parse the CLF part first
+        parsed = self._parse_clf(match)
+        
+        # Add the additional fields
+        parsed.update({
+            'referer': referer if referer != '-' else '',
+            'user_agent': user_agent
+        })
+        
+        return parsed
+    
+    def _parse_error(self, match):
+        """Parse error log match."""
+        date_str, level, ip, message = match.groups()
+        
+        # Parse timestamp
+        try:
+            timestamp = datetime.strptime(date_str, '%a %b %d %H:%M:%S %Y')
+        except ValueError:
+            timestamp = None
+        
+        return {
+            'timestamp': timestamp,
+            'datetime': date_str,
+            'level': level,
+            'ip': ip if ip else '',
+            'message': message
+        }
+    
+    def _parse_app(self, match):
+        """Parse application log match."""
+        date_str, level, module, message = match.groups()
+        
+        # Parse timestamp
+        try:
+            timestamp = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            timestamp = None
+        
+        return {
+            'timestamp': timestamp,
+            'datetime': date_str,
+            'level': level,
+            'module': module,
+            'message': message
+        }
+    
+    def _parse_json(self, match):
+        """Parse JSON log match."""
+        import json
+        
+        json_str = match.group(1)
+        try:
+            data = json.loads(json_str)
+            # Add a timestamp if it exists in a known format
+            if 'timestamp' in data and isinstance(data['timestamp'], str):
+                try:
+                    data['timestamp'] = datetime.fromisoformat(data['timestamp'].replace('Z', '+00:00'))
+                except ValueError:
+                    pass
+            return data
+        except json.JSONDecodeError:
+            return {'raw': json_str}
+    
+    def _parse_clf_date(self, date_str):
+        """Parse CLF date format."""
+        # CLF date format: 02/Jan/2022:03:05:07 +0000
+        try:
+            # Remove timezone for simplicity
+            date_part = date_str.split(' ')[0]
+            return datetime.strptime(date_part, '%d/%b/%Y:%H:%M:%S')
+        except ValueError:
+            return None
+    
+    def parse_file(self, file_path):
+        """
+        Parse a log file.
+        
+        Args:
+            file_path: Path to the log file
+            
+        Returns:
+            List of parsed log entries
+        """
+        entries = []
+        
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+                for line_num, line in enumerate(f, 1):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    
+                    entry = self.parse_line(line)
+                    if entry:
+                        entry['line_number'] = line_num
+                        entry['raw'] = line
+                        entries.append(entry)
+                    else:
+                        # Unknown format
+                        entries.append({
+                            'format': 'unknown',
+                            'line_number': line_num,
+                            'raw': line
+                        })
+        except Exception as e:
+            print(f"Error parsing log file: {e}")
+        
+        return entries
+    
+    def analyze_logs(self, entries):
+        """
+        Analyze log entries to extract useful information.
+        
+        Args:
+            entries: List of parsed log entries
+            
+        Returns:
+            Dictionary with analysis results
+        """
+        results = {
+            'counts': {
+                'total': len(entries),
+                'by_format': Counter(),
+                'by_status': Counter(),
+                'by_method': Counter(),
+                'by_level': Counter(),
+                'by_date': Counter(),
+                'by_hour': Counter(),
+                'by_ip': Counter()
+            },
+            'status_codes': {
+                'success': 0,    # 2xx
+                'redirect': 0,   # 3xx
+                'client_error': 0, # 4xx
+                'server_error': 0  # 5xx
+            },
+            'paths': {
+                'most_visited': Counter()
+            },
+            'errors': []
+        }
+        
+        # Collect statistics
+        for entry in entries:
+            # Count by format
+            results['counts']['by_format'][entry.get('format', 'unknown')] += 1
+            
+            # Web server specific stats
+            if entry.get('format') in ('clf', 'combined'):
+                # Count by status code
+                status = entry.get('status')
+                if status:
+                    results['counts']['by_status'][status] += 1
+                    
+                    # Categorize status codes
+                    if 200 <= status < 300:
+                        results['status_codes']['success'] += 1
+                    elif 300 <= status < 400:
+                        results['status_codes']['redirect'] += 1
+                    elif 400 <= status < 500:
+                        results['status_codes']['client_error'] += 1
+                    elif 500 <= status < 600:
+                        results['status_codes']['server_error'] += 1
+                
+                # Count by HTTP method
+                method = entry.get('method')
+                if method:
+                    results['counts']['by_method'][method] += 1
+                
+                # Count most visited paths
+                path = entry.get('path')
+                if path:
+                    results['paths']['most_visited'][path] += 1
+                
+                # Count by IP
+                ip = entry.get('ip')
+                if ip:
+                    results['counts']['by_ip'][ip] += 1
+            
+            # Application log specific stats
+            elif entry.get('format') in ('application', 'error'):
+                # Count by log level
+                level = entry.get('level')
+                if level:
+                    results['counts']['by_level'][level] += 1
+                
+                # Collect errors
+                if level in ('ERROR', 'FATAL', 'error'):
+                    results['errors'].append(entry)
+            
+            # Count by date and hour
+            timestamp = entry.get('timestamp')
+            if timestamp:
+                date_str = timestamp.strftime('%Y-%m-%d')
+                hour_str = timestamp.strftime('%H')
+                results['counts']['by_date'][date_str] += 1
+                results['counts']['by_hour'][hour_str] += 1
+        
+        # Calculate most common items
+        results['most_common'] = {
+            'ips': results['counts']['by_ip'].most_common(10),
+            'paths': results['paths']['most_visited'].most_common(10),
+            'status_codes': results['counts']['by_status'].most_common(),
+            'methods': results['counts']['by_method'].most_common(),
+            'levels': results['counts']['by_level'].most_common()
+        }
+        
+        return results
+    
+    def generate_report(self, analysis):
+        """
+        Generate a human-readable report from analysis results.
+        
+        Args:
+            analysis: Analysis results from analyze_logs
+            
+        Returns:
+            String containing the report
+        """
+        report = []
+        report.append("Log Analysis Report")
+        report.append("=" * 80)
+        
+        # Basic stats
+        report.append(f"Total entries: {analysis['counts']['total']}")
+        
+        # By format
+        report.append("\nLog Formats:")
+        for format_name, count in analysis['counts']['by_format'].most_common():
+            report.append(f"  {format_name}: {count}")
+        
+        # HTTP stats (if applicable)
+        if analysis['counts']['by_status']:
+            # Status code categories
+            report.append("\nStatus Code Categories:")
+            for category, count in analysis['status_codes'].items():
+                if count > 0:
+                    report.append(f"  {category}: {count}")
+            
+            # Most common status codes
+            report.append("\nMost Common Status Codes:")
+            for status, count in analysis['most_common']['status_codes']:
+                report.append(f"  {status}: {count}")
+            
+            # Most common methods
+            if analysis['most_common']['methods']:
+                report.append("\nHTTP Methods:")
+                for method, count in analysis['most_common']['methods']:
+                    report.append(f"  {method}: {count}")
+            
+            # Most visited paths
+            report.append("\nMost Visited Paths:")
+            for path, count in analysis['most_common']['paths'][:5]:  # Top 5
+                report.append(f"  {path}: {count}")
+        
+        # Application log stats (if applicable)
+        if analysis['counts']['by_level']:
+            report.append("\nLog Levels:")
+            for level, count in analysis['most_common']['levels']:
+                report.append(f"  {level}: {count}")
+            
+            # Show recent errors
+            if analysis['errors']:
+                report.append("\nRecent Errors:")
+                for error in analysis['errors'][-5:]:  # Show last 5 errors
+                    timestamp = error.get('datetime', '')
+                    message = error.get('message', '')
+                    report.append(f"  [{timestamp}] {message}")
+        
+        # Time distribution
+        report.append("\nEntries by Hour:")
+        for hour in sorted(analysis['counts']['by_hour'].keys()):
+            count = analysis['counts']['by_hour'][hour]
+            bar = "#" * (count // max(1, analysis['counts']['total'] // 100))
+            report.append(f"  {hour}:00 - {hour}:59: {count} {bar}")
+        
+        # IP statistics
+        report.append("\nTop IPs:")
+        for ip, count in analysis['most_common']['ips'][:5]:  # Top 5
+            report.append(f"  {ip}: {count}")
+        
+        return "\n".join(report)
+
+# Example usage
+analyzer = LogAnalyzer()
+
+# Example log entries
+log_entries = [
+    '127.0.0.1 - - [02/Jan/2022:03:05:07 +0000] "GET /index.html HTTP/1.1" 200 1234',
+    '127.0.0.1 - - [02/Jan/2022:03:05:08 +0000] "GET /css/style.css HTTP/1.1" 200 567',
+    '192.168.1.1 - - [02/Jan/2022:03:05:10 +0000] "POST /api/login HTTP/1.1" 401 123',
+    '127.0.0.1 - - [02/Jan/2022:03:05:15 +0000] "GET /nonexistent.html HTTP/1.1" 404 345',
+    '127.0.0.1 - - [02/Jan/2022:03:05:20 +0000] "GET /index.html HTTP/1.1" 200 1234 "http://example.com" "Mozilla/5.0"',
+    '[Fri Jan 02 03:05:25 2022] [error] [client 127.0.0.1] File does not exist: /var/www/html/favicon.ico',
+    '2022-01-02 03:05:30 INFO [auth] User logged in: user123',
+    '2022-01-02 03:05:35 ERROR [database] Connection failed: Timeout',
+    '{"timestamp": "2022-01-02T03:05:40Z", "level": "info", "message": "API request received", "method": "GET", "endpoint": "/api/status"}'
+]
+
+# Parse each log entry
+parsed_entries = []
+for entry in log_entries:
+    parsed = analyzer.parse_line(entry)
+    if parsed:
+        parsed['raw'] = entry
+        parsed_entries.append(parsed)
+    else:
+        print(f"Failed to parse: {entry}")
+
+# Analyze the logs
+analysis_results = analyzer.analyze_logs(parsed_entries)
+
+# Generate and print a report
+report = analyzer.generate_report(analysis_results)
+print(report)
+
+# You can also parse a log file directly
+# log_file = 'path/to/logfile.log'
+# log_entries = analyzer.parse_file(log_file)
+# analysis = analyzer.analyze_logs(log_entries)
+# report = analyzer.generate_report(analysis)
+                </code></pre>
+            </div>
+        </section>
+
+        <section class="further-resources">
+            <h3>Further Resources</h3>
+            
+            <h4>Official Documentation</h4>
+            <ul>
+                <li><a href="https://docs.python.org/3/library/re.html" target="_blank">Python re Module Documentation</a></li>
+                <li><a href="https://docs.python.org/3/howto/regex.html" target="_blank">Python Regular Expression HOWTO</a></li>
+                <li><a href="https://docs.python.org/3/library/re.html#regular-expression-syntax" target="_blank">Regular Expression Syntax Reference</a></li>
+            </ul>
+            
+            <h4>Books and Tutorials</h4>
+            <ul>
+                <li><a href="https://www.regular-expressions.info/" target="_blank">Regular-Expressions.info</a> - Comprehensive regex tutorial</li>
+                <li><a href="https://realpython.com/regex-python/" target="_blank">Real Python: Regular Expressions in Python</a></li>
+                <li><a href="https://www.oreilly.com/library/view/mastering-regular-expressions/0596528124/" target="_blank">Mastering Regular Expressions</a> by Jeffrey Friedl</li>
+            </ul>
+            
+            <h4>Online Tools</h4>
+            <ul>
+                <li><a href="https://regex101.com/" target="_blank">Regex101</a> - Interactive regex tester with explanation</li>
+                <li><a href="https://regexr.com/" target="_blank">RegExr</a> - Another excellent regex testing tool</li>
+                <li><a href="https://www.debuggex.com/" target="_blank">Debuggex</a> - Visual regex debugger</li>
+            </ul>
+            
+            <h4>Advanced Topics</h4>
+            <ul>
+                <li><a href="https://pypi.org/project/regex/" target="_blank">Third-party regex module</a></li>
+                <li><a href="https://swtch.com/~rsc/regexp/regexp1.html" target="_blank">Regular Expression Matching Can Be Simple And Fast</a> - Article on regex implementation algorithms</li>
+                <li><a href="https://www.rexegg.com/" target="_blank">RexEgg</a> - Advanced regex techniques and tricks</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Python Full Stack Developer Course &copy; 2025. All rights reserved.</p>
+    </footer>
+</body>
+</html>
+                <h4>Real-World Example: Log Parser</h4>
+                <p>Here's a practical example of using regular expressions to parse log file entries:</p>
+                
+                <pre><code>
+import re
+from datetime import datetime
+
+class LogParser:
+    """A simple log file parser using regular expressions."""
+    
+    def __init__(self):
+        """Initialize the parser with regex patterns."""
+        # Pattern for a standard log line format:
+        # [2023-04-19 14:30:45] INFO: User 'johndoe' logged in from 192.168.1.5
+        self.log_pattern = r'\[(.*?)\] (\w+): (.*)'
+        
+        # Pattern for extracting user information
+        self.user_pattern = r"User '([^']+)'"
+        
+        # Pattern for extracting IP addresses
+        self.ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
+    
+    def parse_log_entry(self, line):
+        """
+        Parse a single log entry.
+        
+        Args:
+            line: A string containing a log entry
+            
+        Returns:
+            A dictionary with parsed information or None if the line doesn't match
+        """
+        match = re.match(self.log_pattern, line)
+        if not match:
+            return None
+        
+        timestamp_str, level, message = match.groups()
+        
+        # Parse timestamp
+        try:
+            timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            timestamp = None
+        
+        # Extract user if present
+        user_match = re.search(self.user_pattern, message)
+        username = user_match.group(1) if user_match else None
+        
+        # Extract IP address if present
+        ip_match = re.search(self.ip_pattern, message)
+        ip_address = ip_match.group(0) if ip_match else None
+        
+        return {
+            'timestamp': timestamp,
+            'level': level,
+            'message': message,
+            'username': username,
+            'ip_address': ip_address
+        }
+    
+    def parse_log_file(self, file_path):
+        """
+        Parse a log file and extract information.
+        
+        Args:
+            file_path: Path to the log file
+            
+        Returns:
+            List of parsed log entries
+        """
+        entries = []
+        
+        try:
+            with open(file_path, 'r') as file:
+                for line in file:
+                    line = line.strip()
+                    if line:  # Skip empty lines
+                        entry = self.parse_log_entry(line)
+                        if entry:
+                            entries.append(entry)
+        except Exception as e:
+            print(f"Error reading log file: {e}")
+        
+        return entries
+    
+    def get_user_activity(self, entries, username):
+        """
+        Filter log entries by username.
+        
+        Args:
+            entries: List of parsed log entries
+            username: Username to filter by
+            
+        Returns:
+            List of entries for the specified user
+        """
+        return [entry for entry in entries if entry['username'] == username]
+    
+    def get_error_logs(self, entries):
+        """
+        Filter log entries to only show errors.
+        
+        Args:
+            entries: List of parsed log entries
+            
+        Returns:
+            List of error entries
+        """
+        return [entry for entry in entries if entry['level'] == 'ERROR']
+
+# Example usage
+parser = LogParser()
+
+# Example log entries
+log_entries = [
+    "[2023-04-19 14:30:45] INFO: User 'johndoe' logged in from 192.168.1.5",
+    "[2023-04-19 14:35:10] ERROR: Database connection failed",
+    "[2023-04-19 14:40:22] INFO: User 'janedoe' uploaded file 'report.pdf'",
+    "[2023-04-19 14:45:31] WARNING: High memory usage detected",
+    "[2023-04-19 14:50:45] ERROR: User 'johndoe' failed to access restricted resource",
+    "[2023-04-19 14:55:12] INFO: System backup completed successfully"
+]
+
+# Parse each log entry
+parsed_entries = [parser.parse_log_entry(entry) for entry in log_entries]
+
+# Print all parsed entries
+print("All log entries:")
+for entry in parsed_entries:
+    if entry:
+        print(f"[{entry['timestamp']}] {entry['level']}: {entry['message']}")
+        if entry['username']:
+            print(f"  User: {entry['username']}")
+        if entry['ip_address']:
+            print(f"  IP: {entry['ip_address']}")
+        print()
+
+# Get activities for a specific user
+johndoe_activities = parser.get_user_activity(parsed_entries, 'johndoe')
+print(f"\nFound {len(johndoe_activities)} entries for user 'johndoe'")
+
+# Get all error logs
+error_logs = parser.get_error_logs(parsed_entries)
+print(f"\nFound {len(error_logs)} error logs")
+for error in error_logs:
+    print(f"[{error['timestamp']}] {error['message']}")
+                </code></pre>
+                
+                <p>This example demonstrates how regular expressions can be used to parse structured log entries. The parser extracts timestamps, log levels, messages, usernames, and IP addresses from each log entry. This is a common task in log analysis and monitoring systems.</p>
+            </div>
+        </section>
+
+        <section class="modification-functions">
+            <h3>Text Replacement and Modification</h3>
+            
+            <p>The <code>re</code> module also provides functions for replacing text based on patterns.</p>
+            
+            <h4>re.sub(): Replace Patterns</h4>
+            <pre><code>
+# re.sub(pattern, replacement, string) - Replace all occurrences of the pattern
+import re
+
+# Basic replacement
+text = "The color of the sky is blue and the color of grass is green."
+pattern = r'color'
+replacement = 'hue'
+
+new_text = re.sub(pattern, replacement, text)
+print(f"Original: {text}")
+print(f"Modified: {new_text}")
+
+# Using a limit (count parameter)
+# Replace only the first 1 occurrence
+new_text = re.sub(pattern, replacement, text, count=1)
+print(f"Replace first occurrence only: {new_text}")
+
+# Case-insensitive replacement
+text = "Python is awesome. PYTHON is powerful."
+new_text = re.sub(r'python', 'Ruby', text, flags=re.IGNORECASE)
+print(f"Case-insensitive replacement: {new_text}")
+            </code></pre>
+            
+            <h4>Using Backreferences in Replacements</h4>
+            <pre><code>
+# Using captured groups in the replacement
+text = "John Smith and Jane Doe"
+pattern = r'(\w+) (\w+)'
+replacement = r'\2, \1'  # Swap first and last names
+
+new_text = re.sub(pattern, replacement, text)
+print(f"Original: {text}")
+print(f"Swapped names: {new_text}")
+
+# Formatting phone numbers
+text = "Call me at 5551234567 or 9998887777"
+pattern = r'(\d{3})(\d{3})(\d{4})'
+replacement = r'(\1) \2-\3'  # Format as (555) 123-4567
+
+new_text = re.sub(pattern, replacement, text)
+print(f"Formatted phone numbers: {new_text}")
+            </code></pre>
+            
+            <h4>Using Functions for Dynamic Replacements</h4>
+            <pre><code>
+# Using a function for dynamic replacements
+def repl_func(match):
+    """Convert matched numbers to hexadecimal."""
+    num = int(match.group())
+    return f"0x{num:X}"
+
+text = "The numbers 10, 20, and 30 will be converted."
+pattern = r'\b\d+\b'
+
+new_text = re.sub(pattern, repl_func, text)
+print(f"Original: {text}")
+print(f"With hex values: {new_text}")
+
+# Capitalize matched words
+def capitalize_word(match):
+    """Capitalize the matched word."""
+    return match.group().upper()
+
+text = "python is a great programming language."
+pattern = r'\bpython\b'
+
+new_text = re.sub(pattern, capitalize_word, text)
+print(f"Capitalized: {new_text}")
+            </code></pre>
+            
+            <h4>re.subn(): Count Replacements</h4>
+            <pre><code>
+# re.subn(pattern, replacement, string) - Returns (new_string, count)
+text = "Python is amazing. Python is powerful."
+pattern = r'Python'
+replacement = 'Ruby'
+
+new_text, count = re.subn(pattern, replacement, text)
+print(f"Modified: {new_text}")
+print(f"Replacements made: {count}")
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Text Anonymizer</h4>
+                <p>Here's a practical example of using regex substitution to anonymize sensitive information in text:</p>
+                
+                <pre><code>
+import re
+
+class TextAnonymizer:
+    """A class for anonymizing sensitive information in text."""
+    
+    def __init__(self):
+        """Initialize with regex patterns for sensitive information."""
+        # Email pattern
+        self.email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        
+        # Phone number patterns (various formats)
+        self.phone_patterns = [
+            r'\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b',  # 555-123-4567, 555.123.4567, 555 123 4567
+            r'\b\(\d{3}\)\s*\d{3}[-.\s]?\d{4}\b',   # (555) 123-4567
+            r'\b\+\d{1,3}[-.\s]?\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b',  # +1-555-123-4567
+        ]
+        
+        # Social Security Number pattern
+        self.ssn_pattern = r'\b\d{3}[-]?\d{2}[-]?\d{4}\b'
+        
+        # Credit card number pattern (simplified)
+        self.cc_pattern = r'\b(?:\d{4}[-\s]?){3}\d{4}\b'
+        
+        # IP address pattern
+        self.ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
+    
+    def _anonymize_match(self, match, info_type, preserve_hint=True):
+        """
+        Anonymize a single match based on its type.
+        
+        Args:
+            match: The regex match object
+            info_type: Type of information (e.g. 'EMAIL', 'PHONE')
+            preserve_hint: Whether to preserve a hint of the original (default: True)
+            
+        Returns:
+            Anonymized string
+        """
+        original = match.group()
+        
+        if info_type == 'EMAIL' and preserve_hint:
+            # Preserve first character of username and domain
+            parts = original.split('@')
+            if len(parts) == 2:
+                username, domain = parts
+                domain_parts = domain.split('.')
+                if len(domain_parts) >= 2:
+                    return f"{username[0]}{'*' * (len(username) - 1)}@{domain_parts[0][0]}{'*' * (len(domain_parts[0]) - 1)}.{domain_parts[-1]}"
+        
+        elif info_type == 'PHONE' and preserve_hint:
+            # Keep last 4 digits
+            digits = re.sub(r'\D', '', original)  # Remove non-digits
+            if len(digits) >= 4:
+                return f"{'*' * (len(digits) - 4)}{digits[-4:]}"
+        
+        elif info_type == 'SSN' and preserve_hint:
+            # Keep last 4 digits
+            digits = re.sub(r'\D', '', original)
+            if len(digits) == 9:
+                return f"***-**-{digits[-4:]}"
+        
+        elif info_type == 'CC' and preserve_hint:
+            # Keep last 4 digits
+            digits = re.sub(r'\D', '', original)
+            if len(digits) >= 4:
+                return f"****-****-****-{digits[-4:]}"
+        
+        # Default: replace with generic placeholder
+        return f"[{info_type}]"
+    
+    def anonymize_emails(self, text, preserve_hint=True):
+        """
+        Anonymize email addresses in text.
+        
+        Args:
+            text: The text to process
+            preserve_hint: Whether to preserve a hint of the original (default: True)
+            
+        Returns:
+            Text with anonymized emails
+        """
+        return re.sub(
+            self.email_pattern,
+            lambda m: self._anonymize_match(m, 'EMAIL', preserve_hint),
+            text
+        )
+    
+    def anonymize_phones(self, text, preserve_hint=True):
+        """Anonymize phone numbers in text."""
+        for pattern in self.phone_patterns:
+            text = re.sub(
+                pattern,
+                lambda m: self._anonymize_match(m, 'PHONE', preserve_hint),
+                text
+            )
+        return text
+    
+    def anonymize_ssn(self, text, preserve_hint=True):
+        """Anonymize Social Security Numbers in text."""
+        return re.sub(
+            self.ssn_pattern,
+            lambda m: self._anonymize_match(m, 'SSN', preserve_hint),
+            text
+        )
+    
+    def anonymize_credit_cards(self, text, preserve_hint=True):
+        """Anonymize credit card numbers in text."""
+        return re.sub(
+            self.cc_pattern,
+            lambda m: self._anonymize_match(m, 'CC', preserve_hint),
+            text
+        )
+    
+    def anonymize_ip_addresses(self, text):
+        """Anonymize IP addresses in text."""
+        return re.sub(self.ip_pattern, '[IP_ADDRESS]', text)
+    
+    def anonymize_all(self, text, preserve_hint=True):
+        """
+        Anonymize all sensitive information in text.
+        
+        Args:
+            text: The text to process
+            preserve_hint: Whether to preserve hints of the originals
+            
+        Returns:
+            Fully anonymized text
+        """
+        text = self.anonymize_emails(text, preserve_hint)
+        text = self.anonymize_phones(text, preserve_hint)
+        text = self.anonymize_ssn(text, preserve_hint)
+        text = self.anonymize_credit_cards(text, preserve_hint)
+        text = self.anonymize_ip_addresses(text)
+        return text
+
+# Example usage
+anonymizer = TextAnonymizer()
+
+# Sample text with sensitive information
+sample_text = """
+Customer Information:
+Name: Jane Smith
+Email: jane.smith@example.com
+Phone: (555) 123-4567
+Alternative Phone: 555.987.6543
+SSN: 123-45-6789
+Credit Card: 4111 1111 1111 1111
+Last Login IP: 192.168.1.1
+
+Technical Contact:
+Name: John Doe
+Email: john.doe@company.org
+International Phone: +1-555-234-5678
+"""
+
+# Anonymize all sensitive information
+anonymized = anonymizer.anonymize_all(sample_text)
+print("Original Text:")
+print(sample_text)
+print("\nAnonymized Text:")
+print(anonymized)
+
+# Anonymize without preserving hints
+fully_anonymized = anonymizer.anonymize_all(sample_text, preserve_hint=False)
+print("\nFully Anonymized (No Hints):")
+print(fully_anonymized)
+                </code></pre>
+                
+                <p>This example demonstrates a practical application of regular expressions for data protection and privacy. The anonymizer can identify and mask various types of sensitive information like email addresses, phone numbers, SSNs, credit card numbers, and IP addresses. This is useful for processing logs, customer data, or any text that may contain personally identifiable information (PII).</p>
+            </div>
+        </section>
+
+        <section class="splitting-function">
+            <h3>Splitting Text with Regular Expressions</h3>
+            
+            <p>The <code>re.split()</code> function allows you to split strings using regular expression patterns as delimiters.</p>
+            
+            <h4>Basic Splitting</h4>
+            <pre><code>
+# re.split(pattern, string) - Split string by pattern occurrences
+import re
+
+# Split by any whitespace
+text = "Python   is  an  amazing  language"
+parts = re.split(r'\s+', text)
+print(f"Split by whitespace: {parts}")
+
+# Split by comma or semicolon
+text = "apple,orange;banana,grape;pear"
+parts = re.split(r'[,;]', text)
+print(f"Split by comma or semicolon: {parts}")
+
+# Split with a limit
+text = "a,b,c,d,e,f"
+parts = re.split(r',', text, maxsplit=3)
+print(f"Split with limit: {parts}")  # ['a', 'b', 'c', 'd,e,f']
+            </code></pre>
+            
+            <h4>Capturing Delimiters</h4>
+            <pre><code>
+# Keep the delimiters by using capturing groups
+text = "apple,orange;banana,grape"
+parts = re.split(r'([,;])', text)
+print(f"Split keeping delimiters: {parts}")  # ['apple', ',', 'orange', ';', 'banana', ',', 'grape']
+
+# Use this to reconstruct with different delimiters
+new_text = ''.join(part if part not in ',;' else '|' for part in parts)
+print(f"Replaced delimiters: {new_text}")  # apple|orange|banana|grape
+            </code></pre>
+            
+            <h4>Splitting by Multiple Patterns</h4>
+            <pre><code>
+# Split by multiple patterns
+text = "1+2-3*4/5"
+# Split by any arithmetic operator
+parts = re.split(r'[+\-*/]', text)
+print(f"Split by operators: {parts}")  # ['1', '2', '3', '4', '5']
+
+# Keep the operators
+parts = re.split(r'([+\-*/])', text)
+print(f"Split by operators, keeping them: {parts}")  # ['1', '+', '2', '-', '3', '*', '4', '/', '5']
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: CSV Parser with Complex Delimiters</h4>
+                <p>Here's a practical example that uses regex splitting to parse CSV data with potentially complex fields:</p>
+                
+                <pre><code>
+import re
+
+class CSVParser:
+    """
+    A CSV parser that can handle quoted fields and various delimiters.
+    
+    This demonstrates using regex to parse CSV-like data that may contain:
+    - Quoted fields (that may include commas or other delimiters)
+    - Different types of delimiters
+    - Escaped quotes within quoted fields
+    """
+    
+    def __init__(self, delimiter=',', quotechar='"'):
+        """
+        Initialize the parser with delimiter and quote character.
+        
+        Args:
+            delimiter: The field delimiter (default: ',')
+            quotechar: The character used for quoting fields (default: '"')
+        """
+        self.delimiter = delimiter
+        self.quotechar = quotechar
+        
+        # Create regex pattern for splitting
+        # This pattern looks for either:
+        # 1. A quoted field (handles escaped quotes inside)
+        # 2. A non-quoted field up to the delimiter
+        escaped_delimiter = re.escape(delimiter)
+        escaped_quotechar = re.escape(quotechar)
+        
+        # Pattern for splitting CSV fields while preserving quotes
+        self.pattern = re.compile(
+            r'{}[^{}]*(?:{}{}[^{}]*)*{}|[^{}\n]+'.format(
+                escaped_quotechar, escaped_quotechar, escaped_quotechar, 
+                escaped_quotechar, escaped_quotechar, escaped_quotechar, 
+                escaped_delimiter
+            )
+        )
+    
+    def parse_line(self, line):
+        """
+        Parse a single line of CSV data.
+        
+        Args:
+            line: A string containing one line of CSV data
+            
+        Returns:
+            List of fields with quotes removed
+        """
+        # Find all fields using our pattern
+        fields = self.pattern.findall(line)
+        
+        # Clean up the fields
+        cleaned_fields = []
+        for field in fields:
+            # Skip empty matches
+            if not field:
+                continue
+                
+            # Remove quotes from quoted fields
+            if (field.startswith(self.quotechar) and 
+                field.endswith(self.quotechar)):
+                # Remove the surrounding quotes
+                field = field[1:-1]
+                # Replace escaped quotes with single quotes
+                field = field.replace(self.quotechar + self.quotechar, 
+                                     self.quotechar)
+            
+            cleaned_fields.append(field)
+        
+        return cleaned_fields
+    
+    def parse_string(self, csv_string):
+        """
+        Parse a multi-line CSV string.
+        
+        Args:
+            csv_string: A string containing CSV data
+            
+        Returns:
+            List of rows, where each row is a list of fields
+        """
+        lines = csv_string.strip().split('\n')
+        return [self.parse_line(line) for line in lines]
+    
+    def parse_file(self, file_path):
+        """
+        Parse a CSV file.
+        
+        Args:
+            file_path: Path to a CSV file
+            
+        Returns:
+            List of rows, where each row is a list of fields
+        """
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return self.parse_string(f.read())
+        except Exception as e:
+            print(f"Error reading CSV file: {e}")
+            return []
+
+# Example usage
+parser = CSVParser()
+
+# Example CSV data with quoted fields and embedded commas
+csv_data = '''
+name,address,notes
+John Smith,"123 Main St, Apt 4",Regular customer
+Jane Doe,"456 Oak Ave, Suite 7B","Prefers contact by email, not phone"
+"Public, John Q.",789 Pine St,"New customer, referred by Jane Doe"
+'''
+
+# Parse the CSV data
+rows = parser.parse_string(csv_data)
+
+# Print the parsed data
+print("Parsed CSV Data:")
+for i, row in enumerate(rows):
+    print(f"Row {i+1}: {row}")
+
+# You can also access fields by position
+print("\nCustomer Information:")
+for row in rows:
+    if len(row) >= 3:  # Ensure the row has enough fields
+        print(f"Name: {row[0]}")
+        print(f"Address: {row[1]}")
+        print(f"Notes: {row[2]}")
+        print()
+                </code></pre>
+                
+                <p>This example demonstrates using regular expressions to parse CSV data with quoted fields that may contain embedded commas or other delimiters. While Python's built-in <code>csv</code> module would be the preferred choice for production code, this example illustrates how powerful regular expressions can be for parsing complex text formats.</p>
+            </div>
+        </section>
+
+        <section class="compiled-regex">
+            <h3>Compiled Regular Expressions</h3>
+            
+            <p>For better performance when using the same pattern multiple times, you can compile the pattern into a regular expression object using <code>re.compile()</code>.</p>
+            
+            <h4>Creating and Using Compiled Patterns</h4>
+            <pre><code>
+# re.compile(pattern) - Compile a pattern for reuse
+import re
+
+# Compile a pattern
+email_pattern = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
+
+# Use the compiled pattern
+text = "Contact us at info@example.com or support@example.org."
+
+# Find all matches
+emails = email_pattern.findall(text)
+print(f"Found emails: {emails}")
+
+# Search for first match
+match = email_pattern.search(text)
+if match:
+    print(f"First email found: {match.group()}")
+
+# Split using the compiled pattern
+parts = email_pattern.split(text)
+print(f"Text with emails removed: {''.join(parts)}")
+
+# Replace emails
+anonymized = email_pattern.sub('[EMAIL]', text)
+print(f"Anonymized text: {anonymized}")
+            </code></pre>
+            
+            <h4>Compiling with Flags</h4>
+            <pre><code>
+# Compile with flags for modified behavior
+# Case-insensitive pattern
+pattern = re.compile(r'python', re.IGNORECASE)
+text = "Python is great. I love PYTHON programming."
+
+matches = pattern.findall(text)
+print(f"Case-insensitive matches: {matches}")
+
+# Multiple flags using bitwise OR (|)
+pattern = re.compile(r'^start.*end$', re.IGNORECASE | re.DOTALL)
+text = """START
+This text has multiple lines.
+END"""
+
+if pattern.match(text):
+    print("Pattern matched with multiple flags")
+            </code></pre>
+            
+            <h4>Common Regex Flags</h4>
+            <ul>
+                <li><code>re.IGNORECASE</code> or <code>re.I</code>: Case-insensitive matching</li>
+                <li><code>re.MULTILINE</code> or <code>re.M</code>: ^ and $ match the start/end of each line</li>
+                <li><code>re.DOTALL</code> or <code>re.S</code>: '.' matches any character including newline</li>
+                <li><code>re.VERBOSE</code> or <code>re.X</code>: Allow verbose regex with comments and whitespace</li>
+                <li><code>re.ASCII</code> or <code>re.A</code>: \w, \W, \b, \B, \d, \D, \s and \S match only ASCII characters</li>
+                <li><code>re.UNICODE</code> or <code>re.U</code>: \w, \W, \b, \B, \d, \D, \s and \S match based on Unicode</li>
+            </ul>
+            
+            <h4>Verbose Regular Expressions</h4>
+            <pre><code>
+# Using the VERBOSE flag for more readable regex
+import re
+
+# A complex pattern for validating email addresses
+email_pattern = re.compile(r'''
+    # Username part
+    \b[A-Za-z0-9._%+-]+   # One or more allowed characters
+    
+    # @ symbol
+    @
+    
+    # Domain name
+    [A-Za-z0-9.-]+        # Domain name
+    
+    # TLD part
+    \.[A-Z|a-z]{2,}\b     # TLD (.com, .org, etc.)
+''', re.VERBOSE)
+
+# Test the pattern
+emails = email_pattern.findall("Contact: test@example.com, invalid@.com, another@example.org")
+print(f"Valid emails: {emails}")  # ['test@example.com', 'another@example.org']
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Form Validator</h4>
+                <p>Here's a practical example of using compiled regular expressions for form validation:</p>
+                
+                <pre><code>
+import re
+
+class FormValidator:
+    """A class for validating common form fields using regular expressions."""
+    
+    def __init__(self):
+        """Initialize with compiled regex patterns for different fields."""
+        # Username: 3-16 characters, alphanumeric and underscore only
+        self.username_pattern = re.compile(r'^[a-zA-Z0-9_]{3,16}$')
+        
+        # Password: 8+ chars, must contain at least one digit, uppercase, lowercase, and special char
+        self.password_pattern = re.compile(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$')
+        
+        # Email with reasonable validation
+        self.email_pattern = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+        
+        # US Phone number (various formats)
+        self.phone_pattern = re.compile(r'^(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$')
+        
+        # URL (basic validation)
+        self.url_pattern = re.compile(r'^(https?://)?([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(/.*)?$')
+        
+        # Date in format MM/DD/YYYY
+        self.date_pattern = re.compile(r'^(0[1-9]|1[0-2])/(0[1-9]|[12][0-9]|3[01])/\d{4}$')
+        
+        # Credit card (basic pattern for major cards)
+        self.credit_card_pattern = re.compile(r'^(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})$')
+        
+        # Zip code (US)
+        self.zipcode_pattern = re.compile(r'^\d{5}(?:-\d{4})?$')
+    
+    def validate_username(self, username):
+        """
+        Validate a username.
+        
+        Args:
+            username: The username to validate
+            
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
+        if not username:
+            return False, "Username cannot be empty"
+        
+        if not self.username_pattern.match(username):
+            return False, "Username must be 3-16 characters long and contain only letters, numbers, and underscores"
+        
+        return True, ""
+    
+    def validate_password(self, password):
+        """Validate a password."""
+        if not password:
+            return False, "Password cannot be empty"
+        
+        if len(password) < 8:
+            return False, "Password must be at least 8 characters long"
+        
+        if not self.password_pattern.match(password):
+            return False, "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character"
+        
+        return True, ""
+    
+    def validate_email(self, email):
+        """Validate an email address."""
+        if not email:
+            return False, "Email cannot be empty"
+        
+        if not self.email_pattern.match(email):
+            return False, "Please enter a valid email address"
+        
+        return True, ""
+    
+    def validate_phone(self, phone):
+        """Validate a phone number."""
+        if not phone:
+            return False, "Phone number cannot be empty"
+        
+        # Remove any whitespace
+        phone = phone.strip()
+        
+        if not self.phone_pattern.match(phone):
+            return False, "Please enter a valid phone number"
+        
+        return True, ""
+    
+    def validate_url(self, url):
+        """Validate a URL."""
+        if not url:
+            return False, "URL cannot be empty"
+        
+        if not self.url_pattern.match(url):
+            return False, "Please enter a valid URL"
+        
+        return True, ""
+    
+    def validate_date(self, date):
+        """Validate a date in MM/DD/YYYY format."""
+        if not date:
+            return False, "Date cannot be empty"
+        
+        if not self.date_pattern.match(date):
+            return False, "Please enter a valid date in MM/DD/YYYY format"
+        
+        # Further validation could check for valid month/day combinations
+        # and leap years, but that's beyond the scope of this example
+        
+        return True, ""
+    
+    def validate_credit_card(self, card_number):
+        """Validate a credit card number (basic format check only)."""
+        if not card_number:
+            return False, "Credit card number cannot be empty"
+        
+        # Remove spaces and dashes
+        card_number = re.sub(r'[\s-]', '', card_number)
+        
+        if not self.credit_card_pattern.match(card_number):
+            return False, "Please enter a valid credit card number"
+        
+        # Add Luhn algorithm check for production use
+        
+        return True, ""
+    
+    def validate_zipcode(self, zipcode):
+        """Validate a US zip code."""
+        if not zipcode:
+            return False, "Zip code cannot be empty"
+        
+        if not self.zipcode_pattern.match(zipcode):
+            return False, "Please enter a valid zip code (e.g., 12345 or 12345-6789)"
+        
+        return True, ""
+    
+    def validate_form(self, form_data):
+        """
+        Validate all fields in a form.
+        
+        Args:
+            form_data: Dictionary of form fields to validate
+            
+        Returns:
+            Tuple of (is_valid, errors_dict)
+        """
+        errors = {}
+        validators = {
+            'username': self.validate_username,
+            'password': self.validate_password,
+            'email': self.validate_email,
+            'phone': self.validate_phone,
+            'url': self.validate_url,
+            'date': self.validate_date,
+            'credit_card': self.validate_credit_card,
+            'zipcode': self.validate_zipcode
+        }
+        
+        for field, validator in validators.items():
+            if field in form_data:
+                is_valid, error = validator(form_data[field])
+                if not is_valid:
+                    errors[field] = error
+        
+        return len(errors) == 0, errors
+
+# Example usage
+validator = FormValidator()
+
+# Test a single field
+email = "user@example.com"
+is_valid, error = validator.validate_email(email)
+print(f"Email '{email}' is valid: {is_valid}")
+
+# Test an invalid field
+password = "password123"
+is_valid, error = validator.validate_password(password)
+print(f"Password validation: {is_valid}")
+if not is_valid:
+    print(f"Error: {error}")
+
+# Validate a complete form
+form_data = {
+    'username': 'john_doe',
+    'password': 'Secure1!Password',
+    'email': 'john.doe@example.com',
+    'phone': '(555) 123-4567',
+    'date': '01/15/2023',
+    'url': 'https://example.com',
+    'zipcode': '12345-6789'
+}
+
+is_valid, errors = validator.validate_form(form_data)
+if is_valid:
+    print("\nForm is valid!")
+else:
+    print("\nForm has errors:")
+    for field, error in errors.items():
+        print(f"  {field}: {error}")
+                </code></pre>
+                
+                <p>This example demonstrates how to use compiled regular expressions to validate common form fields like usernames, passwords, emails, phone numbers, and more. The <code>FormValidator</code> class provides a reusable way to validate user input in web applications, ensuring data follows the expected formats before processing or storing it.</p>
+            </div>
+        </section>
+
+        <section class="match-objects">
+            <h3>Working with Match Objects</h3>
+            
+            <p>When using functions like <code>search()</code>, <code>match()</code>, or methods like <code>finditer()</code>, you get Match objects that contain information about what was matched and where.</p>
+            
+            <h4>Accessing Match Information</h4>
+            <pre><code>
+import re
+
+text = "Python was created in 1991 by Guido van Rossum."
+pattern = re.compile(r'(\w+) was created in (\d{4}) by (\w+ \w+ \w+)')
+
+match = pattern.search(text)
+if match:
+    print(f"Entire match: {match.group(0)}")
+    print(f"First group: {match.group(1)}")  # The language name
+    print(f"Second group: {match.group(2)}")  # The year
+    print(f"Third group: {match.group(3)}")  # The creator
+    
+    # Get all groups at once
+    all_groups = match.groups()
+    print(f"All groups: {all_groups}")
+    
+    # Get the start and end positions
+    print(f"Match starts at: {match.start()}")
+    print(f"Match ends at: {match.end()}")
+    
+    # Get the matched substring
+    print(f"Matched text: {match.string[match.start():match.end()]}")
+    
+    # Group positions
+    for i, group in enumerate(match.groups(), 1):
+        print(f"Group {i} from {match.start(i)} to {match.end(i)}")
+            </code></pre>
+            
+            <h4>Named Groups</h4>
+            <pre><code>
+# Using named groups with (?P<name>pattern)
+pattern = re.compile(r'(?P<language>\w+) was created in (?P<year>\d{4}) by (?P<creator>[\w\s]+)')
+
+match = pattern.search(text)
+if match:
+    print(f"Language: {match.group('language')}")
+    print(f"Year: {match.group('year')}")
+    print(f"Creator: {match.group('creator')}")
+    
+    # Get all named groups as a dictionary
+    named_groups = match.groupdict()
+    print(f"Named groups: {named_groups}")
+            </code></pre>
+            
+            <h4>Iterating Over All Matches</h4>
+            <pre><code>
+text = """
+Python was created in 1991 by Guido van Rossum.
+Java was created in 1995 by James Gosling.
+JavaScript was created in 1995 by Brendan Eich.
+"""
+
+pattern = re.compile(r'(?P<language>\w+) was created in (?P<year>\d{4}) by (?P<creator>[\w\s]+)')
+
+for match in pattern.finditer(text):
+    language = match.group('language')
+    year = match.group('year')
+    creator = match.group('creator').strip()  # Remove trailing period and whitespace
+    print(f"{language} ({year}) - {creator}")
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: HTML Parser</h4>
+                <p>Here's a practical example using match objects to parse and extract information from HTML:</p>
+                
+                <pre><code>
+import re
+
+class HTMLParser:
+    """A simple HTML parser using regular expressions."""
+    
+    def __init__(self):
+        """Initialize with compiled regex patterns."""
+        # Pattern for HTML tags with attributes
+        self.tag_pattern = re.compile(r'<(?P<tag>[a-zA-Z0-9]+)(?P<attrs>[^>]*)>(?P<content>.*?)</(?P=tag)>', re.DOTALL)
+        
+        # Pattern for attributes within a tag
+        self.attr_pattern = re.compile(r'(\w+)\s*=\s*["\']([^"\']*)["\']')
+        
+        # Pattern for self-closing tags
+        self.self_closing_pattern = re.compile(r'<(?P<tag>[a-zA-Z0-9]+)(?P<attrs>[^>]*)/>')
+        
+        # Pattern for comments
+        self.comment_pattern = re.compile(r'<!--(.*?)-->', re.DOTALL)
+    
+    def extract_tags(self, html, tag_name=None):
+        """
+        Extract all tags or specific tags from HTML.
+        
+        Args:
+            html: HTML string to parse
+            tag_name: Specific tag to extract (e.g., 'div', 'a') or None for all
+            
+        Returns:
+            List of tag dictionaries with 'tag', 'attrs', and 'content' keys
+        """
+        tags = []
+        
+        # Find all tags with content
+        for match in self.tag_pattern.finditer(html):
+            tag = match.group('tag')
+            
+            # Skip if we're looking for a specific tag and this isn't it
+            if tag_name and tag.lower() != tag_name.lower():
+                continue
+            
+            # Parse attributes
+            attrs_text = match.group('attrs')
+            attrs = dict(self.attr_pattern.findall(attrs_text))
+            
+            # Add tag info to results
+            tags.append({
+                'tag': tag,
+                'attrs': attrs,
+                'content': match.group('content'),
+                'start': match.start(),
+                'end': match.end()
+            })
+        
+        # Find self-closing tags
+        for match in self.self_closing_pattern.finditer(html):
+            tag = match.group('tag')
+            
+            # Skip if we're looking for a specific tag and this isn't it
+            if tag_name and tag.lower() != tag_name.lower():
+                continue
+            
+            # Parse attributes
+            attrs_text = match.group('attrs')
+            attrs = dict(self.attr_pattern.findall(attrs_text))
+            
+            # Add tag info to results
+            tags.append({
+                'tag': tag,
+                'attrs': attrs,
+                'content': None,  # Self-closing tags have no content
+                'self_closing': True,
+                'start': match.start(),
+                'end': match.end()
+            })
+        
+        # Sort tags by their position in the HTML
+        tags.sort(key=lambda t: t['start'])
+        
+        return tags
+    
+    def extract_links(self, html):
+        """
+        Extract all links (a tags with href) from HTML.
+        
+        Args:
+            html: HTML string to parse
+            
+        Returns:
+            List of dictionaries with 'href', 'text', and 'title' keys
+        """
+        links = []
+        
+        # Get all 'a' tags
+        a_tags = self.extract_tags(html, 'a')
+        
+        for tag in a_tags:
+            # Skip if no href attribute
+            if 'href' not in tag['attrs']:
+                continue
+            
+            links.append({
+                'href': tag['attrs']['href'],
+                'text': tag['content'],
+                'title': tag['attrs'].get('title', '')
+            })
+        
+        return links
+    
+    def extract_images(self, html):
+        """
+        Extract all images from HTML.
+        
+        Args:
+            html: HTML string to parse
+            
+        Returns:
+            List of dictionaries with image information
+        """
+        images = []
+        
+        # Get all 'img' tags
+        img_tags = self.extract_tags(html, 'img')
+        
+        # Also check for self-closing img tags
+        for match in self.self_closing_pattern.finditer(html):
+            if match.group('tag').lower() == 'img':
+                attrs_text = match.group('attrs')
+                attrs = dict(self.attr_pattern.findall(attrs_text))
+                
+                img_tags.append({
+                    'tag': 'img',
+                    'attrs': attrs,
+                    'content': None,
+                    'self_closing': True
+                })
+        
+        for tag in img_tags:
+            # Skip if no src attribute
+            if 'src' not in tag['attrs']:
+                continue
+            
+            images.append({
+                'src': tag['attrs']['src'],
+                'alt': tag['attrs'].get('alt', ''),
+                'width': tag['attrs'].get('width', ''),
+                'height': tag['attrs'].get('height', '')
+            })
+        
+        return images
+    
+    def strip_tags(self, html):
+        """
+        Remove all HTML tags, leaving only text content.
+        
+        Args:
+            html: HTML string to parse
+            
+        Returns:
+            Plain text without HTML tags
+        """
+        # Remove all tags
+        text = re.sub(r'<[^>]*>', '', html)
+        
+        # Remove comments
+        text = self.comment_pattern.sub('', text)
+        
+        # Handle HTML entities
+        text = re.sub(r'&nbsp;', ' ', text)
+        text = re.sub(r'&lt;', '<', text)
+        text = re.sub(r'&gt;', '>', text)
+        text = re.sub(r'&quot;', '"', text)
+        text = re.sub(r'&amp;', '&', text)
+        
+        # Collapse multiple whitespace
+        text = re.sub(r'\s+', ' ', text)
+        
+        return text.strip()
+
+# Example usage
+parser = HTMLParser()
+
+# Sample HTML
+html = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sample Page</title>
+</head>
+<body>
+    <h1>Welcome to My Page</h1>
+    <p>This is a <strong>simple</strong> HTML page with some <em>formatting</em>.</p>
+    
+    <div class="links">
+        <h2>Useful Links</h2>
+        <ul>
+            <li><a href="https://www.example.com" title="Example Website">Example</a></li>
+            <li><a href="https://www.python.org">Python</a></li>
+        </ul>
+    </div>
+    
+    <img src="image1.jpg" alt="Sample Image" width="300" height="200" />
+    <img src="image2.jpg" alt="Another Image" />
+    
+    <!-- This is a comment that should be ignored -->
+    
+    <footer>Copyright &copy; 2023</footer>
+</body>
+</html>
+"""
+
+# Extract all paragraphs
+paragraphs = parser.extract_tags(html, 'p')
+print(f"Found {len(paragraphs)} paragraphs:")
+for p in paragraphs:
+    print(f"  - {parser.strip_tags(p['content'])}")
+
+# Extract all links
+links = parser.extract_links(html)
+print(f"\nFound {len(links)} links:")
+for link in links:
+    print(f"  - {link['text']} -> {link['href']}")
+    if link['title']:
+        print(f"    Title: {link['title']}")
+
+# Extract all images
+images = parser.extract_images(html)
+print(f"\nFound {len(images)} images:")
+for img in images:
+    print(f"  - {img['src']} (Alt: {img['alt']})")
+    if img['width'] and img['height']:
+        print(f"    Size: {img['width']}x{img['height']}")
+
+# Strip all tags
+plain_text = parser.strip_tags(html)
+print(f"\nPlain text content:\n{plain_text}")
+                </code></pre>
+                
+                <p>This example demonstrates a practical application of regular expressions for parsing HTML. While a proper HTML parser like BeautifulSoup would be recommended for production code (as HTML is not a regular language), this example shows how you can use regular expressions and match objects to extract useful information from structured text.</p>
+            </div>
+        </section>
+
+        <section class="advanced-techniques">
+            <h3>Advanced Regular Expression Techniques</h3>
+            
+            <h4>Lookahead and Lookbehind Assertions</h4>
+            <pre><code>
+import re
+
+# Positive lookahead (?=...)
+# Matches if ... matches next, but doesn't consume any of the string
+# Find words followed by a colon
+text = "name: John age: 30 email: john@example.com"
+pattern = r'\b\w+(?=:)'  # Word followed by colon
+
+matches = re.findall(pattern, text)
+print(f"Words followed by colon: {matches}")  # ['name', 'age', 'email']
+
+# Negative lookahead (?!...)
+# Matches if ... doesn't match next
+# Find words NOT followed by 'ing'
+text = "running jumping swimming walking talking"
+pattern = r'\b\w+(?!ing\b)\b'  # Words not ending with 'ing'
+
+matches = re.findall(pattern, text)
+print(f"Words not ending with 'ing': {matches}")  # ['walking', 'talking']
+
+# Positive lookbehind (?<=...)
+# Matches if ... matches before, but doesn't consume any of the string
+# Find numbers preceded by '$'
+text = "Items: $10, €20, $30, ¥40"
+pattern = r'(?<=\$)\d+'  # Digits after dollar sign
+
+matches = re.findall(pattern, text)
+print(f"Dollar amounts: {matches}")  # ['10', '30']
+
+# Negative lookbehind (?<!...)
+# Matches if ... doesn't match before
+# Find numbers not preceded by '$'
+pattern = r'(?<!\$)\d+'  # Digits not after dollar sign
+
+matches = re.findall(pattern, text)
+print(f"Non-dollar amounts: {matches}")  # ['20', '40']
+            </code></pre>
+            
+            <h4>Non-greedy (Lazy) Matching</h4>
+            <pre><code>
+# Greedy vs. non-greedy quantifiers
+text = "<div>First content</div><div>Second content</div>"
+
+# Greedy (default) - matches as much as possible
+greedy_pattern = r'<div>.*</div>'
+greedy_matches = re.findall(greedy_pattern, text)
+print(f"Greedy match: {greedy_matches}")  # ['<div>First content</div><div>Second content</div>']
+
+# Non-greedy/lazy - matches as little as possible
+lazy_pattern = r'<div>.*?</div>'
+lazy_matches = re.findall(lazy_pattern, text)
+print(f"Lazy match: {lazy_matches}")  # ['<div>First content</div>', '<div>Second content</div>']
+            </code></pre>
+            </section>
+            
+            
+           
+            
+                    <section class="regex-cheatsheet">
+                        <h3>Regular Expression Quick Reference</h3>
+                        
+                        <p>This cheatsheet provides a quick reference of common regex patterns and their meaning:</p>
+                        
+                        <h4>Basic Patterns</h4>
+                        <table class="pattern-table">
+                            <tr>
+                                <th>Pattern</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                            <tr>
+                                <td><code>.</code></td>
+                                <td>Matches any character except newline</td>
+                                <td><code>a.c</code> matches "abc", "a2c", "a-c", etc.</td>
+                            </tr>
+                            <tr>
+                                <td><code>^</code></td>
+                                <td>Matches start of string</td>
+                                <td><code>^hello</code> matches "hello world" but not "say hello"</td>
+                            </tr>
+                            <tr>
+                                <td><code>$</code></td>
+                                <td>Matches end of string</td>
+                                <td><code>world$</code> matches "hello world" but not "world class"</td>
+                            </tr>
+                            <tr>
+                                <td><code>\</code></td>
+                                <td>Escapes special characters</td>
+                                <td><code>\.</code> matches a literal period</td>
+                            </tr>
+                        </table>
+                        
+                        <h4>Character Classes</h4>
+                        <table class="pattern-table">
+                            <tr>
+                                <th>Pattern</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                            <tr>
+                                <td><code>[abc]</code></td>
+                                <td>Matches any of the characters inside brackets</td>
+                                <td><code>gr[ae]y</code> matches "gray" or "grey"</td>
+                            </tr>
+                            <tr>
+                                <td><code>[^abc]</code></td>
+                                <td>Matches any character NOT inside brackets</td>
+                                <td><code>[^0-9]</code> matches any non-digit</td>
+                            </tr>
+                            <tr>
+                                <td><code>[a-z]</code></td>
+                                <td>Matches any character in the range</td>
+                                <td><code>[a-z]</code> matches any lowercase letter</td>
+                            </tr>
+                            <tr>
+                                <td><code>\d</code></td>
+                                <td>Matches any digit (equivalent to <code>[0-9]</code>)</td>
+                                <td><code>\d{3}</code> matches "123", "456", etc.</td>
+                            </tr>
+                            <tr>
+                                <td><code>\D</code></td>
+                                <td>Matches any non-digit</td>
+                                <td><code>\D+</code> matches "abc", "xyz", etc.</td>
+                            </tr>
+                            <tr>
+                                <td><code>\w</code></td>
+                                <td>Matches any word character (alphanumeric + underscore)</td>
+                                <td><code>\w+</code> matches "abc123", "python_3", etc.</td>
+                            </tr>
+                            <tr>
+                                <td><code>\W</code></td>
+                                <td>Matches any non-word character</td>
+                                <td><code>\W+</code> matches " + = ", "!@#", etc.</td>
+                            </tr>
+                            <tr>
+                                <td><code>\s</code></td>
+                                <td>Matches any whitespace character</td>
+                                <td><code>\s+</code> matches spaces, tabs, newlines</td>
+                            </tr>
+                            <tr>
+                                <td><code>\S</code></td>
+                                <td>Matches any non-whitespace character</td>
+                                <td><code>\S+</code> matches "abc", "123", etc.</td>
+                            </tr>
+                        </table>
+                        
+                        <h4>Quantifiers</h4>
+                        <table class="pattern-table">
+                            <tr>
+                                <th>Pattern</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                            <tr>
+                                <td><code>*</code></td>
+                                <td>Matches 0 or more occurrences</td>
+                                <td><code>ab*c</code> matches "ac", "abc", "abbc", etc.</td>
+                            </tr>
+                            <tr>
+                                <td><code>+</code></td>
+                                <td>Matches 1 or more occurrences</td>
+                                <td><code>ab+c</code> matches "abc", "abbc", but not "ac"</td>
+                            </tr>
+                            <tr>
+                                <td><code>?</code></td>
+                                <td>Matches 0 or 1 occurrence</td>
+                                <td><code>colou?r</code> matches "color" or "colour"</td>
+                            </tr>
+                            <tr>
+                                <td><code>{n}</code></td>
+                                <td>Matches exactly n occurrences</td>
+                                <td><code>\d{3}</code> matches "123", "456", etc.</td>
+                            </tr>
+                            <tr>
+                                <td><code>{n,}</code></td>
+                                <td>Matches n or more occurrences</td>
+                                <td><code>\d{2,}</code> matches "12", "345", etc.</td>
+                            </tr>
+                            <tr>
+                                <td><code>{n,m}</code></td>
+                                <td>Matches between n and m occurrences</td>
+                                <td><code>\d{2,4}</code> matches "12", "123", "1234"</td>
+                            </tr>
+                            <tr>
+                                <td><code>*?</code>, <code>+?</code>, <code>??</code></td>
+                                <td>Non-greedy versions of *, +, ?</td>
+                                <td><code>a.*?b</code> matches "ab", "acb" in "acbdb"</td>
+                            </tr>
+                        </table>
+                        
+                        <h4>Groups and Alternation</h4>
+                        <table class="pattern-table">
+                            <tr>
+                                <th>Pattern</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                            <tr>
+                                <td><code>(xyz)</code></td>
+                                <td>Capturing group</td>
+                                <td><code>(abc)+</code> matches "abc", "abcabc", etc.</td>
+                            </tr>
+                            <tr>
+                                <td><code>(?:xyz)</code></td>
+                                <td>Non-capturing group</td>
+                                <td><code>(?:abc)+</code> same as above but doesn't capture</td>
+                            </tr>
+                            <tr>
+                                <td><code>x|y</code></td>
+                                <td>Alternation (x or y)</td>
+                                <td><code>cat|dog</code> matches "cat" or "dog"</td>
+                            </tr>
+                            <tr>
+                                <td><code>(?P&lt;name&gt;xyz)</code></td>
+                                <td>Named capturing group</td>
+                                <td><code>(?P&lt;year&gt;\d{4})</code> captures year as a named group</td>
+                            </tr>
+                            <tr>
+                                <td><code>\1</code>, <code>\2</code>, etc.</td>
+                                <td>Backreference to a capturing group</td>
+                                <td><code>(abc)\1</code> matches "abcabc"</td>
+                            </tr>
+                            <tr>
+                                <td><code>(?P=name)</code></td>
+                                <td>Backreference to a named group</td>
+                                <td><code>(?P&lt;char&gt;a)(?P=char)</code> matches "aa"</td>
+                            </tr>
+                        </table>
+                        
+                        <h4>Lookahead and Lookbehind</h4>
+                        <table class="pattern-table">
+                            <tr>
+                                <th>Pattern</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                            <tr>
+                                <td><code>(?=xyz)</code></td>
+                                <td>Positive lookahead</td>
+                                <td><code>a(?=b)</code> matches "a" only if followed by "b"</td>
+                            </tr>
+                            <tr>
+                                <td><code>(?!xyz)</code></td>
+                                <td>Negative lookahead</td>
+                                <td><code>a(?!b)</code> matches "a" only if not followed by "b"</td>
+                            </tr>
+                            <tr>
+                                <td><code>(?&lt;=xyz)</code></td>
+                                <td>Positive lookbehind</td>
+                                <td><code>(?&lt;=a)b</code> matches "b" only if preceded by "a"</td>
+                            </tr>
+                            <tr>
+                                <td><code>(?&lt;!xyz)</code></td>
+                                <td>Negative lookbehind</td>
+                                <td><code>(?&lt;!a)b</code> matches "b" only if not preceded by "a"</td>
+                            </tr>
+                        </table>
+                        
+                        <h4>Flags (Modifiers)</h4>
+                        <table class="pattern-table">
+                            <tr>
+                                <th>Flag</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                            <tr>
+                                <td><code>re.I</code> or <code>re.IGNORECASE</code></td>
+                                <td>Case-insensitive matching</td>
+                                <td><code>re.search('a', 'A', re.I)</code> matches</td>
+                            </tr>
+                            <tr>
+                                <td><code>re.M</code> or <code>re.MULTILINE</code></td>
+                                <td>^ and $ match start/end of each line</td>
+                                <td><code>re.search('^a', 'b\na', re.M)</code> matches</td>
+                            </tr>
+                            <tr>
+                                <td><code>re.S</code> or <code>re.DOTALL</code></td>
+                                <td>Dot (.) matches newline too</td>
+                                <td><code>re.search('a.b', 'a\nb', re.S)</code> matches</td>
+                            </tr>
+                            <tr>
+                                <td><code>re.X</code> or <code>re.VERBOSE</code></td>
+                                <td>Allows formatted regex with comments</td>
+                                <td>See verbose pattern examples</td>
+                            </tr>
+                            <tr>
+                                <td><code>re.A</code> or <code>re.ASCII</code></td>
+                                <td>\w, \W, \b, \B, \s, \S match ASCII only</td>
+                                <td>Affects behavior with Unicode characters</td>
+                            </tr>
+                            <tr>
+                                <td><code>re.U</code> or <code>re.UNICODE</code></td>
+                                <td>\w, \W, \b, \B, \s, \S match based on Unicode</td>
+                                <td>Default in Python 3</td>
+                            </tr>
+                        </table>
+                    </section>
+                    
+                    <section class="common-patterns">
+                        <h3>Common Regular Expression Patterns</h3>
+                        
+                        <p>Here's a collection of useful regex patterns for common tasks:</p>
+                        
+                        <h4>Data Validation Patterns</h4>
+                        
+                        <h5>Email Address</h5>
+                        <pre><code>
+            # Simple email validation
+            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            
+            # More comprehensive email validation
+            email_complex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$'
+                        </code></pre>
+                        
+                        <h5>Phone Numbers</h5>
+                        <pre><code>
+            # US phone number in various formats
+            us_phone = r'^\(?(\d{3})\)?[-. ]?(\d{3})[-. ]?(\d{4})$'
+            
+            # International phone number
+            intl_phone = r'^\+?\d{1,3}[-. ]?\(?(\d{3})\)?[-. ]?(\d{3})[-. ]?(\d{4})$'
+                        </code></pre>
+                        
+                        <h5>URLs</h5>
+                        <pre><code>
+            # Basic URL validation
+            url_pattern = r'^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$'
+            
+            # More comprehensive URL validation
+            url_complex = r'^(?:(?:https?|ftp):\/\/)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/\S*)?$'
+                        </code></pre>
+                        
+                        <h5>IP Addresses</h5>
+                        <pre><code>
+            # IPv4 address
+            ipv4_pattern = r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+            
+            # IPv6 address (simplified)
+            ipv6_pattern = r'^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$'
+                        </code></pre>
+                        
+                        <h5>Dates</h5>
+                        <pre><code>
+            # MM/DD/YYYY format
+            date_mmddyyyy = r'^(0[1-9]|1[0-2])/(0[1-9]|[12][0-9]|3[01])/\d{4}$'
+            
+            # YYYY-MM-DD format (ISO)
+            date_iso = r'^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'
+            
+            # Flexible date matching (multiple formats)
+            date_flexible = r'^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$'
+                        </code></pre>
+                        
+                        <h5>Password Strength</h5>
+                        <pre><code>
+            # At least 8 chars, with at least one digit, one uppercase, one lowercase, and one special char
+            strong_password = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$'
+            
+            # Complex password with minimum length of 10
+            complex_password = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{10,}$'
+                        </code></pre>
+                        
+                        <h4>Text Processing Patterns</h4>
+                        
+                        <h5>HTML Tags</h5>
+                        <pre><code>
+            # Match HTML tags
+            html_tag = r'<([a-z][a-z0-9]*)\b[^>]*>(.*?)</\1>'
+            
+            # Extract all links from HTML
+            html_links = r'<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1'
+                        </code></pre>
+                        
+                        <h5>CSV Parsing</h5>
+                        <pre><code>
+            # Match CSV fields (handles quoted fields with commas)
+            csv_field = r'(?:^|,)(?:"([^"]*(?:""[^"]*)*)"|([^,"]*))'
+                        </code></pre>
+                        
+                        <h5>Log Parsing</h5>
+                        <pre><code>
+            # Common Log Format (CLF) pattern for web server logs
+            clf_pattern = r'(\S+)\s+-\s+-\s+\[(.*?)\]\s+"(\S+)\s+(\S+)\s+([^"]*)"\s+(\d+)\s+(\d+|-)'
+            
+            # Timestamp pattern (various formats)
+            timestamp = r'\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:\s+[\+\-]\d{4})?'
+                        </code></pre>
+                        
+                        <h5>Code Extraction</h5>
+                        <pre><code>
+            # Extract Python functions
+            python_function = r'def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\((.*?)\):'
+            
+            # Extract JSON objects
+            json_object = r'\{(?:[^{}]|(?R))*\}'
+                        </code></pre>
+                        
+                        <h4>Text Replacement Patterns</h4>
+                        
+                        <h5>Removing Extra Whitespace</h5>
+                        <pre><code>
+            # Replace multiple spaces with a single space
+            remove_extra_spaces = r'\s+'
+            replacement = ' '
+            
+            # Trim leading/trailing whitespace
+            trim_whitespace = r'^\s+|\s+$'
+            replacement = ''
+                        </code></pre>
+                        
+                        <h5>Normalizing Text</h5>
+                        <pre><code>
+            # Convert camelCase to snake_case
+            camel_to_snake = r'([a-z0-9])([A-Z])'
+            replacement = r'\1_\2'
+            
+            # Convert snake_case to camelCase
+            snake_to_camel = r'_([a-z])'
+            replacement = lambda match: match.group(1).upper()
+                        </code></pre>
+                    </section>
+                    
+                    <section class="optimization">
+                        <h3>Regex Optimization Techniques</h3>
+                        
+                        <p>Regular expressions can sometimes be inefficient, especially with complex patterns or large text inputs. Here are some techniques to optimize your regex patterns:</p>
+                        
+                        <h4>Avoid Catastrophic Backtracking</h4>
+                        <pre><code>
+            # Bad pattern (can lead to catastrophic backtracking)
+            bad_pattern = r'(a+)+b'
+            
+            # Better pattern (more efficient)
+            better_pattern = r'a+b'
+                        </code></pre>
+                        
+                        <p>Patterns with nested repetition quantifiers (like <code>(a+)+</code>) can cause exponential backtracking on certain inputs. For example, if you try to match "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" with <code>(a+)+b</code>, it will try an exponential number of ways to split the 'a's into groups before eventually failing.</p>
+                        
+                        <h4>Use Atomic Groups or Possessive Quantifiers</h4>
+                        <p>These features are not directly supported in Python's <code>re</code> module, but can be approximated with lookahead assertions:</p>
+                        
+                        <pre><code>
+            # Simulate atomic grouping with lookahead
+            pattern = r'(?=(a+))\1b'  # Similar to (?>a+)b in other regex engines
+                        </code></pre>
+                        
+                        <h4>Anchor Your Patterns</h4>
+                        <pre><code>
+            # Unanchored pattern (has to scan the entire string)
+            unanchored = r'python'
+            
+            # Anchored pattern (faster if the match is at the beginning)
+            anchored = r'^python'
+                        </code></pre>
+                        
+                        <h4>Be Specific</h4>
+                        <pre><code>
+            # Less specific pattern
+            less_specific = r'.*python.*'
+            
+            # More specific pattern
+            more_specific = r'[a-zA-Z]*python[a-zA-Z]*'
+                        </code></pre>
+                        
+                        <h4>Use Non-Capturing Groups When Capture Is Unnecessary</h4>
+                        <pre><code>
+            # Using capturing groups
+            capturing = r'(https?://)([^/]+)(/.*)'
+            
+            # Using non-capturing groups when you don't need the capture
+            non_capturing = r'(?:https?://)([^/]+)(?:/.*)'
+                        </code></pre>
+                        
+                        <h4>Precompile Patterns</h4>
+                        <pre><code>
+            import re
+            
+            # Precompile pattern for repeated use
+            pattern = re.compile(r'\b\w+\b')
+            
+            # Use the compiled pattern multiple times
+            text1 = "Hello, world!"
+            text2 = "Python is amazing!"
+            words1 = pattern.findall(text1)
+            words2 = pattern.findall(text2)
+                        </code></pre>
+                        
+                        <h4>Use More Efficient Alternatives When Possible</h4>
+                        <pre><code>
+            import re
+            
+            # Checking if a string contains only digits
+            text = "12345"
+            
+            # Using regex (less efficient)
+            is_digits_regex = bool(re.match(r'^\d+$', text))
+            
+            # Using str.isdigit() (more efficient)
+            is_digits_str = text.isdigit()
+                        </code></pre>
+                    </section>
+                    
+                    <section class="debugging">
+                        <h3>Debugging Regular Expressions</h3>
+                        
+                        <p>Debugging complex regular expressions can be challenging. Here are some techniques to help you debug your patterns:</p>
+                        
+                        <h4>Using Verbose Mode</h4>
+                        <pre><code>
+            import re
+            
+            # Complex pattern in verbose mode
+            pattern = re.compile(r'''
+                # Start of string
+                ^
+                
+                # Username part
+                (?P<username>[a-zA-Z0-9._-]+)
+                
+                # @ symbol
+                @
+                
+                # Domain part
+                (?P<domain>[a-zA-Z0-9.-]+)
+                
+                # TLD part
+                \.
+                (?P<tld>[a-zA-Z]{2,})
+                
+                # End of string
+                $
+            ''', re.VERBOSE)
+            
+            # Test the pattern
+            match = pattern.match('user123@example.com')
+            if match:
+                print("Match found!")
+                print(f"Username: {match.group('username')}")
+                print(f"Domain: {match.group('domain')}")
+                print(f"TLD: {match.group('tld')}")
+                        </code></pre>
+                        
+                        <h4>Debugging with re.DEBUG Flag</h4>
+                        <pre><code>
+            import re
+            
+            # Use the DEBUG flag to see how the pattern is interpreted
+            pattern = re.compile(r'(\w+)@(\w+)\.(\w+)', re.DEBUG)
+                        </code></pre>
+                        
+                        <h4>Incremental Testing</h4>
+                        <pre><code>
+            import re
+            
+            # Start with a simple pattern and gradually add complexity
+            text = "Email me at user@example.com or admin@test.org"
+            
+            # Step 1: Match the basic structure
+            pattern1 = re.compile(r'\w+@\w+\.\w+')
+            print(f"Pattern 1 matches: {pattern1.findall(text)}")
+            
+            # Step 2: Refine the username part
+            pattern2 = re.compile(r'[a-zA-Z0-9._-]+@\w+\.\w+')
+            print(f"Pattern 2 matches: {pattern2.findall(text)}")
+            
+            # Step 3: Refine the domain part
+            pattern3 = re.compile(r'[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.\w+')
+            print(f"Pattern 3 matches: {pattern3.findall(text)}")
+            
+            # Step 4: Refine the TLD part
+            pattern4 = re.compile(r'[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}')
+            print(f"Pattern 4 matches: {pattern4.findall(text)}")
+                        </code></pre>
+                        
+                        <h4>Building a Simple Regex Debugger</h4>
+                        <pre><code>
+            import re
+            
+            def debug_regex(pattern, text, flags=0):
+                """
+                Debug a regular expression pattern against a text.
+                
+                Args:
+                    pattern: The regex pattern to debug
+                    text: The text to match against
+                    flags: Optional regex flags
+                    
+                Returns:
+                    None (prints debugging information)
+                """
+                print(f"Pattern: {pattern}")
+                print(f"Text: {text}")
+                print(f"Flags: {flags}")
+                
+                try:
+                    # Compile the pattern
+                    compiled = re.compile(pattern, flags)
+                    print("Pattern compiled successfully.")
+                    
+                    # Try a match
+                    match = compiled.search(text)
+                    
+                    if match:
+                        print("\nMatch found!")
+                        print(f"Match span: {match.span()}")
+                        print(f"Matched text: '{match.group()}'")
+                        
+                        # Print all groups
+                        if match.groups():
+                            print("\nGroups:")
+                            for i, group in enumerate(match.groups(), 1):
+                                print(f"  Group {i}: '{group}'")
+                        
+                        # Print named groups
+                        if match.groupdict():
+                            print("\nNamed groups:")
+                            for name, value in match.groupdict().items():
+                                print(f"  {name}: '{value}'")
+                    else:
+                        print("\nNo match found.")
+                        
+                        # Try to find where the pattern fails
+                        for i in range(len(text) + 1):
+                            if compiled.match(text[:i]):
+                                last_match = i
+                        
+                        if 'last_match' in locals():
+                            print(f"Pattern matches up to: '{text[:last_match]}'")
+                            print(f"Failed at: '{text[last_match:last_match+10]}...'")
+                        
+                    # Find all matches
+                    all_matches = compiled.findall(text)
+                    if all_matches:
+                        print(f"\nAll matches: {all_matches}")
+                        
+                except re.error as e:
+                    print(f"\nRegex error: {e}")
+                    if 'position' in dir(e):
+                        print(f"Error at position {e.pos}: {pattern[:e.pos]}>>>HERE>>>{pattern[e.pos:]}")
+            
+            # Example usage
+            debug_regex(r'(\w+)@(\w+)\.(\w+)', "Contact us at user@example.com or admin@test.org")
+                        </code></pre>
+                        
+                        <h4>Using Online Tools</h4>
+                        <p>Several online tools can help you visualize and debug your regex patterns:</p>
+                        <ul>
+                            <li><a href="https://regex101.com/" target="_blank">Regex101</a></li>
+                            <li><a href="https://regexr.com/" target="_blank">RegExr</a></li>
+                            <li><a href="https://www.debuggex.com/" target="_blank">Debuggex</a></li>
+                        </ul>
+                        
+                        <p>These tools provide real-time feedback, explanation of your pattern, and often visualize the matching process, which can be incredibly helpful for understanding complex patterns.</p>
+                    </section>
+                    
+                    <section class="regex-in-practice">
+                        <h3>Regular Expressions in Practice</h3>
+                        
+                        <p>Here are some common use cases and examples of how regular expressions can be applied in real-world projects:</p>
+                        
+                        <h4>Data Cleaning and Preparation</h4>
+                        <pre><code>
+            import re
+            import pandas as pd
+            
+            def clean_data(df, text_column):
+                """
+                Clean a text column in a DataFrame.
+                
+                Args:
+                    df: pandas DataFrame
+                    text_column: Name of the text column to clean
+                    
+                Returns:
+                    DataFrame with cleaned text column
+                """
+                # Create a copy to avoid modifying the original
+                cleaned_df = df.copy()
+                
+                # Apply cleaning operations
+                cleaned_df[text_column] = cleaned_df[text_column].apply(lambda x: x.lower() if isinstance(x, str) else x)
+                
+                # Remove HTML tags
+                cleaned_df[text_column] = cleaned_df[text_column].apply(
+                    lambda x: re.sub(r'<[^>]+>', '', x) if isinstance(x, str) else x
+                )
+                
+                # Remove URLs
+                cleaned_df[text_column] = cleaned_df[text_column].apply(
+                    lambda x: re.sub(r'https?://\S+|www\.\S+', '', x) if isinstance(x, str) else x
+                )
+                
+                # Remove special characters and numbers
+                cleaned_df[text_column] = cleaned_df[text_column].apply(
+                    lambda x: re.sub(r'[^\w\s]', '', x) if isinstance(x, str) else x
+                )
+                
+                # Replace multiple spaces with a single space
+                cleaned_df[text_column] = cleaned_df[text_column].apply(
+                    lambda x: re.sub(r'\s+', ' ', x).strip() if isinstance(x, str) else x
+                )
+                
+                return cleaned_df
+            
+            # Example usage
+            # data = pd.DataFrame({
+            #     'text': [
+            #         "Check out our website at https://example.com!",
+            #         "This <b>product</b> costs $19.99",
+            #         "Contact us at support@example.com"
+            #     ]
+            # })
+            # cleaned_data = clean_data(data, 'text')
+            # print(cleaned_data)
+                        </code></pre>
+                        
+                        <h4>Form Validation in Web Applications</h4>
+                        <pre><code>
+            import re
+            from flask import Flask, request, jsonify
+            
+            app = Flask(__name__)
+            
+            def validate_email(email):
+                """Validate email format."""
+                pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+                return bool(re.match(pattern, email))
+            
+            def validate_password(password):
+                """
+                Validate password strength.
+                Requirements:
+                - At least 8 characters
+                - Contains at least one digit
+                - Contains at least one uppercase letter
+                - Contains at least one lowercase letter
+                - Contains at least one special character
+                """
+                pattern = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$'
+                return bool(re.match(pattern, password))
+            
+            @app.route('/register', methods=['POST'])
+            def register():
+                """Handle user registration."""
+                data = request.json
+                email = data.get('email', '')
+                password = data.get('password', '')
+                
+                errors = {}
+                
+                if not validate_email(email):
+                    errors['email'] = "Please enter a valid email address."
+                
+                if not validate_password(password):
+                    errors['password'] = ("Password must be at least 8 characters and contain "
+                                         "at least one digit, one uppercase letter, "
+                                         "one lowercase letter, and one special character.")
+                
+                if errors:
+                    return jsonify({"success": False, "errors": errors}), 400
+                
+                # Process valid registration here...
+                
+                return jsonify({"success": True, "message": "Registration successful!"}), 200
+            
+            # Run the app
+            # if __name__ == '__main__':
+            #     app.run(debug=True)
+                        </code></pre>
+                        
+                        <h4>Natural Language Processing</h4>
+                        <pre><code>
+            import re
+            from collections import Counter
+            
+            def tokenize_text(text):
+                """
+                Tokenize text into words, removing punctuation and converting to lowercase.
+                
+                Args:
+                    text: String to tokenize
+                    
+                Returns:
+                    List of tokens
+                """
+                # Convert to lowercase
+                text = text.lower()
+                
+                # Replace non-alphanumeric characters with spaces
+                text = re.sub(r'[^\w\s]', ' ', text)
+                
+                # Split on whitespace and filter out empty tokens
+                tokens = [token for token in text.split() if token]
+                
+                return tokens
+            
+            def extract_ngrams(text, n=2):
+                """
+                Extract n-grams from text.
+                
+                Args:
+                    text: Input text
+                    n: Size of n-grams (default: 2)
+                    
+                Returns:
+                    List of n-grams
+                """
+                # Tokenize the text
+                tokens = tokenize_text(text)
+                
+                # Generate n-grams
+                ngrams = [' '.join(tokens[i:i+n]) for i in range(len(tokens) - n + 1)]
+                
+                return ngrams
+            
+            def extract_entities(text):
+                """
+                Extract potential named entities from text.
+                
+                Args:
+                    text: Input text
+                    
+                Returns:
+                    List of potential named entities
+                """
+                # Pattern for potential named entities (capitalized words)
+                pattern = r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b'
+                
+                # Find all matches
+                entities = re.findall(pattern, text)
+                
+                return entities
+            
+            def simple_text_analysis(text):
+                """
+                Perform simple text analysis using regex.
+                
+                Args:
+                    text: Text to analyze
+                    
+                Returns:
+                    Dictionary with analysis results
+                """
+                # Basic cleaning
+                text = re.sub(r'\s+', ' ', text).strip()
+                
+                # Tokenize
+                tokens = tokenize_text(text)
+                
+                # Count word frequencies
+                word_freq = Counter(tokens)
+                
+                # Extract potential entities
+                entities = extract_entities(text)
+                
+                # Extract bigrams
+                bigrams = extract_ngrams(text, 2)
+                
+                # Count sentences (approximately)
+                sentences = re.split(r'[.!?]+', text)
+                sentences = [s.strip() for s in sentences if s.strip()]
+                
+                # Estimate reading time (average reading speed: 200 words per minute)
+                reading_time = len(tokens) / 200  # in minutes
+                
+                return {
+                    'word_count': len(tokens),
+                    'unique_words': len(word_freq),
+                    'sentence_count': len(sentences),
+                    'most_common_words': word_freq.most_common(10),
+                    'potential_entities': entities,
+                    'reading_time_minutes': reading_time,
+                    'sample_bigrams': bigrams[:10] if bigrams else []
+                }
+            
+            # Example usage
+            sample_text = """
+            Natural language processing (NLP) is a subfield of linguistics, computer science, and artificial intelligence 
+            concerned with the interactions between computers and human language. The goal is to enable computers to 
+            process and understand human language. Challenges in NLP include speech recognition, natural language understanding,
+            and natural language generation. Companies like Google, Microsoft, and OpenAI are leaders in NLP research.
+            """
+            
+            analysis = simple_text_analysis(sample_text)
+            for key, value in analysis.items():
+                if key == 'most_common_words':
+                    print(f"\n{key}:")
+                    for word, count in value:
+                        print(f"  {word}: {count}")
+                elif key == 'potential_entities':
+                    print(f"\n{key}:")
+                    for entity in value:
+                        print(f"  {entity}")
+                elif key == 'sample_bigrams':
+                    print(f"\n{key}:")
+                    for bigram in value:
+                        print(f"  {bigram}")
+                else:
+                    print(f"\n{key}: {value}")
+                        </code></pre>
+                    </section>
+                </main>
+                
+                <footer>
+                    <p>Python Full Stack Developer Course &copy; 2025. All rights reserved.</p>
+                </footer>
+            </body>
+            </html>

@@ -1,0 +1,2355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Standard Library: random for Random Number Generation</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Standard Library: random for Random Number Generation</h1>
+        <h2>Understanding and Using Pseudorandom Number Generation in Python</h2>
+    </header>
+
+    <main>
+        <section class="lecture-intro">
+            <h3>Introduction to Randomness in Computing</h3>
+            <p>Randomness is a fundamental concept in computing that touches many aspects of programming—from simple games and simulations to sophisticated cryptographic systems and statistical sampling. The ability to generate unpredictable or seemingly random values is essential in various applications.</p>
+            
+            <p>However, true randomness is a complex philosophical and scientific concept. Most computing systems don't actually generate true random numbers—they create "pseudorandom" numbers, which are sequences of numbers that appear random but are actually determined by an initial value called a "seed."</p>
+            
+            <p>Think of pseudorandomness like shuffling a deck of cards. If you use the same shuffling technique starting from the same deck arrangement, you'll get the same "random" order every time. What makes it seem random is that a small change in the starting conditions leads to a completely different outcome—a property known as "sensitivity to initial conditions."</p>
+            
+            <p>Python's <code>random</code> module provides a suite of functions that generate pseudorandom numbers suitable for a wide range of applications. In this lecture, we'll explore how to use these functions effectively and understand their strengths and limitations.</p>
+        </section>
+
+        <section class="module-overview">
+            <h3>The random Module: Pseudorandom Number Generator Toolkit</h3>
+            
+            <p>The <code>random</code> module implements pseudorandom number generators for various distributions. At its core, it uses the Mersenne Twister algorithm, a widely-used and well-tested generator that produces high-quality pseudorandom numbers.</p>
+            
+            <p>Let's import the module and explore what it offers:</p>
+            
+            <pre><code>
+# Import the module
+import random
+            </code></pre>
+            
+            <p>The <code>random</code> module functions can be grouped into several categories:</p>
+            <ul>
+                <li><strong>Basic random generation</strong>: Functions for generating random integers, floats, and bits</li>
+                <li><strong>Sequence operations</strong>: Functions for selecting random elements, shuffling, and sampling from sequences</li>
+                <li><strong>Distribution functions</strong>: Functions that generate random numbers according to various statistical distributions</li>
+                <li><strong>Seeding and state functions</strong>: Functions to control the randomness by setting or getting the generator's internal state</li>
+            </ul>
+        </section>
+
+        <section class="basic-random">
+            <h3>Basic Random Number Generation</h3>
+            
+            <p>Let's start with the most commonly used functions for generating basic random values.</p>
+            
+            <h4>Generating Random Floats</h4>
+            <pre><code>
+# Generate a random float in the range [0.0, 1.0)
+# (includes 0.0 but excludes 1.0)
+value = random.random()
+print(f"Random value between 0 and 1: {value}")
+
+# Generate a random float within a specific range [a, b]
+# (includes both a and b)
+a, b = 10, 20
+value = random.uniform(a, b)
+print(f"Random value between {a} and {b}: {value}")
+            </code></pre>
+            
+            <h4>Generating Random Integers</h4>
+            <pre><code>
+# Generate a random integer within a range [a, b]
+# (includes both a and b)
+a, b = 1, 10
+value = random.randint(a, b)
+print(f"Random integer between {a} and {b}: {value}")
+
+# Generate a random integer within a range [a, b) 
+# (includes a but excludes b)
+a, b = 1, 10
+value = random.randrange(a, b)
+print(f"Random integer between {a} and {b-1}: {value}")
+
+# Generate a random integer with a step
+# For example, random even number between 0 and 10
+start, stop, step = 0, 11, 2
+value = random.randrange(start, stop, step)
+print(f"Random even number between {start} and {stop-1}: {value}")
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Simple Dice Roller</h4>
+                <p>Here's a simple but practical example of using random integers to simulate dice rolls:</p>
+                
+                <pre><code>
+import random
+
+class DiceRoller:
+    """A class for simulating dice rolls."""
+    
+    def __init__(self):
+        """Initialize the dice roller."""
+        self.history = []
+    
+    def roll(self, num_dice=1, sides=6):
+        """
+        Roll a specified number of dice with the given number of sides.
+        
+        Args:
+            num_dice: Number of dice to roll (default: 1)
+            sides: Number of sides on each die (default: 6)
+            
+        Returns:
+            List of individual die results and the total
+        """
+        if num_dice < 1:
+            raise ValueError("Number of dice must be at least 1")
+        if sides < 2:
+            raise ValueError("Number of sides must be at least 2")
+        
+        # Roll the dice
+        results = [random.randint(1, sides) for _ in range(num_dice)]
+        total = sum(results)
+        
+        # Store in history
+        roll_record = {
+            'dice': num_dice,
+            'sides': sides,
+            'results': results,
+            'total': total
+        }
+        self.history.append(roll_record)
+        
+        return results, total
+    
+    def get_roll_history(self):
+        """Get the history of all rolls."""
+        return self.history
+
+# Example usage
+dice = DiceRoller()
+
+# Roll a single 6-sided die
+results, total = dice.roll()
+print(f"Rolled a d6: {results[0]}")
+
+# Roll multiple dice
+results, total = dice.roll(3, 6)
+print(f"Rolled 3d6: {results} (Total: {total})")
+
+# Roll a 20-sided die (like in D&D)
+results, total = dice.roll(1, 20)
+print(f"Rolled a d20: {results[0]}")
+
+# Roll percentile dice (d100)
+results, total = dice.roll(1, 100)
+print(f"Rolled d100: {results[0]}%")
+
+# Roll 4d6 (common for generating D&D character stats)
+character_stats = []
+for _ in range(6):  # Generate 6 stats
+    results, total = dice.roll(4, 6)
+    # Typically, you sum the highest 3 rolls
+    stat_value = sum(sorted(results)[1:])
+    character_stats.append(stat_value)
+    print(f"Rolled 4d6: {results} (Using highest 3: {stat_value})")
+
+print(f"Character stats: {character_stats}")
+                </code></pre>
+                
+                <p>This example shows how random integer generation can be used to create a dice rolling system, which is fundamental to many games and simulations. The class keeps track of roll history and supports different dice configurations, making it useful for tabletop role-playing games or any application that relies on dice mechanics.</p>
+            </div>
+        </section>
+
+        <section class="sequence-operations">
+            <h3>Random Operations on Sequences</h3>
+            
+            <p>The <code>random</code> module provides several functions for working with sequences (like lists, tuples, and strings). These are extremely useful for tasks like shuffling cards, selecting random items, or creating random samples.</p>
+            
+            <h4>Selecting a Random Element</h4>
+            <pre><code>
+# Select a random element from a sequence
+fruits = ['apple', 'banana', 'cherry', 'date', 'elderberry']
+random_fruit = random.choice(fruits)
+print(f"Randomly selected fruit: {random_fruit}")
+
+# Select multiple random elements (with replacement)
+# This means the same element can be selected multiple times
+random_fruits = random.choices(fruits, k=3)
+print(f"Random selection with replacement: {random_fruits}")
+
+# Select multiple random elements (without replacement)
+# This ensures each element is selected at most once
+random_sample = random.sample(fruits, k=3)
+print(f"Random sample without replacement: {random_sample}")
+            </code></pre>
+            
+            <h4>Shuffling a Sequence</h4>
+            <pre><code>
+# Create a list to shuffle
+cards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+print(f"Original list: {cards}")
+
+# Shuffle the list in-place
+random.shuffle(cards)
+print(f"Shuffled list: {cards}")
+
+# Note: shuffle() modifies the list in-place and returns None
+# It doesn't work on immutable sequences like strings or tuples
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Card Game Dealer</h4>
+                <p>Here's a more comprehensive example showing how to simulate a card dealer for games:</p>
+                
+                <pre><code>
+import random
+
+class CardDealer:
+    """A class for simulating a deck of cards and dealing operations."""
+    
+    # Constants for card suits and ranks
+    SUITS = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
+    RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace']
+    
+    def __init__(self, num_decks=1, jokers=False):
+        """
+        Initialize the dealer with a specified number of decks.
+        
+        Args:
+            num_decks: Number of decks to use (default: 1)
+            jokers: Whether to include jokers (default: False)
+        """
+        self.num_decks = num_decks
+        self.jokers = jokers
+        self.reset()
+    
+    def reset(self):
+        """Reset to a new, full, shuffled deck."""
+        # Create a full deck
+        self.cards = []
+        for _ in range(self.num_decks):
+            for suit in self.SUITS:
+                for rank in self.RANKS:
+                    self.cards.append((rank, suit))
+            
+            # Add jokers if specified
+            if self.jokers:
+                self.cards.append(('Joker', 'Red'))
+                self.cards.append(('Joker', 'Black'))
+        
+        # Shuffle the deck
+        self.shuffle()
+        
+        # Clear discard pile
+        self.discarded = []
+    
+    def shuffle(self):
+        """Shuffle the current deck."""
+        random.shuffle(self.cards)
+    
+    def deal(self, num_cards=1):
+        """
+        Deal a specified number of cards from the deck.
+        
+        Args:
+            num_cards: Number of cards to deal (default: 1)
+            
+        Returns:
+            A list of dealt cards
+        """
+        if num_cards > len(self.cards):
+            raise ValueError(f"Cannot deal {num_cards} cards. Only {len(self.cards)} remain.")
+        
+        # Deal cards from the end of the list (top of the deck)
+        dealt_cards = []
+        for _ in range(num_cards):
+            dealt_cards.append(self.cards.pop())
+        
+        return dealt_cards
+    
+    def deal_hand(self, num_hands, cards_per_hand):
+        """
+        Deal multiple hands with a specified number of cards per hand.
+        
+        Args:
+            num_hands: Number of hands to deal
+            cards_per_hand: Number of cards in each hand
+            
+        Returns:
+            A list of hands, where each hand is a list of cards
+        """
+        total_cards_needed = num_hands * cards_per_hand
+        if total_cards_needed > len(self.cards):
+            raise ValueError(f"Not enough cards. Need {total_cards_needed}, but only {len(self.cards)} remain.")
+        
+        # Deal cards to each hand in rotation (like in a real card game)
+        hands = [[] for _ in range(num_hands)]
+        for _ in range(cards_per_hand):
+            for hand in hands:
+                hand.append(self.cards.pop())
+        
+        return hands
+    
+    def discard(self, cards):
+        """
+        Add cards to the discard pile.
+        
+        Args:
+            cards: A single card or list of cards to discard
+        """
+        if not isinstance(cards, list):
+            cards = [cards]
+        
+        self.discarded.extend(cards)
+    
+    def get_remaining(self):
+        """Get the number of cards remaining in the deck."""
+        return len(self.cards)
+    
+    def get_discarded(self):
+        """Get the number of cards in the discard pile."""
+        return len(self.discarded)
+    
+    @staticmethod
+    def format_card(card):
+        """Format a card tuple as a string."""
+        rank, suit = card
+        return f"{rank} of {suit}"
+
+# Example usage
+dealer = CardDealer()
+
+# Deal a single card
+card = dealer.deal()[0]
+print(f"Dealt card: {dealer.format_card(card)}")
+
+# Deal a poker hand (5 cards)
+poker_hand = dealer.deal(5)
+print("Poker hand:")
+for card in poker_hand:
+    print(f"  {dealer.format_card(card)}")
+
+# Deal multiple hands for a game
+print("\nDealing 4 hands with 5 cards each:")
+hands = dealer.deal_hand(4, 5)
+for i, hand in enumerate(hands):
+    print(f"Hand {i+1}:")
+    for card in hand:
+        print(f"  {dealer.format_card(card)}")
+
+# Check remaining cards
+print(f"\nRemaining cards: {dealer.get_remaining()}")
+
+# Discard a hand and check the discard pile
+dealer.discard(hands[0])
+print(f"Discarded cards: {dealer.get_discarded()}")
+
+# Reset to a fresh deck
+dealer.reset()
+print(f"After reset - Remaining cards: {dealer.get_remaining()}")
+                </code></pre>
+                
+                <p>This example demonstrates a robust card dealing system that could be used in various card games. It showcases several random operations including shuffling and supports multiple decks, jokers, dealing hands, and tracking discarded cards.</p>
+            </div>
+        </section>
+
+        <section class="distributions">
+            <h3>Statistical Distributions</h3>
+            
+            <p>The real power of the <code>random</code> module becomes apparent when you need to generate random numbers that follow specific statistical distributions. These functions are extremely useful for simulations, scientific computing, and statistical modeling.</p>
+            
+            <h4>Common Distributions</h4>
+            <pre><code>
+# Normal (Gaussian) distribution
+# Parameters: mean (mu) and standard deviation (sigma)
+mu, sigma = 0, 1  # Standard normal distribution
+value = random.normalvariate(mu, sigma)
+print(f"Random value from normal distribution (μ={mu}, σ={sigma}): {value}")
+
+# Exponential distribution
+# Parameter: lambda (rate parameter)
+lambda_param = 1.5
+value = random.expovariate(lambda_param)
+print(f"Random value from exponential distribution (λ={lambda_param}): {value}")
+
+# Uniform distribution (already covered with random.uniform())
+value = random.uniform(0, 1)
+print(f"Random value from uniform distribution [0, 1]: {value}")
+
+# Beta distribution
+# Parameters: alpha and beta shape parameters
+alpha, beta = 2, 5
+value = random.betavariate(alpha, beta)
+print(f"Random value from beta distribution (α={alpha}, β={beta}): {value}")
+
+# Gamma distribution
+# Parameters: alpha (shape) and beta (scale)
+alpha, beta = 2, 2
+value = random.gammavariate(alpha, beta)
+print(f"Random value from gamma distribution (α={alpha}, β={beta}): {value}")
+            </code></pre>
+            
+            <h4>Visualizing Distributions</h4>
+            <p>To better understand these distributions, let's generate multiple random values and plot their histograms:</p>
+            
+            <pre><code>
+import random
+import matplotlib.pyplot as plt
+
+def plot_distribution(distribution_name, random_func, num_samples=10000):
+    """
+    Generate samples from a distribution and plot the histogram.
+    
+    Args:
+        distribution_name: Name of the distribution for the plot title
+        random_func: Function that generates a random value from the distribution
+        num_samples: Number of samples to generate (default: 10000)
+    """
+    # Generate samples
+    samples = [random_func() for _ in range(num_samples)]
+    
+    # Create histogram
+    plt.figure(figsize=(10, 6))
+    plt.hist(samples, bins=50, alpha=0.7, density=True)
+    plt.title(f'{distribution_name} Distribution')
+    plt.xlabel('Value')
+    plt.ylabel('Probability Density')
+    plt.grid(alpha=0.3)
+    plt.show()
+
+# Plot standard normal distribution
+plot_distribution(
+    'Standard Normal',
+    lambda: random.normalvariate(0, 1)
+)
+
+# Plot uniform distribution
+plot_distribution(
+    'Uniform [0, 1]',
+    random.random
+)
+
+# Plot exponential distribution
+plot_distribution(
+    'Exponential (λ=1.5)',
+    lambda: random.expovariate(1.5)
+)
+
+# Plot beta distribution
+plot_distribution(
+    'Beta (α=2, β=5)',
+    lambda: random.betavariate(2, 5)
+)
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Monte Carlo Simulation</h4>
+                <p>Here's an example of using random distributions to perform a Monte Carlo simulation for estimating financial risk:</p>
+                
+                <pre><code>
+import random
+import matplotlib.pyplot as plt
+import numpy as np
+
+class InvestmentSimulator:
+    """
+    A simple Monte Carlo simulator for investment portfolios.
+    """
+    
+    def __init__(self, initial_investment, years, annual_contribution=0):
+        """
+        Initialize the simulator.
+        
+        Args:
+            initial_investment: Starting investment amount
+            years: Number of years to simulate
+            annual_contribution: Yearly additional investment (default: 0)
+        """
+        self.initial_investment = initial_investment
+        self.years = years
+        self.annual_contribution = annual_contribution
+    
+    def simulate_portfolio(self, num_simulations, mean_return, std_dev):
+        """
+        Run Monte Carlo simulations of portfolio performance.
+        
+        Args:
+            num_simulations: Number of simulations to run
+            mean_return: Expected mean annual return (e.g., 0.07 for 7%)
+            std_dev: Standard deviation of annual returns
+            
+        Returns:
+            Array of final portfolio values for each simulation
+        """
+        # Array to store final values for each simulation
+        final_values = []
+        
+        # Store one complete trajectory for plotting
+        example_trajectory = []
+        
+        for sim in range(num_simulations):
+            # Start with the initial investment
+            portfolio_value = self.initial_investment
+            
+            # If this is the first simulation, record the trajectory
+            if sim == 0:
+                example_trajectory.append(portfolio_value)
+            
+            # Simulate year by year
+            for year in range(1, self.years + 1):
+                # Generate a random annual return from a normal distribution
+                annual_return = random.normalvariate(mean_return, std_dev)
+                
+                # Apply the return to the current portfolio value
+                portfolio_value *= (1 + annual_return)
+                
+                # Add the annual contribution (if any)
+                portfolio_value += self.annual_contribution
+                
+                # Record the value for the example trajectory
+                if sim == 0:
+                    example_trajectory.append(portfolio_value)
+            
+            # Store the final value of this simulation
+            final_values.append(portfolio_value)
+        
+        return final_values, example_trajectory
+    
+    def analyze_results(self, final_values):
+        """
+        Analyze the results of the simulations.
+        
+        Args:
+            final_values: List of final portfolio values from simulations
+            
+        Returns:
+            Dictionary of analysis metrics
+        """
+        # Sort the final values for percentile calculations
+        sorted_values = sorted(final_values)
+        num_simulations = len(sorted_values)
+        
+        # Calculate statistics
+        mean_value = sum(sorted_values) / num_simulations
+        median_value = sorted_values[num_simulations // 2]
+        min_value = min(sorted_values)
+        max_value = max(sorted_values)
+        
+        # Calculate percentiles
+        percentile_10 = sorted_values[int(num_simulations * 0.1)]
+        percentile_25 = sorted_values[int(num_simulations * 0.25)]
+        percentile_75 = sorted_values[int(num_simulations * 0.75)]
+        percentile_90 = sorted_values[int(num_simulations * 0.9)]
+        
+        return {
+            'mean': mean_value,
+            'median': median_value,
+            'min': min_value,
+            'max': max_value,
+            'percentile_10': percentile_10,
+            'percentile_25': percentile_25,
+            'percentile_75': percentile_75,
+            'percentile_90': percentile_90
+        }
+    
+    def plot_results(self, final_values, example_trajectory):
+        """
+        Plot the simulation results.
+        
+        Args:
+            final_values: List of final portfolio values from simulations
+            example_trajectory: Portfolio values over time for one simulation
+        """
+        # Create a figure with two subplots
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+        
+        # Plot the distribution of final values
+        ax1.hist(final_values, bins=50, alpha=0.7, color='blue')
+        ax1.set_title('Distribution of Final Portfolio Values')
+        ax1.set_xlabel('Final Value ($)')
+        ax1.set_ylabel('Frequency')
+        ax1.grid(alpha=0.3)
+        
+        # Calculate and plot vertical lines for key statistics
+        stats = self.analyze_results(final_values)
+        ax1.axvline(stats['mean'], color='red', linestyle='dashed', linewidth=2, label=f"Mean: ${stats['mean']:.2f}")
+        ax1.axvline(stats['percentile_10'], color='orange', linestyle='dashed', linewidth=2, label=f"10th Percentile: ${stats['percentile_10']:.2f}")
+        ax1.axvline(stats['percentile_90'], color='green', linestyle='dashed', linewidth=2, label=f"90th Percentile: ${stats['percentile_90']:.2f}")
+        ax1.legend()
+        
+        # Plot the example trajectory
+        years = list(range(self.years + 1))
+        ax2.plot(years, example_trajectory, marker='o', linestyle='-', color='blue')
+        ax2.set_title('Example Portfolio Growth Over Time')
+        ax2.set_xlabel('Year')
+        ax2.set_ylabel('Portfolio Value ($)')
+        ax2.grid(alpha=0.3)
+        
+        # Format y-axis as currency
+        import matplotlib.ticker as ticker
+        formatter = ticker.StrMethodFormatter('${x:,.0f}')
+        ax2.yaxis.set_major_formatter(formatter)
+        
+        plt.tight_layout()
+        plt.show()
+    
+    def run_simulation(self, num_simulations=1000, mean_return=0.07, std_dev=0.15):
+        """
+        Run the full simulation and display results.
+        
+        Args:
+            num_simulations: Number of simulations (default: 1000)
+            mean_return: Mean annual return (default: 0.07 or 7%)
+            std_dev: Standard deviation of returns (default: 0.15 or 15%)
+        """
+        print(f"Running {num_simulations} Monte Carlo simulations...")
+        print(f"Initial investment: ${self.initial_investment:,.2f}")
+        print(f"Annual contribution: ${self.annual_contribution:,.2f}")
+        print(f"Time horizon: {self.years} years")
+        print(f"Expected annual return: {mean_return:.1%}")
+        print(f"Standard deviation: {std_dev:.1%}")
+        
+        # Run simulations
+        final_values, example_trajectory = self.simulate_portfolio(
+            num_simulations, mean_return, std_dev
+        )
+        
+        # Analyze results
+        stats = self.analyze_results(final_values)
+        
+        print("\nSimulation Results:")
+        print(f"Mean final value: ${stats['mean']:,.2f}")
+        print(f"Median final value: ${stats['median']:,.2f}")
+        print(f"Minimum final value: ${stats['min']:,.2f}")
+        print(f"Maximum final value: ${stats['max']:,.2f}")
+        print(f"10th percentile: ${stats['percentile_10']:,.2f}")
+        print(f"25th percentile: ${stats['percentile_25']:,.2f}")
+        print(f"75th percentile: ${stats['percentile_75']:,.2f}")
+        print(f"90th percentile: ${stats['percentile_90']:,.2f}")
+        
+        # Plot results
+        self.plot_results(final_values, example_trajectory)
+        
+        return final_values, stats
+
+# Example usage
+simulator = InvestmentSimulator(
+    initial_investment=10000,
+    years=30,
+    annual_contribution=1000
+)
+
+# Using lambda=1.5 means on average, each element gets swapped with ~1.5 other elements
+# Run the simulation
+final_values, stats = simulator.run_simulation(
+    num_simulations=1000,
+    mean_return=0.07,  # 7% average annual return
+    std_dev=0.15       # 15% standard deviation
+)
+                </code></pre>
+                
+                <p>This example demonstrates a Monte Carlo simulation for investment planning. It uses random numbers from a normal distribution to model annual investment returns, then analyzes the range of possible outcomes. This type of simulation helps investors understand the risk and potential rewards of different investment strategies.</p>
+            </div>
+        </section>
+
+        <section class="seeds-and-state">
+            <h3>Seeds and Reproducibility</h3>
+            
+            <p>One of the most important concepts in pseudorandom number generation is the "seed"—an initial value that determines the entire sequence of random numbers that will be generated. By setting a specific seed, you can make your random sequences reproducible, which is essential for testing, debugging, and scientific applications.</p>
+            
+            <h4>Setting and Getting Seeds</h4>
+            <pre><code>
+# Set a specific seed for reproducibility
+random.seed(42)
+value1 = random.random()
+value2 = random.random()
+print(f"With seed 42 - First value: {value1}, Second value: {value2}")
+
+# Reset the seed to the same value
+random.seed(42)
+value1_again = random.random()
+value2_again = random.random()
+print(f"With seed 42 again - First value: {value1_again}, Second value: {value2_again}")
+
+# Verify that the sequences are identical
+print(f"Values are the same: {value1 == value1_again and value2 == value2_again}")
+
+# Use the current system time as a seed (default behavior if no seed is specified)
+random.seed()
+value3 = random.random()
+print(f"With default seed - New value: {value3}")
+            </code></pre>
+            
+            <h4>Getting and Setting the State</h4>
+            <pre><code>
+# Get the current state
+random.seed(42)  # Start with a known seed
+state = random.getstate()
+
+# Generate some random numbers
+for _ in range(5):
+    print(random.random())
+
+# Restore the saved state to go back to the same sequence
+random.setstate(state)
+print("After restoring state:")
+for _ in range(5):
+    print(random.random())  # These will be the same as before
+            </code></pre>
+            
+            <div class="real-world-example">
+                <h4>Real-World Example: Reproducible Experiments</h4>
+                <p>Here's an example showing how to use seeds for reproducible machine learning experiments:</p>
+                
+                <pre><code>
+import random
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+
+class ReproducibleExperiment:
+    """A class for running reproducible machine learning experiments."""
+    
+    def __init__(self, seed=None):
+        """
+        Initialize the experiment with an optional seed.
+        
+        Args:
+            seed: Random seed for reproducibility (default: None)
+        """
+        self.seed = seed
+        self.results = []
+    
+    def set_seed(self, seed):
+        """Set the random seed for all relevant libraries."""
+        self.seed = seed
+        
+        # Set seeds for different libraries
+        random.seed(seed)
+        np.random.seed(seed)
+        
+        # If you're using TensorFlow or PyTorch, you would set their seeds here too
+        # import tensorflow as tf
+        # tf.random.set_seed(seed)
+        # import torch
+        # torch.manual_seed(seed)
+        # torch.cuda.manual_seed_all(seed)
+    
+    def generate_synthetic_data(self, num_samples=1000, num_features=10):
+        """
+        Generate synthetic data for a binary classification problem.
+        
+        Args:
+            num_samples: Number of data points to generate
+            num_features: Number of features for each data point
+            
+        Returns:
+            Tuple of (features, labels)
+        """
+        # Ensure seed is set
+        if self.seed is not None:
+            self.set_seed(self.seed)
+        
+        # Generate random feature matrix
+        X = np.random.randn(num_samples, num_features)
+        
+        # Generate labels based on a random linear combination of features
+        # plus some noise
+        weights = np.random.randn(num_features)
+        bias = np.random.randn()
+        y_score = X.dot(weights) + bias
+        y = (y_score > 0).astype(int)  # Convert to binary labels
+        
+        return X, y
+    
+    def run_experiment(self, model, X, y, test_size=0.2):
+        """
+        Run a machine learning experiment.
+        
+        Args:
+            model: The machine learning model to train
+            X: Feature matrix
+            y: Target labels
+            test_size: Proportion of data to use for testing
+            
+        Returns:
+            Dictionary of experiment results
+        """
+        # Split data into train and test sets
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=test_size, random_state=self.seed
+        )
+        
+        # Train the model
+        model.fit(X_train, y_train)
+        
+        # Make predictions
+        y_pred = model.predict(X_test)
+        
+        # Calculate accuracy
+        accuracy = accuracy_score(y_test, y_pred)
+        
+        # Store results
+        result = {
+            'seed': self.seed,
+            'model': str(model),
+            'accuracy': accuracy,
+            'test_size': test_size,
+            'train_samples': len(X_train),
+            'test_samples': len(X_test)
+        }
+        self.results.append(result)
+        
+        return result
+    
+    def run_multiple_seeds(self, model, X, y, seeds, test_size=0.2):
+        """
+        Run the same experiment with multiple seeds.
+        
+        Args:
+            model: The machine learning model to train
+            X: Feature matrix
+            y: Target labels
+            seeds: List of seeds to use
+            test_size: Proportion of data to use for testing
+            
+        Returns:
+            List of results for each seed
+        """
+        seed_results = []
+        
+        for seed in seeds:
+            # Set the current seed
+            self.set_seed(seed)
+            
+            # Run the experiment
+            result = self.run_experiment(model, X, y, test_size)
+            seed_results.append(result)
+            
+            print(f"Seed {seed}: Accuracy = {result['accuracy']:.4f}")
+        
+        # Calculate average and std dev
+        accuracies = [r['accuracy'] for r in seed_results]
+        avg_accuracy = sum(accuracies) / len(accuracies)
+        std_accuracy = (sum((a - avg_accuracy) ** 2 for a in accuracies) / len(accuracies)) ** 0.5
+        
+        print(f"\nAverage accuracy: {avg_accuracy:.4f} ± {std_accuracy:.4f}")
+        
+        return seed_results
+
+# Example usage
+experiment = ReproducibleExperiment(seed=42)
+
+# Generate synthetic data
+X, y = experiment.generate_synthetic_data()
+
+# Create a model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+
+# Run with a single seed
+result = experiment.run_experiment(model, X, y)
+print(f"Experiment result with seed {result['seed']}: Accuracy = {result['accuracy']:.4f}")
+
+# Run with multiple seeds
+seeds = [42, 123, 456, 789, 101112]
+seed_results = experiment.run_multiple_seeds(model, X, y, seeds)
+                </code></pre>
+                
+                <p>This example demonstrates the importance of setting random seeds in scientific and machine learning experiments. By controlling randomness through seeds, we can make our experiments reproducible, which is essential for verifying results and building on previous work. The code shows how to set seeds for multiple libraries and how to run experiments with multiple seeds to assess the variability of results.</p>
+            </div>
+        </section>
+
+        <section class="random-numbers-applications">
+            <h3>Practical Applications of Random Numbers</h3>
+            
+            <h4>Password Generation</h4>
+            <pre><code>
+import random
+import string
+
+def generate_password(length=12, include_uppercase=True, include_digits=True, include_symbols=True):
+    """
+    Generate a random password of the specified length.
+    
+    Args:
+        length: Length of the password (default: 12)
+        include_uppercase: Whether to include uppercase letters (default: True)
+        include_digits: Whether to include digits (default: True)
+        include_symbols: Whether to include symbols (default: True)
+        
+    Returns:
+        A random password string
+    """
+    # Define character sets
+    lowercase_letters = string.ascii_lowercase
+    uppercase_letters = string.ascii_uppercase if include_uppercase else ''
+    digits = string.digits if include_digits else ''
+    symbols = string.punctuation if include_symbols else ''
+    
+    # Combine all character sets
+    all_chars = lowercase_letters + uppercase_letters + digits + symbols
+    
+    # Ensure all character types are used at least once
+    password = []
+    
+    # Start with one character from each required set
+    if lowercase_letters:
+        password.append(random.choice(lowercase_letters))
+    
+    if uppercase_letters:
+        password.append(random.choice(uppercase_letters))
+    
+    if digits:
+        password.append(random.choice(digits))
+    
+    if symbols:
+        password.append(random.choice(symbols))
+    
+    # Fill the remaining length with random characters
+    remaining_length = length - len(password)
+    password.extend(random.choices(all_chars, k=remaining_length))
+    
+    # Shuffle the password characters to avoid predictable patterns
+    random.shuffle(password)
+    
+    # Join the characters into a string
+    return ''.join(password)
+
+# Example usage
+print("Default password (12 chars with all character types):")
+print(generate_password())
+
+print("\nLonger password (16 chars):")
+print(generate_password(length=16))
+
+print("\nDigits and letters only password:")
+print(generate_password(include_symbols=False))
+
+print("\nLetters-only password:")
+print(generate_password(include_digits=False, include_symbols=False))
+            </code></pre>
+            
+            <h4>Data Sampling and Splitting</h4>
+            <pre><code>
+import random
+
+def split_data(data, train_pct=0.7, val_pct=0.15, test_pct=0.15, seed=None):
+    """
+    Split a dataset into training, validation, and test sets.
+    
+    Args:
+        data: List of data points to split
+        train_pct: Percentage for training set (default: 0.7)
+        val_pct: Percentage for validation set (default: 0.15)
+        test_pct: Percentage for test set (default: 0.15)
+        seed: Random seed for reproducibility (default: None)
+        
+    Returns:
+        Tuple of (train_set, val_set, test_set)
+    """
+    # Check that percentages sum to 1
+    if abs(train_pct + val_pct + test_pct - 1.0) > 1e-10:
+        raise ValueError("Percentages must sum to 1")
+    
+    # Set the random seed if provided
+    if seed is not None:
+        random.seed(seed)
+    
+    # Make a copy of the data to avoid modifying the original
+    data_copy = data.copy()
+    
+    # Shuffle the data
+    random.shuffle(data_copy)
+    
+    # Calculate split indices
+    n = len(data_copy)
+    train_end = int(n * train_pct)
+    val_end = train_end + int(n * val_pct)
+    
+    # Split the data
+    train_set = data_copy[:train_end]
+    val_set = data_copy[train_end:val_end]
+    test_set = data_copy[val_end:]
+    
+    return train_set, val_set, test_set
+
+# Example usage
+# Create a dataset of numbers from 0 to 99
+dataset = list(range(100))
+
+# Split the dataset
+train_data, val_data, test_data = split_data(dataset, seed=42)
+
+print(f"Training set size: {len(train_data)}")
+print(f"Validation set size: {len(val_data)}")
+print(f"Test set size: {len(test_data)}")
+
+# Verify that the sets don't overlap
+print("\nChecking for overlaps...")
+train_set = set(train_data)
+val_set = set(val_data)
+test_set = set(test_data)
+
+print(f"Train-Val overlap: {len(train_set.intersection(val_set))}")
+print(f"Train-Test overlap: {len(train_set.intersection(test_set))}")
+print(f"Val-Test overlap: {len(val_set.intersection(test_set))}")
+
+# Check that all data points are accounted for
+all_items = train_set.union(val_set).union(test_set)
+print(f"All data accounted for: {len(all_items) == len(dataset)}")
+            </code></pre>
+        </section>
+
+        <section class="beyond-random-module">
+            <h3>Beyond the random Module</h3>
+            
+            <p>While the <code>random</code> module is excellent for most uses, there are situations where you might need alternatives:</p>
+            
+            <h4>Cryptographically Secure Random Numbers</h4>
+            <p>For security applications like generating cryptographic keys, the <code>random</code> module is NOT suitable. Instead, use the <code>secrets</code> module, which was introduced in Python 3.6:</p>
+            
+            <pre><code>
+import secrets
+
+# Generate a random token
+token = secrets.token_hex(16)  # 16 bytes = 32 hex chars
+print(f"Random token: {token}")
+
+# Generate a random URL-safe token
+url_token = secrets.token_urlsafe(16)
+print(f"URL-safe token: {url_token}")
+
+# Generate random bytes
+random_bytes = secrets.token_bytes(16)
+print(f"Random bytes: {random_bytes}")
+
+# Choose a random element from a sequence
+choices = ['apple', 'banana', 'cherry', 'date']
+random_choice = secrets.choice(choices)
+print(f"Secure random choice: {random_choice}")
+            </code></pre>
+            
+            <h4>NumPy Random Number Generation</h4>
+            <p>For scientific computing and numerical applications, NumPy's random module provides more efficient random number generation, especially for large arrays:</p>
+            
+            <pre><code>
+import numpy as np
+
+# Set a seed for reproducibility
+np.random.seed(42)
+
+# Generate a single random float
+value = np.random.random()
+print(f"Single random float: {value}")
+
+# Generate an array of random floats
+values = np.random.random(5)
+print(f"Array of random floats: {values}")
+
+# Generate random integers
+integers = np.random.randint(1, 11, size=5)  # 5 integers from 1 to 10
+print(f"Random integers: {integers}")
+
+# Generate from a normal distribution
+normal_values = np.random.normal(0, 1, size=5)  # mean=0, std=1
+print(f"Normal distribution: {normal_values}")
+
+# Using np.random.RandomState for isolated random number generators
+rng1 = np.random.RandomState(1)
+rng2 = np.random.RandomState(2)
+
+print(f"RNG1: {rng1.random(3)}")
+print(f"RNG2: {rng2.random(3)}")
+print(f"RNG1 again (same sequence): {rng1.random(3)}")
+            </code></pre>
+            
+            <h4>Using the NumPy Generator API (NumPy 1.17+)</h4>
+            <p>NumPy introduced a new random number generator API that provides better statistical properties and more control:</p>
+            
+            <pre><code>
+# NumPy's newer Generator API
+from numpy.random import Generator, PCG64
+
+# Create a generator with a specific bit generator
+rng = Generator(PCG64(12345))
+
+# Generate random numbers
+print(f"Random float: {rng.random()}")
+print(f"Random normal: {rng.normal()}")
+print(f"Random integers: {rng.integers(1, 11, size=5)}")  # Note: integers (not randint)
+
+# Create separate generators with different seeds
+rng1 = Generator(PCG64(1))
+rng2 = Generator(PCG64(2))
+
+print(f"RNG1: {rng1.random(3)}")
+print(f"RNG2: {rng2.random(3)}")
+            </code></pre>
+        </section>
+
+        <section class="best-practices">
+            <h3>Best Practices for Using Random Numbers</h3>
+            
+            <ol>
+                <li><strong>Understand Pseudorandomness</strong> - Remember that random numbers in computing are typically pseudorandom, not truly random.</li>
+                <li><strong>Set Seeds for Reproducibility</strong> - Always set a seed when reproducibility is important (tests, debugging, scientific experiments).</li>
+                <li><strong>Use the Right Tool for the Job</strong>:
+                    <ul>
+                        <li>For general use: <code>random</code> module</li>
+                        <li>For cryptographic security: <code>secrets</code> module</li>
+                        <li>For scientific computing: NumPy's random generators</li>
+                    </ul>
+                </li>
+                <li><strong>Avoid Common Mistakes</strong>:
+                    <ul>
+                        <li>Don't set the seed once and forget it in production code</li>
+                        <li>Don't use <code>random</code> for security-critical applications</li>
+                        <li>Be careful with random.sample() vs. random.choices() (with/without replacement)</li>
+                    </ul>
+                </li>
+                <li><strong>Test Randomness-Dependent Code</strong>:
+                    <ul>
+                        <li>Use fixed seeds in tests to make them deterministic</li>
+                        <li>Test with multiple seeds to ensure robustness</li>
+                        <li>Consider boundary cases (e.g., empty sequences, extreme values)</li>
+                    </ul>
+                </li>
+                <li><strong>Document Your Random Number Usage</strong>:
+                    <ul>
+                        <li>Note when and why you're setting seeds</li>
+                        <li>Document the distribution assumptions in statistical code</li>
+                    </ul>
+                </li>
+            </ol>
+            
+            <div class="gotchas">
+                <h4>Common Pitfalls and Gotchas</h4>
+                <ul>
+                    <li><strong>Subtle Bias</strong> - Some old or poorly implemented random number generators have subtle biases that can affect simulations.</li>
+                    <li><strong>Range Boundaries</strong> - Be careful with inclusive vs. exclusive ranges (<code>randint</code> vs. <code>randrange</code>).</li>
+                    <li><strong>Forgetting Seed State</strong> - Setting the seed affects all subsequent random operations, which can lead to unintended consequences.</li>
+                    <li><strong>Sampling Without Replacement from Large Sets</strong> - <code>random.sample()</code> loads the entire population into memory, which can be inefficient for large populations.</li>
+                    <li><strong>Thread Safety</strong> - The default random generator isn't thread-safe; use separate Random instances for multi-threaded code.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="exercises">
+            <h3>Practice Exercises</h3>
+            
+            <div class="exercise-item">
+                <h4>Exercise 1: Create a Random Quote Generator</h4>
+                <p>Build a random quote generator that selects and displays quotes from a collection, with options for filtering by category.</p>
+                
+                <pre><code>
+import random
+import json
+
+class QuoteGenerator:
+    """A class for generating random quotes from a collection."""
+    
+    def __init__(self, quotes_file=None):
+        """
+        Initialize the quote generator with an optional quotes file.
+        
+        Args:
+            quotes_file: Path to a JSON file containing quotes (default: None)
+        """
+        self.quotes = []
+        
+        if quotes_file:
+            self.load_quotes(quotes_file)
+    
+    def load_quotes(self, file_path):
+        """
+        Load quotes from a JSON file.
+        
+        The file should contain a list of quote objects, each with
+        'text', 'author', and optional 'category' fields.
+        
+        Args:
+            file_path: Path to the JSON file
+        """
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                self.quotes = json.load(f)
+            print(f"Loaded {len(self.quotes)} quotes from {file_path}")
+        except FileNotFoundError:
+            print(f"Quote file not found: {file_path}")
+        except json.JSONDecodeError:
+            print(f"Invalid JSON format in {file_path}")
+        except Exception as e:
+            print(f"Error loading quotes: {e}")
+    
+    def add_quote(self, text, author, category=None):
+        """
+        Add a new quote to the collection.
+        
+        Args:
+            text: The text of the quote
+            author: The author of the quote
+            category: Optional category of the quote (default: None)
+        """
+        quote = {
+            'text': text,
+            'author': author
+        }
+        
+        if category:
+            quote['category'] = category
+        
+        self.quotes.append(quote)
+    
+    def get_random_quote(self, category=None):
+        """
+        Get a random quote, optionally filtered by category.
+        
+        Args:
+            category: Optional category to filter by (default: None)
+            
+        Returns:
+            A random quote (or None if no quotes match)
+        """
+        if not self.quotes:
+            return None
+        
+        # Filter quotes by category if specified
+        filtered_quotes = self.quotes
+        if category:
+            filtered_quotes = [
+                q for q in self.quotes
+                if 'category' in q and q['category'] == category
+            ]
+        
+        if not filtered_quotes:
+            return None
+        
+        return random.choice(filtered_quotes)
+    
+    def get_categories(self):
+        """
+        Get a list of all available categories.
+        
+        Returns:
+            A sorted list of unique categories
+        """
+        categories = set()
+        for quote in self.quotes:
+            if 'category' in quote:
+                categories.add(quote['category'])
+        
+        return sorted(list(categories))
+    
+    def get_quote_count(self, category=None):
+        """
+        Get the number of quotes, optionally filtered by category.
+        
+        Args:
+            category: Optional category to filter by (default: None)
+            
+        Returns:
+            Number of quotes
+        """
+        if not category:
+            return len(self.quotes)
+        
+        return sum(1 for q in self.quotes if 'category' in q and q['category'] == category)
+    
+    def search_quotes(self, term):
+        """
+        Search for quotes containing the given term.
+        
+        Args:
+            term: Search term
+            
+        Returns:
+            List of quotes that contain the term
+        """
+        if not term:
+            return []
+        
+        term = term.lower()
+        matching_quotes = []
+        
+        for quote in self.quotes:
+            if (term in quote['text'].lower() or 
+                term in quote['author'].lower() or
+                ('category' in quote and term in quote['category'].lower())):
+                matching_quotes.append(quote)
+        
+        return matching_quotes
+    
+    def display_quote(self, quote):
+        """
+        Format and display a quote.
+        
+        Args:
+            quote: Quote object to display
+        """
+        if not quote:
+            print("No quote found.")
+            return
+        
+        print(f"\"{quote['text']}\"")
+        print(f"  — {quote['author']}")
+        if 'category' in quote:
+            print(f"  Category: {quote['category']}")
+    
+    def save_quotes(self, file_path):
+        """
+        Save the current quote collection to a JSON file.
+        
+        Args:
+            file_path: Path to save the quotes
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(self.quotes, f, indent=2)
+            print(f"Saved {len(self.quotes)} quotes to {file_path}")
+            return True
+        except Exception as e:
+            print(f"Error saving quotes: {e}")
+            return False
+
+# Example quotes to initialize the generator (normally these would come from a file)
+sample_quotes = [
+    {
+        "text": "The only way to do great work is to love what you do.",
+        "author": "Steve Jobs",
+        "category": "Inspiration"
+    },
+    {
+        "text": "Life is what happens when you're busy making other plans.",
+        "author": "John Lennon",
+        "category": "Life"
+    },
+    {
+        "text": "The future belongs to those who believe in the beauty of their dreams.",
+        "author": "Eleanor Roosevelt",
+        "category": "Inspiration"
+    },
+    {
+        "text": "In the end, it's not the years in your life that count. It's the life in your years.",
+        "author": "Abraham Lincoln",
+        "category": "Life"
+    },
+    {
+        "text": "The best way to predict the future is to invent it.",
+        "author": "Alan Kay",
+        "category": "Innovation"
+    },
+    {
+        "text": "If you want to lift yourself up, lift up someone else.",
+        "author": "Booker T. Washington",
+        "category": "Leadership"
+    },
+    {
+        "text": "Success is not final, failure is not fatal: It is the courage to continue that counts.",
+        "author": "Winston Churchill",
+        "category": "Success"
+    },
+    {
+        "text": "The only limit to our realization of tomorrow will be our doubts of today.",
+        "author": "Franklin D. Roosevelt",
+        "category": "Motivation"
+    }
+]
+
+# Create and use the quote generator
+generator = QuoteGenerator()
+
+# Add sample quotes
+for quote in sample_quotes:
+    generator.add_quote(quote['text'], quote['author'], quote.get('category'))
+
+# Display available categories
+categories = generator.get_categories()
+print("Available categories:")
+for category in categories:
+    count = generator.get_quote_count(category)
+    print(f"  {category} ({count} quotes)")
+
+# Get and display a completely random quote
+print("\nRandom Quote:")
+random_quote = generator.get_random_quote()
+generator.display_quote(random_quote)
+
+# Get and display a quote from a specific category
+print("\nRandom Inspiration Quote:")
+inspiration_quote = generator.get_random_quote("Inspiration")
+generator.display_quote(inspiration_quote)
+
+# Search for quotes
+print("\nSearching for 'future':")
+future_quotes = generator.search_quotes("future")
+for quote in future_quotes:
+    generator.display_quote(quote)
+    print()  # Add a blank line between quotes
+
+# Save the quotes to a file
+# generator.save_quotes("quotes.json")
+                </code></pre>
+            </div>
+            
+            <div class="exercise-item">
+                <h4>Exercise 2: Implement a Basic Genetic Algorithm</h4>
+                <p>Create a simple genetic algorithm that uses random operations for selection, crossover, and mutation to solve an optimization problem.</p>
+                
+                <pre><code>
+import random
+import matplotlib.pyplot as plt
+
+class GeneticAlgorithm:
+    """
+    A simple genetic algorithm implementation for optimizing a function.
+    """
+    
+    def __init__(self, fitness_func, chromosome_length, population_size=100, 
+                 mutation_rate=0.01, elite_size=10, seed=None):
+        """
+        Initialize the genetic algorithm.
+        
+        Args:
+            fitness_func: Function to evaluate fitness (higher is better)
+            chromosome_length: Length of binary chromosomes
+            population_size: Size of the population (default: 100)
+            mutation_rate: Probability of bit mutation (default: 0.01)
+            elite_size: Number of top individuals to preserve (default: 10)
+            seed: Random seed for reproducibility (default: None)
+        """
+        self.fitness_func = fitness_func
+        self.chromosome_length = chromosome_length
+        self.population_size = population_size
+        self.mutation_rate = mutation_rate
+        self.elite_size = elite_size
+        
+        # Set random seed if provided
+        if seed is not None:
+            random.seed(seed)
+        
+        # Initialize population randomly
+        self.population = self._create_initial_population()
+        
+        # Track best solution and history
+        self.best_chromosome = None
+        self.best_fitness = float('-inf')
+        self.fitness_history = []
+    
+    def _create_initial_population(self):
+        """
+        Create a random initial population.
+        
+        Returns:
+            List of random binary chromosomes
+        """
+        return [
+            [random.randint(0, 1) for _ in range(self.chromosome_length)]
+            for _ in range(self.population_size)
+        ]
+    
+    def _evaluate_fitness(self, population):
+        """
+        Evaluate the fitness of each chromosome in the population.
+        
+        Args:
+            population: List of chromosomes to evaluate
+            
+        Returns:
+            List of (chromosome, fitness) tuples, sorted by fitness
+        """
+        # Calculate fitness for each chromosome
+        fitness_results = []
+        
+        for chromosome in population:
+            fitness = self.fitness_func(chromosome)
+            fitness_results.append((chromosome, fitness))
+            
+            # Update best solution
+            if fitness > self.best_fitness:
+                self.best_fitness = fitness
+                self.best_chromosome = chromosome.copy()
+        
+        # Sort by fitness (descending)
+        fitness_results.sort(key=lambda x: x[1], reverse=True)
+        
+        return fitness_results
+    
+    def _select_parents(self, fitness_results):
+        """
+        Select parents for reproduction using roulette wheel selection.
+        
+        Args:
+            fitness_results: List of (chromosome, fitness) tuples
+            
+        Returns:
+            List of selected parent chromosomes
+        """
+        # First, preserve elites
+        elites = [chromosome for chromosome, _ in fitness_results[:self.elite_size]]
+        
+        # Select remaining parents using roulette wheel selection
+        selection_pool = []
+        
+        # Calculate total fitness
+        total_fitness = sum(fitness for _, fitness in fitness_results)
+        
+        # To handle negative fitness values, shift all values to be positive
+        min_fitness = min(fitness for _, fitness in fitness_results)
+        if min_fitness < 0:
+            adjusted_fitness = [(chromosome, fitness - min_fitness + 1) 
+                               for chromosome, fitness in fitness_results]
+            total_fitness = sum(fitness for _, fitness in adjusted_fitness)
+        else:
+            adjusted_fitness = fitness_results
+        
+        # Calculate selection probabilities
+        selection_probs = [fitness / total_fitness for _, fitness in adjusted_fitness]
+        
+        # Select parents (population_size - elite_size)
+        for _ in range(self.population_size - self.elite_size):
+            # Roulette wheel selection
+            pick = random.random()
+            current = 0
+            
+            for i, prob in enumerate(selection_probs):
+                current += prob
+                if pick <= current:
+                    selection_pool.append(fitness_results[i][0])
+                    break
+        
+        # Combine elites and selected parents
+        return elites + selection_pool
+    
+    def _crossover(self, parents):
+        """
+        Perform crossover (mating) to create offspring.
+        
+        Args:
+            parents: List of parent chromosomes
+            
+        Returns:
+            New population after crossover
+        """
+        # Preserve elites without modification
+        children = parents[:self.elite_size]
+        
+        # Create the rest through crossover
+        remaining = self.population_size - self.elite_size
+        
+        for i in range(0, remaining, 2):
+            # Select two parents
+            parent1 = random.choice(parents)
+            parent2 = random.choice(parents)
+            
+            # Perform single-point crossover
+            crossover_point = random.randint(1, self.chromosome_length - 1)
+            
+            child1 = parent1[:crossover_point] + parent2[crossover_point:]
+            child2 = parent2[:crossover_point] + parent1[crossover_point:]
+            
+            children.append(child1)
+            
+            # Add second child if needed
+            if i + 1 < remaining:
+                children.append(child2)
+        
+        return children
+    
+    def _mutate(self, population):
+        """
+        Apply random mutations to the population.
+        
+        Args:
+            population: List of chromosomes to mutate
+            
+        Returns:
+            Population after mutation
+        """
+        # Skip elites (they remain unchanged)
+        mutated_population = population[:self.elite_size]
+        
+        # Apply mutation to the rest
+        for i in range(self.elite_size, self.population_size):
+            chromosome = population[i].copy()
+            
+            # Check each bit for mutation
+            for j in range(self.chromosome_length):
+                if random.random() < self.mutation_rate:
+                    # Flip the bit
+                    chromosome[j] = 1 - chromosome[j]
+            
+            mutated_population.append(chromosome)
+        
+        return mutated_population
+    
+    def run_generation(self):
+        """
+        Run a single generation of the genetic algorithm.
+        
+        Returns:
+            Best fitness in the current generation
+        """
+        # Evaluate fitness
+        fitness_results = self._evaluate_fitness(self.population)
+        
+        # Record best fitness for history
+        best_fitness = fitness_results[0][1]
+        self.fitness_history.append(best_fitness)
+        
+        # Select parents
+        parents = self._select_parents(fitness_results)
+        
+        # Create new generation through crossover
+        offspring = self._crossover(parents)
+        
+        # Apply mutation
+        self.population = self._mutate(offspring)
+        
+        return best_fitness
+    
+    def run(self, generations=100):
+        """
+        Run the genetic algorithm for a specified number of generations.
+        
+        Args:
+            generations: Number of generations to run (default: 100)
+            
+        Returns:
+            Tuple of (best_chromosome, best_fitness, fitness_history)
+        """
+        for i in range(generations):
+            best_gen_fitness = self.run_generation()
+            print(f"Generation {i+1}: Best Fitness = {best_gen_fitness}")
+        
+        return self.best_chromosome, self.best_fitness, self.fitness_history
+    
+    def plot_fitness_history(self):
+        """Plot the fitness history."""
+        plt.figure(figsize=(10, 6))
+        plt.plot(self.fitness_history)
+        plt.title('Fitness over Generations')
+        plt.xlabel('Generation')
+        plt.ylabel('Fitness')
+        plt.grid(alpha=0.3)
+        plt.show()
+
+# Example fitness function (maximize the number of 1s)
+def count_ones_fitness(chromosome):
+    """
+    Simple fitness function that counts the number of 1s in the chromosome.
+    
+    Args:
+        chromosome: Binary list to evaluate
+        
+    Returns:
+        Number of 1s in the chromosome
+    """
+    return sum(chromosome)
+
+# Example: More complex fitness function (find a target bit pattern)
+def target_pattern_fitness(chromosome, target=None):
+    """
+    Fitness function that measures how close a chromosome is to a target pattern.
+    
+    Args:
+        chromosome: Binary list to evaluate
+        target: Target bit pattern (default: generate a random one if None)
+        
+    Returns:
+        Negative Hamming distance (higher is better)
+    """
+    if target is None:
+        # Generate a random target if not provided
+        target = [random.randint(0, 1) for _ in range(chromosome_length)]
+    
+    # Create and run the genetic algorithm
+    print(f"Target pattern: {target}")
+    
+    # Define a fitness function using the target
+    def fitness_function(chromosome):
+        return -sum(a != b for a, b in zip(chromosome, target))
+    
+    # Create the genetic algorithm
+    ga = GeneticAlgorithm(
+        fitness_func=fitness_function,
+        chromosome_length=chromosome_length,
+        population_size=population_size,
+        mutation_rate=mutation_rate,
+        seed=42  # Use a seed for reproducibility
+    )
+    
+    # Run the algorithm
+    best_chromosome, best_fitness, _ = ga.run(generations)
+    
+    # Display results
+    print("\nResults:")
+    print(f"Best chromosome: {best_chromosome}")
+    print(f"Best fitness: {best_fitness}")
+    print(f"Target: {target}")
+    print(f"Matches: {sum(1 for a, b in zip(best_chromosome, target) if a == b)} / {chromosome_length}")
+    
+    # Plot fitness history
+    ga.plot_fitness_history()
+
+# Uncomment to run the example
+# run_genetic_algorithm_example()
+                </code></pre>
+            </div>
+            
+            <div class="exercise-item">
+                <h4>Exercise 3: Create a Random Terrain Generator</h4>
+                <p>Implement a simple terrain generator using random numbers to create a heightmap for a 2D terrain.</p>
+                
+                <pre><code>
+import random
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
+
+class TerrainGenerator:
+    """A class for generating random terrain heightmaps."""
+    
+    def __init__(self, width=100, height=100, seed=None):
+        """
+        Initialize the terrain generator.
+        
+        Args:
+            width: Width of the terrain (default: 100)
+            height: Height of the terrain (default: 100)
+            seed: Random seed for reproducibility (default: None)
+        """
+        self.width = width
+        self.height = height
+        self.seed = seed
+        
+        # Set the random seed if provided
+        if seed is not None:
+            random.seed(seed)
+            np.random.seed(seed)
+        
+        # Initialize an empty heightmap
+        self.heightmap = np.zeros((height, width))
+    
+    def _normalize(self, array):
+        """
+        Normalize an array to range [0, 1].
+        
+        Args:
+            array: Array to normalize
+            
+        Returns:
+            Normalized array
+        """
+        min_val = np.min(array)
+        max_val = np.max(array)
+        range_val = max_val - min_val
+        
+        if range_val > 0:
+            return (array - min_val) / range_val
+        else:
+            return np.zeros_like(array)
+    
+    def generate_random_noise(self):
+        """
+        Generate a completely random noise heightmap.
+        
+        Returns:
+            The generated heightmap
+        """
+        self.heightmap = np.random.random((self.height, self.width))
+        return self.heightmap
+    
+    def generate_value_noise(self, octaves=4, persistence=0.5):
+        """
+        Generate a value noise heightmap.
+        
+        Args:
+            octaves: Number of octaves (layers of noise) (default: 4)
+            persistence: How much each octave contributes (default: 0.5)
+            
+        Returns:
+            The generated heightmap
+        """
+        # Start with a grid of random values
+        self.heightmap = np.zeros((self.height, self.width))
+        
+        max_value = 0
+        amplitude = 1.0
+        frequency = 1.0
+        
+        for _ in range(octaves):
+            # Add a new octave of noise
+            grid_size = int(max(self.width, self.height) / frequency)
+            if grid_size < 2:
+                break
+            
+            # Generate a grid of random values
+            grid = np.random.random((grid_size, grid_size))
+            
+            # Interpolate the grid to the full size
+            for y in range(self.height):
+                for x in range(self.width):
+                    # Calculate grid coordinates
+                    grid_x = (x / self.width) * (grid_size - 1)
+                    grid_y = (y / self.height) * (grid_size - 1)
+                    
+                    # Get the four grid points
+                    x0 = int(grid_x)
+                    y0 = int(grid_y)
+                    x1 = min(x0 + 1, grid_size - 1)
+                    y1 = min(y0 + 1, grid_size - 1)
+                    
+                    # Get interpolation weights
+                    sx = grid_x - x0
+                    sy = grid_y - y0
+                    
+                    # Bilinear interpolation
+                    n0 = grid[y0, x0]
+                    n1 = grid[y0, x1]
+                    ix0 = n0 + (n1 - n0) * sx
+                    
+                    n0 = grid[y1, x0]
+                    n1 = grid[y1, x1]
+                    ix1 = n0 + (n1 - n0) * sx
+                    
+                    value = ix0 + (ix1 - ix0) * sy
+                    
+                    # Add to heightmap
+                    self.heightmap[y, x] += value * amplitude
+            
+            max_value += amplitude
+            amplitude *= persistence
+            frequency *= 2
+        
+        # Normalize the heightmap
+        if max_value > 0:
+            self.heightmap /= max_value
+        
+        return self.heightmap
+    
+    def generate_diamond_square(self, roughness=0.5):
+        """
+        Generate terrain using the diamond-square algorithm.
+        
+        Args:
+            roughness: Roughness factor (0-1) (default: 0.5)
+            
+        Returns:
+            The generated heightmap
+        """
+        # Size must be 2^n + 1
+        n = max(self.width, self.height) - 1
+        if n <= 0 or (n & (n - 1)) != 0:  # Check if n is a power of 2
+            # Round up to the next power of 2, plus 1
+            size = 2 ** int(np.ceil(np.log2(max(self.width, self.height) - 1))) + 1
+        else:
+            size = max(self.width, self.height)
+        
+        # Create a square array
+        grid = np.zeros((size, size))
+        
+        # Set the four corners to random values
+        grid[0, 0] = random.random()
+        grid[0, size-1] = random.random()
+        grid[size-1, 0] = random.random()
+        grid[size-1, size-1] = random.random()
+        
+        # Recursively subdivide
+        step = size - 1
+        while step > 1:
+            half = step // 2
+            
+            # Diamond step
+            for y in range(half, size, step):
+                for x in range(half, size, step):
+                    # Average the four corners
+                    avg = (grid[y-half, x-half] +  # top-left
+                           grid[y-half, x+half] +  # top-right
+                           grid[y+half, x-half] +  # bottom-left
+                           grid[y+half, x+half]) / 4.0  # bottom-right
+                    
+                    # Add random offset
+                    displacement = (random.random() - 0.5) * step * roughness
+                    grid[y, x] = avg + displacement
+            
+            # Square step
+            for y in range(0, size, half):
+                for x in range((y + half) % step, size, step):
+                    # Average the four adjacent values
+                    count = 0
+                    avg = 0.0
+                    
+                    if y >= half:  # top
+                        avg += grid[y-half, x]
+                        count += 1
+                    if y + half < size:  # bottom
+                        avg += grid[y+half, x]
+                        count += 1
+                    if x >= half:  # left
+                        avg += grid[y, x-half]
+                        count += 1
+                    if x + half < size:  # right
+                        avg += grid[y, x+half]
+                        count += 1
+                    
+                    avg /= count
+                    
+                    # Add random offset
+                    displacement = (random.random() - 0.5) * step * roughness
+                    grid[y, x] = avg + displacement
+            
+            # Reduce the step size
+            step = half
+        
+        # Crop to the desired size
+        if size != max(self.width, self.height):
+            grid = grid[:self.height, :self.width]
+        
+        # Normalize
+        self.heightmap = self._normalize(grid)
+        return self.heightmap
+    
+    def apply_erosion(self, iterations=5000, droplet_lifetime=30, erosion_strength=0.3):
+        """
+        Apply hydraulic erosion to the heightmap.
+        
+        Args:
+            iterations: Number of water droplets to simulate (default: 5000)
+            droplet_lifetime: Maximum steps for each droplet (default: 30)
+            erosion_strength: How much material each droplet can erode (default: 0.3)
+            
+        Returns:
+            The eroded heightmap
+        """
+        # Make a copy of the heightmap
+        eroded = np.copy(self.heightmap)
+        
+        # Parameters for erosion
+        inertia = 0.1  # Water's tendency to keep moving in the same direction
+        gravity = 1.0  # Strength of gravity
+        capacity = 4.0  # How much sediment a droplet can carry
+        deposition = 0.1  # Rate of sediment deposition
+        evaporation = 0.01  # Rate of water evaporation
+        
+        # Create a gradient field for the heightmap
+        gradient_x, gradient_y = np.gradient(eroded)
+        
+        # For each droplet
+        for _ in range(iterations):
+            # Random starting position
+            x = random.uniform(0, self.width - 1)
+            y = random.uniform(0, self.height - 1)
+            
+            # Initial direction and velocity
+            dir_x = 0.0
+            dir_y = 0.0
+            
+            # Initial water and sediment content
+            water = 1.0
+            sediment = 0.0
+            
+            # Move the droplet
+            for _ in range(droplet_lifetime):
+                # Get the integer coordinates
+                int_x = int(x)
+                int_y = int(y)
+                
+                # Stop if we've left the map
+                if (int_x < 0 or int_x >= self.width - 1 or
+                    int_y < 0 or int_y >= self.height - 1):
+                    break
+                
+                # Calculate the droplet's heights and gradient
+                height = eroded[int_y, int_x]
+                
+                # Calculate the gradient (slope)
+                gx = gradient_x[int_y, int_x]
+                gy = gradient_y[int_y, int_x]
+                
+                # Update droplet direction
+                length = max(0.01, np.sqrt(gx*gx + gy*gy))
+                dir_x = (dir_x * inertia - gx * (1 - inertia)) / length
+                dir_y = (dir_y * inertia - gy * (1 - inertia)) / length
+                
+                # Move the droplet
+                new_x = x + dir_x
+                new_y = y + dir_y
+                
+                # Stop if we've left the map
+                new_int_x = int(new_x)
+                new_int_y = int(new_y)
+                if (new_int_x < 0 or new_int_x >= self.width - 1 or
+                    new_int_y < 0 or new_int_y >= self.height - 1):
+                    break
+                
+                # Calculate new height
+                new_height = eroded[new_int_y, new_int_x]
+                
+                # Height difference
+                height_diff = new_height - height
+                
+                # Calculate the droplet's sediment capacity
+                sediment_capacity = max(
+                    -height_diff * water * capacity,
+                    0.01
+                )
+                
+                # If moving uphill, deposit sediment
+                if height_diff > 0 or sediment > sediment_capacity:
+                    deposit_amount = (
+                        height_diff > 0 ?
+                        min(height_diff, sediment) :
+                        (sediment - sediment_capacity) * deposition
+                    )
+                    sediment -= deposit_amount
+                    eroded[int_y, int_x] += deposit_amount * erosion_strength
+                else:
+                    # Erode the terrain
+                    erode_amount = min(
+                        (sediment_capacity - sediment) * deposition,
+                        -height_diff
+                    )
+                    eroded[int_y, int_x] -= erode_amount * erosion_strength
+                    sediment += erode_amount
+                
+                # Update droplet
+                water *= (1 - evaporation)
+                x = new_x
+                y = new_y
+                
+                # Stop if the droplet has dried up
+                if water <= 0.01:
+                    break
+        
+        # Normalize the heightmap
+        self.heightmap = self._normalize(eroded)
+        return self.heightmap
+    
+    def apply_thermal_erosion(self, iterations=50, talus_angle=0.8):
+        """
+        Apply thermal erosion (material sliding down steep slopes).
+        
+        Args:
+            iterations: Number of iterations (default: 50)
+            talus_angle: Maximum stable slope angle (default: 0.8)
+            
+        Returns:
+            The eroded heightmap
+        """
+        # Make a copy of the heightmap
+        eroded = np.copy(self.heightmap)
+        
+        # For each iteration
+        for _ in range(iterations):
+            # Create a temporary heightmap to store changes
+            changes = np.zeros_like(eroded)
+            
+            # For each cell
+            for y in range(1, self.height - 1):
+                for x in range(1, self.width - 1):
+                    # Calculate height differences with neighbors
+                    center = eroded[y, x]
+                    left = eroded[y, x-1]
+                    right = eroded[y, x+1]
+                    top = eroded[y-1, x]
+                    bottom = eroded[y+1, x]
+                    
+                    # For each neighbor, calculate the height difference
+                    diffs = [
+                        center - left,
+                        center - right,
+                        center - top,
+                        center - bottom
+                    ]
+                    
+                    # Calculate the amount of material to move
+                    for i, diff in enumerate(diffs):
+                        if diff > talus_angle:
+                            # Move material to the neighbor
+                            amount = (diff - talus_angle) / 2
+                            
+                            # Record the change
+                            changes[y, x] -= amount
+                            
+                            if i == 0:  # left
+                                changes[y, x-1] += amount
+                            elif i == 1:  # right
+                                changes[y, x+1] += amount
+                            elif i == 2:  # top
+                                changes[y-1, x] += amount
+                            else:  # bottom
+                                changes[y+1, x] += amount
+            
+            # Apply the changes
+            eroded += changes
+        
+        # Normalize the heightmap
+        self.heightmap = self._normalize(eroded)
+        return self.heightmap
+    
+    def apply_island_mask(self):
+        """
+        Apply a circular mask to create an island shape.
+        
+        Returns:
+            The masked heightmap
+        """
+        # Create a distance field from the center
+        y, x = np.ogrid[:self.height, :self.width]
+        center_y, center_x = self.height / 2, self.width / 2
+        
+        # Calculate distance from center (normalized)
+        distance = np.sqrt(((x - center_x) / center_x) ** 2 +
+                           ((y - center_y) / center_y) ** 2)
+        
+        # Create a circular mask that fades from 1 at the center to 0 at the edges
+        mask = np.clip(1.0 - distance, 0, 1)
+        
+        # Apply the mask
+        self.heightmap *= mask
+        
+        return self.heightmap
+    
+    def generate_biomes(self, num_biomes=4, blur_radius=5):
+        """
+        Generate a biome map based on the heightmap.
+        
+        Args:
+            num_biomes: Number of biome types (default: 4)
+            blur_radius: Radius for blurring biome boundaries (default: 5)
+            
+        Returns:
+            A biome map (2D array of integers representing biome types)
+        """
+        # Initialize the biome map
+        biome_map = np.zeros((self.height, self.width), dtype=int)
+        
+        # Create random biome centers
+        centers = []
+        for _ in range(num_biomes):
+            x = random.randint(0, self.width - 1)
+            y = random.randint(0, self.height - 1)
+            centers.append((x, y))
+        
+        # For each cell, find the closest biome center
+        for y in range(self.height):
+            for x in range(self.width):
+                # Calculate distances to all centers
+                distances = []
+                for cx, cy in centers:
+                    # Use terrain height to influence distance (similar heights = closer)
+                    height_diff = abs(self.heightmap[y, x] - self.heightmap[cy, cx])
+                    
+                    # Weighted combination of spatial distance and height difference
+                    dist = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5
+                    weighted_dist = dist + height_diff * self.width * 0.5
+                    
+                    distances.append(weighted_dist)
+                
+                # Assign the biome of the closest center
+                biome_map[y, x] = np.argmin(distances)
+        
+        # Apply a simple blur to the biome boundaries
+        if blur_radius > 0:
+            from scipy.ndimage import gaussian_filter
+            
+            # Create a one-hot encoding of the biome map
+            one_hot = np.zeros((self.height, self.width, num_biomes))
+            for i in range(num_biomes):
+                one_hot[:, :, i] = (biome_map == i).astype(float)
+            
+            # Apply Gaussian blur to each channel
+            blurred = np.zeros_like(one_hot)
+            for i in range(num_biomes):
+                blurred[:, :, i] = gaussian_filter(one_hot[:, :, i], blur_radius)
+            
+            # Convert back to a single biome index
+            biome_map = np.argmax(blurred, axis=2)
+        
+        return biome_map
+    
+    def plot_heightmap(self, cmap='terrain'):
+        """
+        Plot the heightmap using matplotlib.
+        
+        Args:
+            cmap: Colormap to use (default: 'terrain')
+        """
+        plt.figure(figsize=(10, 10))
+        plt.imshow(self.heightmap, cmap=cmap)
+        plt.colorbar(label='Height')
+        plt.title('Terrain Heightmap')
+        plt.axis('off')
+        plt.tight_layout()
+        plt.show()
+    
+    def plot_3d(self, vertical_scale=0.3, cmap='terrain'):
+        """
+        Create a 3D plot of the terrain.
+        
+        Args:
+            vertical_scale: Scaling factor for height (default: 0.3)
+            cmap: Colormap to use (default: 'terrain')
+        """
+        from mpl_toolkits.mplot3d import Axes3D
+        
+        # Create figure and 3D axes
+        fig = plt.figure(figsize=(12, 10))
+        ax = fig.add_subplot(111, projection='3d')
+        
+        # Create a grid of coordinates
+        x, y = np.meshgrid(
+            np.linspace(0, 1, self.width),
+            np.linspace(0, 1, self.height)
+        )
+        
+        # Plot the surface
+        surf = ax.plot_surface(
+            x, y, self.heightmap * vertical_scale,
+            cmap=cmap,
+            linewidth=0,
+            antialiased=True
+        )
+        
+        # Add a color bar
+        fig.colorbar(surf, ax=ax, shrink=0.5, aspect=5)
+        
+        # Set labels and title
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Height')
+        ax.set_title('3D Terrain Visualization')
+        
+        # Adjust the viewing angle
+        ax.view_init(elev=30, azim=225)
+        
+        plt.tight_layout()
+        plt.show()
+    
+    def plot_biomes(self, biome_map, colors=None, show_heightmap=True):
+        """
+        Plot biomes and heightmap together.
+        
+        Args:
+            biome_map: Biome map array
+            colors: List of colors for each biome (default: None)
+            show_heightmap: Whether to show heightmap as shading (default: True)
+        """
+        num_biomes = biome_map.max() + 1
+        
+        # Default colors if not provided
+        if colors is None:
+            # Generate some distinct colors
+            colors = plt.cm.tab10(np.linspace(0, 1, num_biomes))
+        
+        # Create a custom colormap
+        cmap = LinearSegmentedColormap.from_list('biomes', colors, N=num_biomes)
+        
+        plt.figure(figsize=(12, 10))
+        
+        # Plot biomes
+        plt.imshow(biome_map, cmap=cmap, alpha=0.7 if show_heightmap else 1.0)
+        
+        # Overlay heightmap as shading
+        if show_heightmap:
+            plt.imshow(self.heightmap, cmap='gray', alpha=0.3)
+        
+        # Add a legend
+        from matplotlib.patches import Patch
+        legend_elements = [
+            Patch(facecolor=colors[i], edgecolor='black', label=f'Biome {i}')
+            for i in range(num_biomes)
+        ]
+        plt.legend(handles=legend_elements, loc='upper right')
+        
+        plt.title('Terrain Biomes')
+        plt.axis('off')
+        plt.tight_layout()
+        plt.show()
+
+# Example usage
+def generate_example_terrain():
+    """Generate and visualize an example terrain."""
+    # Create a terrain generator
+    width, height = 256, 256
+    generator = TerrainGenerator(width, height, seed=42)
+    
+    # Generate the heightmap using the diamond-square algorithm
+    print("Generating terrain using diamond-square algorithm...")
+    generator.generate_diamond_square(roughness=0.5)
+    
+    # Apply an island mask to create an island
+    print("Applying island mask...")
+    generator.apply_island_mask()
+    
+    # Apply thermal erosion to smooth out steep slopes
+    print("Applying thermal erosion...")
+    generator.apply_thermal_erosion()
+    
+    # Visualize the heightmap
+    print("Plotting heightmap...")
+    generator.plot_heightmap()
+    
+    # Generate biomes
+    print("Generating biomes...")
+    biome_map = generator.generate_biomes(num_biomes=5)
+    
+    # Visualize the biomes
+    print("Plotting biomes...")
+    generator.plot_biomes(biome_map)
+    
+    # Create a 3D visualization
+    print("Creating 3D visualization...")
+    generator.plot_3d()
+
+# Uncomment to run the example
+# generate_example_terrain()
+                </code></pre>
+            </div>
+        </section>
+
+        <section class="further-resources">
+            <h3>Further Resources</h3>
+            
+            <h4>Official Documentation</h4>
+            <ul>
+                <li><a href="https://docs.python.org/3/library/random.html" target="_blank">Python random Module Documentation</a></li>
+                <li><a href="https://docs.python.org/3/library/secrets.html" target="_blank">Python secrets Module Documentation</a></li>
+                <li><a href="https://numpy.org/doc/stable/reference/random/index.html" target="_blank">NumPy Random Generator Documentation</a></li>
+            </ul>
+            
+            <h4>Books and Tutorials</h4>
+            <ul>
+                <li><a href="https://realpython.com/python-random/" target="_blank">Real Python: Generating Random Data in Python</a></li>
+                <li><a href="https://pymotw.com/3/random/" target="_blank">Python Module of the Week: random</a></li>
+                <li><a href="https://www.geeksforgeeks.org/python-random-module/" target="_blank">GeeksforGeeks: Python Random Module</a></li>
+            </ul>
+            
+            <h4>Additional Resources</h4>
+            <ul>
+                <li><a href="https://numpy.org/doc/stable/reference/random/bit_generators/index.html" target="_blank">NumPy Random Bit Generators</a></li>
+                <li><a href="https://matplotlib.org/stable/gallery/statistics/histogram_features.html" target="_blank">Matplotlib: Histogram Features</a></li>
+                <li><a href="https://eli.thegreenplace.net/2018/the-basics-of-monte-carlo-simulations/" target="_blank">The Basics of Monte Carlo Simulations</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Python Full Stack Developer Course &copy; 2025. All rights reserved.</p>
+    </footer>
+</body>
+</html>

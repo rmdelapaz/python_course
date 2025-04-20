@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Paths and Operating System Differences in Python</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>File Paths and Operating System Differences in Python</h1>
+        <h2>Week 3: Python Fundamentals - File Operations</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h2>Introduction to File Paths</h2>
+            <p>Welcome to our exploration of file paths and operating system differences in Python! Whether you're writing code that needs to run on different operating systems, building file management utilities, or simply trying to understand why your script works on your machine but not your colleague's, understanding file paths is essential.</p>
+            
+            <p>File paths are like addresses for files and directories in your computer. Just like physical addresses differ in format between countries (with different conventions for street numbers, postal codes, etc.), file paths differ between operating systems. As a Python developer, you'll need to navigate these differences to write code that works consistently across platforms.</p>
+
+            <div class="folder-structure">
+                <h3>Folder Structure for Today's Examples</h3>
+                <pre>
+file_paths_examples/
+├── data/
+│   ├── sample.txt
+│   ├── nested/
+│   │   └── deep/
+│   │       └── file.txt
+│   └── output/
+│       └── processed.txt
+├── examples/
+│   ├── os_path_basics.py
+│   ├── pathlib_basics.py
+│   ├── path_operations.py
+│   ├── cross_platform.py
+│   └── temp_file_handling.py
+└── exercises/
+    ├── exercise1.py
+    ├── exercise2.py
+    └── exercise3.py
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>The Path Dilemma: Operating System Differences</h2>
+            
+            <p>Before diving into Python's solutions, let's understand the fundamental differences in how various operating systems handle file paths.</p>
+            
+            <div class="os-differences">
+                <h3>Path Separators</h3>
+                <table>
+                    <tr>
+                        <th>Operating System</th>
+                        <th>Path Separator</th>
+                        <th>Example Path</th>
+                    </tr>
+                    <tr>
+                        <td>Windows</td>
+                        <td>Backslash (\)</td>
+                        <td>C:\Users\username\Documents\file.txt</td>
+                    </tr>
+                    <tr>
+                        <td>Unix/Linux/macOS</td>
+                        <td>Forward slash (/)</td>
+                        <td>/home/username/documents/file.txt</td>
+                    </tr>
+                </table>
+                <p>This fundamental difference can cause many headaches! In Python string literals, backslashes have special meaning (like \n for newline), so Windows paths need special handling.</p>
+            </div>
+            
+            <div class="os-differences">
+                <h3>Root Directory Structure</h3>
+                <ul>
+                    <li><strong>Windows</strong>: Uses drive letters (C:, D:, etc.) followed by a backslash</li>
+                    <li><strong>Unix/Linux/macOS</strong>: Uses a single root directory (/) with mounted filesystems</li>
+                </ul>
+            </div>
+            
+            <div class="os-differences">
+                <h3>Path Conventions</h3>
+                <ul>
+                    <li><strong>Windows</strong>: Case insensitive (usually), supporting both <code>\</code> and <code>/</code> as separators</li>
+                    <li><strong>Unix/Linux/macOS</strong>: Case sensitive, using only <code>/</code> as separator</li>
+                </ul>
+            </div>
+            
+            <div class="os-differences">
+                <h3>Special Paths</h3>
+                <ul>
+                    <li><strong>Windows</strong>: Has concepts like drive letters and UNC paths (\\server\share)</li>
+                    <li><strong>Unix/Linux/macOS</strong>: Everything is a file, including devices (/dev/sda)</li>
+                </ul>
+            </div>
+            
+            <div class="os-differences">
+                <h3>Max Path Length</h3>
+                <ul>
+                    <li><strong>Windows</strong>: Traditionally limited to 260 characters (though can be extended)</li>
+                    <li><strong>Unix/Linux</strong>: Typically 4096 characters</li>
+                    <li><strong>macOS</strong>: Typically 1024 characters</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Manual String Handling (Not Recommended)</h2>
+            
+            <p>Let's first look at why handling paths manually with string operations is problematic:</p>
+            
+            <div class="code-example">
+                <h3>The Problems with Manual Path Handling</h3>
+                <pre>
+# File: examples/manual_paths.py
+
+# Windows path with backslashes
+windows_path = "C:\\Users\\username\\Documents\\file.txt"
+print(f"Windows path: {windows_path}")
+
+# Unix path with forward slashes
+unix_path = "/home/username/documents/file.txt"
+print(f"Unix path: {unix_path}")
+
+# Attempting to combine paths manually
+base_dir = "C:\\Users\\username"
+sub_dir = "Documents"
+filename = "file.txt"
+
+# This approach is error-prone!
+combined_path = base_dir + "\\" + sub_dir + "\\" + filename
+print(f"Combined path: {combined_path}")
+
+# What if we're running on Unix?
+# This would produce incorrect paths!
+                </pre>
+            </div>
+            
+            <p>The problems with manual string manipulation for paths include:</p>
+            <ul>
+                <li>Different separators between operating systems</li>
+                <li>Escaping issues with backslashes in Python strings</li>
+                <li>Handling edge cases like trailing separators</li>
+                <li>Normalizing and resolving relative paths</li>
+                <li>No built-in validation or error checking</li>
+            </ul>
+            
+            <p>Fortunately, Python provides robust tools for handling these issues!</p>
+        </section>
+
+        <section>
+            <h2>Python's os.path Module: The Classic Solution</h2>
+            
+            <p>Python's <code>os.path</code> module has been the traditional way to handle paths in a cross-platform manner. Think of it as a trusty compass that helps navigate the filesystem regardless of the operating system.</p>
+            
+            <div class="code-example">
+                <h3>Basic Path Operations with os.path</h3>
+                <pre>
+# File: examples/os_path_basics.py
+import os
+
+# Current script's directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+print(f"Script directory: {script_dir}")
+
+# Join paths using os.path.join() for cross-platform compatibility
+data_dir = os.path.join(script_dir, "data")
+file_path = os.path.join(data_dir, "sample.txt")
+print(f"Data directory: {data_dir}")
+print(f"File path: {file_path}")
+
+# Path components
+dirname = os.path.dirname(file_path)  # Directory containing the file
+basename = os.path.basename(file_path)  # Filename with extension
+filename, extension = os.path.splitext(basename)  # Split filename and extension
+print(f"Directory name: {dirname}")
+print(f"Base name: {basename}")
+print(f"Filename: {filename}")
+print(f"Extension: {extension}")
+
+# Check if paths exist
+if os.path.exists(file_path):
+    print(f"The file {file_path} exists.")
+    if os.path.isfile(file_path):
+        print("It's a file.")
+    elif os.path.isdir(file_path):
+        print("It's a directory.")
+else:
+    print(f"The file {file_path} does not exist.")
+
+# Path normalization
+messy_path = os.path.join(script_dir, "..", "data", "..", "file_paths_examples", "data", "sample.txt")
+normalized_path = os.path.normpath(messy_path)
+print(f"Messy path: {messy_path}")
+print(f"Normalized path: {normalized_path}")
+
+# Absolute vs. relative paths
+relative_path = "data/sample.txt"
+absolute_path = os.path.abspath(relative_path)
+print(f"Relative path: {relative_path}")
+print(f"Absolute path: {absolute_path}")
+                </pre>
+            </div>
+            
+            <div class="key-functions">
+                <h3>Key os.path Functions</h3>
+                <table>
+                    <tr>
+                        <th>Function</th>
+                        <th>Description</th>
+                        <th>Example</th>
+                    </tr>
+                    <tr>
+                        <td><code>os.path.join()</code></td>
+                        <td>Joins path components using the appropriate separator</td>
+                        <td><code>os.path.join('folder', 'file.txt')</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>os.path.dirname()</code></td>
+                        <td>Returns the directory name of a path</td>
+                        <td><code>os.path.dirname('/home/user/file.txt')</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>os.path.basename()</code></td>
+                        <td>Returns the base filename of a path</td>
+                        <td><code>os.path.basename('/home/user/file.txt')</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>os.path.abspath()</code></td>
+                        <td>Returns the absolute path of a path</td>
+                        <td><code>os.path.abspath('file.txt')</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>os.path.exists()</code></td>
+                        <td>Checks if a path exists</td>
+                        <td><code>os.path.exists('/home/user/file.txt')</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>os.path.isfile()</code></td>
+                        <td>Checks if a path is a file</td>
+                        <td><code>os.path.isfile('/home/user/file.txt')</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>os.path.isdir()</code></td>
+                        <td>Checks if a path is a directory</td>
+                        <td><code>os.path.isdir('/home/user')</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>os.path.splitext()</code></td>
+                        <td>Splits a path into root and extension</td>
+                        <td><code>os.path.splitext('file.txt')</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>os.path.normpath()</code></td>
+                        <td>Normalizes a path (resolves .. and .)</td>
+                        <td><code>os.path.normpath('dir/../file.txt')</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>os.path.expanduser()</code></td>
+                        <td>Expands ~ to user's home directory</td>
+                        <td><code>os.path.expanduser('~/file.txt')</code></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="real-world-example">
+                <h3>Real-world Example: Recursive File Search</h3>
+                <pre>
+# File: examples/recursive_search.py
+import os
+
+def find_files(directory, extension):
+    """Find all files with a specific extension in a directory and its subdirectories."""
+    found_files = []
+    
+    # Walk through directory structure
+    for root, dirs, files in os.walk(directory):
+        # Filter files by extension
+        for file in files:
+            if file.endswith(extension):
+                # Build full path using os.path.join
+                full_path = os.path.join(root, file)
+                found_files.append(full_path)
+    
+    return found_files
+
+# Usage
+if __name__ == "__main__":
+    # Get the directory of this script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Go up one level to the project directory
+    project_dir = os.path.dirname(script_dir)
+    
+    # Search for Python files
+    python_files = find_files(project_dir, ".py")
+    
+    print(f"Found {len(python_files)} Python files:")
+    for file in python_files:
+        # Get the relative path from the project directory
+        rel_path = os.path.relpath(file, project_dir)
+        print(f"- {rel_path}")
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>pathlib: The Modern Object-Oriented Approach</h2>
+            
+            <p>Python 3.4 introduced the <code>pathlib</code> module, which provides an object-oriented approach to file paths. It's like upgrading from a paper map to a GPS navigator—more intuitive, more powerful, and more concise.</p>
+            
+            <div class="code-example">
+                <h3>Basic Path Operations with pathlib</h3>
+                <pre>
+# File: examples/pathlib_basics.py
+from pathlib import Path
+
+# Current script's directory
+script_dir = Path(__file__).resolve().parent
+print(f"Script directory: {script_dir}")
+
+# Creating path objects
+data_dir = script_dir / "data"  # Path joining with / operator
+file_path = data_dir / "sample.txt"
+print(f"Data directory: {data_dir}")
+print(f"File path: {file_path}")
+
+# Path components
+dirname = file_path.parent  # Directory containing the file
+basename = file_path.name  # Filename with extension
+filename = file_path.stem  # Filename without extension
+extension = file_path.suffix  # File extension
+print(f"Directory name: {dirname}")
+print(f"Base name: {basename}")
+print(f"Filename: {filename}")
+print(f"Extension: {extension}")
+
+# Check if paths exist
+if file_path.exists():
+    print(f"The file {file_path} exists.")
+    if file_path.is_file():
+        print("It's a file.")
+    elif file_path.is_dir():
+        print("It's a directory.")
+else:
+    print(f"The file {file_path} does not exist.")
+
+# Path normalization is automatic
+messy_path = script_dir / ".." / "data" / ".." / "file_paths_examples" / "data" / "sample.txt"
+resolved_path = messy_path.resolve()  # Similar to normpath + abspath
+print(f"Messy path: {messy_path}")
+print(f"Resolved path: {resolved_path}")
+
+# Absolute vs. relative paths
+relative_path = Path("data/sample.txt")
+absolute_path = relative_path.absolute()
+print(f"Relative path: {relative_path}")
+print(f"Absolute path: {absolute_path}")
+
+# Home directory
+home_path = Path.home() / "documents" / "file.txt"
+print(f"Home directory path: {home_path}")
+                </pre>
+            </div>
+            
+            <div class="key-attributes">
+                <h3>Key pathlib Properties and Methods</h3>
+                <table>
+                    <tr>
+                        <th>Property/Method</th>
+                        <th>Description</th>
+                        <th>Example</th>
+                    </tr>
+                    <tr>
+                        <td><code>Path.name</code></td>
+                        <td>The filename component</td>
+                        <td><code>Path('/home/user/file.txt').name</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Path.stem</code></td>
+                        <td>The filename without extension</td>
+                        <td><code>Path('/home/user/file.txt').stem</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Path.suffix</code></td>
+                        <td>The file extension</td>
+                        <td><code>Path('/home/user/file.txt').suffix</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Path.parent</code></td>
+                        <td>The parent directory</td>
+                        <td><code>Path('/home/user/file.txt').parent</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Path.parents</code></td>
+                        <td>An iterable of all parents</td>
+                        <td><code>Path('/home/user/file.txt').parents[0]</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Path.parts</code></td>
+                        <td>A tuple of path components</td>
+                        <td><code>Path('/home/user/file.txt').parts</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Path.exists()</code></td>
+                        <td>Checks if path exists</td>
+                        <td><code>Path('/home/user/file.txt').exists()</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Path.is_file()</code></td>
+                        <td>Checks if path is a file</td>
+                        <td><code>Path('/home/user/file.txt').is_file()</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Path.is_dir()</code></td>
+                        <td>Checks if path is a directory</td>
+                        <td><code>Path('/home/user').is_dir()</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Path.resolve()</code></td>
+                        <td>Returns the absolute path without symlinks</td>
+                        <td><code>Path('file.txt').resolve()</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Path.absolute()</code></td>
+                        <td>Returns the absolute path</td>
+                        <td><code>Path('file.txt').absolute()</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Path.home()</code></td>
+                        <td>Returns user's home directory</td>
+                        <td><code>Path.home()</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>Path.glob()</code></td>
+                        <td>Returns paths matching a pattern</td>
+                        <td><code>Path('/home').glob('*.txt')</code></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="advantages">
+                <h3>Advantages of pathlib Over os.path</h3>
+                <ol>
+                    <li><strong>More intuitive syntax</strong> - The / operator for path joining feels natural</li>
+                    <li><strong>Object-oriented approach</strong> - Paths are objects with methods and properties</li>
+                    <li><strong>Chaining operations</strong> - Easier to compose multiple path operations</li>
+                    <li><strong>Built-in file operations</strong> - Methods for reading, writing, and other operations</li>
+                    <li><strong>Type safety</strong> - Distinguish between different path types (PurePath, WindowsPath, PosixPath)</li>
+                    <li><strong>Less importing</strong> - One module instead of functions spread across os, os.path, and glob</li>
+                </ol>
+            </div>
+            
+            <div class="code-example">
+                <h3>File Operations with pathlib</h3>
+                <pre>
+# File: examples/pathlib_operations.py
+from pathlib import Path
+
+# Working with a file path
+file_path = Path("data") / "sample.txt"
+
+# Reading a file
+if file_path.exists():
+    # Read entire content
+    content = file_path.read_text()
+    print(f"File content:\n{content}")
+    
+    # Read as bytes
+    binary_content = file_path.read_bytes()
+    print(f"Binary content (first 10 bytes): {binary_content[:10]}")
+    
+    # Read line by line (via open)
+    with file_path.open() as f:
+        for i, line in enumerate(f, 1):
+            print(f"Line {i}: {line.strip()}")
+
+# Writing to a file
+output_path = Path("data") / "output" / "generated.txt"
+output_path.parent.mkdir(exist_ok=True)  # Create parent directories if needed
+
+# Write text
+output_path.write_text("This is a test file.\nCreated by pathlib example.")
+print(f"Wrote text to {output_path}")
+
+# Append to file with open()
+with output_path.open('a') as f:
+    f.write("\nAppended line.")
+
+# Directory operations
+data_dir = Path("data")
+
+# List all text files
+print("\nText files in data directory:")
+for text_file in data_dir.glob("*.txt"):
+    print(f"- {text_file.name}")
+
+# Recursive search
+print("\nAll Python files in project:")
+project_dir = Path(__file__).resolve().parent.parent
+for py_file in project_dir.glob("**/*.py"):
+    print(f"- {py_file.relative_to(project_dir)}")
+                </pre>
+            </div>
+            
+            <div class="real-world-example">
+                <h3>Real-world Example: File Organizer</h3>
+                <pre>
+# File: examples/file_organizer.py
+from pathlib import Path
+import shutil
+from datetime import datetime
+
+def organize_files_by_extension(source_dir, target_dir):
+    """Organize files into subdirectories based on their extension."""
+    source_path = Path(source_dir)
+    target_path = Path(target_dir)
+    
+    # Create target directory if it doesn't exist
+    target_path.mkdir(exist_ok=True, parents=True)
+    
+    # Process all files in the source directory
+    for file_path in source_path.iterdir():
+        # Skip directories
+        if not file_path.is_file():
+            continue
+        
+        # Get extension without the dot (or 'no_extension' if none)
+        extension = file_path.suffix[1:] if file_path.suffix else "no_extension"
+        
+        # Create target subdirectory for this extension
+        extension_dir = target_path / extension
+        extension_dir.mkdir(exist_ok=True)
+        
+        # Copy file to the target directory
+        target_file = extension_dir / file_path.name
+        shutil.copy2(file_path, target_file)
+        print(f"Copied {file_path.name} to {target_file}")
+
+def organize_files_by_date(source_dir, target_dir):
+    """Organize files into subdirectories based on their modification date."""
+    source_path = Path(source_dir)
+    target_path = Path(target_dir)
+    
+    # Create target directory if it doesn't exist
+    target_path.mkdir(exist_ok=True, parents=True)
+    
+    # Process all files in the source directory
+    for file_path in source_path.iterdir():
+        # Skip directories
+        if not file_path.is_file():
+            continue
+        
+        # Get modification time
+        mod_time = datetime.fromtimestamp(file_path.stat().st_mtime)
+        date_folder = mod_time.strftime("%Y-%m-%d")
+        
+        # Create target subdirectory for this date
+        date_dir = target_path / date_folder
+        date_dir.mkdir(exist_ok=True)
+        
+        # Copy file to the target directory
+        target_file = date_dir / file_path.name
+        shutil.copy2(file_path, target_file)
+        print(f"Copied {file_path.name} to {target_file}")
+
+# Usage
+if __name__ == "__main__":
+    downloads_dir = Path.home() / "Downloads"
+    organized_by_ext = Path.home() / "Downloads" / "Organized" / "by_type"
+    organized_by_date = Path.home() / "Downloads" / "Organized" / "by_date"
+    
+    # Comment out to run with real data
+    # organize_files_by_extension(downloads_dir, organized_by_ext)
+    # organize_files_by_date(downloads_dir, organized_by_date)
+    
+    # For demonstration, use a sample directory
+    sample_dir = Path(__file__).resolve().parent.parent / "data"
+    output_dir = Path(__file__).resolve().parent.parent / "data" / "output"
+    
+    organize_files_by_extension(sample_dir, output_dir / "by_type")
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Cross-Platform Path Considerations</h2>
+            
+            <p>When developing applications that need to run on multiple operating systems, there are additional considerations beyond basic path handling.</p>
+            
+            <div class="cross-platform-issues">
+                <h3>Common Cross-Platform Challenges</h3>
+                <ul>
+                    <li><strong>Path Length Limitations</strong> - Windows has traditionally limited paths to 260 characters</li>
+                    <li><strong>Reserved Filenames</strong> - Windows has reserved names like CON, PRN, AUX, etc.</li>
+                    <li><strong>Case Sensitivity</strong> - Unix-like systems are case-sensitive, Windows typically isn't</li>
+                    <li><strong>Line Endings</strong> - Different systems use different line ending conventions (CR, LF, CRLF)</li>
+                    <li><strong>File Locking Mechanisms</strong> - Different behavior across systems</li>
+                    <li><strong>Permission Models</strong> - Unix permissions vs. Windows ACLs</li>
+                </ul>
+            </div>
+            
+            <div class="code-example">
+                <h3>Detecting the Operating System</h3>
+                <pre>
+# File: examples/detect_os.py
+import os
+import sys
+import platform
+
+# Various ways to detect the operating system
+print(f"os.name: {os.name}")  # 'posix', 'nt', 'java'
+print(f"sys.platform: {sys.platform}")  # 'linux', 'win32', 'darwin'
+print(f"platform.system(): {platform.system()}")  # 'Linux', 'Windows', 'Darwin'
+print(f"platform.platform(): {platform.platform()}")  # More detailed info
+
+# Check if we're on a specific OS
+is_windows = os.name == 'nt' or sys.platform.startswith('win')
+is_mac = sys.platform == 'darwin'
+is_linux = sys.platform.startswith('linux')
+
+print(f"Is Windows? {is_windows}")
+print(f"Is macOS? {is_mac}")
+print(f"Is Linux? {is_linux}")
+
+# Get OS-specific information
+if is_windows:
+    print(f"Windows release: {platform.release()}")
+    print(f"Windows version: {platform.version()}")
+elif is_mac:
+    print(f"macOS release: {platform.mac_ver()[0]}")
+elif is_linux:
+    print(f"Linux distribution: {platform.linux_distribution()}")  # Deprecated in Python 3.8+
+    # Alternative for newer Python versions:
+    try:
+        import distro
+        print(f"Linux distribution: {distro.name()} {distro.version()}")
+    except ImportError:
+        print("Install 'distro' package for Linux distribution information")
+                </pre>
+            </div>
+            
+            <div class="code-example">
+                <h3>Cross-Platform Path Handling</h3>
+                <pre>
+# File: examples/cross_platform.py
+import os
+import sys
+from pathlib import Path
+
+def get_app_data_dir(app_name):
+    """
+    Get the appropriate directory for storing application data,
+    depending on the operating system.
+    """
+    home = Path.home()
+    
+    # Windows: Use %APPDATA% (C:\Users\username\AppData\Roaming)
+    if os.name == 'nt':
+        app_data = Path(os.environ.get('APPDATA', str(home / 'AppData' / 'Roaming')))
+        return app_data / app_name
+    
+    # macOS: Use ~/Library/Application Support
+    elif sys.platform == 'darwin':
+        return home / 'Library' / 'Application Support' / app_name
+    
+    # Linux/Unix: Use ~/.local/share or XDG_DATA_HOME
+    else:
+        xdg_data_home = os.environ.get('XDG_DATA_HOME', str(home / '.local' / 'share'))
+        return Path(xdg_data_home) / app_name
+
+def get_config_dir(app_name):
+    """
+    Get the appropriate directory for storing configuration files,
+    depending on the operating system.
+    """
+    home = Path.home()
+    
+    # Windows: Use %APPDATA% (same as app data)
+    if os.name == 'nt':
+        app_data = Path(os.environ.get('APPDATA', str(home / 'AppData' / 'Roaming')))
+        return app_data / app_name
+    
+    # macOS: Use ~/Library/Preferences
+    elif sys.platform == 'darwin':
+        return home / 'Library' / 'Preferences' / app_name
+    
+    # Linux/Unix: Use ~/.config or XDG_CONFIG_HOME
+    else:
+        xdg_config_home = os.environ.get('XDG_CONFIG_HOME', str(home / '.config'))
+        return Path(xdg_config_home) / app_name
+
+def get_log_dir(app_name):
+    """
+    Get the appropriate directory for storing log files,
+    depending on the operating system.
+    """
+    home = Path.home()
+    
+    # Windows: Use %LOCALAPPDATA%\Logs
+    if os.name == 'nt':
+        local_app_data = Path(os.environ.get('LOCALAPPDATA', str(home / 'AppData' / 'Local')))
+        return local_app_data / app_name / 'Logs'
+    
+    # macOS: Use ~/Library/Logs
+    elif sys.platform == 'darwin':
+        return home / 'Library' / 'Logs' / app_name
+    
+    # Linux/Unix: Use ~/.local/state or XDG_STATE_HOME
+    else:
+        xdg_state_home = os.environ.get('XDG_STATE_HOME', str(home / '.local' / 'state'))
+        return Path(xdg_state_home) / app_name / 'logs'
+
+# Example usage
+if __name__ == "__main__":
+    app_name = "MyAwesomeApp"
+    
+    data_dir = get_app_data_dir(app_name)
+    config_dir = get_config_dir(app_name)
+    log_dir = get_log_dir(app_name)
+    
+    print(f"App data directory: {data_dir}")
+    print(f"Config directory: {config_dir}")
+    print(f"Log directory: {log_dir}")
+    
+    # Create these directories if they don't exist
+    for directory in [data_dir, config_dir, log_dir]:
+        directory.mkdir(parents=True, exist_ok=True)
+        print(f"Created directory: {directory}")
+                </pre>
+            </div>
+            
+            <div class="windows-specific">
+                <h3>Windows-Specific Path Challenges</h3>
+                <p>Windows paths have some unique challenges that developers should be aware of:</p>
+                
+                <h4>Long Path Support</h4>
+                <pre>
+# File: examples/windows_long_paths.py
+from pathlib import Path
+import os
+
+# Windows traditionally has a 260 character path limit
+# Modern versions of Windows with correct settings can handle longer paths
+
+def enable_long_paths_in_code():
+    """
+    Enable long path support in Python code.
+    Note: This requires Windows 10 or later with long path support enabled at the OS level.
+    """
+    if os.name == 'nt':
+        try:
+            # Try to use extended-length path prefix
+            long_prefix = '\\\\?\\'
+            return long_prefix + str(Path.cwd().absolute())
+        except Exception as e:
+            print(f"Error enabling long paths: {e}")
+            return str(Path.cwd().absolute())
+    else:
+        # Non-Windows systems don't need this
+        return str(Path.cwd().absolute())
+
+# Usage
+if os.name == 'nt':
+    print("On Windows, demonstrating long path handling...")
+    base_path = enable_long_paths_in_code()
+    print(f"Base path with long path support: {base_path}")
+    
+    # Creating a deep path structure
+    # This is for demonstration - uncomment to actually create the paths
+    """
+    deep_path = Path(base_path)
+    for i in range(30):  # Create a very deep path
+        deep_path = deep_path / f"subfolder_{i:02d}"
+        deep_path.mkdir(exist_ok=True)
+        print(f"Created: {deep_path}")
+        
+        # Create a file in each folder
+        test_file = deep_path / "test.txt"
+        test_file.write_text(f"Test file at depth {i}")
+        print(f"Created file: {test_file}")
+    """
+else:
+    print("Not on Windows, long path handling not needed.")
+                </pre>
+                
+                <h4>Reserved Names and Device Paths</h4>
+                <pre>
+# File: examples/windows_reserved_names.py
+from pathlib import Path
+import os
+
+def is_windows_reserved_name(name):
+    """Check if a name is reserved on Windows."""
+    # Windows reserved device names
+    reserved_names = {
+        'CON', 'PRN', 'AUX', 'NUL',
+        'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
+        'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'
+    }
+    
+    # Check the name without extension
+    base_name = name.split('.')[0].upper()
+    return base_name in reserved_names
+
+def safe_filename_for_windows(original_name):
+    """Create a safe filename for Windows by avoiding reserved names."""
+    if not os.name == 'nt':
+        # Not on Windows, no need to check
+        return original_name
+    
+    if is_windows_reserved_name(original_name):
+        # Add an underscore to avoid the reserved name
+        name_parts = original_name.split('.')
+        if len(name_parts) > 1:
+            # Has extension
+            extension = name_parts[-1]
+            base_name = '.'.join(name_parts[:-1])
+            return f"{base_name}_{os.urandom(2).hex()}.{extension}"
+        else:
+            # No extension
+            return f"{original_name}_{os.urandom(2).hex()}"
+    
+    return original_name
+
+# Usage
+test_names = ['normal.txt', 'CON', 'con.txt', 'COM1.csv', 'prn.log', 'file.txt']
+
+for name in test_names:
+    safe_name = safe_filename_for_windows(name)
+    reserved = is_windows_reserved_name(name)
+    print(f"Original: {name}, Reserved: {reserved}, Safe name: {safe_name}")
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Temporary Files and Directories</h2>
+            
+            <p>Creating and managing temporary files and directories is a common need that requires careful handling across platforms. Python's <code>tempfile</code> module provides cross-platform functionality for this purpose.</p>
+            
+            <div class="code-example">
+                <h3>Using the tempfile Module</h3>
+                <pre>
+# File: examples/temp_file_handling.py
+import tempfile
+import os
+from pathlib import Path
+
+# Create a temporary file
+with tempfile.NamedTemporaryFile(suffix='.txt', prefix='example_', delete=False) as temp_file:
+    # Write to the temporary file
+    temp_file.write(b"This is temporary file content.\n")
+    temp_file.write(b"It will be automatically deleted.\n")
+    
+    # Get the file path
+    temp_path = temp_file.name
+    print(f"Created temporary file: {temp_path}")
+
+# File is closed but not deleted due to delete=False
+# We can still access it
+print(f"Temporary file exists: {os.path.exists(temp_path)}")
+with open(temp_path, 'r') as f:
+    content = f.read()
+    print(f"Content: {content}")
+
+# Clean up manually
+os.unlink(temp_path)
+print(f"Deleted temporary file, exists: {os.path.exists(temp_path)}")
+
+# Create a temporary directory
+with tempfile.TemporaryDirectory(prefix='example_') as temp_dir:
+    # Convert to Path object
+    temp_dir_path = Path(temp_dir)
+    print(f"Created temporary directory: {temp_dir_path}")
+    
+    # Create some files in the temporary directory
+    for i in range(3):
+        file_path = temp_dir_path / f"file_{i}.txt"
+        file_path.write_text(f"This is file {i} in the temporary directory.")
+        print(f"Created: {file_path}")
+    
+    # List files in the directory
+    files = list(temp_dir_path.glob('*.txt'))
+    print(f"Files in temporary directory: {[f.name for f in files]}")
+
+# Directory is automatically cleaned up
+print(f"Temporary directory exists: {os.path.exists(temp_dir)}")
+
+# For long-lived temporary files/directories
+temp_base_dir = tempfile.gettempdir()
+print(f"System temp directory: {temp_base_dir}")
+
+# Creating custom temp directory for your application
+app_temp_dir = Path(temp_base_dir) / "my_application_temp"
+app_temp_dir.mkdir(exist_ok=True)
+print(f"Application temp directory: {app_temp_dir}")
+
+# Creating a file in the custom temp directory
+temp_file_path = app_temp_dir / f"temp_file_{os.urandom(4).hex()}.txt"
+temp_file_path.write_text("Custom temporary file content")
+print(f"Created custom temp file: {temp_file_path}")
+
+# This would need to be cleaned up by your application when done
+# For demonstration, uncomment to clean up:
+# temp_file_path.unlink()
+# app_temp_dir.rmdir()  # Will only work if directory is empty
+                </pre>
+            </div>
+            
+            <div class="tempfile-functions">
+                <h3>Key tempfile Functions</h3>
+                <table>
+                    <tr>
+                        <th>Function</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>tempfile.gettempdir()</code></td>
+                        <td>Returns the system's temporary directory</td>
+                    </tr>
+                    <tr>
+                        <td><code>tempfile.TemporaryFile()</code></td>
+                        <td>Creates a temporary file that is automatically deleted</td>
+                    </tr>
+                    <tr>
+                        <td><code>tempfile.NamedTemporaryFile()</code></td>
+                        <td>Creates a named temporary file</td>
+                    </tr>
+                    <tr>
+                        <td><code>tempfile.TemporaryDirectory()</code></td>
+                        <td>Creates a temporary directory that is automatically deleted</td>
+                    </tr>
+                    <tr>
+                        <td><code>tempfile.mkstemp()</code></td>
+                        <td>Creates a temporary file and returns a tuple of file descriptor and path</td>
+                    </tr>
+                    <tr>
+                        <td><code>tempfile.mkdtemp()</code></td>
+                        <td>Creates a temporary directory and returns its path</td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <section>
+            <h2>Best Practices for Cross-Platform Path Handling</h2>
+            
+            <div class="best-practices">
+                <ol>
+                    <li><strong>Use pathlib or os.path</strong> - Never manually construct paths with string concatenation or hardcoded separators</li>
+                    <li><strong>Prefer pathlib for new code</strong> - It's more modern, intuitive, and powerful</li>
+                    <li><strong>Use relative paths when possible</strong> - Makes code more portable</li>
+                    <li><strong>Normalize paths</strong> - Use <code>os.path.normpath()</code> or <code>Path.resolve()</code></li>
+                    <li><strong>Check existence before operations</strong> - Use <code>os.path.exists()</code> or <code>Path.exists()</code></li>
+                    <li><strong>Create directories as needed</strong> - Use <code>os.makedirs()</code> or <code>Path.mkdir(parents=True)</code></li>
+                    <li><strong>Handle temporary files properly</strong> - Use the <code>tempfile</code> module</li>
+                    <li><strong>Be careful with case sensitivity</strong> - Some systems are case-sensitive, others aren't</li>
+                    <li><strong>Use platform-appropriate locations</strong> - For app data, config files, etc.</li>
+                    <li><strong>Handle non-ASCII characters</strong> - Be careful with encoding and decoding</li>
+                </ol>
+            </div>
+            
+            <div class="code-example">
+                <h3>Cross-Platform File Processing Template</h3>
+                <pre>
+# File: examples/cross_platform_template.py
+from pathlib import Path
+import os
+import sys
+import logging
+import tempfile
+import shutil
+
+def setup_logging(app_name):
+    """Set up logging with appropriate paths for the platform."""
+    # Determine log directory
+    if os.name == 'nt':  # Windows
+        log_dir = Path(os.environ.get('LOCALAPPDATA', str(Path.home() / 'AppData' / 'Local')))
+    elif sys.platform == 'darwin':  # macOS
+        log_dir = Path.home() / 'Library' / 'Logs'
+    else:  # Linux/Unix
+        log_dir = Path.home() / '.local' / 'share' / 'log'
+    
+    log_dir = log_dir / app_name
+    log_dir.mkdir(parents=True, exist_ok=True)
+    
+    log_file = log_dir / f"{app_name}.log"
+    
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()
+        ]
+    )
+    
+    return logging.getLogger(app_name)
+
+def process_file(input_path, output_dir=None, backup=True):
+    """
+    Process a file with proper path handling.
+    
+    Args:
+        input_path: Path to the input file
+        output_dir: Directory for output (or None to use same directory)
+        backup: Whether to create a backup before processing
+    
+    Returns:
+        Path to the output file
+    """
+    # Convert to Path objects
+    input_path = Path(input_path).resolve()
+    
+    # Check if input file exists
+    if not input_path.exists():
+        raise FileNotFoundError(f"Input file not found: {input_path}")
+    
+    # Determine output directory
+    if output_dir is None:
+        output_dir = input_path.parent
+    else:
+        output_dir = Path(output_dir).resolve()
+        output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Create backup if requested
+    if backup:
+        backup_dir = output_dir / "backups"
+        backup_dir.mkdir(exist_ok=True)
+        backup_path = backup_dir / f"{input_path.stem}_backup{input_path.suffix}"
+        shutil.copy2(input_path, backup_path)
+        logger.info(f"Created backup: {backup_path}")
+    
+    # Process the file (example: convert to uppercase)
+    # This would be replaced with your actual processing logic
+    with tempfile.NamedTemporaryFile(delete=False, suffix=input_path.suffix) as temp_file:
+        temp_path = Path(temp_file.name)
+        
+        # Read input and perform processing
+        content = input_path.read_text()
+        processed_content = content.upper()  # Example transformation
+        
+        # Write to temp file
+        temp_file.write(processed_content.encode())
+    
+    # Determine output path
+    output_path = output_dir / f"{input_path.stem}_processed{input_path.suffix}"
+    
+    # Move temp file to final destination
+    shutil.move(temp_path, output_path)
+    logger.info(f"Created processed file: {output_path}")
+    
+    return output_path
+
+# Application setup
+APP_NAME = "FileProcessor"
+logger = setup_logging(APP_NAME)
+
+# Example usage
+if __name__ == "__main__":
+    try:
+        # Get script directory
+        script_dir = Path(__file__).resolve().parent
+        
+        # Example input file
+        sample_file = script_dir.parent / "data" / "sample.txt"
+        
+        # Process the file
+        output_file = process_file(
+            sample_file,
+            output_dir=script_dir.parent / "data" / "output",
+            backup=True
+        )
+        
+        logger.info(f"Processing completed successfully: {output_file}")
+        
+    except Exception as e:
+        logger.error(f"Error processing file: {e}", exc_info=True)
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Exercises to Reinforce Learning</h2>
+            
+            <div class="exercise">
+                <h3>Exercise 1: Path Information Utility</h3>
+                <p>Create a utility that takes a path as input and provides detailed information about it, including existence, type, size, permissions, parent directories, etc.</p>
+                <pre>
+# File: exercises/path_info.py
+from pathlib import Path
+import os
+import datetime
+import stat
+
+def analyze_path(path_string):
+    """
+    Analyze a path and return detailed information about it.
+    
+    Args:
+        path_string: A string representing a file or directory path
+        
+    Returns:
+        A dictionary containing path information
+    """
+    # Your implementation here
+    # Include: exists, type, size, creation/modification time, permissions,
+    # parent directories, absolute path, etc.
+    pass
+
+# Test the function with different paths
+test_paths = [
+    "data/sample.txt",
+    "data/nonexistent.txt",
+    "data",
+    "data/../examples/os_path_basics.py",
+    "~/.bashrc"
+]
+
+for path_str in test_paths:
+    info = analyze_path(path_str)
+    print(f"\nAnalysis for: {path_str}")
+    for key, value in info.items():
+        print(f"  {key}: {value}")
+                </pre>
+            </div>
+            
+            <div class="exercise">
+                <h3>Exercise 2: Directory Synchronizer</h3>
+                <p>Create a script that synchronizes the contents of two directories, ensuring they have the same files.</p>
+                <pre>
+# File: exercises/directory_sync.py
+from pathlib import Path
+import shutil
+import filecmp
+import datetime
+
+def synchronize_directories(source_dir, target_dir, delete_extra=False, dry_run=True):
+    """
+    Synchronize two directories to ensure target has same contents as source.
+    
+    Args:
+        source_dir: Path to source directory
+        target_dir: Path to target directory
+        delete_extra: Whether to delete files in target that aren't in source
+        dry_run: If True, only list changes without applying them
+    
+    Returns:
+        A summary of actions taken
+    """
+    # Your implementation here
+    # 1. Convert paths to Path objects
+    # 2. Create target dir if it doesn't exist
+    # 3. Scan source and target directories
+    # 4. Copy/update files that are different or missing in target
+    # 5. Optionally remove files in target that aren't in source
+    # 6. Return summary of operations
+    pass
+
+# Test with example directories
+source = Path("data")
+target = Path("data/output/sync_test")
+
+# Perform a dry run first
+print("Dry run:")
+summary = synchronize_directories(source, target, delete_extra=True, dry_run=True)
+print(summary)
+
+# Ask for confirmation to apply changes
+response = input("Apply these changes? (y/n): ")
+if response.lower() == 'y':
+    summary = synchronize_directories(source, target, delete_extra=True, dry_run=False)
+    print("Changes applied:", summary)
+                </pre>
+            </div>
+            
+            <div class="exercise">
+                <h3>Exercise 3: File Finder Utility</h3>
+                <p>Build a command-line utility that finds files matching various criteria (name pattern, size range, modification time, etc.)</p>
+                <pre>
+# File: exercises/file_finder.py
+from pathlib import Path
+import argparse
+import os
+import datetime
+import fnmatch
+
+def find_files(start_dir, name_pattern=None, extension=None, min_size=None, 
+              max_size=None, modified_after=None, modified_before=None,
+              recursive=True):
+    """
+    Find files matching specified criteria.
+    
+    Args:
+        start_dir: Directory to start searching from
+        name_pattern: Glob pattern for filename matching
+        extension: File extension to match
+        min_size: Minimum file size in bytes
+        max_size: Maximum file size in bytes
+        modified_after: Only include files modified after this datetime
+        modified_before: Only include files modified before this datetime
+        recursive: Whether to search subdirectories
+    
+    Returns:
+        List of matching file paths
+    """
+    # Your implementation here
+    # Use os.walk or Path.glob/rglob to find files
+    # Apply filters based on the provided criteria
+    pass
+
+# Command-line interface
+def main():
+    parser = argparse.ArgumentParser(description="Find files matching various criteria")
+    parser.add_argument("directory", help="Directory to search in")
+    parser.add_argument("--pattern", "-p", help="Filename pattern (e.g., '*.txt')")
+    parser.add_argument("--extension", "-e", help="File extension (e.g., 'py')")
+    parser.add_argument("--min-size", type=int, help="Minimum file size in bytes")
+    parser.add_argument("--max-size", type=int, help="Maximum file size in bytes")
+    parser.add_argument("--modified-after", help="Only files modified after date (YYYY-MM-DD)")
+    parser.add_argument("--modified-before", help="Only files modified before date (YYYY-MM-DD)")
+    parser.add_argument("--no-recursive", action="store_true", help="Don't search subdirectories")
+    
+    args = parser.parse_args()
+    
+    # Convert date strings to datetime objects if provided
+    modified_after = None
+    if args.modified_after:
+        modified_after = datetime.datetime.strptime(args.modified_after, "%Y-%m-%d")
+    
+    modified_before = None
+    if args.modified_before:
+        modified_before = datetime.datetime.strptime(args.modified_before, "%Y-%m-%d")
+    
+    # Find files matching criteria
+    results = find_files(
+        args.directory,
+        name_pattern=args.pattern,
+        extension=args.extension,
+        min_size=args.min_size,
+        max_size=args.max_size,
+        modified_after=modified_after,
+        modified_before=modified_before,
+        recursive=not args.no_recursive
+    )
+    
+    # Print results
+    if results:
+        print(f"Found {len(results)} matching files:")
+        for file_path in results:
+            print(f"- {file_path}")
+    else:
+        print("No files found matching the criteria.")
+
+if __name__ == "__main__":
+    main()
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Summary</h2>
+            
+            <div class="summary">
+                <p>In this comprehensive lesson on file paths and operating system differences in Python, we've explored:</p>
+                
+                <ul>
+                    <li>The fundamental differences in path handling between Windows and Unix-like systems</li>
+                    <li>The problems with manual string handling for paths</li>
+                    <li>Using <code>os.path</code> for cross-platform path operations</li>
+                    <li>Using <code>pathlib</code> for modern, object-oriented path handling</li>
+                    <li>Handling challenging cross-platform issues like long paths and reserved names</li>
+                    <li>Working with temporary files and directories</li>
+                    <li>Best practices for writing portable, cross-platform code</li>
+                </ul>
+                
+                <p>Understanding these concepts is crucial for developing Python applications that work reliably across different operating systems. By using the right tools and following best practices, you can write code that handles file paths correctly no matter where it runs.</p>
+                
+                <p>Remember these key takeaways:</p>
+                <ol>
+                    <li>Always use <code>pathlib</code> or <code>os.path</code> instead of manual string operations</li>
+                    <li><code>pathlib</code> provides a more modern and intuitive interface</li>
+                    <li>Be aware of platform-specific issues and handle them appropriately</li>
+                    <li>Use relative paths when possible for better portability</li>
+                    <li>Always check file existence before operations to avoid errors</li>
+                    <li>Use platform-appropriate locations for application data</li>
+                </ol>
+                
+                <p>With these tools and knowledge, you're well-equipped to create robust, cross-platform Python applications that handle files and paths correctly on any system.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

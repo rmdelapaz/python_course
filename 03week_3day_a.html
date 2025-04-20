@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading and Writing Text Files in Python</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Reading and Writing Text Files in Python</h1>
+        <h2>Week 3: Python Fundamentals - Working with Files</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h2>Introduction to File I/O</h2>
+            <p>Welcome to our deep dive into file handling with Python! Being able to read from and write to files is a foundational skill that unlocks countless possibilities in your programming journey. Think of files as containers of persistent data—unlike variables that disappear when your program ends, files remain on disk, ready to be accessed again later.</p>
+            
+            <p>File handling is like having a conversation with your computer's storage system. You open a communication channel, exchange information, and then politely close the connection when you're done. This conversation follows certain protocols and conventions that we'll explore today.</p>
+
+            <div class="folder-structure">
+                <h3>Folder Structure for Today's Examples</h3>
+                <pre>
+file_io_examples/
+├── data/
+│   ├── sample.txt
+│   ├── output.txt
+│   └── numbers.txt
+├── examples/
+│   ├── basic_reading.py
+│   ├── basic_writing.py
+│   └── file_processing.py
+└── exercises/
+    ├── exercise1.py
+    ├── exercise2.py
+    └── data/
+        └── exercise_data.txt
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>The File I/O Workflow: A Restaurant Analogy</h2>
+            
+            <p>Working with files in Python follows a pattern that's similar to dining at a restaurant:</p>
+            
+            <ol>
+                <li><strong>Open the file</strong> - Like entering a restaurant and being seated at a table</li>
+                <li><strong>Read or write data</strong> - Like ordering food (writing) or eating food (reading)</li>
+                <li><strong>Close the file</strong> - Like paying the bill and leaving the restaurant</li>
+            </ol>
+            
+            <p>Just as you wouldn't want to leave a restaurant without paying (causing problems for the restaurant), you don't want to leave files open when you're done with them (causing resource leaks in your system).</p>
+
+            <div class="code-example">
+                <h3>The Basic File Workflow</h3>
+                <pre>
+# Traditional approach (not recommended)
+file = open('data/sample.txt', 'r')  # Open in read mode
+content = file.read()               # Read the content
+file.close()                        # Close the file (important!)
+
+# The recommended approach using a context manager
+with open('data/sample.txt', 'r') as file:
+    content = file.read()           # Read the content
+# File is automatically closed when the block ends
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>File Opening Modes: The Access Permissions</h2>
+            
+            <p>When opening a file, you specify a mode that determines what operations are allowed. Think of these modes as different types of passes or tickets that grant different levels of access to a secure facility:</p>
+            
+            <table>
+                <tr>
+                    <th>Mode</th>
+                    <th>Description</th>
+                    <th>Real-world Analogy</th>
+                </tr>
+                <tr>
+                    <td><code>'r'</code></td>
+                    <td>Read (default) - Open for reading</td>
+                    <td>Like a museum pass that lets you look but not touch exhibits</td>
+                </tr>
+                <tr>
+                    <td><code>'w'</code></td>
+                    <td>Write - Open for writing, creates file if it doesn't exist, truncates if it does</td>
+                    <td>Like an editor who can completely rewrite a document</td>
+                </tr>
+                <tr>
+                    <td><code>'a'</code></td>
+                    <td>Append - Open for writing, creates file if it doesn't exist, adds to end if it does</td>
+                    <td>Like a historian who can only add new entries to the end of a historical record</td>
+                </tr>
+                <tr>
+                    <td><code>'r+'</code></td>
+                    <td>Read and write - Open for both reading and writing</td>
+                    <td>Like a book club member who can both read and write notes in the margins</td>
+                </tr>
+                <tr>
+                    <td><code>'b'</code></td>
+                    <td>Binary mode (added to other modes like <code>'rb'</code> or <code>'wb'</code>)</td>
+                    <td>Like switching from reading text to reading blueprints or technical diagrams</td>
+                </tr>
+                <tr>
+                    <td><code>'t'</code></td>
+                    <td>Text mode (default, can be added like <code>'rt'</code> or <code>'wt'</code>)</td>
+                    <td>Like reading a book in your native language</td>
+                </tr>
+            </table>
+            
+            <div class="code-example">
+                <h3>Examples of Different File Modes</h3>
+                <pre>
+# Open for reading (default text mode)
+with open('data/sample.txt', 'r') as file:
+    content = file.read()
+
+# Open for writing, will create or overwrite
+with open('data/output.txt', 'w') as file:
+    file.write('Hello, world!')
+
+# Open for appending
+with open('data/log.txt', 'a') as file:
+    file.write('\nNew log entry at ' + str(datetime.now()))
+
+# Open in binary mode (for images, etc.)
+with open('data/image.jpg', 'rb') as file:
+    image_data = file.read()
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Reading Text Files: The Art of Information Extraction</h2>
+            
+            <p>Reading files is like extracting information from a book. Python gives you several ways to read, from consuming the whole book at once to reading it chapter by chapter, or even line by line.</p>
+            
+            <div class="code-example">
+                <h3>Reading an Entire File at Once</h3>
+                <pre>
+# File: examples/basic_reading.py
+with open('data/sample.txt', 'r') as file:
+    content = file.read()  # Reads the entire file as a single string
+    print(content)
+                </pre>
+            </div>
+            
+            <p>Reading the entire file is convenient for small files, but for larger files, it's like trying to eat an entire meal in one bite—not always the best approach!</p>
+            
+            <div class="code-example">
+                <h3>Reading Line by Line</h3>
+                <pre>
+# File: examples/line_reading.py
+with open('data/sample.txt', 'r') as file:
+    for line in file:
+        # Process each line
+        print(f"Line: {line.strip()}")  # strip() removes the newline character
+                </pre>
+            </div>
+            
+            <p>Reading line by line is like eating a meal one bite at a time—much more manageable for larger files and often exactly what you need for text processing.</p>
+            
+            <div class="code-example">
+                <h3>Reading Lines into a List</h3>
+                <pre>
+# File: examples/readlines_example.py
+with open('data/sample.txt', 'r') as file:
+    lines = file.readlines()  # Returns a list where each element is a line from the file
+
+for i, line in enumerate(lines):
+    print(f"Line {i+1}: {line.strip()}")
+                </pre>
+            </div>
+            
+            <p>Using <code>readlines()</code> is like taking a photo of each page in a book—you have all the content stored in a structure that you can process later.</p>
+            
+            <div class="real-world-example">
+                <h3>Real-world Example: Log File Analyzer</h3>
+                <pre>
+# File: examples/log_analyzer.py
+def analyze_log(log_file_path):
+    error_count = 0
+    warning_count = 0
+    
+    with open(log_file_path, 'r') as log_file:
+        for line in log_file:
+            if 'ERROR' in line:
+                error_count += 1
+                print(f"Found error: {line.strip()}")
+            elif 'WARNING' in line:
+                warning_count += 1
+    
+    return {
+        'errors': error_count,
+        'warnings': warning_count
+    }
+
+# Usage
+results = analyze_log('data/application.log')
+print(f"Analysis complete: {results['errors']} errors, {results['warnings']} warnings found.")
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Writing Text Files: Creating Digital Footprints</h2>
+            
+            <p>Writing to files is like creating or modifying a document. You can start fresh with a blank page, add to an existing document, or completely replace its contents.</p>
+            
+            <div class="code-example">
+                <h3>Writing Text to a File</h3>
+                <pre>
+# File: examples/basic_writing.py
+with open('data/output.txt', 'w') as file:
+    file.write("Hello, this is a line of text.\n")
+    file.write("This is another line of text.")
+                </pre>
+            </div>
+            
+            <p>Notice that <code>write()</code> doesn't automatically add newline characters. That's like writing in a notebook where you need to explicitly press Enter to start a new line.</p>
+            
+            <div class="code-example">
+                <h3>Appending to a File</h3>
+                <pre>
+# File: examples/append_example.py
+with open('data/log.txt', 'a') as file:
+    file.write("\nLog entry at " + str(datetime.now()))
+                </pre>
+            </div>
+            
+            <p>Appending is like adding new entries to a journal—you're continuing from where you left off without erasing what came before.</p>
+            
+            <div class="code-example">
+                <h3>Writing Multiple Lines at Once</h3>
+                <pre>
+# File: examples/writelines_example.py
+lines = [
+    "First line of text\n",
+    "Second line of text\n",
+    "Third line of text\n"
+]
+
+with open('data/multiple_lines.txt', 'w') as file:
+    file.writelines(lines)  # Note: writelines doesn't add newlines between items
+                </pre>
+            </div>
+            
+            <div class="real-world-example">
+                <h3>Real-world Example: Simple CSV Writer</h3>
+                <pre>
+# File: examples/csv_writer.py
+def save_data_to_csv(data, filepath):
+    with open(filepath, 'w') as csv_file:
+        # Write header
+        header = ','.join(data[0].keys()) + '\n'
+        csv_file.write(header)
+        
+        # Write data rows
+        for item in data:
+            row = ','.join(str(value) for value in item.values()) + '\n'
+            csv_file.write(row)
+
+# Example usage
+users = [
+    {'id': 1, 'name': 'Alice', 'email': 'alice@example.com'},
+    {'id': 2, 'name': 'Bob', 'email': 'bob@example.com'},
+    {'id': 3, 'name': 'Charlie', 'email': 'charlie@example.com'}
+]
+
+save_data_to_csv(users, 'data/users.csv')
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>The Context Manager Pattern: Python's File Safety Net</h2>
+            
+            <p>We've been using the <code>with</code> statement in our examples, which implements what's called a "context manager" pattern. Think of this as Python's automatic safety system for working with files.</p>
+            
+            <div class="comparison">
+                <h3>Without a Context Manager (Risky)</h3>
+                <pre>
+# File: examples/without_context.py
+try:
+    file = open('data/sample.txt', 'r')
+    content = file.read()
+    # What if an exception happens here?
+    # The file might never get closed!
+finally:
+    file.close()  # We need to ensure this happens
+                </pre>
+                
+                <h3>With a Context Manager (Safe)</h3>
+                <pre>
+# File: examples/with_context.py
+with open('data/sample.txt', 'r') as file:
+    content = file.read()
+    # Even if an exception occurs, the file will be closed automatically
+                </pre>
+            </div>
+            
+            <p>Using <code>with</code> is like having a responsible friend who always makes sure the lights are turned off and the door is locked when you leave a room, even if you're in a hurry or get distracted.</p>
+            
+            <div class="practical-tip">
+                <h3>Practical Tip: Always Use Context Managers</h3>
+                <p>Always use the <code>with</code> statement when working with files. It guarantees that files are properly closed, even when exceptions occur. This prevents resource leaks and potential data corruption.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>File Pointers: Navigating Through Files</h2>
+            
+            <p>When you're reading from or writing to a file, Python keeps track of your position with an internal pointer or cursor. Think of this like a bookmark in a book—it remembers where you left off.</p>
+            
+            <div class="code-example">
+                <h3>Managing File Position</h3>
+                <pre>
+# File: examples/file_position.py
+with open('data/sample.txt', 'r') as file:
+    # Read the first 10 characters
+    part1 = file.read(10)
+    print(f"First 10 characters: {part1}")
+    
+    # Check the current position
+    position = file.tell()
+    print(f"Current position: {position}")
+    
+    # Read the next 10 characters
+    part2 = file.read(10)
+    print(f"Next 10 characters: {part2}")
+    
+    # Move back to the beginning
+    file.seek(0)
+    print(f"After seek(0), first 5 characters: {file.read(5)}")
+                </pre>
+            </div>
+            
+            <p>The file position functionality is like being able to jump to any page in a book instantly, rather than having to read through from the beginning each time.</p>
+        </section>
+
+        <section>
+            <h2>Error Handling in File Operations</h2>
+            
+            <p>Working with files involves the outside world, which means many things can go wrong: files might not exist, permissions might be insufficient, disks might be full. Good code anticipates these issues.</p>
+            
+            <div class="code-example">
+                <h3>Robust File Reading</h3>
+                <pre>
+# File: examples/error_handling.py
+def safe_read_file(filepath):
+    try:
+        with open(filepath, 'r') as file:
+            return file.read()
+    except FileNotFoundError:
+        print(f"Error: The file '{filepath}' does not exist.")
+        return None
+    except PermissionError:
+        print(f"Error: You don't have permission to read '{filepath}'.")
+        return None
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return None
+
+# Usage
+content = safe_read_file('data/nonexistent_file.txt')
+if content:
+    print("File content:", content)
+else:
+    print("Could not read the file content.")
+                </pre>
+            </div>
+            
+            <p>Error handling in file operations is like having contingency plans for your hiking trip—what will you do if it rains? What if the trail is closed? Good preparation makes for a better experience.</p>
+        </section>
+
+        <section>
+            <h2>Common File Processing Tasks</h2>
+            
+            <div class="task-example">
+                <h3>Task: Counting Lines, Words, and Characters</h3>
+                <pre>
+# File: examples/word_count.py
+def count_file_stats(filepath):
+    try:
+        with open(filepath, 'r') as file:
+            content = file.read()
+            lines = content.split('\n')
+            words = content.split()
+            chars = len(content)
+            
+            return {
+                'lines': len(lines),
+                'words': len(words),
+                'characters': chars
+            }
+    except Exception as e:
+        print(f"Error analyzing file: {e}")
+        return None
+
+# Usage
+stats = count_file_stats('data/sample.txt')
+if stats:
+    print(f"Lines: {stats['lines']}")
+    print(f"Words: {stats['words']}")
+    print(f"Characters: {stats['characters']}")
+                </pre>
+            </div>
+            
+            <div class="task-example">
+                <h3>Task: Finding and Replacing Text</h3>
+                <pre>
+# File: examples/find_replace.py
+def find_and_replace(filepath, search_text, replace_text):
+    try:
+        # Read the file content
+        with open(filepath, 'r') as file:
+            content = file.read()
+        
+        # Perform the replacement
+        modified_content = content.replace(search_text, replace_text)
+        
+        # Write the modified content back
+        with open(filepath, 'w') as file:
+            file.write(modified_content)
+            
+        # Count replacements
+        replacements = content.count(search_text)
+        return replacements
+    except Exception as e:
+        print(f"Error during find and replace: {e}")
+        return -1
+
+# Usage
+num_replacements = find_and_replace('data/document.txt', 'Python', 'Python3')
+print(f"Made {num_replacements} replacements.")
+                </pre>
+            </div>
+            
+            <div class="task-example">
+                <h3>Task: Processing Numerical Data</h3>
+                <pre>
+# File: examples/number_processing.py
+def calculate_statistics(numbers_file):
+    try:
+        numbers = []
+        with open(numbers_file, 'r') as file:
+            for line in file:
+                # Convert line to a number and add to list
+                try:
+                    num = float(line.strip())
+                    numbers.append(num)
+                except ValueError:
+                    # Skip lines that aren't valid numbers
+                    continue
+        
+        if not numbers:
+            return "No valid numbers found in the file."
+            
+        # Calculate statistics
+        count = len(numbers)
+        total = sum(numbers)
+        average = total / count
+        maximum = max(numbers)
+        minimum = min(numbers)
+        
+        return {
+            'count': count,
+            'sum': total,
+            'average': average,
+            'max': maximum,
+            'min': minimum
+        }
+    except Exception as e:
+        return f"Error processing file: {e}"
+
+# Usage
+stats = calculate_statistics('data/numbers.txt')
+print(f"Statistics: {stats}")
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Handling File Paths: The Location Navigation Challenge</h2>
+            
+            <p>One common challenge in file I/O is dealing with file paths correctly across different operating systems. Python provides the <code>os.path</code> and newer <code>pathlib</code> modules to help with this.</p>
+            
+            <div class="code-example">
+                <h3>Using os.path</h3>
+                <pre>
+# File: examples/os_path_example.py
+import os
+
+# Current script directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Join paths in an OS-independent way
+data_path = os.path.join(script_dir, 'data', 'sample.txt')
+
+# Check if a file exists
+if os.path.exists(data_path):
+    print(f"File exists: {data_path}")
+else:
+    print(f"File does not exist: {data_path}")
+
+# Get file information
+file_size = os.path.getsize(data_path)
+print(f"File size: {file_size} bytes")
+
+# Split a path into directory and filename
+directory, filename = os.path.split(data_path)
+print(f"Directory: {directory}")
+print(f"Filename: {filename}")
+                </pre>
+            </div>
+            
+            <div class="code-example">
+                <h3>Using pathlib (Python 3.4+)</h3>
+                <pre>
+# File: examples/pathlib_example.py
+from pathlib import Path
+
+# Current script directory
+script_dir = Path(__file__).resolve().parent
+
+# Join paths using / operator
+data_path = script_dir / 'data' / 'sample.txt'
+
+# Check if a file exists
+if data_path.exists():
+    print(f"File exists: {data_path}")
+else:
+    print(f"File does not exist: {data_path}")
+
+# Get file information
+file_size = data_path.stat().st_size
+print(f"File size: {file_size} bytes")
+
+# Access parts of the path
+print(f"Directory: {data_path.parent}")
+print(f"Filename: {data_path.name}")
+print(f"Stem (without extension): {data_path.stem}")
+print(f"Extension: {data_path.suffix}")
+                </pre>
+            </div>
+            
+            <p>Using proper path handling is like having a good GPS system when traveling—it helps you navigate correctly regardless of whether you're in New York, Tokyo, or London.</p>
+        </section>
+
+        <section>
+            <h2>Character Encodings: The Language of Text Files</h2>
+            
+            <p>Text files store characters as bytes, and the way those bytes are interpreted depends on the encoding. Think of encodings as different languages for computers—the same bytes might mean different things in different encodings.</p>
+            
+            <div class="code-example">
+                <h3>Handling Different Encodings</h3>
+                <pre>
+# File: examples/encoding_example.py
+# Reading a UTF-8 encoded file
+with open('data/utf8_sample.txt', 'r', encoding='utf-8') as file:
+    content = file.read()
+    print(content)
+
+# Reading a file with a different encoding
+with open('data/latin1_sample.txt', 'r', encoding='latin-1') as file:
+    content = file.read()
+    print(content)
+
+# Writing with a specific encoding
+with open('data/output_utf8.txt', 'w', encoding='utf-8') as file:
+    file.write("This is UTF-8 encoded text with special characters: äöüß")
+                </pre>
+            </div>
+            
+            <p>Using the wrong encoding is like trying to read a French book with an English dictionary—you'll get garbled results. Always be aware of what encoding your files use.</p>
+            
+            <div class="practical-tip">
+                <h3>Practical Tip: Stick with UTF-8</h3>
+                <p>When creating new text files, use UTF-8 encoding whenever possible. It's become the de facto standard for text encoding on the web and supports characters from virtually all modern writing systems.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Real-world Applications</h2>
+            
+            <div class="application">
+                <h3>1. Configuration Files</h3>
+                <pre>
+# File: examples/config_reader.py
+def load_configuration(config_file):
+    config = {}
+    with open(config_file, 'r') as file:
+        for line in file:
+            # Skip comments and empty lines
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+                
+            # Parse key=value pairs
+            if '=' in line:
+                key, value = line.split('=', 1)
+                config[key.strip()] = value.strip()
+    
+    return config
+
+# Usage
+settings = load_configuration('data/app_config.ini')
+print("Loaded configuration:", settings)
+                </pre>
+            </div>
+            
+            <div class="application">
+                <h3>2. Log Files</h3>
+                <pre>
+# File: examples/logger.py
+import datetime
+
+def log_event(log_file, event_type, message):
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_entry = f"[{timestamp}] [{event_type}] {message}\n"
+    
+    with open(log_file, 'a') as file:
+        file.write(log_entry)
+
+# Usage
+log_event('data/application.log', 'INFO', 'Application started')
+log_event('data/application.log', 'WARNING', 'Low memory condition detected')
+log_event('data/application.log', 'ERROR', 'Failed to connect to database')
+                </pre>
+            </div>
+            
+            <div class="application">
+                <h3>3. Data Processing Pipeline</h3>
+                <pre>
+# File: examples/data_pipeline.py
+def process_data_file(input_file, output_file):
+    processed_data = []
+    
+    # Read and process input
+    with open(input_file, 'r') as file:
+        for line in file:
+            # Example processing: convert to uppercase and add line number
+            processed_line = line.strip().upper()
+            processed_data.append(processed_line)
+    
+    # Write processed data to output
+    with open(output_file, 'w') as file:
+        for i, line in enumerate(processed_data):
+            file.write(f"{i+1}: {line}\n")
+    
+    return len(processed_data)
+
+# Usage
+lines_processed = process_data_file('data/raw_data.txt', 'data/processed_data.txt')
+print(f"Processed {lines_processed} lines of data")
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Best Practices</h2>
+            
+            <div class="best-practices">
+                <ol>
+                    <li><strong>Always use context managers (the <code>with</code> statement)</strong> to ensure files are properly closed.</li>
+                    <li><strong>Handle exceptions</strong> that might occur during file operations.</li>
+                    <li><strong>Use absolute paths</strong> when necessary to avoid path resolution issues.</li>
+                    <li><strong>Be explicit about file encodings</strong> to avoid character corruption.</li>
+                    <li><strong>For large files, read line by line</strong> rather than loading the entire file into memory.</li>
+                    <li><strong>Use appropriate modules</strong> for specific file formats (e.g., <code>csv</code> for CSV files, <code>json</code> for JSON).</li>
+                    <li><strong>Check if a file exists before opening</strong> it to avoid unexpected errors.</li>
+                    <li><strong>Consider file permissions</strong> especially in multi-user environments.</li>
+                </ol>
+            </div>
+        </section>
+
+        <section>
+            <h2>Exercises to Reinforce Learning</h2>
+            
+            <div class="exercise">
+                <h3>Exercise 1: Word Frequency Counter</h3>
+                <p>Create a program that reads a text file and counts the frequency of each word, then writes the results to a new file, sorted by frequency.</p>
+                <pre>
+# File: exercises/exercise1.py
+def count_word_frequency(input_file, output_file):
+    # Your implementation here
+    pass
+
+# Test with a sample file
+count_word_frequency('exercises/data/sample_text.txt', 'exercises/data/word_count.txt')
+                </pre>
+            </div>
+            
+            <div class="exercise">
+                <h3>Exercise 2: Log File Analyzer</h3>
+                <p>Create a program that reads a log file, extracts timestamp, log level, and message information, and generates a summary report.</p>
+                <pre>
+# File: exercises/exercise2.py
+def analyze_log_file(log_file, report_file):
+    # Your implementation here
+    pass
+
+# Test with a sample log file
+analyze_log_file('exercises/data/server.log', 'exercises/data/log_report.txt')
+                </pre>
+            </div>
+            
+            <div class="exercise">
+                <h3>Exercise 3: File Comparison Tool</h3>
+                <p>Create a program that compares two text files and identifies the differences, similar to a simplified 'diff' utility.</p>
+                <pre>
+# File: exercises/exercise3.py
+def compare_files(file1, file2, output_file):
+    # Your implementation here
+    pass
+
+# Test with sample files
+compare_files('exercises/data/version1.txt', 'exercises/data/version2.txt', 'exercises/data/diff_report.txt')
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Further Exploration</h2>
+            
+            <div class="further-topics">
+                <h3>Related Topics to Explore</h3>
+                <ul>
+                    <li>Working with binary files (images, audio, etc.)</li>
+                    <li>The <code>io</code> module for more advanced I/O operations</li>
+                    <li>Memory-mapped files for efficient access to large files</li>
+                    <li>Temporary files for intermediate processing</li>
+                    <li>File locking for concurrent access</li>
+                    <li>Serialization with <code>pickle</code> for Python objects</li>
+                    <li>Using <code>pandas</code> for structured data files</li>
+                    <li>Cloud storage APIs for remote file access</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Summary</h2>
+            
+            <div class="summary">
+                <p>Today we've explored the fundamentals of reading and writing text files in Python. We've seen how to:</p>
+                
+                <ul>
+                    <li>Open files safely using context managers</li>
+                    <li>Read file contents in various ways</li>
+                    <li>Write and append to files</li>
+                    <li>Manage file positions and encodings</li>
+                    <li>Handle errors that might occur during file operations</li>
+                    <li>Work with file paths across different operating systems</li>
+                    <li>Apply these skills to real-world scenarios</li>
+                </ul>
+                
+                <p>These fundamental file I/O skills form the foundation for many other Python operations, from configuration management to data processing, logging, and more. By mastering these concepts, you've taken an important step toward becoming a proficient Python developer.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

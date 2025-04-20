@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>try/except/else/finally Blocks in Python</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>try/except/else/finally Blocks in Python</h1>
+        <h2>Week 3: Python Fundamentals - Exception Handling Structures</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h2>Introduction to try/except/else/finally</h2>
+            <p>Welcome to our comprehensive guide on Python's exception handling blocks. Python provides a versatile and elegant way to handle errors through the four components of its exception handling mechanism: <code>try</code>, <code>except</code>, <code>else</code>, and <code>finally</code>. Think of these components as the different phases of a contingency plan - preparation, handling problems, success actions, and cleanup.</p>
+            
+            <p>Proper error handling is crucial for building robust, reliable applications. When an error occurs, rather than letting your program crash, you can catch the exception, handle it gracefully, and allow your program to continue or terminate in a controlled manner.</p>
+
+            <div class="folder-structure">
+                <h3>Folder Structure for Today's Examples</h3>
+                <pre>
+try_except_examples/
+├── basics/
+│   ├── try_except_basic.py
+│   ├── try_except_multiple.py
+│   ├── try_except_else.py
+│   ├── try_except_finally.py
+│   └── try_except_else_finally.py
+├── practical/
+│   ├── file_handling.py
+│   ├── database_connection.py
+│   ├── network_requests.py
+│   └── resource_management.py
+├── advanced/
+│   ├── custom_exceptions.py
+│   ├── context_managers.py
+│   ├── exception_chaining.py
+│   └── exception_groups.py
+└── exercises/
+    ├── exercise1.py
+    ├── exercise2.py
+    └── exercise3.py
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Understanding the Components: The Four Pillars of Exception Handling</h2>
+            
+            <div class="component-overview">
+                <h3>The Four Components of Python's Exception Handling</h3>
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Purpose</th>
+                        <th>Real-world Analogy</th>
+                    </tr>
+                    <tr>
+                        <td><code>try</code></td>
+                        <td>Encloses code that might raise an exception</td>
+                        <td>Attempting a challenging task while being prepared for problems</td>
+                    </tr>
+                    <tr>
+                        <td><code>except</code></td>
+                        <td>Handles specific exceptions if they occur</td>
+                        <td>Your backup plan if something goes wrong</td>
+                    </tr>
+                    <tr>
+                        <td><code>else</code></td>
+                        <td>Executes if no exceptions were raised in the <code>try</code> block</td>
+                        <td>Actions taken only if the challenging task succeeds</td>
+                    </tr>
+                    <tr>
+                        <td><code>finally</code></td>
+                        <td>Always executes, regardless of whether an exception occurred</td>
+                        <td>Cleanup steps you take no matter what happens</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <p>These components work together to create a comprehensive error handling framework that allows your code to anticipate problems, recover from errors, take special actions on success, and ensure proper cleanup.</p>
+        </section>
+
+        <section>
+            <h2>The try/except Block: The Foundation of Exception Handling</h2>
+            
+            <p>Let's start with the most basic form of exception handling: the <code>try/except</code> block.</p>
+            
+            <div class="code-example">
+                <h3>Basic try/except Structure</h3>
+                <pre>
+# File: basics/try_except_basic.py
+
+def divide_numbers(a, b):
+    try:
+        # Code that might raise an exception
+        result = a / b
+        return result
+    except ZeroDivisionError:
+        # Handler for the specific exception
+        print("Error: Cannot divide by zero!")
+        return None
+
+# Testing the function
+print(divide_numbers(10, 2))  # Output: 5.0
+print(divide_numbers(10, 0))  # Output: Error: Cannot divide by zero! None
+                </pre>
+                
+                <p>In this example, the <code>try</code> block attempts a division operation that could potentially raise a <code>ZeroDivisionError</code>. If this exception occurs, the <code>except</code> block catches it and handles it by printing an error message and returning <code>None</code>. If no exception occurs, the function simply returns the division result.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Handling Multiple Exception Types</h3>
+                <pre>
+# File: basics/try_except_multiple.py
+
+def process_data(data):
+    try:
+        # Multiple operations that could raise different exceptions
+        value = data['key']                 # Potential KeyError
+        result = 100 / value                # Potential ZeroDivisionError
+        return int(result)                  # Potential ValueError
+    except KeyError:
+        print("Error: The required key doesn't exist in the data!")
+        return None
+    except ZeroDivisionError:
+        print("Error: Cannot divide by zero!")
+        return None
+    except ValueError:
+        print("Error: Could not convert the result to an integer!")
+        return None
+    except Exception as e:
+        # Catch-all for any other exceptions
+        print(f"Unexpected error: {e}")
+        return None
+
+# Testing with different scenarios
+print(process_data({'key': 4}))        # Works fine: 25
+print(process_data({'different_key': 4}))  # KeyError
+print(process_data({'key': 0}))        # ZeroDivisionError
+print(process_data({'key': 'string'}))  # TypeError (caught by the general Exception handler)
+                </pre>
+                
+                <p>This example demonstrates how to handle multiple exception types with separate <code>except</code> blocks. The function attempts several operations, each with different potential exceptions, and provides specific handling for each.</p>
+                
+                <p>Important note: The order of <code>except</code> blocks matters. More specific exceptions should be caught before more general ones. If you put <code>except Exception</code> first, it would catch all exceptions before the more specific handlers ever get a chance.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Using the Exception Object</h3>
+                <pre>
+# File: basics/try_except_with_exception_object.py
+
+def get_user_data(user_id):
+    users = {
+        1: {"name": "Alice", "email": "alice@example.com"},
+        2: {"name": "Bob", "email": "bob@example.com"}
+    }
+    
+    try:
+        # Attempt to retrieve and process user data
+        user = users[user_id]
+        email_parts = user["email"].split('@')
+        domain = email_parts[1]
+        return f"User {user['name']} has an email on the {domain} domain"
+    except KeyError as e:
+        # Access the exception object for more information
+        print(f"Error: No user found with ID {e}")
+        return None
+    except IndexError as e:
+        # Access the exception object for more information
+        print(f"Error: Invalid email format. Details: {e}")
+        return None
+
+# Testing the function
+print(get_user_data(1))  # Works fine
+print(get_user_data(3))  # KeyError
+                </pre>
+                
+                <p>This example shows how to capture the exception object using the <code>as</code> keyword. This gives you access to details about the exception, which can be useful for debugging or providing more specific error messages.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Adding else: Actions for Success</h2>
+            
+            <p>The <code>else</code> clause in exception handling provides a way to execute code that should run only if no exceptions were raised in the <code>try</code> block. This creates a clearer separation between the normal code path and the error handling path.</p>
+            
+            <div class="code-example">
+                <h3>try/except/else Structure</h3>
+                <pre>
+# File: basics/try_except_else.py
+
+def read_and_process_file(filename):
+    try:
+        # Attempt to open and read the file
+        file = open(filename, 'r')
+        content = file.read()
+        file.close()
+    except FileNotFoundError:
+        print(f"Error: The file '{filename}' was not found.")
+        return None
+    except PermissionError:
+        print(f"Error: You don't have permission to read '{filename}'.")
+        return None
+    else:
+        # This block executes if try block had no exceptions
+        print(f"Successfully read {len(content)} characters from '{filename}'.")
+        # Process the content (e.g., convert to uppercase)
+        processed_content = content.upper()
+        return processed_content
+
+# Testing the function
+result = read_and_process_file("existing_file.txt")  # Assume this file exists
+if result:
+    print(f"Processed content: {result[:50]}...")  # Show first 50 chars
+
+result = read_and_process_file("nonexistent_file.txt")  # This file doesn't exist
+                </pre>
+                
+                <p>In this example, the <code>else</code> block contains code that processes the file content, but only if the file was successfully opened and read without exceptions. This makes the code's logic easier to follow: the <code>try</code> block focuses just on the operations that might fail, while the <code>else</code> block handles the success path.</p>
+            </div>
+            
+            <div class="why-use-else">
+                <h3>Why Use else Instead of Putting Code in the try Block?</h3>
+                
+                <p>You might wonder why we use an <code>else</code> block instead of simply putting all the code in the <code>try</code> block. There are several good reasons:</p>
+                
+                <ol>
+                    <li><strong>Clarity of intent</strong> - It makes it clear which code is there to handle the "happy path" (normal execution) versus which code might raise exceptions.</li>
+                    <li><strong>Minimizing the try block</strong> - Only the code that might raise exceptions is in the <code>try</code> block, which follows the principle of making <code>try</code> blocks as small as possible.</li>
+                    <li><strong>Preventing masked exceptions</strong> - If an exception occurs in the <code>else</code> block, it won't be caught by the <code>except</code> blocks from the preceding <code>try</code>. This prevents accidentally catching and mishandling exceptions from the processing code.</li>
+                </ol>
+                
+                <p>As a metaphor, think of the <code>try</code> block as opening a door that might be locked, the <code>except</code> block as what to do if you can't open it, and the <code>else</code> block as what you do after successfully entering the room.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Adding finally: Ensuring Cleanup Actions</h2>
+            
+            <p>The <code>finally</code> block contains code that always executes, regardless of whether an exception occurred in the <code>try</code> block or not. This makes it perfect for cleanup operations like closing files, releasing resources, or other tasks that should happen no matter what.</p>
+            
+            <div class="code-example">
+                <h3>try/except/finally Structure</h3>
+                <pre>
+# File: basics/try_except_finally.py
+
+def read_file_content(filename):
+    file = None
+    try:
+        # Attempt to open and read the file
+        file = open(filename, 'r')
+        content = file.read()
+        return content
+    except FileNotFoundError:
+        print(f"Error: The file '{filename}' was not found.")
+        return None
+    finally:
+        # This block always executes, even if there's a return in try or except
+        print("Cleanup: Ensuring file is closed.")
+        if file:
+            file.close()
+            print("File closed successfully.")
+        else:
+            print("No file to close.")
+
+# Testing the function
+content = read_file_content("existing_file.txt")  # Assume this file exists
+if content:
+    print(f"File content length: {len(content)} characters")
+
+content = read_file_content("nonexistent_file.txt")  # This file doesn't exist
+                </pre>
+                
+                <p>In this example, the <code>finally</code> block ensures that the file is closed, regardless of whether the file was successfully opened or an exception occurred. This is crucial for resource management, as it prevents resource leaks even in the case of errors.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Using finally Without except</h3>
+                <pre>
+# File: basics/try_finally.py
+
+def perform_calculation(a, b):
+    print("Starting calculation...")
+    
+    try:
+        # Attempt the calculation
+        result = a / b
+    finally:
+        # Cleanup code that always runs
+        print("Calculation attempt completed.")
+    
+    # This only executes if no exception occurs
+    return result
+
+# Testing the function
+try:
+    result = perform_calculation(10, 2)
+    print(f"Result: {result}")
+except ZeroDivisionError:
+    print("Error: Division by zero detected.")
+
+try:
+    result = perform_calculation(10, 0)  # This will raise ZeroDivisionError
+    print(f"Result: {result}")
+except ZeroDivisionError:
+    print("Error: Division by zero detected.")
+                </pre>
+                
+                <p>You can use <code>try/finally</code> without an <code>except</code> block. In this case, any exceptions will propagate up to the caller, but the cleanup code in <code>finally</code> will still execute before the exception propagates. This pattern is useful when you want to ensure cleanup but don't want to handle the exceptions at this level.</p>
+            </div>
+            
+            <div class="finally-characteristics">
+                <h3>Key Characteristics of finally</h3>
+                
+                <ul>
+                    <li><strong>Always executes</strong> - The <code>finally</code> block runs regardless of whether an exception was raised, caught, or not.</li>
+                    <li><strong>Executes before return</strong> - Even if there's a <code>return</code> statement in the <code>try</code> or <code>except</code> blocks, the <code>finally</code> block executes before the function returns.</li>
+                    <li><strong>Executes before exception propagation</strong> - If an exception isn't caught, the <code>finally</code> block executes before the exception propagates to the caller.</li>
+                    <li><strong>Can override return values</strong> - If the <code>finally</code> block contains a <code>return</code> statement, it will override any return value from the <code>try</code> or <code>except</code> blocks.</li>
+                </ul>
+                
+                <p>As a metaphor, think of <code>finally</code> as the closing credits of a movie. No matter how the movie ends—happily, sadly, or with a cliffhanger—the credits always roll at the end.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Putting It All Together: The Complete try/except/else/finally Structure</h2>
+            
+            <p>Now let's see how all four components work together to create a comprehensive exception handling structure.</p>
+            
+            <div class="code-example">
+                <h3>Complete Structure</h3>
+                <pre>
+# File: basics/try_except_else_finally.py
+
+def process_file_data(filename):
+    file = None
+    try:
+        # Attempt to open and read the file (might raise exceptions)
+        print(f"Attempting to open file: {filename}")
+        file = open(filename, 'r')
+        content = file.read()
+        data = content.split(',')
+    except FileNotFoundError:
+        # Handle the specific case of a missing file
+        print(f"Error: The file '{filename}' was not found.")
+        return None
+    except Exception as e:
+        # Handle any other exceptions
+        print(f"Error processing file: {e}")
+        return None
+    else:
+        # Execute only if no exceptions were raised in the try block
+        # Process the data (in a real scenario, this might be more complex)
+        print("File read successfully, processing data...")
+        result = [item.strip().upper() for item in data]
+        return result
+    finally:
+        # Always execute, regardless of whether exceptions occurred
+        print("Cleanup: Closing file if open.")
+        if file:
+            file.close()
+            print("File closed.")
+
+# Testing the function
+result = process_file_data("sample_data.txt")  # Assume this file exists with comma-separated values
+if result:
+    print(f"Processed data: {result}")
+
+result = process_file_data("nonexistent_file.txt")  # This file doesn't exist
+                </pre>
+                
+                <p>This example shows the complete structure with all four components:</p>
+                <ol>
+                    <li>The <code>try</code> block attempts to open and read a file, which might raise exceptions.</li>
+                    <li>The <code>except</code> blocks handle specific exceptions that might occur during the file operations.</li>
+                    <li>The <code>else</code> block processes the file data, but only executes if no exceptions were raised in the <code>try</code> block.</li>
+                    <li>The <code>finally</code> block ensures the file is closed, regardless of whether the operations succeeded or raised exceptions.</li>
+                </ol>
+            </div>
+            
+            <div class="execution-flow">
+                <h3>Understanding the Execution Flow</h3>
+                
+                <p>Let's trace the execution flow for different scenarios:</p>
+                
+                <h4>Scenario 1: No Exceptions</h4>
+                <ol>
+                    <li>The <code>try</code> block executes completely without raising exceptions.</li>
+                    <li>The <code>except</code> blocks are skipped.</li>
+                    <li>The <code>else</code> block executes.</li>
+                    <li>The <code>finally</code> block executes.</li>
+                    <li>The function returns the result from the <code>else</code> block.</li>
+                </ol>
+                
+                <h4>Scenario 2: FileNotFoundError Occurs</h4>
+                <ol>
+                    <li>The <code>try</code> block raises a <code>FileNotFoundError</code> when attempting to open the file.</li>
+                    <li>The matching <code>except</code> block executes.</li>
+                    <li>The <code>else</code> block is skipped (because an exception occurred).</li>
+                    <li>The <code>finally</code> block executes.</li>
+                    <li>The function returns <code>None</code> from the <code>except</code> block.</li>
+                </ol>
+                
+                <h4>Scenario 3: Another Exception Occurs</h4>
+                <ol>
+                    <li>The <code>try</code> block raises some other exception (e.g., a <code>PermissionError</code>).</li>
+                    <li>The second <code>except</code> block (with <code>Exception</code>) executes.</li>
+                    <li>The <code>else</code> block is skipped.</li>
+                    <li>The <code>finally</code> block executes.</li>
+                    <li>The function returns <code>None</code> from the second <code>except</code> block.</li>
+                </ol>
+                
+                <h4>Scenario 4: Exception in else Block</h4>
+                <ol>
+                    <li>The <code>try</code> block executes without exceptions.</li>
+                    <li>The <code>except</code> blocks are skipped.</li>
+                    <li>The <code>else</code> block starts executing but raises an exception.</li>
+                    <li>The <code>finally</code> block executes.</li>
+                    <li>The exception from the <code>else</code> block propagates to the caller (it's not caught by the preceding <code>except</code> blocks).</li>
+                </ol>
+            </div>
+        </section>
+
+        <section>
+            <h2>Practical Applications</h2>
+            
+            <p>Let's explore some common real-world scenarios where the complete <code>try/except/else/finally</code> structure proves valuable.</p>
+            
+            <div class="code-example">
+                <h3>File Handling with Context Manager</h3>
+                <pre>
+# File: practical/file_handling.py
+
+def read_and_process_file(filename):
+    try:
+        # Attempt to open and process the file
+        with open(filename, 'r') as file:
+            content = file.read()
+            
+        # Note: The file is automatically closed when the with block exits,
+        # even if an exception occurs, so we don't need a finally block for that.
+        
+    except FileNotFoundError:
+        print(f"Error: The file '{filename}' does not exist.")
+        return None
+    except PermissionError:
+        print(f"Error: You don't have permission to read '{filename}'.")
+        return None
+    except Exception as e:
+        print(f"Unexpected error reading file: {e}")
+        return None
+    else:
+        # Process the content if file was read successfully
+        word_count = len(content.split())
+        line_count = len(content.splitlines())
+        return {
+            'filename': filename,
+            'word_count': word_count,
+            'line_count': line_count,
+            'char_count': len(content)
+        }
+    finally:
+        # Any cleanup code that isn't handled by the context manager
+        # For example, logging that the operation is complete
+        print(f"File operation on '{filename}' completed.")
+
+# Testing the function
+stats = read_and_process_file("sample_document.txt")
+if stats:
+    print(f"File statistics: {stats}")
+                </pre>
+                
+                <p>This example uses a context manager (<code>with</code> statement) for file handling, which automatically takes care of closing the file. This is generally preferred over manually closing files, but we still use the complete exception handling structure to handle different error scenarios and process the file data only on success.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Database Connection</h3>
+                <pre>
+# File: practical/database_connection.py
+
+def query_database(query, parameters=None):
+    """
+    Execute a database query with proper error handling.
+    
+    Note: This is a simplified example. In real code, you would
+    use an actual database driver instead of the mock_db module.
+    """
+    # In a real application, you would import a database module
+    # import sqlite3 as db
+    
+    # For demonstration, we'll use a mock database module
+    class MockConnection:
+        def __init__(self, db_name):
+            self.db_name = db_name
+            print(f"Connected to database: {db_name}")
+            
+        def cursor(self):
+            return MockCursor()
+            
+        def commit(self):
+            print("Transaction committed")
+            
+        def rollback(self):
+            print("Transaction rolled back")
+            
+        def close(self):
+            print("Database connection closed")
+    
+    class MockCursor:
+        def execute(self, query, params=None):
+            if "SELECT" not in query.upper():
+                raise ValueError("Only SELECT queries are supported in this example")
+            print(f"Executing query: {query}")
+            if params:
+                print(f"With parameters: {params}")
+            return self
+            
+        def fetchall(self):
+            # Return some mock data
+            return [("user1", "John Doe"), ("user2", "Jane Smith")]
+    
+    # Simulate a database connection
+    connection = None
+    cursor = None
+    
+    try:
+        # Attempt to connect to the database and execute the query
+        connection = MockConnection("example_db")
+        cursor = connection.cursor()
+        cursor.execute(query, parameters)
+        
+    except ValueError as e:
+        # Handle query format errors
+        print(f"Query error: {e}")
+        if connection:
+            connection.rollback()
+        return None
+        
+    except Exception as e:
+        # Handle other database errors
+        print(f"Database error: {e}")
+        if connection:
+            connection.rollback()
+        return None
+        
+    else:
+        # Query executed successfully, fetch and return the results
+        results = cursor.fetchall()
+        connection.commit()
+        return results
+        
+    finally:
+        # Clean up resources
+        if cursor:
+            # In some database APIs, you need to close the cursor separately
+            # cursor.close() 
+            pass
+            
+        if connection:
+            connection.close()
+
+# Testing the function
+results = query_database("SELECT username, name FROM users")
+if results:
+    print("Query results:")
+    for row in results:
+        print(f"  {row[0]}: {row[1]}")
+
+# Test with an invalid query
+results = query_database("UPDATE users SET status = 'active'")
+                </pre>
+                
+                <p>This example demonstrates database connection handling with the complete exception structure. It shows the importance of transaction management (commit on success, rollback on failure) and proper resource cleanup, regardless of whether the operation succeeds or fails.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Network Request</h3>
+                <pre>
+# File: practical/network_requests.py
+
+def fetch_data_from_api(url, timeout=10):
+    """
+    Fetch data from an API with proper error handling.
+    
+    Note: This is a simplified example. In real code, you would
+    typically use the requests library or similar.
+    """
+    # For demonstration, we'll simulate HTTP requests
+    import time
+    import random
+    
+    class MockResponse:
+        def __init__(self, status_code, data=None):
+            self.status_code = status_code
+            self.data = data or {}
+            
+        def json(self):
+            if self.status_code >= 400:
+                raise ValueError("Response is not valid JSON")
+            return self.data
+    
+    # Simulate the request
+    print(f"Sending request to {url}")
+    start_time = time.time()
+    response = None
+    
+    try:
+        # Simulate network request that might fail in various ways
+        if "invalid" in url:
+            raise ValueError("Invalid URL format")
+            
+        if "timeout" in url:
+            time.sleep(timeout + 1)  # Simulate timeout
+            raise TimeoutError("Request timed out")
+            
+        if "notfound" in url:
+            response = MockResponse(404)
+        elif "servererror" in url:
+            response = MockResponse(500)
+        else:
+            # Simulate successful response with random delay
+            time.sleep(random.uniform(0.1, 0.5))
+            response = MockResponse(200, {"data": "Sample API response", "timestamp": time.time()})
+        
+        # Check response status
+        if response.status_code >= 400:
+            raise Exception(f"HTTP error: {response.status_code}")
+            
+    except TimeoutError as e:
+        print(f"Network timeout: {e}")
+        return None
+        
+    except ValueError as e:
+        print(f"Request error: {e}")
+        return None
+        
+    except Exception as e:
+        print(f"Network error: {e}")
+        return None
+        
+    else:
+        # Process the successful response
+        try:
+            data = response.json()
+            return {
+                'status': response.status_code,
+                'data': data,
+                'response_time': time.time() - start_time
+            }
+        except ValueError as e:
+            print(f"Error parsing response: {e}")
+            return None
+            
+    finally:
+        # Cleanup, logging, or metrics
+        request_time = time.time() - start_time
+        print(f"Request to {url} completed in {request_time:.2f} seconds")
+        
+        # In a real application, you might close connections or clean up resources
+        if response and hasattr(response, 'close'):
+            response.close()
+
+# Testing the function
+result = fetch_data_from_api("https://api.example.com/data")
+if result:
+    print(f"Received data: {result['data']}")
+    print(f"Response time: {result['response_time']:.2f} seconds")
+
+# Test with error scenarios
+fetch_data_from_api("https://api.example.com/notfound")
+fetch_data_from_api("https://api.example.com/timeout")
+fetch_data_from_api("https://invalid-url")
+                </pre>
+                
+                <p>This example simulates making HTTP requests with comprehensive error handling for different failure scenarios. It demonstrates how to handle network-specific errors like timeouts, HTTP error status codes, and response parsing errors.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Advanced Patterns and Techniques</h2>
+            
+            <p>Let's explore some more advanced patterns and techniques that build upon the basic <code>try/except/else/finally</code> structure.</p>
+            
+            <div class="code-example">
+                <h3>Nested Exception Handling</h3>
+                <pre>
+# File: advanced/nested_exceptions.py
+
+def process_config_file(filename):
+    try:
+        # Outer try block for file operations
+        with open(filename, 'r') as file:
+            content = file.read()
+            
+        # Process content successfully read from file
+        print(f"Read {len(content)} bytes from {filename}")
+        
+        try:
+            # Inner try block for parsing operations
+            # In a real application, you might parse JSON, YAML, etc.
+            config = {}
+            for line in content.splitlines():
+                if '=' in line and not line.strip().startswith('#'):
+                    key, value = line.split('=', 1)
+                    config[key.strip()] = value.strip()
+                    
+        except ValueError as e:
+            # Handle parsing errors
+            print(f"Error parsing config file: {e}")
+            return None
+            
+        else:
+            # Parsing succeeded
+            print(f"Successfully parsed {len(config)} configuration items")
+            return config
+            
+    except FileNotFoundError:
+        print(f"Config file not found: {filename}")
+        return None
+        
+    except PermissionError:
+        print(f"Permission denied when reading config file: {filename}")
+        return None
+        
+    except Exception as e:
+        print(f"Unexpected error reading config file: {e}")
+        return None
+        
+    finally:
+        print(f"Config file operation completed")
+
+# Testing the function
+config = process_config_file("config.ini")  # Assume this file exists with key=value lines
+if config:
+    print("Configuration:")
+    for key, value in config.items():
+        print(f"  {key}: {value}")
+                </pre>
+                
+                <p>This example demonstrates nested exception handling, where different levels of the operation have their own <code>try/except</code> blocks. This is useful when different parts of the process can fail in different ways and require different error handling approaches.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Exception Chaining with raise from</h3>
+                <pre>
+# File: advanced/exception_chaining.py
+
+class ConfigError(Exception):
+    """Base exception for configuration-related errors."""
+    pass
+
+class ConfigParsingError(ConfigError):
+    """Raised when parsing configuration fails."""
+    pass
+
+class ConfigValidationError(ConfigError):
+    """Raised when configuration validation fails."""
+    pass
+
+def parse_config_value(text):
+    try:
+        # Try to parse as an integer
+        return int(text)
+    except ValueError as e:
+        # Chain the original exception to a new, more specific one
+        raise ConfigParsingError(f"Invalid numeric value: {text}") from e
+
+def validate_config(config):
+    try:
+        # Validate required fields
+        for field in ['port', 'max_connections', 'timeout']:
+            if field not in config:
+                raise KeyError(f"Missing required field: {field}")
+            
+        # Validate field values
+        if config['port'] <= 0 or config['port'] > 65535:
+            raise ValueError(f"Invalid port number: {config['port']}")
+            
+        if config['max_connections'] <= 0:
+            raise ValueError(f"Invalid max_connections: {config['max_connections']}")
+            
+        if config['timeout'] <= 0:
+            raise ValueError(f"Invalid timeout: {config['timeout']}")
+            
+    except (KeyError, ValueError) as e:
+        # Chain the original exception
+        raise ConfigValidationError("Configuration validation failed") from e
+
+def load_and_validate_config(filename):
+    try:
+        # Read the config file
+        with open(filename, 'r') as file:
+            lines = file.readlines()
+            
+        # Parse the configuration
+        config = {}
+        for i, line in enumerate(lines, 1):
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+                
+            if '=' not in line:
+                raise ConfigParsingError(f"Invalid line format at line {i}: {line}")
+                
+            key, value = line.split('=', 1)
+            key = key.strip()
+            value = value.strip()
+            
+            # Parse values with appropriate types
+            if key in ['port', 'max_connections', 'timeout']:
+                try:
+                    config[key] = parse_config_value(value)
+                except ConfigParsingError as e:
+                    # Add line number information to the error
+                    raise ConfigParsingError(f"Error at line {i}: {e}") from e
+            else:
+                config[key] = value
+        
+        # Validate the configuration
+        validate_config(config)
+        
+        return config
+        
+    except ConfigError as e:
+        # Propagate ConfigError exceptions
+        raise
+        
+    except Exception as e:
+        # Wrap any other exceptions
+        raise ConfigError(f"Failed to load configuration: {e}") from e
+
+# Testing the function
+def test_config_loading():
+    try:
+        config = load_and_validate_config("server_config.ini")
+        print("Configuration loaded successfully:")
+        for key, value in config.items():
+            print(f"  {key}: {value}")
+            
+    except ConfigError as e:
+        print(f"Configuration error: {e}")
+        
+        # Access the original exception that caused this
+        if e.__cause__:
+            print(f"Original error: {e.__cause__}")
+            
+            # In Python 3.10+, you can also do:
+            # import traceback
+            # traceback.print_exception(e)
+
+# Run the test
+# test_config_loading()
+                </pre>
+                
+                <p>This example demonstrates exception chaining using the <code>raise ... from ...</code> syntax introduced in Python 3. This preserves the original exception as the <code>__cause__</code> of the new exception, creating a chain that helps with debugging and provides more context about what went wrong.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Custom Context Managers</h3>
+                <pre>
+# File: advanced/context_managers.py
+
+class DatabaseConnection:
+    """A custom context manager for database connections."""
+    
+    def __init__(self, connection_string):
+        self.connection_string = connection_string
+        self.connection = None
+        
+    def __enter__(self):
+        """Set up the database connection."""
+        try:
+            # In a real application, this would use an actual database driver
+            # self.connection = db.connect(self.connection_string)
+            # For demonstration purposes, we'll simulate it
+            print(f"Connecting to database: {self.connection_string}")
+            self.connection = {"connected": True, "conn_string": self.connection_string}
+            return self.connection
+        except Exception as e:
+            print(f"Error connecting to database: {e}")
+            # Re-raise the exception to be caught by the caller
+            raise
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Clean up the database connection."""
+        if self.connection:
+            # In a real application, you would call connection.close()
+            print(f"Closing database connection to: {self.connection_string}")
+            
+            # Decide whether to suppress exceptions
+            if exc_type is not None:
+                print(f"Exception occurred: {exc_type.__name__}: {exc_val}")
+                
+                # If it's a specific type of error that we want to handle specially
+                if exc_type is ValueError:
+                    print("Handled ValueError in context manager exit")
+                    return True  # Suppress the exception
+                    
+            # By default, don't suppress exceptions (return None or False)
+            return False
+
+def execute_query(connection, query):
+    """Simulate executing a database query."""
+    print(f"Executing query: {query}")
+    
+    # Simulate errors for certain queries
+    if "invalid" in query.lower():
+        raise ValueError("Invalid query syntax")
+        
+    if "error" in query.lower():
+        raise RuntimeError("Query execution failed")
+        
+    # Return simulated results
+    return [{"id": 1, "name": "Result 1"}, {"id": 2, "name": "Result 2"}]
+
+# Example usage with try/except/else/finally inside the with block
+def query_database(connection_string, query):
+    try:
+        # Use our custom context manager
+        with DatabaseConnection(connection_string) as conn:
+            try:
+                # Try to execute the query
+                results = execute_query(conn, query)
+                
+            except ValueError as e:
+                # Handle specific query errors
+                print(f"Query validation error: {e}")
+                return None
+                
+            except Exception as e:
+                # Handle other query errors
+                print(f"Query execution error: {e}")
+                return None
+                
+            else:
+                # Process successful results
+                print(f"Query returned {len(results)} results")
+                return results
+                
+    except Exception as e:
+        # Handle connection errors
+        print(f"Database connection error: {e}")
+        return None
+
+# Testing the function
+print("\nTesting valid query:")
+results = query_database("postgresql://localhost/mydb", "SELECT * FROM users")
+if results:
+    print(f"Results: {results}")
+
+print("\nTesting invalid query:")
+results = query_database("postgresql://localhost/mydb", "SELECT invalid FROM users")
+if results:
+    print(f"Results: {results}")
+
+print("\nTesting query that raises error:")
+results = query_database("postgresql://localhost/mydb", "SELECT * FROM users WHERE error=true")
+if results:
+    print(f"Results: {results}")
+                </pre>
+                
+                <p>This example demonstrates creating a custom context manager that implements the <code>__enter__</code> and <code>__exit__</code> methods. Context managers provide a clean way to manage resources and can be combined with traditional <code>try/except/else/finally</code> blocks for more complex error handling requirements.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Best Practices and Guidelines</h2>
+            
+            <div class="best-practices">
+                <h3>Do's and Don'ts</h3>
+                <table>
+                    <tr>
+                        <th>Do</th>
+                        <th>Don't</th>
+                    </tr>
+                    <tr>
+                        <td>✅ Catch specific exceptions when possible</td>
+                        <td>❌ Use bare <code>except:</code> (catches all exceptions, including KeyboardInterrupt)</td>
+                    </tr>
+                    <tr>
+                        <td>✅ Keep <code>try</code> blocks as small as possible</td>
+                        <td>❌ Put more code than necessary in the <code>try</code> block</td>
+                    </tr>
+                    <tr>
+                        <td>✅ Use <code>else</code> for code that should run only if no exceptions occur</td>
+                        <td>❌ Put success-path code directly in the <code>try</code> block when it doesn't need to be there</td>
+                    </tr>
+                    <tr>
+                        <td>✅ Use <code>finally</code> for cleanup code that must always execute</td>
+                        <td>❌ Duplicate cleanup code in both <code>try</code> and <code>except</code> blocks</td>
+                    </tr>
+                    <tr>
+                        <td>✅ Use context managers for resource management when possible</td>
+                        <td>❌ Rely on manual resource cleanup without ensuring it happens in all cases</td>
+                    </tr>
+                    <tr>
+                        <td>✅ Provide meaningful error messages</td>
+                        <td>❌ Silently ignore exceptions without logging or reporting them</td>
+                    </tr>
+                    <tr>
+                        <td>✅ Let exceptions propagate when you can't handle them properly</td>
+                        <td>❌ Catch exceptions just to log them and then re-raise without adding value</td>
+                    </tr>
+                </table>
+                
+                <h3>When to Use Each Component</h3>
+                <ul>
+                    <li><strong>try</strong>: Always required for exception handling, contains the code that might raise exceptions.</li>
+                    <li><strong>except</strong>: Use to handle specific exceptions you can recover from or provide helpful error messages for.</li>
+                    <li><strong>else</strong>: Use when you have code that should run only if no exceptions were raised, especially if this code might raise different exceptions that shouldn't be caught by the preceding <code>except</code> blocks.</li>
+                    <li><strong>finally</strong>: Use for cleanup code that must always execute, regardless of whether exceptions occurred. Especially important for resource management like closing files, database connections, or network sockets.</li>
+                </ul>
+                
+                <h3>Exception Handling Anti-Patterns</h3>
+                <ul>
+                    <li><strong>Pokemon Exception Handling ("Gotta Catch 'Em All")</strong>: Catching all exceptions without discrimination.</li>
+                    <li><strong>Catching Exception Too Broadly</strong>: Using <code>except Exception:</code> at a low level where you should be more specific.</li>
+                    <li><strong>Empty Except Blocks</strong>: Catching exceptions and doing nothing, which hides errors.</li>
+                    <li><strong>Misusing try/except for Control Flow</strong>: Using exceptions for normal program flow rather than for exceptional conditions.</li>
+                    <li><strong>Raising String Exceptions</strong>: Using strings instead of exception objects (obsolete style).</li>
+                    <li><strong>Shadow Variables in Except</strong>: Using a variable name in <code>except Exception as e:</code> that shadows another important variable.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Exercises to Reinforce Learning</h2>
+            
+            <div class="exercise">
+                <h3>Exercise 1: Data Parsing with Error Handling</h3>
+                <p>Create a function that parses a CSV file, with proper error handling for various failure scenarios like missing files, malformed data, and conversion errors.</p>
+                <pre>
+# File: exercises/exercise1.py
+
+def parse_csv_file(filename):
+    """
+    Parse a CSV file and return the data as a list of dictionaries.
+    
+    Args:
+        filename: Path to the CSV file
+        
+    Returns:
+        A list of dictionaries, where each dictionary represents a row
+        with keys from the header row
+    """
+    # Implement with proper try/except/else/finally structure
+    # Handle at least these errors:
+    # - File not found
+    # - Permission errors
+    # - Malformed CSV (e.g., inconsistent number of columns)
+    # - Type conversion errors (e.g., invalid numbers)
+    pass
+
+# Test your function with different scenarios:
+# - A valid CSV file
+# - A nonexistent file
+# - A file with malformed data
+# - A file with invalid numeric values
+                </pre>
+            </div>
+            
+            <div class="exercise">
+                <h3>Exercise 2: Resource Manager Implementation</h3>
+                <p>Implement a resource manager class that properly manages a simulated resource with the full <code>try/except/else/finally</code> pattern.</p>
+                <pre>
+# File: exercises/exercise2.py
+
+class Resource:
+    """A simulated resource that needs proper management."""
+    
+    def __init__(self, name):
+        self.name = name
+        self.is_open = False
+        
+    def open(self):
+        """Open the resource."""
+        if self.is_open:
+            raise ValueError(f"Resource '{self.name}' is already open")
+        print(f"Opening resource: {self.name}")
+        self.is_open = True
+        
+    def use(self, action):
+        """Use the resource for some action."""
+        if not self.is_open:
+            raise ValueError(f"Resource '{self.name}' is not open")
+        print(f"Using resource for: {action}")
+        
+        # Simulate errors for certain actions
+        if "invalid" in action:
+            raise ValueError(f"Invalid action: {action}")
+        if "error" in action:
+            raise RuntimeError(f"Error during action: {action}")
+            
+        return f"Result of {action} on {self.name}"
+        
+    def close(self):
+        """Close the resource."""
+        if not self.is_open:
+            raise ValueError(f"Resource '{self.name}' is not open")
+        print(f"Closing resource: {self.name}")
+        self.is_open = False
+
+def use_resource(resource_name, action):
+    """
+    Use a resource with proper error handling.
+    
+    Args:
+        resource_name: Name of the resource to use
+        action: Action to perform with the resource
+        
+    Returns:
+        The result of the action or None if an error occurred
+    """
+    # Implement with proper try/except/else/finally structure
+    # Ensure the resource is always properly closed
+    pass
+
+# Test your function with different scenarios:
+# - Normal usage
+# - Resource already open
+# - Invalid action
+# - Error during action
+                </pre>
+            </div>
+            
+            <div class="exercise">
+                <h3>Exercise 3: Custom Context Manager with Transactions</h3>
+                <p>Implement a custom context manager that simulates a database transaction with rollback capabilities.</p>
+                <pre>
+# File: exercises/exercise3.py
+
+class DatabaseTransaction:
+    """
+    A context manager for database transactions.
+    
+    Args:
+        connection: A database connection object
+        
+    This context manager should:
+    1. Begin a transaction in __enter__
+    2. Commit the transaction in __exit__ if no exceptions
+    3. Rollback the transaction in __exit__ if an exception occurs
+    """
+    
+    def __init__(self, connection):
+        # Initialize your context manager
+        pass
+        
+    def __enter__(self):
+        # Start the transaction
+        pass
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # Commit or rollback the transaction
+        pass
+
+# A mock database connection for testing
+class MockDatabaseConnection:
+    def __init__(self):
+        self.in_transaction = False
+        
+    def begin_transaction(self):
+        if self.in_transaction:
+            raise ValueError("Transaction already in progress")
+        print("Beginning transaction")
+        self.in_transaction = True
+        
+    def commit(self):
+        if not self.in_transaction:
+            raise ValueError("No transaction in progress")
+        print("Committing transaction")
+        self.in_transaction = False
+        
+    def rollback(self):
+        if not self.in_transaction:
+            raise ValueError("No transaction in progress")
+        print("Rolling back transaction")
+        self.in_transaction = False
+        
+    def execute(self, query):
+        if "error" in query.lower():
+            raise RuntimeError(f"Error executing query: {query}")
+        print(f"Executing query: {query}")
+        
+# Test your context manager with different scenarios:
+# - Successful transaction
+# - Failed transaction due to an error
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Summary</h2>
+            
+            <div class="summary">
+                <h3>Key Takeaways</h3>
+                <ul>
+                    <li>The <code>try/except/else/finally</code> structure provides a comprehensive framework for handling exceptions in Python.</li>
+                    <li>Each component has a specific role:
+                        <ul>
+                            <li><code>try</code>: Contains code that might raise exceptions</li>
+                            <li><code>except</code>: Handles specific exceptions if they occur</li>
+                            <li><code>else</code>: Executes only if no exceptions were raised in the <code>try</code> block</li>
+                            <li><code>finally</code>: Always executes, regardless of whether exceptions occurred</li>
+                        </ul>
+                    </li>
+                    <li>Using these components effectively leads to more robust, maintainable code that can handle errors gracefully.</li>
+                    <li>Context managers (<code>with</code> statement) provide a clean, Pythonic way to manage resources with automatic setup and cleanup.</li>
+                    <li>Advanced techniques like exception chaining and custom context managers build upon these basic structures for more sophisticated error handling.</li>
+                </ul>
+                
+                <h3>Mental Model: The Four Phases of Exception Handling</h3>
+                <p>Think of exception handling as having four phases:</p>
+                <ol>
+                    <li><strong>Attempt</strong> (<code>try</code>): "Let me try this operation that might fail."</li>
+                    <li><strong>Respond to Failure</strong> (<code>except</code>): "If something specific goes wrong, here's how I'll handle it."</li>
+                    <li><strong>Success Path</strong> (<code>else</code>): "If everything went well, here's what I'll do next."</li>
+                    <li><strong>Cleanup</strong> (<code>finally</code>): "Regardless of what happened, I need to do this cleanup."</li>
+                </ol>
+                
+                <p>This mental model helps you structure your exception handling code logically and ensures you don't miss important aspects of robust error handling.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

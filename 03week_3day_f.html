@@ -1,0 +1,2887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exception Handling Deep Dive in Python</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Exception Handling Deep Dive in Python</h1>
+        <h2>Week 3: Python Fundamentals - Error Management</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h2>Introduction to Exception Handling</h2>
+            <p>Welcome to our deep dive into Python's exception handling system! Exception handling is one of the most powerful features in Python, allowing you to write robust code that can gracefully handle errors and unexpected situations.</p>
+            
+            <p>Think of exceptions as unexpected detours on a journey. When you're driving to a destination, you might encounter road closures, traffic jams, or other obstacles. Similarly, when your program runs, it might encounter various "exceptions" to the normal flow: missing files, network failures, invalid inputs, and more. Exception handling gives you the tools to navigate these detours effectively.</p>
+
+            <div class="folder-structure">
+                <h3>Folder Structure for Today's Examples</h3>
+                <pre>
+exception_examples/
+├── basics/
+│   ├── try_except_basics.py
+│   ├── multiple_except.py
+│   ├── else_finally.py
+│   └── exception_propagation.py
+├── custom_exceptions/
+│   ├── custom_exception_classes.py
+│   ├── exception_hierarchy.py
+│   └── business_logic_exceptions.py
+├── advanced/
+│   ├── context_managers.py
+│   ├── cleanup_actions.py
+│   ├── exception_chaining.py
+│   └── traceback_manipulation.py
+├── patterns/
+│   ├── retry_pattern.py
+│   ├── circuit_breaker.py
+│   ├── transaction_pattern.py
+│   └── error_handling_middleware.py
+└── exercises/
+    ├── exercise1.py
+    ├── exercise2.py
+    └── exercise3.py
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Understanding Exceptions: The Anatomy of Error Handling</h2>
+            
+            <p>Before diving into the mechanics of handling exceptions, let's understand what they are and how they work in Python.</p>
+            
+            <div class="explanation">
+                <h3>What Are Exceptions?</h3>
+                <p>Exceptions are events that occur during the execution of a program that disrupt the normal flow of instructions. When an error occurs, Python creates an exception object containing information about the error, and the normal program flow stops.</p>
+                
+                <p>If the exception is not handled (or "caught"), the program will terminate with an error message. However, exceptions can be caught and processed, allowing your program to recover from errors gracefully.</p>
+            </div>
+            
+            <div class="explanation">
+                <h3>The Exception Hierarchy</h3>
+                <p>Python has a rich hierarchy of built-in exception classes, all inheriting from the base <code>BaseException</code> class. Here's a simplified view of the hierarchy:</p>
+                
+                <pre>
+BaseException
+ ├── SystemExit              # Raised by sys.exit()
+ ├── KeyboardInterrupt       # Raised when the user presses Ctrl+C
+ ├── GeneratorExit           # Raised when a generator is closed
+ └── Exception               # Base class for all standard exceptions
+      ├── StopIteration      # Raised when an iterator has no more values
+      ├── ArithmeticError    # Base for arithmetic errors
+      │    ├── FloatingPointError
+      │    ├── OverflowError
+      │    └── ZeroDivisionError
+      ├── AssertionError     # Raised by assert statements
+      ├── AttributeError     # Raised when attribute reference fails
+      ├── BufferError        # Raised for buffer-related errors
+      ├── EOFError           # Raised when input() hits end-of-file
+      ├── ImportError        # Raised when import fails
+      │    └── ModuleNotFoundError
+      ├── LookupError        # Base for lookup errors
+      │    ├── IndexError    # Raised for out-of-range sequence indexes
+      │    └── KeyError      # Raised for non-existent dictionary keys
+      ├── MemoryError        # Raised when memory allocation fails
+      ├── NameError          # Raised for non-existent variables
+      │    └── UnboundLocalError
+      ├── OSError            # Base for system-related errors
+      │    ├── FileExistsError
+      │    ├── FileNotFoundError
+      │    ├── PermissionError
+      │    └── TimeoutError
+      ├── ReferenceError     # Raised for weak references
+      ├── RuntimeError       # Generic runtime error
+      │    ├── NotImplementedError
+      │    └── RecursionError
+      ├── SyntaxError        # Raised for parsing errors
+      │    └── IndentationError
+      ├── SystemError        # Internal Python system error
+      ├── TypeError          # Raised for improper type usage
+      ├── ValueError         # Raised for improper value
+      │    └── UnicodeError
+      └── Warning            # Base for warning categories
+                </pre>
+                
+                <p>Understanding this hierarchy helps you catch exceptions at the appropriate level of specificity. For example, you might catch <code>OSError</code> to handle any operating system-related errors, or specifically catch <code>FileNotFoundError</code> to handle only that specific case.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Basic Exception Handling: try, except, else, and finally</h2>
+            
+            <p>The fundamental mechanism for handling exceptions in Python is the <code>try</code>/<code>except</code> block, often enhanced with <code>else</code> and <code>finally</code> clauses.</p>
+            
+            <div class="code-example">
+                <h3>The Basic try/except Block</h3>
+                <pre>
+# File: basics/try_except_basics.py
+
+def divide_numbers(a, b):
+    try:
+        # Code that might raise an exception
+        result = a / b
+        return result
+    except ZeroDivisionError:
+        # Code that executes if a ZeroDivisionError occurs
+        print("Error: Cannot divide by zero!")
+        return None
+
+# Test the function
+print(divide_numbers(10, 2))  # Works fine: 5.0
+print(divide_numbers(10, 0))  # Handles the error gracefully
+                </pre>
+                
+                <p>Think of a <code>try</code> block as a safety net. You're telling Python: "Try to execute this code, and if anything goes wrong, I have a plan to handle it."</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Handling Multiple Exception Types</h3>
+                <pre>
+# File: basics/multiple_except.py
+
+def process_data(data):
+    try:
+        # Multiple things could go wrong here
+        value = data['key']
+        result = 100 / value
+        return result
+    except KeyError:
+        # Handles missing dictionary key
+        print("Error: The required key doesn't exist in the data!")
+        return None
+    except TypeError:
+        # Handles case where data is not a dictionary
+        print("Error: The data is not a dictionary!")
+        return None
+    except ZeroDivisionError:
+        # Handles division by zero
+        print("Error: Cannot divide by zero!")
+        return None
+    except Exception as e:
+        # Catches any other exceptions
+        print(f"Unexpected error: {e}")
+        return None
+
+# Test with different scenarios
+print(process_data({'key': 4}))         # Works fine: 25.0
+print(process_data({'different_key': 4}))  # KeyError
+print(process_data("not a dict"))       # TypeError
+print(process_data({'key': 0}))         # ZeroDivisionError
+print(process_data({'key': '4'}))       # TypeError (can't divide by string)
+                </pre>
+                
+                <p>You can catch multiple exception types by providing multiple <code>except</code> blocks. Python will check each exception type in order and execute the first matching handler.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Using else and finally</h3>
+                <pre>
+# File: basics/else_finally.py
+
+def read_file(filename):
+    try:
+        file = open(filename, 'r')
+        content = file.read()
+    except FileNotFoundError:
+        print(f"Error: The file '{filename}' was not found.")
+        return None
+    except PermissionError:
+        print(f"Error: You don't have permission to read '{filename}'.")
+        return None
+    except Exception as e:
+        print(f"Unexpected error while reading the file: {e}")
+        return None
+    else:
+        # This code executes if no exceptions were raised in the try block
+        print(f"Successfully read {len(content)} characters from '{filename}'.")
+        return content
+    finally:
+        # This code always executes, regardless of whether an exception occurred
+        print("Cleanup: Ensuring file is closed.")
+        try:
+            file.close()
+        except:
+            # Handle case where file was never successfully opened
+            pass
+
+# Test with different scenarios
+content = read_file("existing_file.txt")  # Successful case
+content = read_file("nonexistent_file.txt")  # FileNotFoundError
+                </pre>
+                
+                <p>The <code>else</code> block runs only if no exceptions were raised in the <code>try</code> block. This is useful for code that should only execute if the try block was successful.</p>
+                
+                <p>The <code>finally</code> block always runs, regardless of whether an exception occurred. This is perfect for cleanup operations like closing files, network connections, or releasing other resources.</p>
+            </div>
+            
+            <div class="analogy">
+                <h3>The Restaurant Analogy</h3>
+                <p>Think of exception handling like dining at a restaurant:</p>
+                <ul>
+                    <li><code>try</code>: You order a meal and hope for the best.</li>
+                    <li><code>except</code>: If something goes wrong (they're out of your dish, it's undercooked, etc.), you have a backup plan (order something else, send it back).</li>
+                    <li><code>else</code>: If your meal is perfect, you might order dessert.</li>
+                    <li><code>finally</code>: Regardless of how the meal went, you always pay the bill and leave the restaurant.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Exception Propagation: How Exceptions Travel</h2>
+            
+            <p>When an exception occurs, it doesn't just disappear—it propagates up the call stack until it's either caught or reaches the main program, causing it to terminate.</p>
+            
+            <div class="code-example">
+                <h3>Basic Exception Propagation</h3>
+                <pre>
+# File: basics/exception_propagation.py
+
+def level3():
+    # This function raises an exception
+    x = 1 / 0  # ZeroDivisionError
+    return x
+
+def level2():
+    # This function calls level3
+    print("Entering level2")
+    result = level3()
+    print("Exiting level2")  # This line never executes if level3 raises an exception
+    return result
+
+def level1():
+    # This function calls level2, but catches exceptions
+    print("Entering level1")
+    try:
+        result = level2()
+        return result
+    except ZeroDivisionError:
+        print("Caught divide by zero error in level1")
+        return None
+    finally:
+        print("Exiting level1")
+
+# Main program
+print("Starting program")
+result = level1()
+print(f"Final result: {result}")
+print("Program completed")
+
+# Output:
+# Starting program
+# Entering level1
+# Entering level2
+# Caught divide by zero error in level1
+# Exiting level1
+# Final result: None
+# Program completed
+                </pre>
+                
+                <p>In this example, the <code>ZeroDivisionError</code> originates in <code>level3()</code>, but it's not handled there. It propagates up to <code>level2()</code>, which also doesn't handle it. Finally, it reaches <code>level1()</code>, which has a <code>try/except</code> block that catches it.</p>
+                
+                <p>This is like a hot potato being passed up a line of people until someone has gloves to handle it.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Partial Handling and Re-raising</h3>
+                <pre>
+# File: basics/exception_reraising.py
+
+def process_data(data):
+    try:
+        value = 100 / data
+        return value
+    except ZeroDivisionError:
+        # We'll handle this partially, then re-raise
+        print("Warning: Attempted to divide by zero!")
+        # We can do some cleanup or logging here
+        
+        # Then re-raise the exception to let the caller handle it further
+        raise  # Re-raises the current exception
+
+def main():
+    try:
+        result = process_data(0)
+        print(f"Result: {result}")
+    except ZeroDivisionError:
+        print("Error handled in main: Cannot divide by zero")
+        # Provide a default value or alternative
+        result = float('inf')  # Use infinity as a fallback
+        print(f"Using fallback value: {result}")
+
+# Run the program
+main()
+
+# Output:
+# Warning: Attempted to divide by zero!
+# Error handled in main: Cannot divide by zero
+# Using fallback value: inf
+                </pre>
+                
+                <p>Sometimes, you may want to handle an exception partially at one level, then let a higher level handle it further. You can do this by re-raising the exception using the <code>raise</code> statement without arguments.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Catching Exceptions at Different Levels</h3>
+                <pre>
+# File: basics/multilevel_exception_handling.py
+
+def parse_data(data_string):
+    try:
+        # Attempt to parse as an integer
+        return int(data_string)
+    except ValueError:
+        # If that fails, try to parse as float
+        try:
+            return float(data_string)
+        except ValueError:
+            # If that also fails, raise a custom error
+            raise ValueError(f"Cannot parse '{data_string}' as a number")
+
+def process_input(input_value):
+    try:
+        number = parse_data(input_value)
+        result = 100 / number
+        return f"Processing complete: {result}"
+    except ValueError as e:
+        # Handle parsing errors
+        return f"Input error: {e}"
+    except ZeroDivisionError:
+        # Handle division by zero
+        return "Error: Cannot divide by zero"
+
+# Test with different inputs
+inputs = ["42", "3.14", "zero", "0"]
+for input_value in inputs:
+    output = process_input(input_value)
+    print(f"Input: {input_value} -> {output}")
+
+# Output:
+# Input: 42 -> Processing complete: 2.380952380952381
+# Input: 3.14 -> Processing complete: 31.847133757961785
+# Input: zero -> Input error: Cannot parse 'zero' as a number
+# Input: 0 -> Error: Cannot divide by zero
+                </pre>
+                
+                <p>This example shows how exceptions can be caught and handled at different levels in your program, based on where it makes the most sense to handle each type of error.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Custom Exceptions: Creating Your Own Error Types</h2>
+            
+            <p>Python allows you to define your own exception types by creating classes that inherit from the built-in <code>Exception</code> class or one of its subclasses. This is a powerful way to express domain-specific errors in your code.</p>
+            
+            <div class="code-example">
+                <h3>Basic Custom Exceptions</h3>
+                <pre>
+# File: custom_exceptions/custom_exception_classes.py
+
+# Define custom exception classes
+class InsufficientFundsError(Exception):
+    """Raised when a bank account doesn't have enough money for a withdrawal."""
+    pass
+
+class InvalidAmountError(Exception):
+    """Raised when an invalid monetary amount is provided."""
+    pass
+
+class AccountLockedError(Exception):
+    """Raised when an operation is attempted on a locked account."""
+    pass
+
+# A simple bank account class using custom exceptions
+class BankAccount:
+    def __init__(self, account_id, balance=0):
+        self.account_id = account_id
+        self.balance = balance
+        self.is_locked = False
+    
+    def deposit(self, amount):
+        if self.is_locked:
+            raise AccountLockedError(f"Account {self.account_id} is locked")
+        
+        if amount <= 0:
+            raise InvalidAmountError(f"Deposit amount must be positive, got {amount}")
+        
+        self.balance += amount
+        return self.balance
+    
+    def withdraw(self, amount):
+        if self.is_locked:
+            raise AccountLockedError(f"Account {self.account_id} is locked")
+        
+        if amount <= 0:
+            raise InvalidAmountError(f"Withdrawal amount must be positive, got {amount}")
+        
+        if amount > self.balance:
+            raise InsufficientFundsError(
+                f"Cannot withdraw ${amount}. Account balance is ${self.balance}"
+            )
+        
+        self.balance -= amount
+        return self.balance
+    
+    def lock_account(self):
+        self.is_locked = True
+    
+    def unlock_account(self):
+        self.is_locked = False
+
+# Usage example
+def demonstrate_custom_exceptions():
+    account = BankAccount("12345", 100)
+    
+    try:
+        account.deposit(50)
+        print(f"Balance after deposit: ${account.balance}")
+        
+        account.withdraw(30)
+        print(f"Balance after withdrawal: ${account.balance}")
+        
+        # This should raise an InsufficientFundsError
+        account.withdraw(200)
+    except InsufficientFundsError as e:
+        print(f"Error: {e}")
+    
+    try:
+        # This should raise an InvalidAmountError
+        account.deposit(-50)
+    except InvalidAmountError as e:
+        print(f"Error: {e}")
+    
+    account.lock_account()
+    try:
+        # This should raise an AccountLockedError
+        account.withdraw(10)
+    except AccountLockedError as e:
+        print(f"Error: {e}")
+
+# Run the demonstration
+demonstrate_custom_exceptions()
+                </pre>
+                
+                <p>Creating custom exceptions makes your code more expressive and helps users of your code understand what went wrong. It's like creating a specialized language for the errors in your domain.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Custom Exception Hierarchy</h3>
+                <pre>
+# File: custom_exceptions/exception_hierarchy.py
+
+# Base exception for our application
+class AppError(Exception):
+    """Base exception for the application."""
+    pass
+
+# Database error hierarchy
+class DatabaseError(AppError):
+    """Base exception for database-related errors."""
+    pass
+
+class ConnectionError(DatabaseError):
+    """Raised when database connection fails."""
+    pass
+
+class QueryError(DatabaseError):
+    """Raised when a database query fails."""
+    pass
+
+# Validation error hierarchy
+class ValidationError(AppError):
+    """Base exception for validation-related errors."""
+    pass
+
+class RequiredFieldError(ValidationError):
+    """Raised when a required field is missing."""
+    def __init__(self, field_name):
+        self.field_name = field_name
+        super().__init__(f"Required field missing: {field_name}")
+
+class InvalidFormatError(ValidationError):
+    """Raised when a field has an invalid format."""
+    def __init__(self, field_name, expected_format):
+        self.field_name = field_name
+        self.expected_format = expected_format
+        super().__init__(
+            f"Field '{field_name}' has invalid format. Expected: {expected_format}"
+        )
+
+# Authentication error hierarchy
+class AuthError(AppError):
+    """Base exception for authentication-related errors."""
+    pass
+
+class LoginFailedError(AuthError):
+    """Raised when login fails."""
+    pass
+
+class PermissionDeniedError(AuthError):
+    """Raised when user doesn't have permission for an action."""
+    pass
+
+# Example usage with a database connection function
+def connect_to_database(connection_string):
+    try:
+        # Simulate connection logic
+        if not connection_string:
+            raise ConnectionError("Empty connection string")
+        
+        if "invalid" in connection_string:
+            raise ConnectionError(f"Invalid connection string: {connection_string}")
+        
+        print(f"Connected to database with {connection_string}")
+        return {"connection": "object"}
+    
+    except ConnectionError:
+        # Re-raise the exception
+        raise
+    except Exception as e:
+        # Wrap any other exceptions in our custom type
+        raise DatabaseError(f"Unexpected database error: {e}")
+
+# Example validation function
+def validate_user(user_data):
+    required_fields = ['username', 'email', 'password']
+    
+    # Check required fields
+    for field in required_fields:
+        if field not in user_data or not user_data[field]:
+            raise RequiredFieldError(field)
+    
+    # Validate email format (simplified)
+    if '@' not in user_data['email']:
+        raise InvalidFormatError('email', 'valid email address')
+    
+    # Validate password length
+    if len(user_data['password']) < 8:
+        raise InvalidFormatError('password', 'at least 8 characters')
+    
+    return True
+
+# Example usage
+def process_user_registration(user_data):
+    try:
+        # Validate user data
+        validate_user(user_data)
+        
+        # Connect to database
+        db = connect_to_database("mysql://validconnection")
+        
+        # Additional processing would go here
+        print(f"User {user_data['username']} registered successfully")
+        
+    except ValidationError as e:
+        print(f"Validation failed: {e}")
+        # Log error, display to user, etc.
+        
+    except DatabaseError as e:
+        print(f"Database error: {e}")
+        # Log error, retry, or show system error
+        
+    except AppError as e:
+        print(f"Application error: {e}")
+        # Generic application error handling
+
+# Test with valid and invalid data
+valid_user = {
+    'username': 'johndoe',
+    'email': 'john@example.com',
+    'password': 'securepass123'
+}
+
+invalid_user = {
+    'username': 'janedoe',
+    'email': 'invalid-email',
+    'password': 'short'
+}
+
+missing_field_user = {
+    'username': 'bobsmith',
+    # missing email
+    'password': 'securepw456'
+}
+
+process_user_registration(valid_user)
+process_user_registration(invalid_user)
+process_user_registration(missing_field_user)
+                </pre>
+                
+                <p>Creating a hierarchy of custom exceptions allows you to catch exceptions at different levels of specificity. It's like having categories and subcategories for different types of errors.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Adding Context to Custom Exceptions</h3>
+                <pre>
+# File: custom_exceptions/enhanced_exceptions.py
+
+class DataProcessingError(Exception):
+    """Base exception for data processing errors."""
+    
+    def __init__(self, message, data=None, source=None):
+        self.data = data
+        self.source = source
+        self.message = message
+        
+        # Create a more informative error message with context
+        error_msg = message
+        if source:
+            error_msg += f" (Source: {source})"
+        
+        super().__init__(error_msg)
+    
+    def get_context(self):
+        """Return a dictionary with all context information."""
+        return {
+            'message': self.message,
+            'data': self.data,
+            'source': self.source
+        }
+
+class DataParsingError(DataProcessingError):
+    """Raised when data cannot be parsed correctly."""
+    
+    def __init__(self, message, data=None, source=None, line_number=None):
+        self.line_number = line_number
+        
+        # Include line number in the error message if available
+        if line_number is not None:
+            message = f"{message} at line {line_number}"
+        
+        super().__init__(message, data, source)
+    
+    def get_context(self):
+        context = super().get_context()
+        context['line_number'] = self.line_number
+        return context
+
+# Example usage
+def parse_data_file(filename):
+    try:
+        with open(filename, 'r') as file:
+            for i, line in enumerate(file, 1):
+                try:
+                    # Simulate parsing logic
+                    parts = line.strip().split(',')
+                    
+                    if len(parts) < 2:
+                        raise DataParsingError(
+                            "Insufficient data fields",
+                            data=line.strip(),
+                            source=filename,
+                            line_number=i
+                        )
+                    
+                    # Process the data
+                    print(f"Processed line {i}: {parts}")
+                    
+                except DataParsingError:
+                    # Re-raise parsing errors
+                    raise
+                except Exception as e:
+                    # Wrap other errors in our custom exception
+                    raise DataParsingError(
+                        f"Error parsing data: {e}",
+                        data=line.strip(),
+                        source=filename,
+                        line_number=i
+                    )
+    
+    except FileNotFoundError:
+        raise DataProcessingError(f"File not found", source=filename)
+
+# Error handling function
+def process_with_detailed_errors():
+    try:
+        parse_data_file("sample_data.csv")
+    except DataParsingError as e:
+        print(f"Parsing error: {e}")
+        context = e.get_context()
+        print("Error context:")
+        for key, value in context.items():
+            print(f"  {key}: {value}")
+    except DataProcessingError as e:
+        print(f"Processing error: {e}")
+        context = e.get_context()
+        print("Error context:")
+        for key, value in context.items():
+            print(f"  {key}: {value}")
+
+process_with_detailed_errors()
+                </pre>
+                
+                <p>Enhancing custom exceptions with additional context information makes debugging easier and provides more helpful error messages to users of your code.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Advanced Exception Handling Techniques</h2>
+            
+            <p>Python offers several advanced techniques for handling exceptions that can make your code more robust and easier to maintain.</p>
+            
+            <div class="code-example">
+                <h3>Exception Chaining with raise from</h3>
+                <pre>
+# File: advanced/exception_chaining.py
+
+def fetch_data_from_database(query):
+    try:
+        # Simulate a database operation
+        if "SELECT" not in query.upper():
+            raise ValueError("Invalid query: must be a SELECT statement")
+        
+        # Simulate connectivity issues
+        if "users" in query.lower():
+            raise ConnectionError("Database connection timeout")
+        
+        return ["result1", "result2"]
+    
+    except (ValueError, ConnectionError) as e:
+        # Chain the original exception to a new, more specific one
+        raise DatabaseQueryError(f"Failed to execute query: {query}") from e
+
+class DatabaseQueryError(Exception):
+    """Raised when a database query fails."""
+    pass
+
+def get_user_data(user_id):
+    try:
+        query = f"SELECT * FROM users WHERE id = {user_id}"
+        return fetch_data_from_database(query)
+    except DatabaseQueryError as e:
+        print(f"Error: {e}")
+        # Access the original exception that caused this one
+        original_error = e.__cause__
+        print(f"Caused by: {original_error} (type: {type(original_error).__name__})")
+        return None
+
+# Test the function
+result = get_user_data(42)
+print(f"Result: {result}")
+
+# Example with exception not using 'from'
+def bad_exception_chaining():
+    try:
+        # Try something that might fail
+        x = 1 / 0
+    except ZeroDivisionError:
+        # Raising a new exception without chaining loses the original cause
+        raise RuntimeError("Something went wrong!")
+
+try:
+    bad_exception_chaining()
+except RuntimeError as e:
+    print(f"Error: {e}")
+    # This will be None because we didn't use 'raise ... from'
+    print(f"Caused by: {e.__cause__}")
+                </pre>
+                
+                <p>The <code>raise from</code> syntax explicitly chains exceptions, preserving the original cause of an error. This is invaluable for debugging complex applications.</p>
+                
+                <p>Think of it like leaving a trail of breadcrumbs—instead of replacing one error with another, you're creating a chain that leads back to the original problem.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Using Context Managers for Cleanup</h3>
+                <pre>
+# File: advanced/cleanup_actions.py
+
+class Resource:
+    def __init__(self, name):
+        self.name = name
+        print(f"Resource {name} initialized")
+        
+    def read(self):
+        print(f"Reading from resource {self.name}")
+        return f"Data from {self.name}"
+        
+    def close(self):
+        print(f"Resource {self.name} closed")
+
+# Traditional approach with try/finally
+def use_resource_traditional(name):
+    resource = Resource(name)
+    try:
+        data = resource.read()
+        return data
+    finally:
+        resource.close()
+
+# Context manager approach
+class ResourceManager:
+    def __init__(self, name):
+        self.name = name
+        self.resource = None
+        
+    def __enter__(self):
+        self.resource = Resource(self.name)
+        return self.resource
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.resource:
+            self.resource.close()
+        
+        # Return True to suppress the exception, False to propagate it
+        return False  # Let any exceptions propagate
+
+def use_resource_context_manager(name):
+    with ResourceManager(name) as resource:
+        data = resource.read()
+        return data
+
+# Using a context manager for error handling and cleanup
+def process_resource(name, use_context_manager=True):
+    try:
+        if use_context_manager:
+            print("\nUsing context manager:")
+            data = use_resource_context_manager(name)
+        else:
+            print("\nUsing traditional approach:")
+            data = use_resource_traditional(name)
+            
+        print(f"Processed data: {data}")
+    except Exception as e:
+        print(f"Error processing resource: {e}")
+
+# Test both approaches
+process_resource("file1", use_context_manager=False)
+process_resource("file2", use_context_manager=True)
+
+# Example with built-in context manager
+def process_file(filename):
+    try:
+        with open(filename, 'r') as file:
+            content = file.read()
+            return content
+    except FileNotFoundError:
+        print(f"File not found: {filename}")
+        return None
+
+content = process_file("existing_file.txt")
+print(f"File content: {content}")
+                </pre>
+                
+                <p>Context managers (using the <code>with</code> statement) provide a clean way to ensure that resources are properly managed, even if exceptions occur. They're perfect for files, network connections, database transactions, and other resources that need cleanup.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Traceback Manipulation</h3>
+                <pre>
+# File: advanced/traceback_manipulation.py
+
+import traceback
+import sys
+
+def print_custom_traceback(e):
+    """Print a custom traceback with selective information."""
+    print("\n--- Custom Traceback ---")
+    tb_list = traceback.extract_tb(e.__traceback__)
+    
+    for i, (filename, line, func, text) in enumerate(tb_list):
+        # Skip certain internal frames if desired
+        if "lib/python" in filename and "internal_module" in filename:
+            continue
+            
+        print(f"Frame {i}: File '{filename}', line {line}, in {func}")
+        print(f"  Code: {text}")
+    
+    print(f"Exception: {type(e).__name__}: {e}")
+    print("-----------------------\n")
+
+def capture_exception_info():
+    """Capture and return exception information without raising."""
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    return {
+        "type": exc_type.__name__ if exc_type else None,
+        "message": str(exc_value) if exc_value else None,
+        "traceback": traceback.format_tb(exc_traceback) if exc_traceback else None
+    }
+
+def function_c():
+    # This will raise a ZeroDivisionError
+    return 1 / 0
+
+def function_b():
+    return function_c()
+
+def function_a():
+    return function_b()
+
+def demonstrate_traceback_handling():
+    try:
+        function_a()
+    except Exception as e:
+        # Standard traceback printing
+        print("Standard traceback:")
+        traceback.print_exc()
+        
+        # Custom traceback printing
+        print_custom_traceback(e)
+        
+        # Capturing exception info as a dictionary
+        error_info = capture_exception_info()
+        print("Captured error info as dictionary:")
+        for key, value in error_info.items():
+            print(f"{key}: {value}")
+
+demonstrate_traceback_handling()
+                </pre>
+                
+                <p>Python's <code>traceback</code> module allows you to extract, format, and manipulate the traceback information from exceptions. This is useful for creating custom error reports or logging systems.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Exception Handling Patterns and Best Practices</h2>
+            
+            <p>Let's explore some common patterns and best practices for exception handling in real-world Python applications.</p>
+            
+            <div class="code-example">
+                <h3>The Retry Pattern</h3>
+                <pre>
+# File: patterns/retry_pattern.py
+
+import time
+import random
+
+class TooManyRetriesError(Exception):
+    """Raised when an operation fails after multiple retry attempts."""
+    pass
+
+def retry(func, max_attempts=3, delay=1, backoff_factor=2, exceptions_to_catch=(Exception,)):
+    """
+    Retry a function call with exponential backoff.
+    
+    Args:
+        func: The function to call
+        max_attempts: Maximum number of retry attempts
+        delay: Initial delay between retries (in seconds)
+        backoff_factor: Factor by which the delay increases each retry
+        exceptions_to_catch: Tuple of exception types to catch and retry
+    
+    Returns:
+        The result of the function call if successful
+    
+    Raises:
+        TooManyRetriesError: If the function fails after max_attempts
+    """
+    attempt = 1
+    last_exception = None
+    
+    while attempt <= max_attempts:
+        try:
+            print(f"Attempt {attempt}/{max_attempts}...")
+            return func()
+        except exceptions_to_catch as e:
+            last_exception = e
+            
+            if attempt == max_attempts:
+                # We've reached the maximum attempts, so give up
+                break
+                
+            # Calculate wait time with exponential backoff
+            wait_time = delay * (backoff_factor ** (attempt - 1))
+            
+            # Add some randomness to avoid thundering herd problem
+            jitter = random.uniform(0, 0.1 * wait_time)
+            wait_time += jitter
+            
+            print(f"Attempt {attempt} failed: {e}")
+            print(f"Retrying in {wait_time:.2f} seconds...")
+            
+            time.sleep(wait_time)
+            attempt += 1
+    
+    # If we got here, all attempts failed
+    raise TooManyRetriesError(f"Failed after {max_attempts} attempts. Last error: {last_exception}")
+
+# Example usage with an unreliable network function
+def unreliable_network_call():
+    """Simulate an unreliable network call that sometimes fails."""
+    # Simulate random failures
+    if random.random() < 0.7:  # 70% chance of failure
+        raise ConnectionError("Network timeout")
+    
+    return "Data from network"
+
+# Example with a database connection function
+def unreliable_database_query():
+    """Simulate an unreliable database query."""
+    # Simulate different types of failures
+    failure_type = random.randint(1, 3)
+    
+    if failure_type == 1:
+        raise ConnectionError("Database connection failed")
+    elif failure_type == 2:
+        raise TimeoutError("Query timeout")
+    elif failure_type == 3 and random.random() < 0.5:
+        # 50% chance of this type of failure actually happening
+        raise PermissionError("Insufficient permissions")
+    
+    return ["result1", "result2", "result3"]
+
+# Try the retry pattern
+try:
+    # Retry the unreliable network call
+    result1 = retry(unreliable_network_call, max_attempts=5, delay=0.5)
+    print(f"Network result: {result1}")
+    
+    # Retry the database query, only catching specific exceptions
+    result2 = retry(
+        unreliable_database_query,
+        max_attempts=4,
+        exceptions_to_catch=(ConnectionError, TimeoutError)
+    )
+    print(f"Database result: {result2}")
+    
+except TooManyRetriesError as e:
+    print(f"Operation failed: {e}")
+                </pre>
+                
+                <p>The retry pattern is essential for handling transient errors in distributed systems, like network hiccups or temporary service unavailability.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>The Circuit Breaker Pattern</h3>
+                <pre>
+# File: patterns/circuit_breaker.py
+
+import time
+from enum import Enum, auto
+
+class CircuitState(Enum):
+    CLOSED = auto()  # Normal operation, requests pass through
+    OPEN = auto()    # Not allowing requests through
+    HALF_OPEN = auto()  # Testing if the service is back to normal
+
+class CircuitBreaker:
+    def __init__(self, failure_threshold=5, recovery_timeout=10, expected_exceptions=(Exception,)):
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.expected_exceptions = expected_exceptions
+        
+        self.state = CircuitState.CLOSED
+        self.failure_count = 0
+        self.last_failure_time = None
+        
+    def execute(self, func, *args, **kwargs):
+        """Execute the function with circuit breaker protection."""
+        
+        if self.state == CircuitState.OPEN:
+            # Check if recovery timeout has elapsed
+            if time.time() - self.last_failure_time >= self.recovery_timeout:
+                print("Circuit half-open, testing service...")
+                self.state = CircuitState.HALF_OPEN
+            else:
+                raise CircuitBreakerOpenError(
+                    f"Circuit is open. Service unavailable for another "
+                    f"{self.recovery_timeout - (time.time() - self.last_failure_time):.1f} seconds"
+                )
+        
+        try:
+            result = func(*args, **kwargs)
+            
+            # If the request succeeded and we were in half-open state,
+            # reset the circuit breaker
+            if self.state == CircuitState.HALF_OPEN:
+                print("Service recovered, closing circuit")
+                self.reset()
+                
+            return result
+            
+        except self.expected_exceptions as e:
+            self._handle_failure(e)
+            raise
+    
+    def _handle_failure(self, exception):
+        """Handle a service failure."""
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        
+        if self.state == CircuitState.CLOSED and self.failure_count >= self.failure_threshold:
+            print(f"Failure threshold reached ({self.failure_count}), opening circuit")
+            self.state = CircuitState.OPEN
+            
+        elif self.state == CircuitState.HALF_OPEN:
+            print("Service still failing in half-open state, reopening circuit")
+            self.state = CircuitState.OPEN
+    
+    def reset(self):
+        """Reset the circuit breaker to its initial state."""
+        self.failure_count = 0
+        self.state = CircuitState.CLOSED
+        
+    def __str__(self):
+        return f"CircuitBreaker(state={self.state.name}, failures={self.failure_count})"
+
+class CircuitBreakerOpenError(Exception):
+    """Raised when a service call is attempted while the circuit is open."""
+    pass
+
+# Example with an unreliable service
+def unreliable_service():
+    """Simulate an unreliable service that fails sometimes."""
+    import random
+    
+    # 80% chance of failure during the first 10 calls, then recovers
+    global service_call_count
+    service_call_count += 1
+    
+    failure_probability = 0.8 if service_call_count < 10 else 0.1
+    
+    if random.random() < failure_probability:
+        raise ConnectionError("Service unavailable")
+    
+    return "Service response data"
+
+# Initialize the global counter
+service_call_count = 0
+
+# Create a circuit breaker
+breaker = CircuitBreaker(
+    failure_threshold=3,
+    recovery_timeout=5,
+    expected_exceptions=(ConnectionError, TimeoutError)
+)
+
+# Try making several calls to the service
+for i in range(15):
+    print(f"\nCall {i+1}:")
+    try:
+        result = breaker.execute(unreliable_service)
+        print(f"Service call successful: {result}")
+    except CircuitBreakerOpenError as e:
+        print(f"Circuit breaker prevented call: {e}")
+    except Exception as e:
+        print(f"Service call failed: {e}")
+    
+    print(f"Circuit breaker status: {breaker}")
+    
+    # Short delay between calls
+    time.sleep(1)
+                </pre>
+                
+                <p>The circuit breaker pattern prevents cascading failures by stopping calls to a failing service after too many errors, then periodically testing if the service has recovered.</p>
+                
+                <p>It's like a circuit breaker in your home's electrical system—when there's a problem, it trips to prevent further damage, then later it can be reset.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>The Transaction Pattern</h3>
+                <pre>
+# File: patterns/transaction_pattern.py
+
+class TransactionError(Exception):
+    """Base exception for transaction-related errors."""
+    pass
+
+class Transaction:
+    """Simple transaction context manager."""
+    
+    def __init__(self, *resources):
+        self.resources = resources
+        self.completed = False
+    
+    def __enter__(self):
+        # Begin the transaction
+        print("Beginning transaction")
+        try:
+            for resource in self.resources:
+                if hasattr(resource, 'begin'):
+                    resource.begin()
+            return self
+        except Exception as e:
+            # Rollback if beginning fails
+            self.rollback()
+            raise TransactionError(f"Failed to begin transaction: {e}") from e
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # If an exception occurred, rollback
+        if exc_type is not None:
+            print(f"Transaction failed: {exc_val}")
+            self.rollback()
+            return False  # Let the exception propagate
+        
+        # If we got here, commit the transaction
+        if not self.completed:
+            self.commit()
+        
+        return False  # Let any exceptions propagate
+    
+    def commit(self):
+        """Commit all resources in the transaction."""
+        try:
+            print("Committing transaction")
+            for resource in self.resources:
+                if hasattr(resource, 'commit'):
+                    resource.commit()
+            self.completed = True
+        except Exception as e:
+            # If commit fails, try to rollback
+            self.rollback()
+            raise TransactionError(f"Failed to commit transaction: {e}") from e
+    
+    def rollback(self):
+        """Rollback all resources in the transaction."""
+        print("Rolling back transaction")
+        rollback_exceptions = []
+        
+        # Try to rollback all resources, collecting any exceptions
+        for resource in self.resources:
+            if hasattr(resource, 'rollback'):
+                try:
+                    resource.rollback()
+                except Exception as e:
+                    rollback_exceptions.append(e)
+        
+        # If any rollbacks failed, raise a new exception
+        if rollback_exceptions:
+            raise TransactionError(
+                f"Failed to rollback transaction: {rollback_exceptions}"
+            )
+
+# Example resource classes
+class Database:
+    def __init__(self, name):
+        self.name = name
+        print(f"Database {name} initialized")
+    
+    def begin(self):
+        print(f"Database {self.name}: Beginning transaction")
+    
+    def commit(self):
+        print(f"Database {self.name}: Committing changes")
+    
+    def rollback(self):
+        print(f"Database {self.name}: Rolling back changes")
+    
+    def execute(self, query):
+        print(f"Database {self.name}: Executing query: {query}")
+
+class FileSystem:
+    def __init__(self, root_dir):
+        self.root_dir = root_dir
+        self.temp_files = []
+        print(f"FileSystem at {root_dir} initialized")
+    
+    def begin(self):
+        print(f"FileSystem: Beginning transaction")
+    
+    def commit(self):
+        print(f"FileSystem: Committing {len(self.temp_files)} temporary files")
+        self.temp_files = []
+    
+    def rollback(self):
+        print(f"FileSystem: Deleting {len(self.temp_files)} temporary files")
+        self.temp_files = []
+    
+    def write_file(self, filename, content):
+        print(f"FileSystem: Writing to {filename}")
+        self.temp_files.append(filename)
+
+# Example usage
+def perform_data_migration(success=True):
+    # Create resources
+    db = Database("UserDB")
+    fs = FileSystem("/var/data")
+    
+    # Use transaction pattern
+    with Transaction(db, fs) as transaction:
+        # Perform operations
+        db.execute("SELECT * FROM users")
+        db.execute("UPDATE users SET status = 'active'")
+        
+        fs.write_file("user_export.csv", "user data")
+        fs.write_file("log.txt", "migration completed")
+        
+        # Simulate an error if success=False
+        if not success:
+            raise ValueError("Simulated error during migration")
+        
+        # If we get here and success=True, the transaction will be committed
+
+# Test successful transaction
+print("\nSuccessful transaction:")
+perform_data_migration(success=True)
+
+# Test failed transaction
+print("\nFailed transaction:")
+try:
+    perform_data_migration(success=False)
+except Exception as e:
+    print(f"Caught exception: {e}")
+                </pre>
+                
+                <p>The transaction pattern ensures that a series of operations either all succeed or all fail, with no partial changes. This is crucial for maintaining data consistency.</p>
+            </div>
+            
+            <div class="best-practices">
+                <h3>Exception Handling Best Practices</h3>
+                <ol>
+                    <li><strong>Be specific about which exceptions you catch</strong> - Never use a bare <code>except:</code> statement; always specify the exception types you're expecting.</li>
+                    <li><strong>Don't suppress exceptions without good reason</strong> - If you catch an exception, either handle it properly or re-raise it (possibly in a more specific form).</li>
+                    <li><strong>Clean up resources properly</strong> - Use <code>finally</code> blocks or context managers to ensure resources are released.</li>
+                    <li><strong>Keep exception handling separate from normal code</strong> - Don't mix error handling logic with business logic.</li>
+                    <li><strong>Use custom exceptions for domain-specific errors</strong> - Create a hierarchy that reflects your application's error model.</li>
+                    <li><strong>Include context in exceptions</strong> - Provide enough information to understand what went wrong and how to fix it.</li>
+                    <li><strong>Log exceptions appropriately</strong> - Ensure error information is preserved for debugging.</li>
+                    <li><strong>Consider error recovery strategies</strong> - Retry operations, use defaults, or gracefully degrade functionality.</li>
+                    <li><strong>Don't use exceptions for flow control</strong> - Exceptions should be for exceptional conditions, not normal program flow.</li>
+                    <li><strong>Test your error handling code</strong> - Deliberately trigger exceptions to ensure your handling works.</li>
+                </ol>
+            </div>
+        </section>
+
+        <section>
+            <h2>Debugging and Troubleshooting with Exceptions</h2>
+            
+            <p>Exceptions aren't just for handling errors—they're also powerful debugging tools. Let's explore how to use exceptions effectively during development and troubleshooting.</p>
+            
+            <div class="code-example">
+                <h3>Logging Exceptions</h3>
+                <pre>
+# File: advanced/exception_logging.py
+
+import logging
+import traceback
+import sys
+from datetime import datetime
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("app.log"),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger("ExceptionExample")
+
+def log_exception(e, log_level=logging.ERROR, include_traceback=True):
+    """Log an exception with optional traceback."""
+    exception_type = type(e).__name__
+    
+    # Basic exception info
+    msg = f"Exception {exception_type}: {e}"
+    
+    # Add traceback if requested
+    if include_traceback:
+        exception_traceback = traceback.format_exc()
+        msg += f"\n{exception_traceback}"
+    
+    # Log at the specified level
+    logger.log(log_level, msg)
+
+def log_cause_chain(e, log_level=logging.ERROR):
+    """Log an exception and its causes."""
+    current = e
+    chain = []
+    
+    # Build the cause chain
+    while current:
+        chain.append((type(current).__name__, str(current)))
+        current = current.__cause__
+    
+    # Create message
+    msg_parts = ["Exception chain:"]
+    for i, (exc_type, exc_msg) in enumerate(chain):
+        prefix = "└─ " if i == 0 else f"   {'  ' * i}└─ "
+        msg_parts.append(f"{prefix}{exc_type}: {exc_msg}")
+    
+    msg = "\n".join(msg_parts)
+    logger.log(log_level, msg)
+
+def function_that_logs_exceptions():
+    try:
+        result = 1 / 0
+    except Exception as e:
+        # Basic logging
+        logger.error(f"An error occurred: {e}")
+        
+        # More detailed logging
+        log_exception(e)
+        
+        # Re-raise if needed
+        raise
+
+def demonstrate_logging():
+    # Example 1: Simple exception logging
+    try:
+        logger.info("Running example 1...")
+        function_that_logs_exceptions()
+    except Exception as e:
+        logger.info("Example 1 completed with expected exception")
+    
+    # Example 2: Exception chaining and cause logging
+    try:
+        logger.info("Running example 2...")
+        try:
+            # This will raise a TypeError
+            int("not_a_number")
+        except TypeError as e:
+            # Chain it to a higher-level exception
+            raise ValueError("Failed to process input") from e
+    except Exception as e:
+        # Log the chain of causes
+        log_cause_chain(e)
+        logger.info("Example 2 completed with expected exception")
+    
+    # Example 3: Logging with context
+    try:
+        logger.info("Running example 3...")
+        user_id = "user123"
+        operation = "account_update"
+        timestamp = datetime.now().isoformat()
+        
+        # Simulate an error
+        raise PermissionError("Access denied")
+    except Exception as e:
+        # Log with context
+        logger.error(
+            f"Operation failed: {e}",
+            extra={
+                "user_id": user_id,
+                "operation": operation,
+                "timestamp": timestamp
+            }
+        )
+        logger.info("Example 3 completed with expected exception")
+
+# Run the demonstration
+demonstrate_logging()
+                </pre>
+                
+                <p>Proper exception logging is crucial for troubleshooting issues in production. It provides the context and information needed to understand what went wrong.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Debugging with Assertions</h3>
+                <pre>
+# File: advanced/debugging_with_assertions.py
+
+def calculate_average(numbers):
+    """Calculate the average of a list of numbers."""
+    # Use assertions to validate inputs during development
+    assert isinstance(numbers, list), f"Expected list, got {type(numbers)}"
+    assert numbers, "List cannot be empty"
+    assert all(isinstance(n, (int, float)) for n in numbers), "All elements must be numbers"
+    
+    return sum(numbers) / len(numbers)
+
+def process_user_data(user_data):
+    """Process user data with assertions for debugging."""
+    # Check data structure
+    assert isinstance(user_data, dict), "User data must be a dictionary"
+    
+    # Check required fields
+    assert "name" in user_data, "Missing 'name' field"
+    assert "age" in user_data, "Missing 'age' field"
+    
+    # Check data types
+    assert isinstance(user_data["name"], str), "Name must be a string"
+    assert isinstance(user_data["age"], int), "Age must be an integer"
+    
+    # Check value constraints
+    assert 0 <= user_data["age"] <= 120, "Age must be between 0 and 120"
+    
+    # Process the data
+    print(f"Processing user: {user_data['name']}, {user_data['age']} years old")
+    
+    return {
+        "processed": True,
+        "user_id": hash(user_data["name"]) % 10000,
+        "category": "adult" if user_data["age"] >= 18 else "minor"
+    }
+
+def demonstrate_assertions():
+    # Example 1: Valid input
+    try:
+        average = calculate_average([1, 2, 3, 4, 5])
+        print(f"Average: {average}")
+    except AssertionError as e:
+        print(f"Assertion failed: {e}")
+    
+    # Example 2: Invalid input (empty list)
+    try:
+        average = calculate_average([])
+        print(f"Average: {average}")
+    except AssertionError as e:
+        print(f"Assertion failed: {e}")
+    
+    # Example 3: Invalid input (wrong type)
+    try:
+        average = calculate_average("not a list")
+        print(f"Average: {average}")
+    except AssertionError as e:
+        print(f"Assertion failed: {e}")
+    
+    # Example 4: Valid user data
+    try:
+        result = process_user_data({"name": "Alice", "age": 30})
+        print(f"Result: {result}")
+    except AssertionError as e:
+        print(f"Assertion failed: {e}")
+    
+    # Example 5: Invalid user data
+    try:
+        result = process_user_data({"name": "Bob"})  # Missing age
+        print(f"Result: {result}")
+    except AssertionError as e:
+        print(f"Assertion failed: {e}")
+
+# Assertions can be disabled with the -O flag when running Python
+# If they're performance-critical, use explicit checks instead
+
+# In a production environment, you might have code like this:
+def calculate_average_production(numbers):
+    """Production-safe version of calculate_average."""
+    if not isinstance(numbers, list):
+        raise TypeError(f"Expected list, got {type(numbers)}")
+    if not numbers:
+        raise ValueError("List cannot be empty")
+    if not all(isinstance(n, (int, float)) for n in numbers):
+        raise TypeError("All elements must be numbers")
+    
+    return sum(numbers) / len(numbers)
+
+# Run the demonstration
+demonstrate_assertions()
+                </pre>
+                
+                <p>Assertions are a great tool during development for catching logical errors and validating assumptions. Unlike regular exception handling, they're meant to catch programmer errors rather than runtime conditions.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Exercises to Reinforce Learning</h2>
+            
+            <div class="exercise">
+                <h3>Exercise 1: File Processing with Error Handling</h3>
+                <p>Create a function that reads data from multiple files, processes it, and writes the results to an output file. Implement robust error handling for various failure scenarios.</p>
+                <pre>
+# File: exercises/file_processor.py
+
+def process_files(input_files, output_file):
+    """
+    Process multiple input files and write the results to an output file.
+    
+    Args:
+        input_files: List of input file paths
+        output_file: Path to the output file
+    
+    Returns:
+        A dict with statistics about the processing
+    """
+    # Implement this function with robust error handling
+    # Handle cases like:
+    # - Missing input files
+    # - Permission errors
+    # - Invalid file formats
+    # - Output file write errors
+    # Use try/except blocks appropriately
+    # Use finally for cleanup
+    # Use custom exceptions if appropriate
+    pass
+
+# Example usage
+input_files = ["data1.txt", "data2.txt", "missing.txt"]
+output_file = "results.txt"
+stats = process_files(input_files, output_file)
+print(f"Processing statistics: {stats}")
+                </pre>
+            </div>
+            
+            <div class="exercise">
+                <h3>Exercise 2: API Client with Error Handling</h3>
+                <p>Create a simulated API client class with methods for making requests. Implement error handling for various failure scenarios, including transient errors, authentication issues, and unexpected responses.</p>
+                <pre>
+# File: exercises/api_client.py
+
+class APIError(Exception):
+    """Base exception for API-related errors."""
+    pass
+
+class ConnectionError(APIError):
+    """Raised when the API connection fails."""
+    pass
+
+class AuthenticationError(APIError):
+    """Raised when authentication fails."""
+    pass
+
+class RateLimitError(APIError):
+    """Raised when the API rate limit is exceeded."""
+    pass
+
+class APIClient:
+    """
+    A simulated API client with error handling.
+    """
+    
+    def __init__(self, api_key, base_url):
+        self.api_key = api_key
+        self.base_url = base_url
+        # Initialize other properties as needed
+    
+    def get(self, endpoint, params=None):
+        """Make a GET request to the API."""
+        # Implement with error handling
+        pass
+    
+    def post(self, endpoint, data=None):
+        """Make a POST request to the API."""
+        # Implement with error handling
+        pass
+    
+    def put(self, endpoint, data=None):
+        """Make a PUT request to the API."""
+        # Implement with error handling
+        pass
+    
+    def delete(self, endpoint):
+        """Make a DELETE request to the API."""
+        # Implement with error handling
+        pass
+
+# Example usage (simulate different scenarios)
+def demonstrate_api_client():
+    # Initialize client
+    client = APIClient("your_api_key", "https://api.example.com")
+    
+    try:
+        # Make some requests
+        response = client.get("/users")
+        print(f"GET response: {response}")
+        
+        response = client.post("/users", {"name": "New User"})
+        print(f"POST response: {response}")
+        
+        # Simulate different error scenarios
+        # ...
+        
+    except AuthenticationError as e:
+        print(f"Authentication error: {e}")
+    except RateLimitError as e:
+        print(f"Rate limit exceeded: {e}")
+    except ConnectionError as e:
+        print(f"Connection failed: {e}")
+    except APIError as e:
+        print(f"API error: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+demonstrate_api_client()
+                </pre>
+            </div>
+            
+            <div class="exercise">
+                <h3>Exercise 3: Database Transaction Manager</h3>
+                <p>Create a database transaction manager that uses context managers for handling transactions. Implement proper error handling and resource cleanup.</p>
+                <pre>
+# File: exercises/transaction_manager.py
+
+class DatabaseError(Exception):
+    """Base exception for database-related errors."""
+    pass
+
+class ConnectionError(DatabaseError):
+    """Raised when database connection fails."""
+    pass
+
+class QueryError(DatabaseError):
+    """Raised when a query fails."""
+    pass
+
+class TransactionError(DatabaseError):
+    """Raised when a transaction fails."""
+    pass
+
+class Database:
+    """
+    A simulated database connection.
+    """
+    
+    def __init__(self, connection_string):
+        self.connection_string = connection_string
+        self.connection = None
+        self.in_transaction = False
+    
+    def connect(self):
+        """Connect to the database."""
+        # Simulate connection
+        print(f"Connecting to database: {self.connection_string}")
+        self.connection = {"status": "connected"}
+        return self.connection
+    
+    def close(self):
+        """Close the database connection."""
+        if self.connection:
+            print("Closing database connection")
+            self.connection = None
+    
+    def execute(self, query, params=None):
+        """Execute a SQL query."""
+        if not self.connection:
+            raise ConnectionError("Not connected to database")
+        
+        print(f"Executing query: {query}")
+        # Simulate query execution
+        return {"rows": 10, "affected": 5}
+    
+    def begin_transaction(self):
+        """Begin a new transaction."""
+        if not self.connection:
+            raise ConnectionError("Not connected to database")
+        
+        if self.in_transaction:
+            raise TransactionError("Transaction already in progress")
+        
+        print("Beginning transaction")
+        self.in_transaction = True
+    
+    def commit(self):
+        """Commit the current transaction."""
+        if not self.connection:
+            raise ConnectionError("Not connected to database")
+        
+        if not self.in_transaction:
+            raise TransactionError("No transaction in progress")
+        
+        print("Committing transaction")
+        self.in_transaction = False
+    
+    def rollback(self):
+        """Roll back the current transaction."""
+        if not self.connection:
+            raise ConnectionError("Not connected to database")
+        
+        if not self.in_transaction:
+            raise TransactionError("No transaction in progress")
+        
+        print("Rolling back transaction")
+        self.in_transaction = False
+
+        
+        class DatabaseConnectionManager:
+            """
+            A context manager for database connections.
+            """
+            
+            def __init__(self, connection_string):
+                self.connection_string = connection_string
+                self.db = None
+            
+            def __enter__(self):
+                """Set up the database connection."""
+                self.db = Database(self.connection_string)
+                try:
+                    self.db.connect()
+                    return self.db
+                except Exception as e:
+                    # If connection fails, clean up and re-raise
+                    self.db = None
+                    raise ConnectionError(f"Failed to connect to database: {e}") from e
+            
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                """Clean up the database connection."""
+                if self.db:
+                    try:
+                        self.db.close()
+                    except Exception as e:
+                        print(f"Warning: Error closing database connection: {e}")
+                
+                # Let any exceptions propagate
+                return False
+        
+        class TransactionManager:
+            """
+            A context manager for database transactions.
+            """
+            
+            def __init__(self, database):
+                self.db = database
+            
+            def __enter__(self):
+                """Begin the transaction."""
+                try:
+                    self.db.begin_transaction()
+                    return self
+                except Exception as e:
+                    raise TransactionError(f"Failed to begin transaction: {e}") from e
+            
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                """Commit or roll back the transaction."""
+                if exc_type is not None:
+                    # An exception occurred, roll back the transaction
+                    try:
+                        self.db.rollback()
+                        print(f"Transaction rolled back due to: {exc_val}")
+                    except Exception as e:
+                        print(f"Warning: Error rolling back transaction: {e}")
+                    return False  # Let the exception propagate
+                
+                # No exception, commit the transaction
+                try:
+                    self.db.commit()
+                    return True  # Indicate success
+                except Exception as e:
+                    # Try to roll back if commit fails
+                    try:
+                        self.db.rollback()
+                    except:
+                        pass  # Ignore errors in rollback after failed commit
+                    
+                    # Raise a new exception about the commit failure
+                    raise TransactionError(f"Failed to commit transaction: {e}") from e
+        
+        def demonstrate_transaction_management():
+            """Demonstrate the database transaction management."""
+            connection_string = "postgresql://user:password@localhost/mydb"
+            
+            # Example 1: Successful transaction
+            print("\nExample 1: Successful transaction")
+            try:
+                with DatabaseConnectionManager(connection_string) as db:
+                    with TransactionManager(db):
+                        db.execute("INSERT INTO users (name) VALUES ('Alice')")
+                        db.execute("UPDATE accounts SET balance = balance - 100 WHERE user_id = 1")
+                        db.execute("UPDATE accounts SET balance = balance + 100 WHERE user_id = 2")
+                        print("Transaction completed successfully")
+            except DatabaseError as e:
+                print(f"Database error: {e}")
+            
+            # Example 2: Transaction with an error
+            print("\nExample 2: Transaction with an error")
+            try:
+                with DatabaseConnectionManager(connection_string) as db:
+                    with TransactionManager(db):
+                        db.execute("INSERT INTO users (name) VALUES ('Bob')")
+                        # This will cause an error
+                        db.execute("INSERT INTO nonexistent_table (column) VALUES ('value')")
+                        print("This line won't be reached")
+            except QueryError:
+                print("Expected query error caught")
+            except DatabaseError as e:
+                print(f"Other database error: {e}")
+            
+            # Example 3: Nested transactions
+            print("\nExample 3: Multiple operations with a single connection")
+            try:
+                with DatabaseConnectionManager(connection_string) as db:
+                    # First transaction
+                    with TransactionManager(db):
+                        db.execute("INSERT INTO logs (message) VALUES ('Starting batch')")
+                    
+                    # Second transaction
+                    with TransactionManager(db):
+                        db.execute("UPDATE status SET state = 'processing'")
+                    
+                    # Third transaction that fails
+                    try:
+                        with TransactionManager(db):
+                            db.execute("INSERT INTO logs (message) VALUES ('Processing items')")
+                            raise ValueError("Simulated error")
+                    except ValueError:
+                        print("Caught ValueError, but connection still valid")
+                    
+                    # Fourth transaction after error recovery
+                    with TransactionManager(db):
+                        db.execute("INSERT INTO logs (message) VALUES ('Recovered from error')")
+                        
+                    print("Multiple operations completed")
+            except DatabaseError as e:
+                print(f"Database error: {e}")
+        
+        # Run the demonstration
+        demonstrate_transaction_management()
+                        </pre>
+                    </div>
+                </section>
+        
+                <section>
+                    <h2>Custom Exceptions with Data Enrichment</h2>
+                    
+                    <p>Custom exceptions become even more powerful when they carry additional data about the error context. Let's explore how to create rich exception types that provide detailed information for debugging and error handling.</p>
+                    
+                    <div class="code-example">
+                        <h3>Creating Data-Rich Exception Classes</h3>
+                        <pre>
+        # File: custom_exceptions/data_rich_exceptions.py
+        
+        class ValidationError(Exception):
+            """Base exception for data validation errors."""
+            
+            def __init__(self, message, field=None, value=None, constraints=None):
+                self.field = field
+                self.value = value
+                self.constraints = constraints or {}
+                
+                # Enhance the message with field information if provided
+                full_message = message
+                if field:
+                    full_message = f"{message} (field: {field}"
+                    if value is not None:
+                        full_message += f", value: {repr(value)}"
+                    full_message += ")"
+                
+                super().__init__(full_message)
+            
+            def as_dict(self):
+                """Return the error details as a dictionary."""
+                return {
+                    'error_type': self.__class__.__name__,
+                    'message': str(self),
+                    'field': self.field,
+                    'value': self.value,
+                    'constraints': self.constraints
+                }
+        
+        class RequiredFieldError(ValidationError):
+            """Raised when a required field is missing or empty."""
+            
+            def __init__(self, field, message=None):
+                default_message = f"Required field missing or empty"
+                super().__init__(message or default_message, field=field)
+        
+        class TypeMismatchError(ValidationError):
+            """Raised when a field's value is not of the expected type."""
+            
+            def __init__(self, field, value, expected_type, message=None):
+                default_message = f"Expected type {expected_type.__name__}"
+                super().__init__(
+                    message or default_message,
+                    field=field,
+                    value=value,
+                    constraints={'expected_type': expected_type.__name__}
+                )
+                self.expected_type = expected_type
+        
+        class ValueRangeError(ValidationError):
+            """Raised when a numeric value is outside the allowed range."""
+            
+            def __init__(self, field, value, min_value=None, max_value=None, message=None):
+                constraints = {}
+                if min_value is not None:
+                    constraints['min_value'] = min_value
+                if max_value is not None:
+                    constraints['max_value'] = max_value
+                
+                range_str = []
+                if min_value is not None:
+                    range_str.append(f">= {min_value}")
+                if max_value is not None:
+                    range_str.append(f"<= {max_value}")
+                
+                default_message = f"Value outside allowed range ({' and '.join(range_str)})"
+                
+                super().__init__(
+                    message or default_message,
+                    field=field,
+                    value=value,
+                    constraints=constraints
+                )
+                self.min_value = min_value
+                self.max_value = max_value
+        
+        class PatternMismatchError(ValidationError):
+            """Raised when a string value doesn't match the required pattern."""
+            
+            def __init__(self, field, value, pattern, message=None):
+                default_message = f"Value doesn't match required pattern"
+                super().__init__(
+                    message or default_message,
+                    field=field,
+                    value=value,
+                    constraints={'pattern': str(pattern)}
+                )
+                self.pattern = pattern
+        
+        # Example usage with a data validation function
+        def validate_user_data(data):
+            """
+            Validate a user data dictionary with rich error reporting.
+            
+            Args:
+                data: Dictionary containing user data
+            
+            Returns:
+                True if validation passes
+            
+            Raises:
+                ValidationError: If any validation check fails
+            """
+            # Check for required fields
+            required_fields = ['username', 'email', 'age']
+            for field in required_fields:
+                if field not in data or not data[field]:
+                    raise RequiredFieldError(field)
+            
+            # Validate types
+            if not isinstance(data['username'], str):
+                raise TypeMismatchError('username', data['username'], str)
+            
+            if not isinstance(data['email'], str):
+                raise TypeMismatchError('email', data['email'], str)
+            
+            if not isinstance(data['age'], int):
+                raise TypeMismatchError('age', data['age'], int)
+            
+            # Validate value ranges
+            if data['age'] &lt; 18 or data['age'] > 120:
+                raise ValueRangeError('age', data['age'], min_value=18, max_value=120)
+            
+            # Validate patterns (simplified email check)
+            if '@' not in data['email']:
+                raise PatternMismatchError(
+                    'email', 
+                    data['email'], 
+                    'user@example.com',
+                    "Invalid email format"
+                )
+            
+            return True
+        
+        # Function to handle validation errors and create user-friendly messages
+        def get_validation_errors(data):
+            """
+            Validate data and return user-friendly error messages.
+            
+            Args:
+                data: Dictionary containing data to validate
+            
+            Returns:
+                A list of error messages, or an empty list if validation passes
+            """
+            try:
+                validate_user_data(data)
+                return []
+            except ValidationError as e:
+                # Create user-friendly error message
+                if isinstance(e, RequiredFieldError):
+                    return [f"Please provide your {e.field}."]
+                elif isinstance(e, TypeMismatchError):
+                    return [f"The {e.field} field has an invalid type."]
+                elif isinstance(e, ValueRangeError):
+                    if e.min_value is not None and e.max_value is not None:
+                        return [f"The {e.field} must be between {e.min_value} and {e.max_value}."]
+                    elif e.min_value is not None:
+                        return [f"The {e.field} must be at least {e.min_value}."]
+                    else:
+                        return [f"The {e.field} must be at most {e.max_value}."]
+                elif isinstance(e, PatternMismatchError):
+                    return [f"The {e.field} has an invalid format."]
+                else:
+                    return [str(e)]
+        
+        # Function to demonstrate data validation
+        def demonstrate_data_validation():
+            # Test with valid data
+            valid_data = {
+                'username': 'johndoe',
+                'email': 'john@example.com',
+                'age': 35
+            }
+            
+            # Test with invalid data
+            invalid_data_samples = [
+                # Missing required field
+                {
+                    'username': 'janedoe',
+                    'age': 28
+                    # missing email
+                },
+                # Type mismatch
+                {
+                    'username': 'bobsmith',
+                    'email': 'bob@example.com',
+                    'age': '29'  # age should be an integer
+                },
+                # Value range error
+                {
+                    'username': 'alicejones',
+                    'email': 'alice@example.com',
+                    'age': 17  # too young
+                },
+                # Pattern mismatch
+                {
+                    'username': 'charliebrown',
+                    'email': 'invalid-email',
+                    'age': 42
+                }
+            ]
+            
+            # Validate and show errors
+            print("Validating valid data:")
+            errors = get_validation_errors(valid_data)
+            if not errors:
+                print("✓ Valid data")
+            else:
+                print(f"✗ Unexpected errors: {errors}")
+            
+            print("\nValidating invalid data samples:")
+            for i, data in enumerate(invalid_data_samples, 1):
+                print(f"\nSample {i}:")
+                print(f"Data: {data}")
+                
+                try:
+                    validate_user_data(data)
+                    print("✓ Unexpectedly valid")
+                except ValidationError as e:
+                    print(f"✗ Exception: {e} (type: {type(e).__name__})")
+                    print(f"  Details: {e.as_dict()}")
+                    
+                    # Get user-friendly messages
+                    messages = get_validation_errors(data)
+                    print(f"  User message: {messages[0]}")
+        
+        # Run the demonstration
+        demonstrate_data_validation()
+                        </pre>
+                    </div>
+                    
+                    <p>The data-rich exceptions approach has several benefits:</p>
+                    <ul>
+                        <li>Provides detailed context about the error</li>
+                        <li>Makes errors more self-documenting</li>
+                        <li>Enables programmatic handling of errors based on their attributes</li>
+                        <li>Facilitates creating user-friendly error messages from technical details</li>
+                        <li>Serves as documentation for expected constraints and requirements</li>
+                    </ul>
+                </section>
+        
+                <section>
+                    <h2>Exception Handling in Asynchronous Code</h2>
+                    
+                    <p>Asynchronous programming with <code>async</code>/<code>await</code> introduces some unique considerations for exception handling. Let's explore how to handle exceptions effectively in asynchronous code.</p>
+                    
+                    <div class="code-example">
+                        <h3>Exception Handling in Async Functions</h3>
+                        <pre>
+        # File: advanced/async_exceptions.py
+        
+        import asyncio
+        import random
+        import time
+        
+        class ServiceUnavailableError(Exception):
+            """Raised when a service is unavailable."""
+            pass
+        
+        class TimeoutError(Exception):
+            """Raised when an operation times out."""
+            pass
+        
+        async def fetch_data(service_id):
+            """
+            Simulate fetching data from a service.
+            
+            Args:
+                service_id: ID of the service to fetch from
+            
+            Returns:
+                The fetched data
+                
+            Raises:
+                ServiceUnavailableError: If the service is unavailable
+                TimeoutError: If the operation times out
+            """
+            # Simulate random service behavior
+            service_status = random.choice(['available', 'unavailable', 'slow'])
+            
+            if service_status == 'unavailable':
+                raise ServiceUnavailableError(f"Service {service_id} is unavailable")
+            
+            # Simulate a delay
+            delay = 0.1 if service_status == 'available' else 2.0
+            await asyncio.sleep(delay)
+            
+            # Simulate timeout for slow services
+            if service_status == 'slow':
+                raise TimeoutError(f"Request to service {service_id} timed out")
+            
+            # If we got here, return some data
+            return f"Data from service {service_id}"
+        
+        async def fetch_with_retry(service_id, max_retries=3, retry_delay=0.5):
+            """
+            Fetch data with retry logic.
+            
+            Args:
+                service_id: ID of the service to fetch from
+                max_retries: Maximum number of retry attempts
+                retry_delay: Delay between retries in seconds
+                
+            Returns:
+                The fetched data
+                
+            Raises:
+                ServiceUnavailableError: If the service is still unavailable after all retries
+                TimeoutError: If the operation times out on the final retry
+            """
+            for attempt in range(1, max_retries + 1):
+                try:
+                    print(f"Fetching from service {service_id}, attempt {attempt}/{max_retries}")
+                    return await fetch_data(service_id)
+                except (ServiceUnavailableError, TimeoutError) as e:
+                    print(f"Attempt {attempt} failed: {e}")
+                    
+                    if attempt == max_retries:
+                        print(f"All {max_retries} attempts failed for service {service_id}")
+                        raise  # Re-raise the last exception
+                    
+                    # Wait before retrying
+                    retry_wait = retry_delay * (2 ** (attempt - 1))  # Exponential backoff
+                    print(f"Waiting {retry_wait:.2f}s before retry...")
+                    await asyncio.sleep(retry_wait)
+        
+        async def fetch_from_multiple_services(service_ids):
+            """
+            Fetch data from multiple services concurrently.
+            
+            Args:
+                service_ids: List of service IDs to fetch from
+                
+            Returns:
+                Dictionary mapping service IDs to their data or error messages
+            """
+            tasks = {}
+            results = {}
+            
+            # Start all fetch tasks
+            for service_id in service_ids:
+                task = asyncio.create_task(fetch_with_retry(service_id))
+                tasks[service_id] = task
+            
+            # Wait for all tasks to complete (whether successfully or with exception)
+            for service_id, task in tasks.items():
+                try:
+                    data = await task
+                    results[service_id] = {'status': 'success', 'data': data}
+                except Exception as e:
+                    results[service_id] = {'status': 'error', 'error': str(e)}
+            
+            return results
+        
+        async def process_in_order(service_ids):
+            """
+            Process services in order, handling exceptions for each.
+            
+            Args:
+                service_ids: List of service IDs to fetch from
+                
+            Returns:
+                List of results in the same order as service_ids
+            """
+            results = []
+            
+            for service_id in service_ids:
+                try:
+                    data = await fetch_with_retry(service_id)
+                    results.append({'service_id': service_id, 'status': 'success', 'data': data})
+                except Exception as e:
+                    results.append({'service_id': service_id, 'status': 'error', 'error': str(e)})
+            
+            return results
+        
+        async def demonstrate_async_exception_handling():
+            # Example 1: Basic async exception handling
+            print("Example 1: Basic async exception handling")
+            try:
+                data = await fetch_data(1)
+                print(f"Fetched data: {data}")
+            except ServiceUnavailableError as e:
+                print(f"Service error: {e}")
+            except TimeoutError as e:
+                print(f"Timeout error: {e}")
+            except Exception as e:
+                print(f"Unexpected error: {e}")
+            
+            # Example 2: Retry pattern
+            print("\nExample 2: Retry pattern")
+            try:
+                data = await fetch_with_retry(2, max_retries=3)
+                print(f"Fetched data with retry: {data}")
+            except Exception as e:
+                print(f"All retries failed: {e}")
+            
+            # Example 3: Concurrent tasks with individual exception handling
+            print("\nExample 3: Concurrent tasks")
+            service_ids = [3, 4, 5, 6, 7]
+            results = await fetch_from_multiple_services(service_ids)
+            
+            print("Results from concurrent fetches:")
+            for service_id, result in results.items():
+                if result['status'] == 'success':
+                    print(f"Service {service_id}: {result['data']}")
+                else:
+                    print(f"Service {service_id}: Error - {result['error']}")
+            
+            # Example 4: Sequential processing with individual exception handling
+            print("\nExample 4: Sequential processing")
+            service_ids = [8, 9, 10]
+            results = await process_in_order(service_ids)
+            
+            print("Results from sequential processing:")
+            for result in results:
+                service_id = result['service_id']
+                if result['status'] == 'success':
+                    print(f"Service {service_id}: {result['data']}")
+                else:
+                    print(f"Service {service_id}: Error - {result['error']}")
+        
+        # Run the demonstration
+        async def main():
+            await demonstrate_async_exception_handling()
+        
+        # This code would normally be run like:
+        # asyncio.run(main())
+                        </pre>
+                    </div>
+                    
+                    <p>Key points about exception handling in asynchronous code:</p>
+                    <ul>
+                        <li>Use <code>try</code>/<code>except</code> blocks with <code>await</code> expressions to catch exceptions from coroutines</li>
+                        <li>Exceptions propagate through the <code>await</code> chain similar to normal function calls</li>
+                        <li>For concurrent tasks, handle exceptions individually to prevent one failure from stopping all tasks</li>
+                        <li>Use <code>asyncio.gather()</code> with <code>return_exceptions=True</code> to collect results and exceptions from multiple tasks</li>
+                        <li>Consider implementing retry patterns with exponential backoff for transient errors</li>
+                    </ul>
+                </section>
+        
+                <section>
+                    <h2>Real-World Exception Handling Strategies</h2>
+                    
+                    <p>In real-world applications, exception handling is often integrated into larger architectural patterns. Let's explore some common approaches.</p>
+                    
+                    <div class="code-example">
+                        <h3>Global Exception Handler</h3>
+                        <pre>
+        # File: patterns/global_exception_handler.py
+        
+        import sys
+        import traceback
+        import logging
+        from datetime import datetime
+        import json
+        
+        # Configure logging
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler("app.log"),
+                logging.StreamHandler()
+            ]
+        )
+        
+        logger = logging.getLogger("ExceptionHandler")
+        
+        class GlobalExceptionHandler:
+            """
+            A class to handle uncaught exceptions globally.
+            """
+            
+            def __init__(self, log_file=None, report_url=None):
+                self.log_file = log_file
+                self.report_url = report_url
+                self.original_excepthook = sys.excepthook
+            
+            def handle_exception(self, exc_type, exc_value, exc_traceback):
+                """Handle an uncaught exception."""
+                # Don't handle KeyboardInterrupt (Ctrl+C)
+                if issubclass(exc_type, KeyboardInterrupt):
+                    return self.original_excepthook(exc_type, exc_value, exc_traceback)
+                
+                # Log the exception
+                logger.error(
+                    "Uncaught exception",
+                    exc_info=(exc_type, exc_value, exc_traceback)
+                )
+                
+                # Get formatted traceback
+                tb_lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+                tb_text = ''.join(tb_lines)
+                
+                # Create error report
+                error_report = {
+                    'timestamp': datetime.now().isoformat(),
+                    'exception_type': exc_type.__name__,
+                    'exception_message': str(exc_value),
+                    'traceback': tb_text
+                }
+                
+                # Write error report to file if configured
+                if self.log_file:
+                    try:
+                        with open(self.log_file, 'a') as f:
+                            f.write(f"\n\n--- Error Report: {error_report['timestamp']} ---\n")
+                            f.write(json.dumps(error_report, indent=2))
+                            f.write("\n------------------------------\n")
+                    except Exception as e:
+                        logger.error(f"Failed to write error report to file: {e}")
+                
+                # Send error report to remote service if configured
+                if self.report_url:
+                    try:
+                        # This would normally use requests or similar
+                        # requests.post(self.report_url, json=error_report)
+                        logger.info(f"Would send error report to {self.report_url}")
+                    except Exception as e:
+                        logger.error(f"Failed to send error report: {e}")
+                
+                # Display a user-friendly message
+                print("\n===== Unexpected Error =====")
+                print(f"An unexpected error has occurred: {exc_type.__name__}")
+                print(f"Error details: {exc_value}")
+                print("\nThis error has been logged and reported to our team.")
+                print("Please check the application logs for more information.")
+                print("=============================\n")
+            
+            def install(self):
+                """Install this handler as the global exception handler."""
+                sys.excepthook = self.handle_exception
+                logger.info("Global exception handler installed")
+            
+            def uninstall(self):
+                """Restore the original exception handler."""
+                sys.excepthook = self.original_excepthook
+                logger.info("Global exception handler uninstalled")
+        
+        # Example usage
+        def demonstrate_global_handler():
+            # Install global handler
+            handler = GlobalExceptionHandler(
+                log_file="error_reports.log",
+                report_url="https://api.example.com/error-reports"
+            )
+            handler.install()
+            
+            # Simulate some operations
+            try:
+                # This will be caught by the try/except block
+                result = 1 / 0
+            except ZeroDivisionError:
+                print("Caught division by zero error")
+            
+            # This would normally be uncaught and handled by the global handler
+            # Uncomment to test
+            # x = undefined_variable  # NameError
+            
+            # Uninstall handler
+            handler.uninstall()
+        
+        # Run the demonstration
+        # demonstrate_global_handler()
+                        </pre>
+                    </div>
+                    
+                    <div class="code-example">
+                        <h3>Error Handling Middleware</h3>
+                        <pre>
+        # File: patterns/error_handling_middleware.py
+        
+        # Example with a web framework (simplified)
+        class Request:
+            """Simplified request object."""
+            def __init__(self, path, method="GET", data=None, headers=None):
+                self.path = path
+                self.method = method
+                self.data = data or {}
+                self.headers = headers or {}
+        
+        class Response:
+            """Simplified response object."""
+            def __init__(self, body="", status=200, headers=None):
+                self.body = body
+                self.status = status
+                self.headers = headers or {}
+            
+            def set_status(self, status):
+                self.status = status
+                return self
+            
+            def set_body(self, body):
+                self.body = body
+                return self
+            
+            def set_header(self, name, value):
+                self.headers[name] = value
+                return self
+            
+            def __str__(self):
+                return f"Response(status={self.status}, body={self.body!r})"
+        
+        class ErrorHandlingMiddleware:
+            """
+            Middleware that catches exceptions from route handlers and converts
+            them to appropriate HTTP responses.
+            """
+            
+            def __init__(self, app, logger=None):
+                self.app = app
+                self.logger = logger
+            
+            def __call__(self, request):
+                try:
+                    # Call the next middleware or route handler
+                    return self.app(request)
+                except Exception as e:
+                    # Log the exception
+                    if self.logger:
+                        self.logger.error(f"Error handling request: {e}", exc_info=True)
+                    
+                    # Convert exception to appropriate response
+                    return self.exception_to_response(e)
+            
+            def exception_to_response(self, exception):
+                """Convert an exception to an HTTP response."""
+                # Create a basic error response
+                response = Response().set_header("Content-Type", "application/json")
+                
+                # Customize based on exception type
+                if isinstance(exception, NotFoundError):
+                    return response.set_status(404).set_body(
+                        '{"error": "Not found", "message": "' + str(exception) + '"}'
+                    )
+                
+                elif isinstance(exception, ValidationError):
+                    return response.set_status(400).set_body(
+                        '{"error": "Bad request", "message": "' + str(exception) + '"}'
+                    )
+                
+                elif isinstance(exception, AuthenticationError):
+                    return response.set_status(401).set_body(
+                        '{"error": "Unauthorized", "message": "' + str(exception) + '"}'
+                    )
+                
+                elif isinstance(exception, PermissionError):
+                    return response.set_status(403).set_body(
+                        '{"error": "Forbidden", "message": "' + str(exception) + '"}'
+                    )
+                
+                # Default to 500 Internal Server Error
+                else:
+                    return response.set_status(500).set_body(
+                        '{"error": "Internal server error", "message": "An unexpected error occurred"}'
+                    )
+        
+        # Example custom exceptions for a web application
+        class NotFoundError(Exception):
+            """Raised when a requested resource doesn't exist."""
+            pass
+        
+        class ValidationError(Exception):
+            """Raised when request data fails validation."""
+            pass
+        
+        class AuthenticationError(Exception):
+            """Raised when authentication fails."""
+            pass
+        
+        # Example route handlers
+        def get_user(request):
+            """Example route handler to get a user."""
+            user_id = request.path.split("/")[-1]
+            
+            # Simulate looking up a user
+            if user_id == "123":
+                return Response().set_body('{"id": "123", "name": "Alice"}')
+            else:
+                raise NotFoundError(f"User with ID {user_id} not found")
+        
+        def create_user(request):
+            """Example route handler to create a user."""
+            # Validate request data
+            if 'name' not in request.data:
+                raise ValidationError("Name is required")
+            
+            if not isinstance(request.data.get('name'), str):
+                raise ValidationError("Name must be a string")
+            
+            # Simulate creating a user
+            return Response().set_status(201).set_body(
+                '{"id": "456", "name": "' + request.data['name'] + '"}'
+            )
+        
+        def authenticate(request):
+            """Example route handler for authentication."""
+            # Validate credentials
+            if 'username' not in request.data or 'password' not in request.data:
+                raise ValidationError("Username and password are required")
+            
+            # Simulate authentication
+            if request.data['username'] == "admin" and request.data['password'] == "secret":
+                return Response().set_body('{"token": "abc123"}')
+            else:
+                raise AuthenticationError("Invalid credentials")
+        
+        # Router with middleware
+        class Router:
+            """Simplified router with middleware support."""
+            
+            def __init__(self):
+                self.routes = {}
+                self.middleware = []
+            
+            def add_route(self, path, method, handler):
+                """Add a route."""
+                key = (path, method.upper())
+                self.routes[key] = handler
+            
+            def add_middleware(self, middleware):
+                """Add middleware."""
+                self.middleware.append(middleware)
+            
+            def __call__(self, request):
+                """Handle a request."""
+                # Build the middleware chain
+                handler = self.get_handler(request)
+                
+                # Apply middleware in reverse order
+                for middleware in reversed(self.middleware):
+                    handler = middleware(handler)
+                
+                # Handle the request
+                return handler(request)
+            
+            def get_handler(self, request):
+                """Get the handler for a request."""
+                key = (request.path, request.method.upper())
+                
+                # Find an exact match
+                if key in self.routes:
+                    return self.routes[key]
+                
+                # Find a path pattern match (simplified)
+                for (path, method), handler in self.routes.items():
+                    if method == request.method.upper() and path.endswith("/:id") and request.path.startswith(path[:-4]):
+                        return handler
+                
+                # No matching route
+                return lambda r: Response().set_status(404).set_body(
+                    '{"error": "Not found", "message": "Route not found"}'
+                )
+        
+        def demonstrate_middleware():
+            # Create a router
+            router = Router()
+            
+            # Add routes
+            router.add_route("/users/:id", "GET", get_user)
+            router.add_route("/users", "POST", create_user)
+            router.add_route("/auth", "POST", authenticate)
+            
+            # Add middleware
+            logger = logging.getLogger("WebApp")
+            router.add_middleware(lambda app: ErrorHandlingMiddleware(app, logger))
+            
+            # Test requests
+            requests = [
+                # Valid request, should succeed
+                Request("/users/123", "GET"),
+                
+                # Invalid user ID, should return 404
+                Request("/users/999", "GET"),
+                
+                # Valid user creation
+                Request("/users", "POST", {"name": "Bob"}),
+                
+                # Invalid user creation (missing name)
+                Request("/users", "POST", {}),
+                
+                # Valid authentication
+                Request("/auth", "POST", {"username": "admin", "password": "secret"}),
+                
+                # Invalid authentication
+                Request("/auth", "POST", {"username": "admin", "password": "wrong"})
+            ]
+            
+            # Process each request
+            for i, request in enumerate(requests, 1):
+                print(f"\nRequest {i}: {request.method} {request.path}")
+                if request.data:
+                    print(f"Data: {request.data}")
+                
+                response = router(request)
+                print(f"Response: {response}")
+        
+        # Run the demonstration
+        # demonstrate_middleware()
+                        </pre>
+                    </div>
+                </section>
+        
+                <section>
+                    <h2>Performance Considerations</h2>
+                    
+                    <p>Exception handling, while powerful, can have performance implications. Let's explore some considerations and best practices for efficient exception handling.</p>
+                    
+                    <div class="explanation">
+                        <h3>Exception Handling Performance Facts</h3>
+                        <ul>
+                            <li><strong>Creating an exception object is relatively expensive</strong> - It captures the stack trace, which involves walking the call stack</li>
+                            <li><strong>Raising an exception is even more expensive</strong> - It involves unwinding the stack frame by frame</li>
+                            <li><strong>Catching an exception is cheap</strong> - The cost is primarily in raising it</li>
+                            <li><strong>The cost increases with stack depth</strong> - Deeper call stacks mean more frames to process</li>
+                            <li><strong>The performance impact only matters when exceptions actually occur</strong> - Setting up <code>try</code>/<code>except</code> blocks has minimal overhead</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="code-example">
+                        <h3>Avoid Using Exceptions for Flow Control</h3>
+                        <pre>
+        # File: performance/exception_vs_check.py
+        
+        import time
+        import statistics
+        
+        # Example 1: Using exceptions for control flow
+        def find_key_with_exception(data, key):
+            try:
+                return data[key]
+            except KeyError:
+                return None
+        
+        # Example 2: Using a check first
+        def find_key_with_check(data, key):
+            if key in data:
+                return data[key]
+            else:
+                return None
+        
+        # Timing function
+        def time_function(func, *args, **kwargs):
+            """Measure the execution time of a function."""
+            start_time = time.time()
+            result = func(*args, **kwargs)
+            end_time = time.time()
+            return result, (end_time - start_time) * 1000  # Convert to milliseconds
+        
+        # Performance comparison
+        def compare_approaches(data_size=1000000, iterations=100):
+            # Create a large dictionary
+            data = {f"key_{i}": i for i in range(data_size)}
+            
+            # Test keys
+            existing_key = "key_1000"  # This key exists
+            missing_key = "nonexistent_key"  # This key doesn't exist
+            
+            # Measure time for existing key with exception approach
+            exception_times_existing = []
+            for _ in range(iterations):
+                _, elapsed = time_function(find_key_with_exception, data, existing_key)
+                exception_times_existing.append(elapsed)
+            
+            # Measure time for missing key with exception approach
+            exception_times_missing = []
+            for _ in range(iterations):
+                _, elapsed = time_function(find_key_with_exception, data, missing_key)
+                exception_times_missing.append(elapsed)
+            
+            # Measure time for existing key with check approach
+            check_times_existing = []
+            for _ in range(iterations):
+                _, elapsed = time_function(find_key_with_check, data, existing_key)
+                check_times_existing.append(elapsed)
+            
+            # Measure time for missing key with check approach
+            check_times_missing = []
+            for _ in range(iterations):
+                _, elapsed = time_function(find_key_with_check, data, missing_key)
+                check_times_missing.append(elapsed)
+            
+            # Print results
+            print(f"Performance comparison ({data_size} items, {iterations} iterations):")
+            print("\nExisting key:")
+            print(f"  Exception approach: {statistics.mean(exception_times_existing):.4f} ms")
+            print(f"  Check approach:     {statistics.mean(check_times_existing):.4f} ms")
+            
+            print("\nMissing key:")
+            print(f"  Exception approach: {statistics.mean(exception_times_missing):.4f} ms")
+            print(f"  Check approach:     {statistics.mean(check_times_missing):.4f} ms")
+        
+        # Run the performance comparison
+        # compare_approaches()
+                        </pre>
+                    </div>
+                    
+                    <div class="best-practices">
+                        <h3>Performance Best Practices</h3>
+                        <ol>
+                            <li><strong>Avoid using exceptions for normal flow control</strong> - Use conditional checks when possible</li>
+                            <li><strong>Be specific about which exceptions you catch</strong> - Catching specific exceptions is not only safer but can be more efficient</li>
+                            <li><strong>Use exceptions for exceptional conditions</strong> - Reserve them for truly unexpected scenarios</li>
+                            <li><strong>Consider the depth of your call stack</strong> - Exceptions raised deep in the call stack are more expensive</li>
+                            <li><strong>Profile your code</strong> - Measure the actual impact of exceptions in your specific application</li>
+                            <li><strong>Don't prematurely optimize</strong> - Exception handling rarely becomes a bottleneck unless misused</li>
+                        </ol>
+                    </div>
+                </section>
+        
+                <section>
+                    <h2>Summary</h2>
+                    
+                    <div class="summary">
+                        <p>In this comprehensive deep dive into Python's exception handling, we've covered:</p>
+                        
+                        <ul>
+                            <li>The fundamentals of Python's exception system and the exception hierarchy</li>
+                            <li>Basic exception handling with <code>try</code>, <code>except</code>, <code>else</code>, and <code>finally</code></li>
+                            <li>How exceptions propagate through the call stack</li>
+                            <li>Creating custom exception classes to express domain-specific errors</li>
+                            <li>Advanced techniques like exception chaining, context managers, and traceback manipulation</li>
+                            <li>Error handling patterns like retry, circuit breaker, and transaction patterns</li>
+                            <li>Working with exceptions in asynchronous code</li>
+                            <li>Architectural approaches for error handling in larger applications</li>
+                            <li>Performance considerations and best practices</li>
+                        </ul>
+                        
+                        <p>Exception handling is a cornerstone of robust, reliable Python programming. By mastering these concepts and techniques, you'll be well-equipped to write code that gracefully handles errors, provides informative feedback, and maintains data integrity even when unexpected situations arise.</p>
+                        
+                        <p>Remember that the goal of exception handling isn't just to prevent your program from crashing—it's to create a better experience for your users and your fellow developers. Good exception handling is like a safety net that allows you to write more ambitious code, knowing that you've accounted for the edge cases and potential failures.</p>
+                        
+                        <p>As you develop your Python skills further, continue to refine your approach to error handling. Different applications and domains may call for different strategies, but the principles and techniques we've covered will serve you well across a wide range of scenarios.</p>
+                    </div>
+                </section>
+        
+                <section>
+                    <h2>Further Resources</h2>
+                    
+                    <div class="resources">
+                        <h3>Official Documentation</h3>
+                        <ul>
+                            <li><a href="https://docs.python.org/3/tutorial/errors.html" target="_blank">Python Tutorial: Errors and Exceptions</a></li>
+                            <li><a href="https://docs.python.org/3/library/exceptions.html" target="_blank">Python Standard Library: Built-in Exceptions</a></li>
+                            <li><a href="https://docs.python.org/3/library/contextlib.html" target="_blank">Python Standard Library: contextlib</a></li>
+                        </ul>
+                        
+                        <h3>Books and Articles</h3>
+                        <ul>
+                            <li>"Python Cookbook" by David Beazley and Brian K. Jones - Chapter 14: Testing, Debugging, and Exceptions</li>
+                            <li>"Effective Python: 90 Specific Ways to Write Better Python" by Brett Slatkin - Item 67: Consider contextlib and with Statements for Reusable try/finally Behavior</li>
+                            <li>"Clean Code in Python" by Mariano Anaya - Chapter 5: Exception Handling</li>
+                        </ul>
+                        
+                        <h3>Online Resources</h3>
+                        <ul>
+                            <li><a href="https://realpython.com/python-exceptions/" target="_blank">Real Python: Python Exceptions</a></li>
+                            <li><a href="https://www.python-course.eu/python3_exception_handling.php" target="_blank">Python Course: Exception Handling</a></li>
+                            <li><a href="https://martinfowler.com/articles/resilience-engineering.html" target="_blank">Martin Fowler: Resilience Engineering</a></li>
+                            <li><a href="https://12factor.net/logs" target="_blank">The Twelve-Factor App: Logs</a></li>
+                        </ul>
+                    </div>
+                </section>
+            </main>
+        
+            <footer>
+                <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+            </footer>
+        </body>
+        </html>

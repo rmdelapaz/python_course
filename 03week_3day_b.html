@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Working with CSV Files in Python</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Working with CSV Files in Python</h1>
+        <h2>Week 3: Python Fundamentals - File Operations</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h2>Introduction to CSV Files</h2>
+            <p>Welcome to our session on working with CSV files in Python! CSV (Comma-Separated Values) files are one of the most common formats for storing and exchanging structured data. Think of CSV files as spreadsheets in their simplest form - rows and columns of data, but stored as plain text.</p>
+            
+            <p>CSV files are like the universal translators of the data world - nearly every database, spreadsheet application, and data analysis tool can import and export CSV files. This makes them incredibly useful for moving data between different systems.</p>
+
+            <div class="anatomy">
+                <h3>Anatomy of a CSV File</h3>
+                <pre>
+name,age,email
+John Smith,28,john.smith@example.com
+Sarah Johnson,34,sarah.j@example.com
+Miguel Rodriguez,42,miguel.r@example.com
+                </pre>
+                <p>A CSV file is fundamentally just a text file with:</p>
+                <ul>
+                    <li>Each line representing a row of data</li>
+                    <li>Values separated by delimiters (typically commas, hence the name)</li>
+                    <li>Often (but not always) a header row that names each column</li>
+                </ul>
+            </div>
+
+            <div class="folder-structure">
+                <h3>Folder Structure for Today's Examples</h3>
+                <pre>
+csv_examples/
+├── data/
+│   ├── sample.csv
+│   ├── employees.csv
+│   ├── sales_data.csv
+│   └── output/
+│       ├── processed.csv
+│       └── report.csv
+├── examples/
+│   ├── basic_reading.py
+│   ├── basic_writing.py
+│   ├── data_analysis.py
+│   └── csv_processing.py
+└── exercises/
+    ├── exercise1.py
+    ├── exercise2.py
+    └── data/
+        └── exercise_data.csv
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>The Python CSV Module: Your Specialized Tool</h2>
+            
+            <p>While you could process CSV files using the basic file operations we learned earlier, Python provides a specialized <code>csv</code> module that handles many CSV complexities for you.</p>
+            
+            <p>Think of the <code>csv</code> module as a specialized tool, like a food processor compared to a knife. Both can cut food, but the food processor is specifically designed to handle certain food preparation tasks more efficiently and with less effort.</p>
+
+            <div class="code-example">
+                <h3>Importing the CSV Module</h3>
+                <pre>
+# Start by importing the module
+import csv
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Reading CSV Files: Extracting Structured Data</h2>
+            
+            <p>Reading from CSV files is one of the most common operations when working with data. The CSV module offers several ways to read CSV data, depending on how you want to access it.</p>
+            
+            <div class="code-example">
+                <h3>Basic CSV Reading with csv.reader</h3>
+                <pre>
+# File: examples/basic_reading.py
+import csv
+
+# Open the file
+with open('data/sample.csv', 'r', newline='') as csvfile:
+    # Create a CSV reader object
+    csv_reader = csv.reader(csvfile)
+    
+    # The first row typically contains headers
+    headers = next(csv_reader)
+    print(f"Headers: {headers}")
+    
+    # Process the remaining rows
+    for row in csv_reader:
+        print(f"Row: {row}")
+                </pre>
+            </div>
+            
+            <p>Using <code>csv.reader</code> is like having an assistant who hands you rows of data one at a time, with each row represented as a list of values. It's simple and efficient.</p>
+            
+            <div class="warning-box">
+                <h3>Important Note on newline=''</h3>
+                <p>Always use <code>newline=''</code> when opening files for CSV reading or writing. This parameter ensures compatibility with different operating systems' line-ending conventions and prevents the CSV module from misinterpreting line breaks within fields.</p>
+            </div>
+            
+            <div class="code-example">
+                <h3>Reading CSV into a List</h3>
+                <pre>
+# File: examples/csv_to_list.py
+import csv
+
+def read_csv_to_list(filepath):
+    data = []
+    
+    with open(filepath, 'r', newline='') as csvfile:
+        csv_reader = csv.reader(csvfile)
+        headers = next(csv_reader)  # Get the header row
+        
+        for row in csv_reader:
+            data.append(row)
+    
+    return headers, data
+
+# Usage
+headers, data = read_csv_to_list('data/employees.csv')
+print(f"Found {len(data)} employees")
+print(f"First employee: {data[0]}")
+                </pre>
+            </div>
+            
+            <div class="code-example">
+                <h3>Reading CSV into a List of Dictionaries</h3>
+                <pre>
+# File: examples/csv_to_dict.py
+import csv
+
+def read_csv_to_dict(filepath):
+    data = []
+    
+    with open(filepath, 'r', newline='') as csvfile:
+        # DictReader uses the first row as keys for the dictionaries
+        csv_reader = csv.DictReader(csvfile)
+        
+        for row in csv_reader:
+            data.append(row)
+    
+    return data
+
+# Usage
+employees = read_csv_to_dict('data/employees.csv')
+print(f"Found {len(employees)} employees")
+print(f"First employee name: {employees[0]['name']}")
+print(f"First employee email: {employees[0]['email']}")
+                </pre>
+            </div>
+            
+            <p>Using <code>csv.DictReader</code> is like having a smart assistant who not only hands you the data but also labels each piece for you. This makes your code much more readable, as you can access values by their column names instead of positional indices.</p>
+            
+            <div class="real-world-example">
+                <h3>Real-world Example: Analyzing Sales Data</h3>
+                <pre>
+# File: examples/sales_analysis.py
+import csv
+from datetime import datetime
+
+def analyze_sales(sales_file):
+    total_sales = 0
+    sales_by_region = {}
+    sales_by_product = {}
+    
+    with open(sales_file, 'r', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        
+        for row in reader:
+            # Convert string amount to float
+            amount = float(row['amount'])
+            region = row['region']
+            product = row['product']
+            
+            # Add to total sales
+            total_sales += amount
+            
+            # Group by region
+            if region in sales_by_region:
+                sales_by_region[region] += amount
+            else:
+                sales_by_region[region] = amount
+            
+            # Group by product
+            if product in sales_by_product:
+                sales_by_product[product] += amount
+            else:
+                sales_by_product[product] = amount
+    
+    return {
+        'total_sales': total_sales,
+        'by_region': sales_by_region,
+        'by_product': sales_by_product
+    }
+
+# Usage
+results = analyze_sales('data/sales_data.csv')
+print(f"Total sales: ${results['total_sales']:,.2f}")
+print("\nSales by region:")
+for region, amount in results['by_region'].items():
+    print(f"  {region}: ${amount:,.2f}")
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Handling CSV Variants and Edge Cases</h2>
+            
+            <p>While the CSV format seems straightforward, there are many variations and edge cases that can make processing them challenging.</p>
+            
+            <div class="edge-cases">
+                <h3>Common CSV Challenges:</h3>
+                <ul>
+                    <li><strong>Different Delimiters</strong>: While the "C" in CSV stands for "comma," some files use tabs, semicolons, or other characters as separators.</li>
+                    <li><strong>Quoted Fields</strong>: Fields containing the delimiter character are typically enclosed in quotes.</li>
+                    <li><strong>Line Breaks in Fields</strong>: Some CSV files contain fields that have line breaks within them, enclosed in quotes.</li>
+                    <li><strong>Different Encodings</strong>: CSV files may use different character encodings (UTF-8, Latin-1, etc.).</li>
+                    <li><strong>Inconsistent Data Types</strong>: A column might contain a mix of numbers and text.</li>
+                </ul>
+            </div>
+            
+            <p>Handling these cases is like being a translator who needs to interpret different dialects and nuances of a language. Fortunately, the CSV module can help with many of these challenges.</p>
+            
+            <div class="code-example">
+                <h3>Using Different Delimiters</h3>
+                <pre>
+# File: examples/different_delimiter.py
+import csv
+
+# For TSV (tab-separated values) files
+with open('data/sample.tsv', 'r', newline='') as tsvfile:
+    tsv_reader = csv.reader(tsvfile, delimiter='\t')
+    for row in tsv_reader:
+        print(row)
+
+# For semicolon-separated files (common in European locales)
+with open('data/european_data.csv', 'r', newline='') as csvfile:
+    csv_reader = csv.reader(csvfile, delimiter=';')
+    for row in csv_reader:
+        print(row)
+                </pre>
+            </div>
+            
+            <div class="code-example">
+                <h3>Handling Complex CSV Files with Dialects</h3>
+                <pre>
+# File: examples/csv_dialect.py
+import csv
+
+# Define a custom dialect
+csv.register_dialect('my_custom_format',
+                    delimiter=',',
+                    quotechar='"',
+                    escapechar='\\',
+                    doublequote=True,
+                    skipinitialspace=True,
+                    lineterminator='\n',
+                    quoting=csv.QUOTE_MINIMAL)
+
+# Reading with the custom dialect
+with open('data/complex_data.csv', 'r', newline='') as csvfile:
+    reader = csv.reader(csvfile, dialect='my_custom_format')
+    for row in reader:
+        print(row)
+
+# You can also use predefined dialects like 'excel', 'excel-tab', or 'unix'
+with open('data/excel_export.csv', 'r', newline='') as csvfile:
+    reader = csv.reader(csvfile, dialect='excel')
+    for row in reader:
+        print(row)
+                </pre>
+            </div>
+            
+            <p>Think of CSV dialects as language dialects. Just as English might be spoken differently in the US, UK, Australia, or India, CSV files can have different "dialects" depending on where and how they were created.</p>
+        </section>
+
+        <section>
+            <h2>Writing CSV Files: Creating Structured Data</h2>
+            
+            <p>Writing to CSV files is just as important as reading them. Whether you're exporting data for other applications, creating reports, or saving processed results, the CSV module makes writing structured data straightforward.</p>
+            
+            <div class="code-example">
+                <h3>Basic CSV Writing with csv.writer</h3>
+                <pre>
+# File: examples/basic_writing.py
+import csv
+
+# Data to write
+header = ['name', 'age', 'city']
+rows = [
+    ['Alice', '24', 'New York'],
+    ['Bob', '32', 'San Francisco'],
+    ['Charlie', '45', 'Chicago']
+]
+
+# Writing to CSV
+with open('data/output/new_users.csv', 'w', newline='') as csvfile:
+    csv_writer = csv.writer(csvfile)
+    
+    # Write the header
+    csv_writer.writerow(header)
+    
+    # Write all rows at once
+    csv_writer.writerows(rows)
+                </pre>
+            </div>
+            
+            <p>Using <code>csv.writer</code> is like having an assistant who neatly formats and organizes your data into rows and columns, ensuring everything is properly aligned and separated.</p>
+            
+            <div class="code-example">
+                <h3>Writing Dictionaries to CSV</h3>
+                <pre>
+# File: examples/dict_to_csv.py
+import csv
+
+# Data to write
+users = [
+    {'name': 'Alice', 'age': '24', 'city': 'New York'},
+    {'name': 'Bob', 'age': '32', 'city': 'San Francisco'},
+    {'name': 'Charlie', 'age': '45', 'city': 'Chicago'}
+]
+
+# Writing dictionaries to CSV
+with open('data/output/users_dict.csv', 'w', newline='') as csvfile:
+    # Define the field names (column headers)
+    fieldnames = ['name', 'age', 'city']
+    
+    # Create a DictWriter object
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    
+    # Write the header row
+    writer.writeheader()
+    
+    # Write all rows
+    writer.writerows(users)
+                </pre>
+            </div>
+            
+            <p>Using <code>csv.DictWriter</code> is like having a form with labeled fields that you fill out for each entry. It ensures that the right information goes in the right column, making your code more maintainable and less prone to ordering errors.</p>
+            
+            <div class="real-world-example">
+                <h3>Real-world Example: Generating a Report</h3>
+                <pre>
+# File: examples/generate_report.py
+import csv
+from datetime import datetime
+
+def generate_sales_report(sales_data, output_file):
+    # First, calculate summary metrics
+    total_sales = sum(float(item['amount']) for item in sales_data)
+    average_sale = total_sales / len(sales_data)
+    
+    # Group sales by region
+    sales_by_region = {}
+    for sale in sales_data:
+        region = sale['region']
+        amount = float(sale['amount'])
+        
+        if region in sales_by_region:
+            sales_by_region[region] += amount
+        else:
+            sales_by_region[region] = amount
+    
+    # Create report data
+    report_data = []
+    
+    # Add header row with generation date
+    report_data.append(['Sales Report', f'Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'])
+    report_data.append([])  # Empty row for spacing
+    
+    # Add summary metrics
+    report_data.append(['Total Sales', f'${total_sales:,.2f}'])
+    report_data.append(['Number of Transactions', len(sales_data)])
+    report_data.append(['Average Sale', f'${average_sale:,.2f}'])
+    report_data.append([])  # Empty row for spacing
+    
+    # Add region breakdown
+    report_data.append(['Region', 'Total Sales', 'Percentage'])
+    for region, amount in sales_by_region.items():
+        percentage = (amount / total_sales) * 100
+        report_data.append([region, f'${amount:,.2f}', f'{percentage:.1f}%'])
+    
+    # Write to CSV
+    with open(output_file, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerows(report_data)
+    
+    return output_file
+
+# Usage
+sales_data = read_csv_to_dict('data/sales_data.csv')  # Assuming this function from earlier
+report_file = generate_sales_report(sales_data, 'data/output/sales_report.csv')
+print(f"Report generated at: {report_file}")
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>CSV Processing Patterns: Common Workflows</h2>
+            
+            <p>When working with CSV files, certain patterns appear frequently. Understanding these patterns can save you time and effort.</p>
+            
+            <div class="pattern">
+                <h3>Pattern: Filter and Transform</h3>
+                <pre>
+# File: examples/filter_transform.py
+import csv
+
+def filter_and_transform(input_file, output_file, filter_func, transform_func):
+    """
+    Reads a CSV file, filters rows based on filter_func, 
+    transforms each row with transform_func, then writes to output_file.
+    """
+    with open(input_file, 'r', newline='') as infile, \
+         open(output_file, 'w', newline='') as outfile:
+        
+        reader = csv.DictReader(infile)
+        
+        # Get fieldnames from the reader, but the transform might change them
+        old_fieldnames = reader.fieldnames
+        
+        # Process the first row to determine the new structure
+        # Store all processed rows for later writing
+        processed_rows = []
+        
+        for row in reader:
+            # Apply filter
+            if filter_func(row):
+                # Apply transformation
+                transformed = transform_func(row)
+                processed_rows.append(transformed)
+        
+        if not processed_rows:
+            # No rows passed the filter
+            return 0
+        
+        # Determine fieldnames from the first transformed row
+        new_fieldnames = list(processed_rows[0].keys())
+        
+        # Create writer with the new fieldnames
+        writer = csv.DictWriter(outfile, fieldnames=new_fieldnames)
+        writer.writeheader()
+        writer.writerows(processed_rows)
+        
+        return len(processed_rows)
+
+# Example usage:
+# Filter for employees in the Engineering department
+def is_engineer(row):
+    return row['department'] == 'Engineering'
+
+# Transform to create a simplified view
+def simplify_employee(row):
+    return {
+        'full_name': f"{row['first_name']} {row['last_name']}",
+        'email': row['email'],
+        'years_employed': str(int(row['end_date'][:4]) - int(row['start_date'][:4]))
+    }
+
+# Process the data
+count = filter_and_transform(
+    'data/employees.csv', 
+    'data/output/engineering_team.csv',
+    is_engineer,
+    simplify_employee
+)
+print(f"Processed {count} engineering employees")
+                </pre>
+            </div>
+            
+            <div class="pattern">
+                <h3>Pattern: CSV Aggregation</h3>
+                <pre>
+# File: examples/csv_aggregation.py
+import csv
+from collections import defaultdict
+
+def aggregate_csv_data(input_file, output_file, group_by_field, agg_field, agg_func='sum'):
+    """
+    Groups CSV data by group_by_field and applies agg_func to agg_field.
+    """
+    aggregated = defaultdict(list)
+    
+    with open(input_file, 'r', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        
+        # Group values by the group_by_field
+        for row in reader:
+            group_key = row[group_by_field]
+            # Convert the value to float if we're doing numerical aggregation
+            try:
+                value = float(row[agg_field])
+            except ValueError:
+                value = row[agg_field]
+            
+            aggregated[group_key].append(value)
+    
+    # Apply aggregation function
+    results = []
+    for group_key, values in aggregated.items():
+        if agg_func == 'sum':
+            # Only works for numeric values
+            agg_value = sum(values)
+        elif agg_func == 'avg':
+            agg_value = sum(values) / len(values)
+        elif agg_func == 'count':
+            agg_value = len(values)
+        elif agg_func == 'min':
+            agg_value = min(values)
+        elif agg_func == 'max':
+            agg_value = max(values)
+        else:
+            raise ValueError(f"Unsupported aggregation function: {agg_func}")
+        
+        results.append({group_by_field: group_key, f"{agg_func}_{agg_field}": agg_value})
+    
+    # Write results
+    with open(output_file, 'w', newline='') as csvfile:
+        fieldnames = [group_by_field, f"{agg_func}_{agg_field}"]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        
+        writer.writeheader()
+        writer.writerows(results)
+    
+    return len(results)
+
+# Example usage: Sum sales by region
+count = aggregate_csv_data(
+    'data/sales_data.csv',
+    'data/output/sales_by_region.csv',
+    'region',
+    'amount',
+    'sum'
+)
+print(f"Generated report with {count} regions")
+                </pre>
+            </div>
+            
+            <p>These patterns are like cooking recipes - once you learn the basic techniques, you can adapt and combine them to handle a wide variety of data processing needs.</p>
+        </section>
+
+        <section>
+            <h2>Advanced CSV Processing: Beyond the Basics</h2>
+            
+            <div class="advanced-topic">
+                <h3>Data Validation and Cleaning</h3>
+                <pre>
+# File: examples/data_validation.py
+import csv
+import re
+
+def validate_email(email):
+    """Simple email validation."""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
+
+def validate_and_clean_csv(input_file, output_file):
+    valid_rows = []
+    invalid_rows = []
+    
+    with open(input_file, 'r', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        
+        for row_num, row in enumerate(reader, start=2):  # Start from 2 to account for header
+            # Create a clean copy of the row
+            clean_row = {}
+            is_valid = True
+            
+            # Validate and clean each field
+            for field, value in row.items():
+                # Strip whitespace
+                clean_value = value.strip()
+                
+                # Field-specific validation and cleaning
+                if field == 'email':
+                    if not validate_email(clean_value):
+                        is_valid = False
+                        print(f"Row {row_num}: Invalid email: {clean_value}")
+                elif field == 'age':
+                    try:
+                        age = int(clean_value)
+                        if age < 0 or age > 120:
+                            is_valid = False
+                            print(f"Row {row_num}: Age out of range: {clean_value}")
+                    except ValueError:
+                        is_valid = False
+                        print(f"Row {row_num}: Invalid age format: {clean_value}")
+                
+                # Store the cleaned value
+                clean_row[field] = clean_value
+            
+            # Add to appropriate list
+            if is_valid:
+                valid_rows.append(clean_row)
+            else:
+                invalid_rows.append(clean_row)
+    
+    # Write valid rows to output file
+    with open(output_file, 'w', newline='') as csvfile:
+        if valid_rows:
+            writer = csv.DictWriter(csvfile, fieldnames=valid_rows[0].keys())
+            writer.writeheader()
+            writer.writerows(valid_rows)
+    
+    # Also write invalid rows to a separate file for review
+    with open(output_file.replace('.csv', '_invalid.csv'), 'w', newline='') as csvfile:
+        if invalid_rows:
+            writer = csv.DictWriter(csvfile, fieldnames=invalid_rows[0].keys())
+            writer.writeheader()
+            writer.writerows(invalid_rows)
+    
+    return len(valid_rows), len(invalid_rows)
+
+# Example usage
+valid_count, invalid_count = validate_and_clean_csv(
+    'data/user_data.csv',
+    'data/output/validated_users.csv'
+)
+print(f"Processed {valid_count + invalid_count} rows: {valid_count} valid, {invalid_count} invalid")
+                </pre>
+            </div>
+            
+            <div class="advanced-topic">
+                <h3>Working with Large CSV Files</h3>
+                <p>Large CSV files present unique challenges - they may not fit in memory, and processing them can be time-consuming.</p>
+                
+                <pre>
+# File: examples/large_file_processing.py
+import csv
+import os
+
+def process_large_csv_in_chunks(input_file, output_file, chunk_size=1000):
+    """
+    Process a large CSV file in chunks to avoid memory issues.
+    """
+    # Create a temporary file for each chunk
+    temp_files = []
+    
+    with open(input_file, 'r', newline='') as infile:
+        reader = csv.DictReader(infile)
+        fieldnames = reader.fieldnames
+        
+        # Process in chunks
+        chunk = []
+        chunk_num = 0
+        
+        for row in reader:
+            # Process the row (example: capitalize all string values)
+            processed_row = {k: v.upper() if isinstance(v, str) else v 
+                            for k, v in row.items()}
+            chunk.append(processed_row)
+            
+            # When chunk is full, write to temp file
+            if len(chunk) >= chunk_size:
+                temp_file = f"temp_chunk_{chunk_num}.csv"
+                with open(temp_file, 'w', newline='') as outfile:
+                    writer = csv.DictWriter(outfile, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(chunk)
+                
+                temp_files.append(temp_file)
+                chunk = []
+                chunk_num += 1
+        
+        # Write any remaining rows
+        if chunk:
+            temp_file = f"temp_chunk_{chunk_num}.csv"
+            with open(temp_file, 'w', newline='') as outfile:
+                writer = csv.DictWriter(outfile, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(chunk)
+            
+            temp_files.append(temp_file)
+    
+    # Merge temp files into final output
+    with open(output_file, 'w', newline='') as outfile:
+        writer = csv.DictWriter(outfile, fieldnames=fieldnames)
+        writer.writeheader()
+        
+        for temp_file in temp_files:
+            with open(temp_file, 'r', newline='') as infile:
+                reader = csv.DictReader(infile)
+                for row in reader:
+                    writer.writerow(row)
+            
+            # Remove temp file after using it
+            os.remove(temp_file)
+    
+    return len(temp_files)
+
+# Example usage
+chunks_processed = process_large_csv_in_chunks(
+    'data/very_large_dataset.csv',
+    'data/output/processed_large_dataset.csv',
+    chunk_size=5000
+)
+print(f"Processed file in {chunks_processed} chunks")
+                </pre>
+                
+                <p>Processing large files in chunks is like dividing a large book into chapters for easier reading - you handle one manageable piece at a time.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>CSV and Data Analysis: The Python Ecosystem</h2>
+            
+            <p>While the built-in CSV module is powerful, Python offers several libraries that can make working with tabular data even easier, especially for data analysis.</p>
+            
+            <div class="external-libraries">
+                <h3>Pandas: The Data Analysis Powerhouse</h3>
+                <p>For serious data analysis, the Pandas library provides sophisticated tools built around its DataFrame structure.</p>
+                
+                <pre>
+# File: examples/pandas_example.py
+import pandas as pd
+
+# Reading CSV into a DataFrame
+df = pd.read_csv('data/sales_data.csv')
+
+# Quick statistics
+print(df.describe())
+
+# Grouping and aggregation
+region_stats = df.groupby('region')['amount'].agg(['sum', 'mean', 'count'])
+print("\nRegion statistics:")
+print(region_stats)
+
+# Filtering
+high_value_sales = df[df['amount'] > 1000]
+print(f"\nHigh-value sales: {len(high_value_sales)}")
+
+# Writing back to CSV
+high_value_sales.to_csv('data/output/high_value_sales.csv', index=False)
+                </pre>
+                
+                <p>Pandas is like having an entire data analysis team at your fingertips - it can handle loading, cleaning, transformation, analysis, and visualization with just a few lines of code.</p>
+            </div>
+            
+            <div class="external-libraries">
+                <h3>When to Use What</h3>
+                <table>
+                    <tr>
+                        <th>Tool</th>
+                        <th>Best For</th>
+                    </tr>
+                    <tr>
+                        <td>csv module</td>
+                        <td>
+                            <ul>
+                                <li>Simple CSV reading/writing</li>
+                                <li>Custom processing of rows</li>
+                                <li>Memory-efficient processing of large files</li>
+                                <li>When you need precise control over CSV formatting</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Pandas</td>
+                        <td>
+                            <ul>
+                                <li>Data analysis and statistics</li>
+                                <li>Data cleaning and transformation</li>
+                                <li>Working with multiple related datasets</li>
+                                <li>When you need built-in visualization</li>
+                            </ul>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <section>
+            <h2>Best Practices for CSV Processing</h2>
+            
+            <div class="best-practices">
+                <ol>
+                    <li><strong>Always use the <code>newline=''</code> parameter</strong> when opening files for CSV processing.</li>
+                    <li><strong>Use <code>DictReader</code> and <code>DictWriter</code></strong> for more maintainable code, especially when column order might change.</li>
+                    <li><strong>Be explicit about encodings</strong> to handle international character sets correctly.</li>
+                    <li><strong>Validate and clean data</strong> before processing it to avoid errors.</li>
+                    <li><strong>Handle edge cases</strong> like missing values, inconsistent formats, and unexpected data types.</li>
+                    <li><strong>Process large files in chunks</strong> to avoid memory issues.</li>
+                    <li><strong>Use appropriate libraries</strong> for your specific needs - the <code>csv</code> module for simple tasks, Pandas for data analysis.</li>
+                    <li><strong>Document your CSV format</strong>, especially any non-standard aspects like custom delimiters or quoting rules.</li>
+                </ol>
+            </div>
+        </section>
+
+        <section>
+            <h2>Exercises to Reinforce Learning</h2>
+            
+            <div class="exercise">
+                <h3>Exercise 1: CSV Conversion Tool</h3>
+                <p>Create a program that can convert between different CSV formats (changing delimiters, quoting rules, etc.).</p>
+                <pre>
+# File: exercises/exercise1.py
+def convert_csv_format(input_file, output_file, input_dialect='excel', output_dialect='excel'):
+    """
+    Convert a CSV file from one format to another.
+    """
+    # Your implementation here
+    pass
+
+# Test with a sample file
+convert_csv_format('exercises/data/european.csv', 'exercises/data/converted.csv', 
+                 input_dialect='excel', output_dialect='unix')
+                </pre>
+            </div>
+            
+            <div class="exercise">
+                <h3>Exercise 2: CSV Merger</h3>
+                <p>Create a program that can merge multiple CSV files with compatible schemas into a single file.</p>
+                <pre>
+# File: exercises/exercise2.py
+def merge_csv_files(input_files, output_file):
+    """
+    Merge multiple CSV files into one.
+    """
+    # Your implementation here
+    pass
+
+# Test with sample files
+merge_csv_files(['exercises/data/sales_q1.csv', 'exercises/data/sales_q2.csv', 
+                'exercises/data/sales_q3.csv'], 'exercises/data/merged_sales.csv')
+                </pre>
+            </div>
+            
+            <div class="exercise">
+                <h3>Exercise 3: CSV Data Analysis</h3>
+                <p>Create a program that reads a CSV file of sales data and generates a report with various statistics.</p>
+                <pre>
+# File: exercises/exercise3.py
+def analyze_sales_data(input_file, output_file):
+    """
+    Generate a comprehensive sales report from CSV data.
+    """
+    # Your implementation here
+    pass
+
+# Test with a sample file
+analyze_sales_data('exercises/data/yearly_sales.csv', 'exercises/data/sales_analysis.csv')
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Real-world Applications</h2>
+            
+            <div class="application">
+                <h3>ETL (Extract, Transform, Load) Processes</h3>
+                <p>CSV files are commonly used in data pipelines where data is extracted from one system, transformed to meet certain requirements, and loaded into another system.</p>
+            </div>
+            
+            <div class="application">
+                <h3>Financial Data Processing</h3>
+                <p>Many financial systems export transaction data as CSV files, which can then be processed for accounting, tax preparation, or financial analysis.</p>
+            </div>
+            
+            <div class="application">
+                <h3>Data Migration</h3>
+                <p>When moving data between incompatible systems, CSV often serves as an intermediate format that both systems can understand.</p>
+            </div>
+            
+            <div class="application">
+                <h3>Reporting Systems</h3>
+                <p>Automated report generation often involves processing data from databases or APIs, then formatting it as CSV for import into spreadsheet applications or other reporting tools.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Further Exploration</h2>
+            
+            <div class="further-topics">
+                <h3>Related Topics to Explore</h3>
+                <ul>
+                    <li>JSON and XML as alternatives to CSV for structured data</li>
+                    <li>Database integration with SQLite or PostgreSQL</li>
+                    <li>Data validation libraries like Cerberus or Marshmallow</li>
+                    <li>Advanced data analysis with Pandas and NumPy</li>
+                    <li>Data visualization with Matplotlib, Seaborn, or Plotly</li>
+                    <li>Working with Excel files using openpyxl or xlrd/xlwt</li>
+                    <li>API integration for data retrieval and submission</li>
+                    <li>Automated data pipelines with tools like Airflow</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Summary</h2>
+            
+            <div class="summary">
+                <p>In this session, we've explored working with CSV files in Python, covering:</p>
+                
+                <ul>
+                    <li>The structure and purpose of CSV files</li>
+                    <li>Reading CSV data using the csv module</li>
+                    <li>Writing data to CSV format</li>
+                    <li>Handling different CSV dialects and edge cases</li>
+                    <li>Common processing patterns and techniques</li>
+                    <li>Advanced topics like validation and large file processing</li>
+                    <li>Integration with data analysis libraries like Pandas</li>
+                </ul>
+                
+                <p>CSV files are a fundamental tool in the data programmer's toolkit. They provide a simple yet versatile way to store, exchange, and process structured data. By mastering the techniques we've covered today, you'll be well-equipped to handle a wide variety of data processing tasks in your Python applications.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

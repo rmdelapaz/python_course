@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Best Practices for Error Handling in Python</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Best Practices for Error Handling in Python</h1>
+        <h2>Week 3: Python Fundamentals - Building Robust Applications</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h2>Introduction to Error Handling Best Practices</h2>
+            <p>Welcome to our in-depth exploration of error handling best practices in Python! Well-designed error handling is what separates production-quality code from fragile prototypes. As the saying goes, "It's not just about whether your code works—it's about how gracefully it fails."</p>
+            
+            <p>Error handling isn't just about preventing crashes. It's about creating a better experience for users, developers, and maintainers of your code. It's about making your software robust in the face of unexpected situations, and making it easier to diagnose and fix problems when they occur.</p>
+
+            <div class="folder-structure">
+                <h3>Folder Structure for Today's Examples</h3>
+                <pre>
+error_handling_best_practices/
+├── principles/
+│   ├── specific_exceptions.py
+│   ├── fail_fast.py
+│   ├── clean_up_resources.py
+│   └── error_propagation.py
+├── patterns/
+│   ├── custom_exceptions.py
+│   ├── exception_hierarchies.py
+│   ├── error_translation.py
+│   └── context_managers.py
+├── practical/
+│   ├── file_operations.py
+│   ├── network_requests.py
+│   ├── database_access.py
+│   └── external_apis.py
+└── exercises/
+    ├── refactoring_exercise.py
+    ├── application_exercise.py
+    └── solutions/
+        ├── refactoring_solution.py
+        └── application_solution.py
+                </pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Fundamental Principles of Effective Error Handling</h2>
+            
+            <div class="principle">
+                <h3>1. Be Specific About Which Exceptions You Catch</h3>
+                <p>One of the most important principles in Python error handling is to catch only the specific exceptions you expect and can handle properly. Avoid the temptation to use a bare <code>except:</code> clause, which catches all exceptions, including those you might not be prepared to handle.</p>
+                
+                <div class="code-comparison">
+                    <div class="bad-practice">
+                        <h4>❌ Avoid This</h4>
+                        <pre>
+# File: principles/specific_exceptions_bad.py
+
+def process_file(filename):
+    try:
+        with open(filename, 'r') as file:
+            return file.read()
+    except:  # Bare except clause - catches ALL exceptions
+        return "An error occurred"
+                        </pre>
+                        <p>This code will catch <i>everything</i>—including <code>KeyboardInterrupt</code>, <code>SystemExit</code>, <code>MemoryError</code>, and other exceptions that should generally propagate up. It also provides no information about what went wrong.</p>
+                    </div>
+                    
+                    <div class="good-practice">
+                        <h4>✅ Do This Instead</h4>
+                        <pre>
+# File: principles/specific_exceptions_good.py
+
+def process_file(filename):
+    try:
+        with open(filename, 'r') as file:
+            return file.read()
+    except FileNotFoundError:
+        return f"The file '{filename}' was not found"
+    except PermissionError:
+        return f"You don't have permission to read '{filename}'"
+    except Exception as e:
+        # Only as a last resort, catch Exception but with specific handling
+        error_message = f"An unexpected error occurred: {e}"
+        # In a real application, you might log this error
+        print(error_message)
+        return error_message
+                        </pre>
+                        <p>This improved version catches specific exceptions with tailored responses for each. Even when it catches <code>Exception</code> as a fallback, it provides meaningful information about what happened.</p>
+                    </div>
+                </div>
+                
+                <p><strong>Why This Matters:</strong> Being specific about which exceptions you catch makes your code more robust and predictable. It allows you to handle expected error conditions appropriately while letting unexpected errors propagate up the call stack where they might be better handled.</p>
+            </div>
+            
+            <div class="principle">
+                <h3>2. Provide Meaningful Error Messages</h3>
+                <p>Error messages should be informative and helpful for both users and developers. They should explain what went wrong and, when appropriate, suggest how to fix it.</p>
+                
+                <div class="code-comparison">
+                    <div class="bad-practice">
+                        <h4>❌ Avoid This</h4>
+                        <pre>
+# File: principles/error_messages_bad.py
+
+def validate_age(age):
+    try:
+        age = int(age)
+        if age < 0 or age > 120:
+            raise ValueError()
+        return age
+    except ValueError:
+        raise ValueError("Invalid age")
+                        </pre>
+                        <p>This error message is vague and doesn't explain why the age is invalid or what would constitute a valid value.</p>
+                    </div>
+                    
+                    <div class="good-practice">
+                        <h4>✅ Do This Instead</h4>
+                        <pre>
+# File: principles/error_messages_good.py
+
+def validate_age(age):
+    try:
+        age = int(age)
+    except ValueError:
+        raise ValueError(f"Age must be a number, got '{age}'")
+        
+    if age < 0:
+        raise ValueError("Age cannot be negative")
+    elif age > 120:
+        raise ValueError("Age must be less than or equal to 120")
+        
+    return age
+                        </pre>
+                        <p>This version provides clear, specific error messages that explain exactly what went wrong and implicitly suggest how to fix it.</p>
+                    </div>
+                </div>
+                
+                <p><strong>Why This Matters:</strong> Meaningful error messages significantly improve the debugging experience and can help guide users when something goes wrong. They reduce the time spent diagnosing issues and make your code more maintainable.</p>
+            </div>
+            
+            <div class="principle">
+                <h3>3. Fail Fast and Validate Inputs</h3>
+                <p>Detect and report errors as early as possible, rather than letting invalid values propagate through your code. This principle, known as "fail fast," helps isolate problems and makes debugging easier.</p>
+                
+                <div class="code-comparison">
+                    <div class="bad-practice">
+                        <h4>❌ Avoid This</h4>
+                        <pre>
+# File: principles/fail_fast_bad.py
+
+def calculate_discount(price, discount_percentage):
+    # No validation, errors might occur later
+    discount = price * (discount_percentage / 100)
+    final_price = price - discount
+    return final_price
+                        </pre>
+                        <p>This function doesn't validate its inputs. If <code>price</code> is negative or <code>discount_percentage</code> is 200%, it will return a surprising or nonsensical result.</p>
+                    </div>
+                    
+                    <div class="good-practice">
+                        <h4>✅ Do This Instead</h4>
+                        <pre>
+# File: principles/fail_fast_good.py
+
+def calculate_discount(price, discount_percentage):
+    # Validate inputs immediately
+    if not isinstance(price, (int, float)) or not isinstance(discount_percentage, (int, float)):
+        raise TypeError("Price and discount percentage must be numbers")
+        
+    if price < 0:
+        raise ValueError("Price cannot be negative")
+        
+    if discount_percentage < 0 or discount_percentage > 100:
+        raise ValueError("Discount percentage must be between 0 and 100")
+    
+    # Now we can safely proceed with calculation
+    discount = price * (discount_percentage / 100)
+    final_price = price - discount
+    return final_price
+                        </pre>
+                        <p>This version validates inputs immediately and raises appropriate exceptions with clear messages if the inputs are invalid.</p>
+                    </div>
+                </div>
+                
+                <p><strong>Why This Matters:</strong> Failing fast helps catch errors early, making them easier to diagnose and fix. It also prevents cascading failures where invalid values cause obscure errors deep in your codebase.</p>
+            </div>
+            
+            <div class="principle">
+                <h3>4. Clean Up Resources Properly</h3>
+                <p>Always ensure that resources like files, network connections, and database connections are properly closed, even if exceptions occur. Python's <code>with</code> statement (context managers) is designed for exactly this purpose.</p>
+                
+                <div class="code-comparison">
+                    <div class="bad-practice">
+                        <h4>❌ Avoid This</h4>
+                        <pre>
+# File: principles/clean_up_resources_bad.py
+
+def save_data(data, filename):
+    file = open(filename, 'w')
+    file.write(data)
+    file.close()  # This only happens if no exceptions occur
+                        </pre>
+                        <p>If an exception occurs during <code>file.write()</code>, the file will never be closed, potentially leading to resource leaks.</p>
+                    </div>
+                    
+                    <div class="good-practice">
+                        <h4>✅ Do This Instead</h4>
+                        <pre>
+# File: principles/clean_up_resources_good.py
+
+def save_data(data, filename):
+    with open(filename, 'w') as file:
+        file.write(data)
+    # File is automatically closed, even if an exception occurs
+                        </pre>
+                        <p>Using a context manager with the <code>with</code> statement ensures the file is always closed, regardless of whether an exception occurs.</p>
+                    </div>
+                </div>
+                
+                <p><strong>Why This Matters:</strong> Proper resource cleanup prevents resource leaks and other problems that can degrade application performance or cause it to fail over time. Context managers make this clean and straightforward in Python.</p>
+            </div>
+            
+            <div class="principle">
+                <h3>5. Don't Suppress Exceptions Without Good Reason</h3>
+                <p>Catch exceptions only when you have a specific recovery action to take. If you can't handle an exception appropriately, it's often better to let it propagate up the call stack.</p>
+                
+                <div class="code-comparison">
+                    <div class="bad-practice">
+                        <h4>❌ Avoid This</h4>
+                        <pre>
+# File: principles/suppress_exceptions_bad.py
+
+def get_config_value(key):
+    try:
+        with open('config.ini', 'r') as file:
+            for line in file:
+                if line.startswith(f"{key}="):
+                    return line.split('=')[1].strip()
+    except Exception:
+        # Silently ignoring all errors
+        pass
+    return None  # Default value if anything goes wrong
+                        </pre>
+                        <p>This code catches and silently ignores all exceptions, making it very difficult to diagnose problems when they occur.</p>
+                    </div>
+                    
+                    <div class="good-practice">
+                        <h4>✅ Do This Instead</h4>
+                        <pre>
+# File: principles/suppress_exceptions_good.py
+
+def get_config_value(key, default=None):
+    try:
+        with open('config.ini', 'r') as file:
+            for line in file:
+                if line.startswith(f"{key}="):
+                    return line.split('=')[1].strip()
+    except FileNotFoundError:
+        # Only suppress specific exceptions with a good reason
+        print("Warning: Config file not found, using default values")
+        return default
+    except Exception as e:
+        # Log unexpected errors before re-raising or handling them
+        print(f"Error reading config: {e}")
+        raise  # Re-raise the exception
+    
+    # If key wasn't found but file was read successfully
+    return default
+                        </pre>
+                        <p>This version only suppresses a specific exception with a valid reason and logs it. Other exceptions are logged and re-raised.</p>
+                    </div>
+                </div>
+                
+                <p><strong>Why This Matters:</strong> Silently suppressing exceptions can mask serious problems and make debugging nearly impossible. Be deliberate about which exceptions you catch and how you handle them.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Advanced Error Handling Patterns</h2>
+            
+            <div class="pattern">
+                <h3>Custom Exception Classes</h3>
+                <p>Creating custom exception classes tailored to your application's needs can make your error handling more expressive and easier to use.</p>
+                
+                <div class="code-example">
+                    <h4>Creating and Using Custom Exceptions</h4>
+                    <pre>
+# File: patterns/custom_exceptions.py
+
+class ConfigError(Exception):
+    """Base exception for configuration-related errors."""
+    pass
+
+class ConfigFileNotFoundError(ConfigError):
+    """Raised when the configuration file is not found."""
+    def __init__(self, filename):
+        self.filename = filename
+        super().__init__(f"Configuration file not found: {filename}")
+
+class ConfigParseError(ConfigError):
+    """Raised when there's an error parsing the configuration."""
+    def __init__(self, filename, line_number, message):
+        self.filename = filename
+        self.line_number = line_number
+        super().__init__(f"Error parsing {filename} at line {line_number}: {message}")
+
+def load_config(filename):
+    try:
+        with open(filename, 'r') as file:
+            config = {}
+            for i, line in enumerate(file, 1):
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                    
+                if '=' not in line:
+                    raise ConfigParseError(filename, i, "Missing '=' character")
+                    
+                key, value = line.split('=', 1)
+                config[key.strip()] = value.strip()
+            
+            return config
+    except FileNotFoundError:
+        raise ConfigFileNotFoundError(filename)
+
+# Using the custom exceptions
+try:
+    config = load_config('app_settings.ini')
+    print("Configuration loaded successfully")
+except ConfigFileNotFoundError as e:
+    print(f"Configuration error: {e}")
+    print("Using default configuration...")
+    config = {'debug': 'False', 'log_level': 'INFO'}
+except ConfigParseError as e:
+    print(f"Configuration error: {e}")
+    print(f"Please fix line {e.line_number} in {e.filename}")
+    raise  # Re-raise after logging, as this is a critical error
+except ConfigError as e:
+    # Catch any other config errors
+    print(f"Configuration error: {e}")
+    raise  # Re-raise after logging
+                    </pre>
+                    <p>This example creates a hierarchy of custom exceptions specific to configuration handling. Custom exceptions can include additional attributes (like <code>filename</code> and <code>line_number</code>) that provide context for the error.</p>
+                </div>
+                
+                <p><strong>Key Benefits:</strong></p>
+                <ul>
+                    <li>Provides more context-specific information for error diagnosis</li>
+                    <li>Allows for more granular exception handling</li>
+                    <li>Makes code more self-documenting by explicitly naming the types of errors that can occur</li>
+                    <li>Enables creation of exception hierarchies that match your application's domain model</li>
+                </ul>
+            </div>
+            
+            <div class="pattern">
+                <h3>Exception Translation</h3>
+                <p>Sometimes it's useful to catch low-level exceptions and "translate" them into higher-level exceptions that are more meaningful in your application's context.</p>
+                
+                <div class="code-example">
+                    <h4>Translating Low-Level Exceptions</h4>
+                    <pre>
+# File: patterns/error_translation.py
+
+class DatabaseError(Exception):
+    """Base exception for database-related errors."""
+    pass
+
+class ConnectionError(DatabaseError):
+    """Raised when a database connection fails."""
+    pass
+
+class QueryError(DatabaseError):
+    """Raised when a database query fails."""
+    pass
+
+def execute_query(query, parameters=None):
+    """
+    Execute a database query with proper error handling.
+    
+    For demonstration, we'll simulate database operations.
+    In real code, you'd use a database driver like sqlite3, psycopg2, etc.
+    """
+    try:
+        # Simulate database connection and query execution
+        if "SELECT" not in query.upper():
+            raise ValueError("Only SELECT queries are supported in this example")
+            
+        # Simulate a connection error
+        if "nonexistent_table" in query:
+            raise FileNotFoundError("Table not found")
+            
+        # Simulate other database errors
+        if "invalid_column" in query:
+            raise KeyError("Column not found")
+        
+        # Simulate successful query execution
+        print(f"Executing query: {query}")
+        if parameters:
+            print(f"With parameters: {parameters}")
+        
+        # Return simulated results
+        return [{"id": 1, "name": "Result 1"}, {"id": 2, "name": "Result 2"}]
+        
+    except FileNotFoundError as e:
+        # Translate to our custom exception
+        raise QueryError(f"Table not found: {e}") from e
+        
+    except KeyError as e:
+        # Translate to our custom exception
+        raise QueryError(f"Invalid column: {e}") from e
+        
+    except ValueError as e:
+        # Translate to our custom exception
+        raise QueryError(f"Invalid query: {e}") from e
+        
+    except Exception as e:
+        # Catch-all for unexpected errors
+        raise DatabaseError(f"Unexpected database error: {e}") from e
+
+# Using the exception translation
+try:
+    results = execute_query("SELECT * FROM users WHERE status = ?", ["active"])
+    print(f"Found {len(results)} results")
+except QueryError as e:
+    print(f"Query error: {e}")
+    # We can also access the original exception
+    if e.__cause__:
+        print(f"Original error: {e.__cause__}")
+except DatabaseError as e:
+    print(f"Database error: {e}")
+                    </pre>
+                    <p>This example demonstrates how to catch low-level exceptions (like <code>FileNotFoundError</code>, <code>KeyError</code>, etc.) and translate them into application-specific exceptions that are more meaningful to users of your code.</p>
+                </div>
+                
+                <p><strong>Key Benefits:</strong></p>
+                <ul>
+                    <li>Provides a more consistent error handling interface by normalizing different underlying errors</li>
+                    <li>Adds domain-specific context to technical errors</li>
+                    <li>Abstracts away the details of underlying libraries or systems</li>
+                    <li>Preserves the original exception through the <code>from</code> clause, maintaining the full error context</li>
+                </ul>
+            </div>
+            
+            <div class="pattern">
+                <h3>Context Managers for Resource Management</h3>
+                <p>The <code>with</code> statement and context managers provide a clean, pythonic way to ensure proper resource acquisition and release, even when exceptions occur.</p>
+                
+                <div class="code-example">
+                    <h4>Creating Custom Context Managers</h4>
+                    <pre>
+# File: patterns/context_managers.py
+
+class DatabaseConnection:
+    """A context manager for handling database connections."""
+    
+    def __init__(self, connection_string):
+        self.connection_string = connection_string
+        self.connection = None
+    
+    def __enter__(self):
+        """Set up the database connection."""
+        print(f"Connecting to database: {self.connection_string}")
+        # In a real application, this would use a database driver
+        # self.connection = db.connect(self.connection_string)
+        self.connection = {"connected": True}  # Simulated connection
+        return self.connection
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Clean up the database connection."""
+        print("Closing database connection")
+        if self.connection:
+            # In a real application, you would call connection.close()
+            self.connection = None
+
+# Using a custom context manager
+def fetch_user_data(user_id):
+    with DatabaseConnection("postgresql://localhost/users") as conn:
+        # In a real application, you would execute a query here
+        print(f"Fetching data for user {user_id}")
+        
+        # Simulate fetching data
+        if user_id < 0:
+            raise ValueError("User ID cannot be negative")
+            
+        # Return simulated results
+        return {"id": user_id, "name": f"User {user_id}"}
+
+# Using contextlib.contextmanager for simpler context managers
+from contextlib import contextmanager
+
+@contextmanager
+def transaction(connection):
+    """A context manager for database transactions."""
+    try:
+        print("Beginning transaction")
+        # In a real application: connection.begin()
+        yield  # This is where the code in the with block executes
+        print("Committing transaction")
+        # In a real application: connection.commit()
+    except Exception as e:
+        print(f"Rolling back transaction: {e}")
+        # In a real application: connection.rollback()
+        raise  # Re-raise the exception
+
+# Using the transaction context manager
+def update_user(user_id, data):
+    with DatabaseConnection("postgresql://localhost/users") as conn:
+        with transaction(conn):
+            print(f"Updating user {user_id} with {data}")
+            
+            # Simulate an error during update
+            if 'error' in data:
+                raise ValueError("Invalid data for update")
+            
+            print("User updated successfully")
+
+# Testing our context managers
+try:
+    result = fetch_user_data(42)
+    print(f"User data: {result}")
+except Exception as e:
+    print(f"Error fetching user data: {e}")
+
+try:
+    update_user(42, {"name": "New Name"})
+except Exception as e:
+    print(f"Error updating user: {e}")
+
+try:
+    update_user(42, {"name": "Error Test", "error": True})
+except Exception as e:
+    print(f"Error updating user: {e}")
+                    </pre>
+                    <p>This example shows two ways to create context managers: a class-based approach implementing <code>__enter__</code> and <code>__exit__</code> methods, and a function-based approach using the <code>@contextmanager</code> decorator from the <code>contextlib</code> module.</p>
+                </div>
+                
+                <p><strong>Key Benefits:</strong></p>
+                <ul>
+                    <li>Ensures resources are properly cleaned up, even if exceptions occur</li>
+                    <li>Simplifies code by eliminating explicit try/finally blocks</li>
+                    <li>Makes resource lifecycle management more declarative and less error-prone</li>
+                    <li>Can be nested to manage multiple resources with proper cleanup ordering</li>
+                </ul>
+            </div>
+            
+            <div class="pattern">
+                <h3>Error Handling Middleware</h3>
+                <p>For larger applications, especially web applications, it's often useful to implement an error handling middleware layer that provides consistent error handling across the entire application.</p>
+                
+                <div class="code-example">
+                    <h4>Implementing Error Handling Middleware</h4>
+                    <pre>
+# File: patterns/error_middleware.py
+
+def execute_with_error_handling(func, *args, **kwargs):
+    """
+    Execute a function with standardized error handling.
+    
+    This is a simple example of an error handling middleware pattern
+    that could be used to wrap API endpoints or other function calls.
+    """
+    try:
+        return {
+            "status": "success",
+            "data": func(*args, **kwargs)
+        }
+    except ValueError as e:
+        return {
+            "status": "error",
+            "error_type": "validation_error",
+            "message": str(e)
+        }
+    except KeyError as e:
+        return {
+            "status": "error",
+            "error_type": "not_found",
+            "message": f"Resource not found: {e}"
+        }
+    except Exception as e:
+        # Log unexpected errors
+        print(f"Unexpected error in {func.__name__}: {e}")
+        return {
+            "status": "error",
+            "error_type": "internal_error",
+            "message": "An internal error occurred"
+        }
+
+# Example functions to use with the middleware
+def get_user(user_id):
+    users = {1: "Alice", 2: "Bob"}
+    if not isinstance(user_id, int):
+        raise ValueError("User ID must be an integer")
+    
+    if user_id not in users:
+        raise KeyError(user_id)
+        
+    return {"id": user_id, "name": users[user_id]}
+
+def update_user(user_id, data):
+    if not isinstance(user_id, int):
+        raise ValueError("User ID must be an integer")
+        
+    if not data:
+        raise ValueError("Data cannot be empty")
+        
+    # Simulate a successful update
+    return {"id": user_id, "updated": True}
+
+# Test the middleware
+print("Getting user 1:")
+result = execute_with_error_handling(get_user, 1)
+print(result)
+
+print("\nGetting user 3 (doesn't exist):")
+result = execute_with_error_handling(get_user, 3)
+print(result)
+
+print("\nGetting user with invalid ID:")
+result = execute_with_error_handling(get_user, "not-an-id")
+print(result)
+
+print("\nUpdating user with valid data:")
+result = execute_with_error_handling(update_user, 1, {"name": "Alice Smith"})
+print(result)
+
+print("\nUpdating user with invalid data:")
+result = execute_with_error_handling(update_user, 1, None)
+print(result)
+                    </pre>
+                    <p>This example demonstrates a simple error handling middleware function that standardizes error responses across different function calls. In a real web application, this pattern would be implemented at the framework level (e.g., using middleware in Flask or Django).</p>
+                </div>
+                
+                <p><strong>Key Benefits:</strong></p>
+                <ul>
+                    <li>Provides consistent error handling and reporting across the application</li>
+                    <li>Centralizes error handling logic, reducing duplication</li>
+                    <li>Makes it easier to implement global error policies like logging or monitoring</li>
+                    <li>Separates error handling concerns from business logic</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Practical Examples for Common Scenarios</h2>
+            
+            <div class="practical-example">
+                <h3>File Operations</h3>
+                <p>File operations are prone to various errors, from missing files to permission issues. Here's how to handle them robustly:</p>
+                
+                <div class="code-example">
+                    <h4>Robust File Operations</h4>
+                    <pre>
+# File: practical/file_operations.py
+
+import os
+import json
+from pathlib import Path
+
+def read_json_file(filepath):
+    """
+    Read and parse a JSON file with robust error handling.
+    
+    Args:
+        filepath: Path to the JSON file
+        
+    Returns:
+        The parsed JSON data
+        
+    Raises:
+        FileNotFoundError: If the file doesn't exist
+        PermissionError: If the file can't be read due to permissions
+        json.JSONDecodeError: If the file contains invalid JSON
+        ValueError: If the file has an invalid extension
+    """
+    # Convert to Path object for consistent path handling
+    path = Path(filepath)
+    
+    # Validate file extension
+    if path.suffix.lower() != '.json':
+        raise ValueError(f"Expected a JSON file, got: {path.suffix}")
+    
+    # Try to read and parse the file
+    try:
+        with open(path, 'r', encoding='utf-8') as file:
+            return json.load(file)
+    except FileNotFoundError:
+        # Re-raise with more context
+        raise FileNotFoundError(f"JSON file not found: {path}")
+    except PermissionError:
+        raise PermissionError(f"Permission denied when reading: {path}")
+    except json.JSONDecodeError as e:
+        # Add file context to the error
+        raise json.JSONDecodeError(
+            f"{e.msg} in file {path}", e.doc, e.pos
+        ) from e
+
+def write_json_file(data, filepath, indent=2):
+    """
+    Write data to a JSON file with robust error handling.
+    
+    Args:
+        data: The data to write (must be JSON-serializable)
+        filepath: Path to write the JSON file
+        indent: Number of spaces for indentation (default: 2)
+        
+    Returns:
+        The absolute path to the created file
+        
+    Raises:
+        PermissionError: If the file can't be written due to permissions
+        TypeError: If the data is not JSON-serializable
+        ValueError: If the file has an invalid extension
+    """
+    # Convert to Path object
+    path = Path(filepath)
+    
+    # Validate file extension
+    if path.suffix.lower() != '.json':
+        raise ValueError(f"Expected a JSON file, got: {path.suffix}")
+    
+    # Create directory if it doesn't exist
+    os.makedirs(path.parent, exist_ok=True)
+    
+    # Try to write the file
+    try:
+        with open(path, 'w', encoding='utf-8') as file:
+            json.dump(data, file, indent=indent)
+        return str(path.absolute())
+    except PermissionError:
+        raise PermissionError(f"Permission denied when writing to: {path}")
+    except TypeError as e:
+        raise TypeError(f"Data is not JSON-serializable: {e}")
+
+# Example usage
+def demonstrate_file_operations():
+    # Test reading a valid JSON file
+    try:
+        data = read_json_file('config.json')
+        print(f"Successfully read JSON data: {data}")
+    except FileNotFoundError as e:
+        print(f"File error: {e}")
+    except json.JSONDecodeError as e:
+        print(f"JSON parsing error: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+    
+    # Test writing a JSON file
+    try:
+        data = {
+            "name": "Example Config",
+            "version": 1.0,
+            "settings": {
+                "debug": True,
+                "log_level": "INFO"
+            }
+        }
+        path = write_json_file(data, 'output/new_config.json')
+        print(f"Successfully wrote JSON data to: {path}")
+    except PermissionError as e:
+        print(f"Permission error: {e}")
+    except TypeError as e:
+        print(f"Data error: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+# Run the demonstration
+# demonstrate_file_operations()
+                    </pre>
+                    <p>This example demonstrates robust error handling for JSON file operations, including handling specific file-related exceptions, adding context to errors, and ensuring proper cleanup with context managers.</p>
+                </div>
+            </div>
+            
+            <div class="practical-example">
+                <h3>Network Requests</h3>
+                <p>Network operations are inherently prone to errors like timeouts, connection failures, and unexpected responses. Here's how to handle them gracefully:</p>
+                
+                <div class="code-example">
+                    <h4>Robust Network Operations</h4>
+                    <pre>
+# File: practical/network_requests.py
+
+import time
+import json
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
+from urllib.parse import urlencode
+
+class APIError(Exception):
+    """Base exception for API-related errors."""
+    pass
+
+class APIConnectionError(APIError):
+    """Raised when a connection to the API fails."""
+    pass
+
+class APITimeoutError(APIError):
+    """Raised when an API request times out."""
+    pass
+
+class APIResponseError(APIError):
+    """Raised when the API returns an error response."""
+    def __init__(self, status_code, message):
+        self.status_code = status_code
+        super().__init__(f"API returned error {status_code}: {message}")
+
+def api_request(url, method="GET", data=None, headers=None, timeout=10, retries=3, retry_delay=1):
+    """
+    Make an API request with robust error handling and retry logic.
+    
+    Args:
+        url: The URL to request
+        method: HTTP method (default: GET)
+        data: Request body data (for POST/PUT)
+        headers: Request headers
+        timeout: Request timeout in seconds
+        retries: Number of times to retry on failure
+        retry_delay: Delay between retries in seconds
+        
+    Returns:
+        The parsed JSON response
+        
+    Raises:
+        APIConnectionError: If the connection fails
+        APITimeoutError: If the request times out
+        APIResponseError: If the API returns an error status
+        APIError: For other API-related errors
+    """
+    # Prepare the request
+    request_headers = headers or {}
+    request_headers.setdefault('Content-Type', 'application/json')
+    
+    # Encode data if provided
+    request_data = None
+    if data:
+        if method == "GET":
+            # For GET, add data as query parameters
+            query_string = urlencode(data)
+            url = f"{url}?{query_string}" if '?' not in url else f"{url}&{query_string}"
+        else:
+            # For other methods, encode as JSON
+            request_data = json.dumps(data).encode('utf-8')
+    
+    # Create the request
+    request = Request(
+        url=url,
+        data=request_data,
+        headers=request_headers,
+        method=method
+    )
+    
+    # Retry loop
+    for attempt in range(retries):
+        try:
+            start_time = time.time()
+            
+            # Make the request
+            with urlopen(request, timeout=timeout) as response:
+                # Read and parse the response
+                response_data = response.read().decode('utf-8')
+                
+                # Check if the response is valid JSON
+                try:
+                    result = json.loads(response_data)
+                    return result
+                except json.JSONDecodeError as e:
+                    raise APIError(f"Invalid JSON response: {e}")
+                
+        except HTTPError as e:
+            # Handle HTTP error responses
+            try:
+                # Try to parse the error response
+                error_message = e.read().decode('utf-8')
+                try:
+                    error_json = json.loads(error_message)
+                    error_message = error_json.get('message', error_message)
+                except json.JSONDecodeError:
+                    # Not JSON, use the raw message
+                    pass
+            except Exception:
+                # Couldn't read the error response
+                error_message = str(e)
+            
+            # Check if we should retry
+            if e.code >= 500 and attempt < retries - 1:
+                # Server error, might be transient
+                print(f"API server error (attempt {attempt + 1}/{retries}): {e.code}")
+                time.sleep(retry_delay)
+                continue
+                
+            # Raise an appropriate error
+            raise APIResponseError(e.code, error_message)
+            
+        except URLError as e:
+            # Handle connection errors
+            if "timeout" in str(e.reason).lower():
+                if attempt < retries - 1:
+                    # Timeout, retry
+                    print(f"API request timed out (attempt {attempt + 1}/{retries})")
+                    time.sleep(retry_delay)
+                    continue
+                else:
+                    # Max retries reached
+                    raise APITimeoutError(f"API request timed out after {retries} attempts")
+            else:
+                # Other connection error
+                raise APIConnectionError(f"Connection error: {e.reason}")
+                
+        except Exception as e:
+            # Handle other unexpected errors
+            raise APIError(f"Unexpected error during API request: {e}")
+            
+        # If we get here, the request was successful
+        break
+    
+    # This should never happen (we either return or raise above)
+    raise APIError("Unexpected end of API request function")
+
+# Example usage
+def get_user_data(user_id):
+    """
+    Get user data from a hypothetical API.
+    
+    In a real application, you'd use a proper API client.
+    For this example, we'll use a public JSON placeholder API.
+    """
+    try:
+        response = api_request(
+            url=f"https://jsonplaceholder.typicode.com/users/{user_id}",
+            headers={"Accept": "application/json"},
+            timeout=5
+        )
+        
+        # Process the response
+        return {
+            "id": response.get("id"),
+            "name": response.get("name"),
+            "email": response.get("email")
+        }
+    except APIResponseError as e:
+        if e.status_code == 404:
+            # User not found
+            print(f"User with ID {user_id} not found")
+            return None
+        # Re-raise other API errors
+        raise
+    except APIError as e:
+        # Handle API errors
+        print(f"API error: {e}")
+        # Depending on the use case, you might want to re-raise or return None
+        return None
+
+# Run the demonstration
+# try:
+#     user = get_user_data(1)
+#     if user:
+#         print(f"User: {user}")
+# except Exception as e:
+#     print(f"Unexpected error: {e}")
+                    </pre>
+                    <p>This example demonstrates robust error handling for network requests, including specific exception types for different network-related errors, retry logic for transient issues, and proper resource cleanup using context managers.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Putting It All Together: A Complete Example</h2>
+            
+            <div class="integrated-example">
+                <h3>Configuration Manager with Comprehensive Error Handling</h3>
+                <p>This complete example integrates many of the principles and patterns we've discussed to create a robust configuration management system.</p>
+                
+                <div class="code-example">
+                    <pre>
+# File: practical/config_manager.py
+
+import os
+import json
+import logging
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger("ConfigManager")
+
+# Custom exceptions
+class ConfigError(Exception):
+    """Base exception for configuration-related errors."""
+    pass
+
+class ConfigFileError(ConfigError):
+    """Raised when there's an issue with the configuration file."""
+    pass
+
+class ConfigParseError(ConfigError):
+    """Raised when parsing the configuration fails."""
+    pass
+
+class ConfigValidationError(ConfigError):
+    """Raised when configuration validation fails."""
+    pass
+
+class ConfigManager:
+    """A robust configuration manager with comprehensive error handling."""
+    
+    def __init__(self, app_name: str, config_dir: Optional[str] = None):
+        """
+        Initialize the configuration manager.
+        
+        Args:
+            app_name: Name of the application (used for default directories)
+            config_dir: Custom configuration directory (optional)
+        """
+        self.app_name = app_name
+        
+        # Set up configuration directory
+        if config_dir:
+            self.config_dir = Path(config_dir)
+        else:
+            # Use a default location based on platform
+            if os.name == 'nt':  # Windows
+                self.config_dir = Path(os.environ.get('APPDATA', '')) / app_name
+            else:  # Unix/Linux/Mac
+                self.config_dir = Path.home() / f".{app_name.lower()}"
+        
+        # Set up configuration file paths
+        self.config_file = self.config_dir / "config.json"
+        self.defaults_file = self.config_dir / "defaults.json"
+        
+        # Initialize configuration dictionary
+        self.config = {}
+        self.defaults = {}
+        
+        logger.info(f"Initialized ConfigManager for {app_name}")
+        logger.info(f"Configuration directory: {self.config_dir}")
+    
+    def load(self, validate: bool = True) -> Dict[str, Any]:
+        """
+        Load configuration from files.
+        
+        Args:
+            validate: Whether to validate the configuration
+            
+        Returns:
+            The loaded configuration dictionary
+            
+        Raises:
+            ConfigFileError: If there's an issue with the configuration files
+            ConfigParseError: If parsing the configuration fails
+            ConfigValidationError: If validation fails
+        """
+        logger.info("Loading configuration")
+        
+        # Load defaults
+        try:
+            self.defaults = self._load_config_file(self.defaults_file, required=False)
+            logger.info(f"Loaded defaults: {len(self.defaults)} settings")
+        except ConfigError as e:
+            logger.warning(f"Could not load defaults: {e}")
+            self.defaults = {}
+        
+        # Start with defaults
+        self.config = self.defaults.copy() if self.defaults else {}
+        
+        # Load user configuration
+        try:
+            user_config = self._load_config_file(self.config_file, required=False)
+            if user_config:
+                logger.info(f"Loaded user configuration: {len(user_config)} settings")
+                
+                # Update defaults with user settings
+                self.config.update(user_config)
+        except ConfigError as e:
+            logger.warning(f"Could not load user configuration: {e}")
+        
+        # Validate if requested
+        if validate and self.config:
+            try:
+                self._validate_config(self.config)
+                logger.info("Configuration validation passed")
+            except ConfigValidationError as e:
+                logger.error(f"Configuration validation failed: {e}")
+                raise
+        
+        return self.config
+    
+    def save(self) -> None:
+        """
+        Save the current configuration to file.
+        
+        Raises:
+            ConfigFileError: If there's an issue saving the configuration file
+        """
+        logger.info("Saving configuration")
+        
+        # Ensure the configuration directory exists
+        try:
+            os.makedirs(self.config_dir, exist_ok=True)
+        except OSError as e:
+            raise ConfigFileError(f"Could not create configuration directory: {e}")
+        
+        # Save the configuration
+        try:
+            with open(self.config_file, 'w', encoding='utf-8') as f:
+                json.dump(self.config, f, indent=2)
+            logger.info(f"Configuration saved to {self.config_file}")
+        except (OSError, TypeError) as e:
+            raise ConfigFileError(f"Error saving configuration: {e}")
+    
+    def get(self, key: str, default: Any = None) -> Any:
+        """
+        Get a configuration value.
+        
+        Args:
+            key: Configuration key
+            default: Default value if the key is not found
+            
+        Returns:
+            The configuration value or default
+        """
+        return self.config.get(key, default)
+    
+    def set(self, key: str, value: Any) -> None:
+        """
+        Set a configuration value.
+        
+        Args:
+            key: Configuration key
+            value: Configuration value
+        """
+        self.config[key] = value
+    
+    def _load_config_file(self, filepath: Path, required: bool = True) -> Dict[str, Any]:
+        """
+        Load a configuration file.
+        
+        Args:
+            filepath: Path to the configuration file
+            required: Whether the file is required to exist
+            
+        Returns:
+            The loaded configuration dictionary
+            
+        Raises:
+            ConfigFileError: If there's an issue with the configuration file
+            ConfigParseError: If parsing the configuration fails
+        """
+        # Check if the file exists
+        if not filepath.exists():
+            if required:
+                raise ConfigFileError(f"Configuration file not found: {filepath}")
+            else:
+                logger.info(f"Configuration file not found (optional): {filepath}")
+                return {}
+        
+        # Try to load the configuration
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                try:
+                    return json.load(f)
+                except json.JSONDecodeError as e:
+                    raise ConfigParseError(f"Invalid JSON in {filepath}: {e}") from e
+        except OSError as e:
+            raise ConfigFileError(f"Error reading {filepath}: {e}")
+    
+    def _validate_config(self, config: Dict[str, Any]) -> None:
+        """
+        Validate configuration values.
+        
+        In a real application, this would check for required fields,
+        type validation, range validation, etc.
+        
+        Args:
+            config: Configuration dictionary to validate
+            
+        Raises:
+            ConfigValidationError: If validation fails
+        """
+        # Example validation: check for required fields
+        required_fields = ['log_level', 'debug']
+        missing_fields = [field for field in required_fields if field not in config]
+        
+        if missing_fields:
+            raise ConfigValidationError(
+                f"Missing required configuration fields: {', '.join(missing_fields)}"
+            )
+        
+        # Example validation: check field types
+        if not isinstance(config.get('debug'), bool):
+            raise ConfigValidationError(
+                f"Field 'debug' must be a boolean, got: {type(config.get('debug')).__name__}"
+            )
+        
+        # Example validation: check field values
+        valid_log_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+        if config.get('log_level') not in valid_log_levels:
+            raise ConfigValidationError(
+                f"Invalid log_level: {config.get('log_level')}. "
+                f"Must be one of: {', '.join(valid_log_levels)}"
+            )
+
+# Example usage
+def demonstrate_config_manager():
+    # Create a configuration manager
+    config_manager = ConfigManager("MyApp")
+    
+    try:
+        # Try to load the configuration
+        config = config_manager.load(validate=False)
+        print(f"Loaded configuration: {config}")
+        
+        # Set some values
+        config_manager.set('debug', True)
+        config_manager.set('log_level', 'INFO')
+        config_manager.set('max_threads', 4)
+        
+        # Save the configuration
+        config_manager.save()
+        print("Configuration saved")
+        
+        # Load and validate
+        try:
+            config = config_manager.load(validate=True)
+            print("Configuration validated successfully")
+        except ConfigValidationError as e:
+            print(f"Validation error: {e}")
+    except ConfigError as e:
+        print(f"Configuration error: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+# Run the demonstration
+# demonstrate_config_manager()
+                    </pre>
+                    <p>This example demonstrates a robust configuration management system that incorporates many error handling best practices:</p>
+                    <ul>
+                        <li>Custom exception hierarchy for different error types</li>
+                        <li>Specific error handling for different failure scenarios</li>
+                        <li>Proper cleanup with context managers</li>
+                        <li>Detailed logging for operational visibility</li>
+                        <li>Clear and specific error messages</li>
+                        <li>Input validation for early error detection</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Exercises to Reinforce Learning</h2>
+            
+            <div class="exercise">
+                <h3>Exercise 1: Refactoring for Better Error Handling</h3>
+                <p>In this exercise, you'll refactor code with poor error handling to apply the best practices we've discussed.</p>
+                
+                <div class="exercise-example">
+                    <h4>Code to Refactor</h4>
+                    <pre>
+# File: exercises/refactoring_exercise.py
+
+def parse_data(filename):
+    """Parse data from a file and return the sum of numeric values."""
+    f = open(filename, 'r')
+    lines = f.readlines()
+    f.close()
+    
+    total = 0
+    for line in lines:
+        value = int(line.strip())
+        total += value
+    
+    return total
+
+# Your task: Refactor this function to include proper error handling
+# - Use context managers for file handling
+# - Add specific exception handling for different error scenarios
+# - Provide meaningful error messages
+# - Consider what should happen with invalid data lines
+# - Document the function with clear error handling information
+                    </pre>
+                </div>
+                
+                <div class="exercise-solution">
+                    <h4>Example Solution</h4>
+                    <pre>
+# File: exercises/solutions/refactoring_solution.py
+
+def parse_data(filename, skip_invalid=False):
+    """
+    Parse data from a file and return the sum of numeric values.
+    
+    Args:
+        filename: Path to the data file
+        skip_invalid: Whether to skip invalid lines (default: False)
+        
+    Returns:
+        A dictionary containing the total sum and processing statistics
+        
+    Raises:
+        FileNotFoundError: If the file doesn't exist
+        PermissionError: If the file can't be read due to permissions
+        ValueError: If a line contains non-numeric data and skip_invalid is False
+    """
+    try:
+        with open(filename, 'r') as file:
+            lines = file.readlines()
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Data file not found: {filename}")
+    except PermissionError:
+        raise PermissionError(f"Permission denied when reading: {filename}")
+    except Exception as e:
+        raise IOError(f"Error reading file {filename}: {e}")
+    
+    total = 0
+    processed_lines = 0
+    skipped_lines = 0
+    
+    for i, line in enumerate(lines, 1):
+        try:
+            # Strip whitespace and convert to integer
+            line = line.strip()
+            if not line:
+                skipped_lines += 1
+                continue
+                
+            value = int(line)
+            total += value
+            processed_lines += 1
+            
+        except ValueError:
+            if skip_invalid:
+                skipped_lines += 1
+                continue
+            else:
+                raise ValueError(f"Line {i} contains non-numeric data: '{line}'")
+    
+    return {
+        "total": total,
+        "processed_lines": processed_lines,
+        "skipped_lines": skipped_lines
+    }
+                    </pre>
+                </div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Exercise 2: Building a Robust Application</h3>
+                <p>In this exercise, you'll build a more complex application that demonstrates multiple error handling best practices.</p>
+                
+                <div class="exercise-example">
+                    <h4>Task Description</h4>
+                    <p>Create a data processing pipeline that:</p>
+                    <ol>
+                        <li>Reads data from a CSV file</li>
+                        <li>Processes and validates the data</li>
+                        <li>Writes the results to an output file</li>
+                        <li>Properly handles all potential errors</li>
+                    </ol>
+                    <p>The CSV file contains sales data with columns: date, product_id, quantity, price.</p>
+                    <p>The application should calculate total sales by product and output the results.</p>
+                    <pre>
+# File: exercises/application_exercise.py
+
+# Your task: Implement a robust sales data processor
+# - Use proper exception handling throughout
+# - Create custom exceptions if appropriate
+# - Ensure all resources are properly cleaned up
+# - Provide meaningful error messages
+# - Include input validation
+# - Add logging for operations and errors
+                    </pre>
+                </div>
+                
+                <div class="exercise-solution">
+                    <h4>Example Approach</h4>
+                    <p>An effective solution would include:</p>
+                    <ul>
+                        <li>A custom exception hierarchy for different error types</li>
+                        <li>Context managers for file handling</li>
+                        <li>Specific error handling for different failure scenarios</li>
+                        <li>Input validation and data type checking</li>
+                        <li>Detailed logging for operational visibility</li>
+                        <li>Clear and informative error messages</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Summary: Key Takeaways</h2>
+            
+            <div class="key-takeaways">
+                <ul>
+                    <li><strong>Be specific about which exceptions you catch</strong> - Catch only the exceptions you can handle properly, and be as specific as possible.</li>
+                    <li><strong>Provide meaningful error messages</strong> - Error messages should explain what went wrong and, when appropriate, suggest how to fix it.</li>
+                    <li><strong>Fail fast with input validation</strong> - Detect and report errors as early as possible to isolate problems and make debugging easier.</li>
+                    <li><strong>Always clean up resources</strong> - Use context managers (<code>with</code> statement) to ensure proper resource cleanup, even when exceptions occur.</li>
+                    <li><strong>Don't suppress exceptions without good reason</strong> - Only catch exceptions when you have a specific recovery action to take.</li>
+                    <li><strong>Use custom exceptions for domain-specific errors</strong> - Create custom exception classes for errors that are specific to your application domain.</li>
+                    <li><strong>Translate low-level exceptions to application-specific ones</strong> - Catch technical exceptions and raise more meaningful ones in your application's context.</li>
+                    <li><strong>Include proper exception chaining</strong> - Use <code>raise ... from ...</code> to preserve the original exception context when translating exceptions.</li>
+                    <li><strong>Implement consistent error handling patterns</strong> - Use consistent patterns like error handling middleware for a unified approach across your application.</li>
+                    <li><strong>Consider the user experience</strong> - Design error handling with both end users and developers in mind, providing appropriate information to each.</li>
+                </ul>
+            </div>
+            
+            <p>By applying these best practices, you'll create more robust, maintainable, and user-friendly applications that handle errors gracefully and provide clear guidance when things go wrong.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

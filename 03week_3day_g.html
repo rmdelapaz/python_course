@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Exceptions in Python - Understanding Error Handling</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Custom Exceptions in Python</h1>
+        <h2>Week 3: Wednesday Afternoon Session</h2>
+    </header>
+
+    <main>
+        <section class="intro">
+            <h3>Introduction to Custom Exceptions</h3>
+            <p>Welcome to our deep dive into custom exceptions in Python! Today we'll explore how to move beyond Python's built-in exception types to create our own, tailored specifically to our applications. This is a powerful tool that will help make your code more robust, maintainable, and communicative.</p>
+            
+            <p>By the end of this session, you'll understand not just how to create custom exceptions, but when and why they're valuable in real-world applications. We'll explore this topic with lots of practical examples and analogies to cement your understanding.</p>
+        </section>
+
+        <section>
+            <h3>Review: The Exception Hierarchy</h3>
+            <p>Before we dive into custom exceptions, let's refresh our understanding of Python's exception system. Think of exceptions as Python's way of saying, "Something unexpected happened, and I need to tell you about it."</p>
+            
+            <p>All Python exceptions inherit from the base <code>BaseException</code> class, but most exceptions you'll work with are subclasses of <code>Exception</code>. Here's a simplified view of the hierarchy:</p>
+            
+            <pre><code>BaseException
+ ├── SystemExit
+ ├── KeyboardInterrupt
+ ├── GeneratorExit
+ └── Exception
+      ├── StopIteration
+      ├── ArithmeticError
+      │    ├── FloatingPointError
+      │    ├── OverflowError
+      │    └── ZeroDivisionError
+      ├── AssertionError
+      ├── AttributeError
+      ├── BufferError
+      ├── EOFError
+      ├── ImportError
+      │    └── ModuleNotFoundError
+      ├── LookupError
+      │    ├── IndexError
+      │    └── KeyError
+      ├── MemoryError
+      ├── NameError
+      │    └── UnboundLocalError
+      ├── OSError
+      │    ├── BlockingIOError
+      │    ├── ChildProcessError
+      │    ├── ConnectionError
+      │    │    ├── BrokenPipeError
+      │    │    ├── ConnectionAbortedError
+      │    │    ├── ConnectionRefusedError
+      │    │    └── ConnectionResetError
+      │    ├── FileExistsError
+      │    ├── FileNotFoundError
+      │    ├── InterruptedError
+      │    ├── IsADirectoryError
+      │    ├── NotADirectoryError
+      │    ├── PermissionError
+      │    ├── ProcessLookupError
+      │    └── TimeoutError
+      ├── ReferenceError
+      ├── RuntimeError
+      │    ├── NotImplementedError
+      │    └── RecursionError
+      ├── SyntaxError
+      │    └── IndentationError
+      │         └── TabError
+      ├── SystemError
+      ├── TypeError
+      ├── ValueError
+      │    └── UnicodeError
+      │         ├── UnicodeDecodeError
+      │         ├── UnicodeEncodeError
+      │         └── UnicodeTranslateError
+      └── Warning</code></pre>
+            
+            <p>This hierarchy is like a family tree for errors. When you create custom exceptions, you're essentially adding new branches to this tree, typically extending from <code>Exception</code> or one of its subclasses.</p>
+        </section>
+
+        <section>
+            <h3>Why Create Custom Exceptions?</h3>
+            
+            <p>You might wonder: "With all these built-in exceptions, why would I need to create my own?"</p>
+            
+            <p>Think of built-in exceptions as generic tools, like a basic set of wrenches. They'll handle common problems, but specialized tasks require specialized tools. Custom exceptions are your specialized tools. Here are compelling reasons to create them:</p>
+            
+            <ol>
+                <li><strong>Domain-Specific Error Handling</strong>: Your application likely deals with unique scenarios that aren't covered by generic exceptions.</li>
+                <li><strong>Improved Code Readability</strong>: When someone sees <code>InsufficientFundsError</code> instead of generic <code>ValueError</code>, the intent is immediately clear.</li>
+                <li><strong>Hierarchical Error Processing</strong>: Create exception hierarchies specific to your application domains.</li>
+                <li><strong>Better Error Recovery</strong>: Catch specific exceptions to handle specific error scenarios.</li>
+                <li><strong>Documentation</strong>: Custom exceptions effectively document expected failure modes of your code.</li>
+            </ol>
+            
+            <p><strong>Real-World Analogy</strong>: Think of exceptions like warning signs. Built-in exceptions are like generic signs ("Caution" or "Warning"), while custom exceptions are specific signs ("Slippery When Wet" or "High Voltage"). The more specific the sign, the better prepared people are to handle the situation appropriately.</p>
+        </section>
+
+        <section>
+            <h3>Creating Your First Custom Exception</h3>
+            
+            <p>Creating a custom exception in Python is remarkably simple. At minimum, all you need is to define a new class that inherits from <code>Exception</code> (or any of its subclasses):</p>
+            
+            <pre><code>class MyCustomError(Exception):
+    pass</code></pre>
+            
+            <p>That's it! You've just created a custom exception. Let's use it:</p>
+            
+            <pre><code>def some_function(value):
+    if value < 0:
+        raise MyCustomError("Value cannot be negative")
+    return value * 2
+
+# Using the function
+try:
+    result = some_function(-5)
+except MyCustomError as e:
+    print(f"Caught an error: {e}")</code></pre>
+            
+            <p>This will output: <code>Caught an error: Value cannot be negative</code></p>
+            
+            <p>But this basic example only scratches the surface. Let's explore more sophisticated approaches.</p>
+        </section>
+
+        <section>
+            <h3>Adding Context and Functionality to Custom Exceptions</h3>
+            
+            <p>Custom exceptions become more powerful when you add context-specific information and functionality. Let's enhance our custom exception:</p>
+            
+            <pre><code>class ValueTooSmallError(Exception):
+    """Raised when the input value is too small"""
+    
+    def __init__(self, value, min_value, message=None):
+        self.value = value
+        self.min_value = min_value
+        if message is None:
+            message = f"Value {value} is smaller than the minimum allowed value {min_value}"
+        super().__init__(message)
+    
+    def how_much_smaller(self):
+        """Returns how much smaller the value is than the minimum"""
+        return self.min_value - self.value</code></pre>
+            
+            <p>Now our exception carries useful context:</p>
+            
+            <pre><code>def process_positive_number(value):
+    if value < 0:
+        raise ValueTooSmallError(value, 0)
+    return value * 2
+
+try:
+    result = process_positive_number(-10)
+except ValueTooSmallError as e:
+    print(f"Error: {e}")
+    print(f"The value is {e.how_much_smaller()} below the minimum")</code></pre>
+            
+            <p>Output:</p>
+            <pre><code>Error: Value -10 is smaller than the minimum allowed value 0
+The value is 10 below the minimum</code></pre>
+            
+            <p>This approach gives the exception handler rich information about what went wrong and by how much, enabling more intelligent error recovery.</p>
+        </section>
+
+        <section>
+            <h3>Creating Exception Hierarchies</h3>
+            
+            <p>Just as Python's built-in exceptions form a hierarchy, you can create hierarchies of custom exceptions. This is particularly useful for large applications with multiple error categories.</p>
+            
+            <p>Let's build a hierarchy for a banking application:</p>
+            
+            <pre><code>class BankingError(Exception):
+    """Base class for all banking-related errors"""
+    pass
+
+class AccountError(BankingError):
+    """Errors related to account operations"""
+    pass
+
+class TransactionError(BankingError):
+    """Errors related to transactions"""
+    pass
+
+class InsufficientFundsError(TransactionError):
+    """Raised when a transaction would result in a negative balance"""
+    
+    def __init__(self, account_id, amount_requested, available_balance):
+        self.account_id = account_id
+        self.amount_requested = amount_requested
+        self.available_balance = available_balance
+        self.deficit = amount_requested - available_balance
+        message = f"Account {account_id} has insufficient funds. " \
+                 f"Requested: ${amount_requested}, Available: ${available_balance}"
+        super().__init__(message)
+
+class AccountFrozenError(AccountError):
+    """Raised when operations are attempted on a frozen account"""
+    
+    def __init__(self, account_id, freeze_reason=None):
+        self.account_id = account_id
+        self.freeze_reason = freeze_reason
+        message = f"Account {account_id} is frozen"
+        if freeze_reason:
+            message += f" due to: {freeze_reason}"
+        super().__init__(message)</code></pre>
+            
+            <p>Now we can use these in our banking system:</p>
+            
+            <pre><code>class BankAccount:
+    def __init__(self, account_id, initial_balance=0):
+        self.account_id = account_id
+        self.balance = initial_balance
+        self.frozen = False
+        self.freeze_reason = None
+    
+    def withdraw(self, amount):
+        if self.frozen:
+            raise AccountFrozenError(self.account_id, self.freeze_reason)
+        
+        if amount > self.balance:
+            raise InsufficientFundsError(self.account_id, amount, self.balance)
+        
+        self.balance -= amount
+        return amount
+    
+    def freeze_account(self, reason=None):
+        self.frozen = True
+        self.freeze_reason = reason
+
+# Using our custom exceptions
+account = BankAccount("12345", 100)
+
+try:
+    account.withdraw(150)
+except InsufficientFundsError as e:
+    print(f"Transaction failed: {e}")
+    print(f"You need ${e.deficit} more to complete this transaction")
+
+# Now freeze the account
+account.freeze_account("suspicious activity")
+
+try:
+    account.withdraw(50)  # This amount would normally be fine
+except AccountFrozenError as e:
+    print(f"Transaction failed: {e}")</code></pre>
+            
+            <p>Output:</p>
+            <pre><code>Transaction failed: Account 12345 has insufficient funds. Requested: $150, Available: $100
+You need $50 more to complete this transaction
+Transaction failed: Account 12345 is frozen due to: suspicious activity</code></pre>
+            
+            <p>The power of this approach is that we can catch exceptions at different levels of specificity:</p>
+            
+            <pre><code>try:
+    # Some banking operation
+    account.withdraw(50)
+except InsufficientFundsError as e:
+    # Handle specifically insufficient funds
+    print(f"Please deposit more money. You need ${e.deficit} more.")
+except AccountError as e:
+    # Handle any account-related error
+    print(f"Account issue: {e}")
+except BankingError as e:
+    # Handle any banking error not caught above
+    print(f"Banking system error: {e}")
+except Exception as e:
+    # Handle any other exception
+    print(f"Unexpected error: {e}")</code></pre>
+            
+            <p><strong>Real-World Analogy</strong>: This hierarchical approach is like medical diagnosis. A doctor might first determine you have an infection (general category), then a respiratory infection (more specific), and finally pneumonia (most specific). Each level of specificity enables more targeted treatment.</p>
+        </section>
+
+        <section>
+            <h3>Best Practices for Custom Exceptions</h3>
+            
+            <p>Creating effective custom exceptions involves more than just subclassing <code>Exception</code>. Here are best practices to follow:</p>
+            
+            <ol>
+                <li><strong>Naming Convention</strong>: Always end exception class names with "Error" (e.g., <code>InsufficientFundsError</code>), making it immediately clear it's an exception class.</li>
+                <li><strong>Choose Appropriate Base Classes</strong>: Inherit from the most specific built-in exception that makes sense. If your error is related to values, consider extending <code>ValueError</code>.</li>
+                <li><strong>Include Useful Context</strong>: Store all relevant information that might help diagnose or recover from the error.</li>
+                <li><strong>Clear Error Messages</strong>: Write descriptive error messages that explain what went wrong and possibly how to fix it.</li>
+                <li><strong>Document Exceptions</strong>: Use docstrings to explain when and why your exception might be raised.</li>
+                <li><strong>Create Exception Hierarchies</strong>: For complex applications, develop a hierarchy of exceptions that reflects your application's domain.</li>
+                <li><strong>Keep Exceptions in a Dedicated Module</strong>: For large projects, place all custom exceptions in a dedicated module (e.g., <code>exceptions.py</code> or <code>errors.py</code>).</li>
+            </ol>
+            
+            <p>Example of a well-structured exception module:</p>
+            
+            <pre><code># File: app/exceptions.py
+
+"""Custom exceptions for the application."""
+
+class AppError(Exception):
+    """Base exception for all application errors."""
+    pass
+
+# Database Errors
+class DatabaseError(AppError):
+    """Base exception for database-related errors."""
+    pass
+
+class ConnectionError(DatabaseError):
+    """Raised when database connection fails."""
+    
+    def __init__(self, db_url, message=None):
+        self.db_url = db_url
+        if message is None:
+            message = f"Failed to connect to database at {db_url}"
+        super().__init__(message)
+
+# Validation Errors
+class ValidationError(AppError):
+    """Base exception for data validation errors."""
+    pass
+
+class RequiredFieldError(ValidationError):
+    """Raised when a required field is missing."""
+    
+    def __init__(self, field_name, entity_type=None):
+        self.field_name = field_name
+        self.entity_type = entity_type
+        message = f"Required field '{field_name}' is missing"
+        if entity_type:
+            message += f" for {entity_type}"
+        super().__init__(message)</code></pre>
+            
+            <p>Then in your application code:</p>
+            
+            <pre><code>from app.exceptions import ConnectionError, RequiredFieldError
+
+def save_user(user_data):
+    if 'username' not in user_data:
+        raise RequiredFieldError('username', 'User')
+    
+    try:
+        # Database operations...
+        pass
+    except SomeLibraryDatabaseError:
+        # Convert third-party exceptions to our own
+        raise ConnectionError("db.example.com")</code></pre>
+        </section>
+
+        <section>
+            <h3>Converting Between Exception Types</h3>
+            
+            <p>A common pattern in well-designed libraries is to convert between exception types, especially when dealing with third-party libraries. This creates a consistent exception interface for your application, regardless of the underlying libraries used.</p>
+            
+            <pre><code>import requests
+from app.exceptions import NetworkError, APIError, AuthenticationError
+
+def fetch_user_data(user_id):
+    """Fetch user data from an external API."""
+    try:
+        response = requests.get(f"https://api.example.com/users/{user_id}")
+        response.raise_for_status()  # Raises HTTPError for bad responses
+        return response.json()
+    except requests.ConnectionError as e:
+        # Convert requests.ConnectionError to our custom NetworkError
+        raise NetworkError(f"Failed to connect to API: {e}")
+    except requests.HTTPError as e:
+        if e.response.status_code == 401:
+            raise AuthenticationError("API authentication failed")
+        elif e.response.status_code == 404:
+            raise APIError(f"User {user_id} not found")
+        else:
+            raise APIError(f"API error: {e}")
+    except requests.RequestException as e:
+        # Catch any other requests exceptions
+        raise NetworkError(f"Request failed: {e}")
+    except ValueError as e:
+        # This could happen with response.json() if response isn't valid JSON
+        raise APIError(f"Invalid API response: {e}")</code></pre>
+            
+            <p>This approach creates a clean abstraction that shields the rest of your code from the specific exceptions of the <code>requests</code> library. If you later decide to use a different HTTP library, you only need to update this function, not all the calling code.</p>
+            
+            <p><strong>Real-World Analogy</strong>: This is like having a universal power adapter when traveling internationally. The adapter converts various socket types to the type your devices expect, providing a consistent interface regardless of the country you're in.</p>
+        </section>
+
+        <section>
+            <h3>Exception Chaining</h3>
+            
+            <p>When converting between exception types, it's often useful to preserve the original exception. Python provides a mechanism for this called exception chaining. This allows you to raise a new exception while keeping track of the original cause.</p>
+            
+            <pre><code>try:
+    # Some operation that might fail
+    result = int("not a number")
+except ValueError as e:
+    # Raise a custom exception, but keep the original as the cause
+    raise DataProcessingError("Failed to convert input") from e</code></pre>
+            
+            <p>When this exception is printed, Python will show both exceptions:</p>
+            
+            <pre><code>Traceback (most recent call last):
+  File "example.py", line 3, in &lt;module&gt;
+    result = int("not a number")
+ValueError: invalid literal for int() with base 10: 'not a number'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "example.py", line 5, in &lt;module&gt;
+    raise DataProcessingError("Failed to convert input") from e
+DataProcessingError: Failed to convert input</code></pre>
+            
+            <p>This provides valuable context for debugging, maintaining the complete chain of what went wrong.</p>
+            
+            <p>To suppress the original exception (though generally not recommended), you can use:</p>
+            
+            <pre><code>raise DataProcessingError("Failed to convert input") from None</code></pre>
+        </section>
+
+        <section>
+            <h3>Testing Custom Exceptions</h3>
+            
+            <p>Testing that your code raises the right exceptions in the right circumstances is an important part of a comprehensive test suite. Here's how to test custom exceptions using pytest:</p>
+            
+            <pre><code>import pytest
+from myapp.exceptions import InsufficientFundsError
+from myapp.banking import BankAccount
+
+def test_insufficient_funds_error():
+    account = BankAccount("12345", initial_balance=100)
+    
+    # Test that the right exception is raised
+    with pytest.raises(InsufficientFundsError) as excinfo:
+        account.withdraw(150)
+    
+    # Test exception attributes
+    assert excinfo.value.account_id == "12345"
+    assert excinfo.value.amount_requested == 150
+    assert excinfo.value.available_balance == 100
+    assert excinfo.value.deficit == 50
+    
+    # Test the exception message
+    assert "insufficient funds" in str(excinfo.value).lower()
+    assert "Requested: $150" in str(excinfo.value)</code></pre>
+            
+            <p>This confirms not only that the right type of exception is raised, but also that it contains the expected information and message.</p>
+        </section>
+
+        <section>
+            <h3>Real-World Examples of Custom Exceptions</h3>
+            
+            <h4>E-commerce System</h4>
+            
+            <pre><code>class EcommerceError(Exception):
+    """Base exception for e-commerce system."""
+    pass
+
+class InventoryError(EcommerceError):
+    """Inventory-related errors."""
+    pass
+
+class OutOfStockError(InventoryError):
+    """Raised when trying to purchase an out-of-stock item."""
+    
+    def __init__(self, product_id, requested_quantity, available_quantity):
+        self.product_id = product_id
+        self.requested_quantity = requested_quantity
+        self.available_quantity = available_quantity
+        message = f"Product {product_id} is out of stock. " \
+                 f"Requested: {requested_quantity}, Available: {available_quantity}"
+        super().__init__(message)
+
+class PaymentError(EcommerceError):
+    """Payment-related errors."""
+    pass
+
+class PaymentDeclinedError(PaymentError):
+    """Raised when a payment is declined."""
+    
+    def __init__(self, payment_id, reason=None, suggestion=None):
+        self.payment_id = payment_id
+        self.reason = reason
+        self.suggestion = suggestion
+        message = f"Payment {payment_id} was declined"
+        if reason:
+            message += f": {reason}"
+        super().__init__(message)
+        
+    def get_user_message(self):
+        """Returns a user-friendly message, possibly with a suggestion."""
+        message = str(self)
+        if self.suggestion:
+            message += f" {self.suggestion}"
+        return message
+
+# Using these exceptions
+def process_order(cart, payment_info):
+    try:
+        # Check inventory
+        for item in cart.items:
+            if not inventory.is_available(item.product_id, item.quantity):
+                available = inventory.get_quantity(item.product_id)
+                raise OutOfStockError(item.product_id, item.quantity, available)
+        
+        # Process payment
+        try:
+            payment_result = payment_gateway.charge(payment_info, cart.total)
+            if not payment_result.success:
+                suggestion = None
+                if payment_result.error_code == "INSUFFICIENT_FUNDS":
+                    suggestion = "Please try another payment method."
+                raise PaymentDeclinedError(
+                    payment_result.transaction_id,
+                    payment_result.error_message,
+                    suggestion
+                )
+        except payment_gateway.GatewayError as e:
+            # Convert third-party exception to our own
+            raise PaymentError(f"Payment gateway error: {e}") from e
+        
+        # Complete order
+        order = create_order(cart, payment_result.transaction_id)
+        return order
+        
+    except OutOfStockError as e:
+        # Log the error
+        log.error(f"Inventory error: {e}")
+        # Maybe suggest alternatives
+        alternatives = inventory.find_alternatives(e.product_id)
+        # Re-raise for the caller to handle
+        raise
+    except PaymentDeclinedError as e:
+        # Display user-friendly message
+        return {"error": e.get_user_message()}
+    except EcommerceError as e:
+        # Handle any other e-commerce errors
+        log.error(f"Order processing error: {e}")
+        return {"error": "We couldn't process your order. Please try again later."}</code></pre>
+            
+            <h4>Data Processing Pipeline</h4>
+            
+            <pre><code>class DataError(Exception):
+    """Base exception for data processing errors."""
+    pass
+
+class ValidationError(DataError):
+    """Data validation errors."""
+    
+    def __init__(self, field, value, reason):
+        self.field = field
+        self.value = value
+        self.reason = reason
+        message = f"Validation error for field '{field}': {reason}"
+        super().__init__(message)
+
+class SchemaError(DataError):
+    """Schema-related errors."""
+    pass
+
+class MissingFieldError(SchemaError):
+    """Raised when a required field is missing."""
+    
+    def __init__(self, field, schema_name=None):
+        self.field = field
+        self.schema_name = schema_name
+        message = f"Required field '{field}' is missing"
+        if schema_name:
+            message += f" in schema '{schema_name}'"
+        super().__init__(message)
+
+class UnknownFieldError(SchemaError):
+    """Raised when an unknown field is present."""
+    
+    def __init__(self, field, schema_name=None):
+        self.field = field
+        self.schema_name = schema_name
+        message = f"Unknown field '{field}'"
+        if schema_name:
+            message += f" in schema '{schema_name}'"
+        super().__init__(message)
+
+class ProcessingError(DataError):
+    """Error during data processing."""
+    pass
+
+# Using these exceptions in a data pipeline
+def process_dataset(data, schema):
+    errors = []
+    processed_records = []
+    
+    for i, record in enumerate(data):
+        try:
+            # Validate schema
+            for field in schema['required']:
+                if field not in record:
+                    raise MissingFieldError(field, schema['name'])
+            
+            for field in record:
+                if field not in schema['fields']:
+                    raise UnknownFieldError(field, schema['name'])
+            
+            # Validate data
+            for field, value in record.items():
+                validator = schema['fields'][field].get('validator')
+                if validator and not validator(value):
+                    raise ValidationError(
+                        field, 
+                        value, 
+                        schema['fields'][field].get('error_message', 'Invalid value')
+                    )
+            
+            # Process record
+            try:
+                processed = transform_record(record)
+                processed_records.append(processed)
+            except Exception as e:
+                raise ProcessingError(f"Failed to process record: {e}") from e
+                
+        except DataError as e:
+            # Track error with record index
+            errors.append({
+                'index': i,
+                'error': str(e),
+                'type': type(e).__name__
+            })
+            # Continue processing other records
+            continue
+    
+    return {
+        'processed': processed_records,
+        'errors': errors,
+        'success_rate': len(processed_records) / len(data) if data else 0
+    }</code></pre>
+        </section>
+
+        <section>
+            <h3>Practical Exercise: Building a Validation System</h3>
+            
+            <p>Let's put our knowledge into practice by building a simple but robust data validation system using custom exceptions:</p>
+            
+            <pre><code>class ValidationError(Exception):
+    """Base exception for validation errors."""
+    pass
+
+class TypeValidationError(ValidationError):
+    """Raised when a value has the wrong type."""
+    
+    def __init__(self, field, expected_type, actual_type):
+        self.field = field
+        self.expected_type = expected_type
+        self.actual_type = actual_type
+        message = f"Field '{field}' expected type {expected_type.__name__}, got {actual_type.__name__}"
+        super().__init__(message)
+
+class RangeValidationError(ValidationError):
+    """Raised when a value is outside the allowed range."""
+    
+    def __init__(self, field, value, min_value=None, max_value=None):
+        self.field = field
+        self.value = value
+        self.min_value = min_value
+        self.max_value = max_value
+        
+        if min_value is not None and max_value is not None:
+            message = f"Field '{field}' must be between {min_value} and {max_value}, got {value}"
+        elif min_value is not None:
+            message = f"Field '{field}' must be at least {min_value}, got {value}"
+        elif max_value is not None:
+            message = f"Field '{field}' must be at most {max_value}, got {value}"
+        else:
+            message = f"Field '{field}' value {value} is out of range"
+            
+        super().__init__(message)
+
+class PatternValidationError(ValidationError):
+    """Raised when a value doesn't match the required pattern."""
+    
+    def __init__(self, field, value, pattern, description=None):
+        self.field = field
+        self.value = value
+        self.pattern = pattern
+        self.description = description
+        
+        message = f"Field '{field}' value '{value}' does not match the required pattern"
+        if description:
+            message += f" ({description})"
+            
+        super().__init__(message)
+
+# Let's build a validator class using our custom exceptions
+import re
+from typing import Any, Type, Optional, Pattern, Dict, List, Union, Callable
+
+class Validator:
+    def validate_type(self, field: str, value: Any, expected_type: Type) -> None:
+        """Validate that the value is of the expected type."""
+        if not isinstance(value, expected_type):
+            raise TypeValidationError(field, expected_type, type(value))
+    
+    def validate_range(self, field: str, value: Any, 
+                       min_value: Optional[Any] = None, 
+                       max_value: Optional[Any] = None) -> None:
+        """Validate that the value is within the specified range."""
+        if min_value is not None and value < min_value:
+            raise RangeValidationError(field, value, min_value, max_value)
+        if max_value is not None and value > max_value:
+            raise RangeValidationError(field, value, min_value, max_value)
+    
+    def validate_pattern(self, field: str, value: str, 
+                         pattern: Union[str, Pattern], 
+                         description: Optional[str] = None) -> None:
+        """Validate that the string value matches the specified pattern."""
+        if not re.match(pattern, value):
+            raise PatternValidationError(field, value, pattern, description)
+    
+    def validate_data(self, data: Dict[str, Any], rules: Dict[str, Dict[str, Any]]) -> List[ValidationError]:
+        """Validate all fields according to the specified rules."""
+        errors = []
+        
+        for field, field_rules in rules.items():
+            # Skip validation if field is not present and not required
+            if field not in data:
+                if field_rules.get('required', False):
+                    errors.append(ValidationError(f"Required field '{field}' is missing"))
+                continue
+                
+            value = data[field]
+            
+            # Apply each validation rule
+            try:
+                # Type validation
+                if 'type' in field_rules:
+                    self.validate_type(field, value, field_rules['type'])
+                
+                # Range validation
+                if ('min_value' in field_rules or 'max_value' in field_rules) and \
+                   isinstance(value, (int, float, str)):
+                    self.validate_range(
+                        field, value, 
+                        field_rules.get('min_value'), 
+                        field_rules.get('max_value')
+                    )
+                
+                # Pattern validation
+                if 'pattern' in field_rules and isinstance(value, str):
+                    self.validate_pattern(
+                        field, value, 
+                        field_rules['pattern'],
+                        field_rules.get('pattern_description')
+                    )
+                
+                # Custom validation
+                if 'custom_validator' in field_rules and callable(field_rules['custom_validator']):
+                    try:
+                        field_rules['custom_validator'](field, value)
+                    except ValidationError as e:
+                        errors.append(e)
+                
+            except ValidationError as e:
+                errors.append(e)
+        
+        return errors
+
+# Using our validation system
+def validate_user_profile():
+    # Define validation rules
+    validation_rules = {
+        'username': {
+            'required': True,
+            'type': str,
+            'min_value': 3,  # Minimum length
+            'max_value': 20,  # Maximum length
+            'pattern': r'^[a-zA-Z0-9_]+$',
+            'pattern_description': 'alphanumeric characters and underscores only'
+        },
+        'email': {
+            'required': True,
+            'type': str,
+            'pattern': r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
+            'pattern_description': 'valid email format'
+        },
+        'age': {
+            'type': int,
+            'min_value': 13,
+            'max_value': 120
+        },
+        'website': {
+            'type': str,
+            'pattern': r'^https?://.+\..+$',
+            'pattern_description': 'valid URL starting with http:// or https://'
+        }
+    }
+    
+    # Sample user data
+    user_data = {
+        'username': 'john123',
+        'email': 'invalid-email',
+        'age': 10,
+        'website': 'example.com'  # Missing http://
+    }
+    
+    # Validate the data
+    validator = Validator()
+    errors = validator.validate_data(user_data, validation_rules)
+    
+    if errors:
+        print(f"Found {len(errors)} validation errors:")
+        for i, error in enumerate(errors, 1):
+            print(f"{i}. {error}")
+    else:
+        print("All data is valid!")
+        
+    return len(errors) == 0
+
+# Run the validation
+is_valid = validate_user_profile()</code></pre>
+            
+            <p>This example demonstrates a complete validation system built around custom exceptions. It shows how exceptions can carry rich context about the validation failures, making it easier to process and display meaningful error messages to users.</p>
+        </section>
+
+        <section>
+            <h3>Conclusion and Key Takeaways</h3>
+            
+            <p>Custom exceptions are a powerful way to enhance your Python applications. They allow you to:</p>
+            
+            <ul>
+                <li>Create domain-specific error handling that communicates exactly what went wrong</li>
+                <li>Add context and helper methods to make error handling more informative and useful</li>
+                <li>Build hierarchies of exceptions that map to your application's domain structure</li>
+                <li>Transform and chain exceptions to create clean abstractions between components</li>
+                <li>Implement elegant error handling patterns that improve code quality</li>
+            </ul>
+            
+            <p>Remember that well-designed exceptions are a form of communication—they tell users and developers what went wrong, why it went wrong, and often how to fix it. Invest the time to design a thoughtful exception hierarchy, and you'll be rewarded with code that's more robust, maintainable, and user-friendly.</p>
+            
+            <p>In our next session, we'll explore more advanced Python features, building on the foundations we've established so far. For now, practice creating custom exceptions for your own applications, focusing on making them both informative and helpful.</p>
+        </section>
+
+        <section>
+            <h3>Assignment: Custom Exception Library</h3>
+            
+            <p>Your task is to create a small library of custom exceptions for a specific domain of your choice (e.g., a file system, a game, a web application, etc.). Your library should include:</p>
+            
+            <ol>
+                <li>A base exception for your domain</li>
+                <li>At least two categories of exceptions (subclassing from your base exception)</li>
+                <li>At least two specific exceptions in each category</li>
+                <li>Context information in each specific exception</li>
+                <li>A helper method in at least one exception</li>
+                <li>A simple demo program that raises and handles your custom exceptions</li>
+            </ol>
+            
+            <p>Submit your code as a Python module with appropriate documentation. Be prepared to explain your design decisions in our next session.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

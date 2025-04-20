@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introduction to Testing Concepts</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 3: Python Fundamentals (Part 2)</h2>
+        <h3>Friday Afternoon: Introduction to Testing Concepts</h3>
+    </header>
+
+    <main>
+        <section class="lecture_intro">
+            <h2>The Critical Importance of Testing in Software Development</h2>
+            <p>Welcome to our introduction to testing concepts! Today, we're embarking on a journey that will fundamentally change how you think about software development. As we prepare to dive into web development, understanding testing becomes not just a nice-to-have skill but an essential foundation for building reliable, maintainable applications.</p>
+            
+            <p>Testing is often overlooked by beginners, who focus on features and functionality. But professional developers know that comprehensive testing is what separates hobby projects from production-ready applications. By the end of this session, you'll understand why testing is crucial and how to begin implementing it in your Python projects.</p>
+        </section>
+
+        <section>
+            <h2>Why We Test: Beyond Catching Bugs</h2>
+            
+            <p><strong>Analogy:</strong> Software testing is like a safety inspection for a bridge. You don't just build a bridge and hope it stands—you systematically verify its structural integrity before letting traffic cross. Similarly, you don't just write code and hope it works—you test it rigorously before users depend on it.</p>
+            
+            <p>Testing provides numerous benefits beyond simply catching bugs:</p>
+            
+            <ul>
+                <li><strong>Confidence in Changes:</strong> Make updates without fear of breaking existing functionality</li>
+                <li><strong>Documentation by Example:</strong> Tests demonstrate how code should be used</li>
+                <li><strong>Better Design:</strong> Testable code is typically better designed and more modular</li>
+                <li><strong>Faster Development:</strong> Identify issues early when they're cheaper to fix</li>
+                <li><strong>Easier Refactoring:</strong> Change implementation details while ensuring behavior remains consistent</li>
+                <li><strong>Team Collaboration:</strong> Enable multiple developers to work on the same codebase safely</li>
+            </ul>
+            
+            <p><strong>Real-world Impact:</strong> Companies with strong testing practices typically experience 40-80% fewer production defects. In web development specifically, where a single bug can affect thousands or millions of users simultaneously, testing is not optional—it's a professional responsibility.</p>
+            
+            <p><strong>Example:</strong> In 2011, a single untested change to Knight Capital's trading algorithm caused the company to lose $440 million in just 45 minutes. Proper testing would have caught the issue before deployment.</p>
+        </section>
+
+        <section>
+            <h2>The Testing Pyramid: Different Types of Tests</h2>
+            
+            <p><strong>Metaphor:</strong> Think of the different types of tests as a pyramid. At the bottom, you have many small, focused unit tests that form the foundation. In the middle, you have fewer integration tests that verify components work together. At the top, you have a small number of end-to-end tests that validate the entire system.</p>
+            
+            <div class="diagram" style="text-align: center;">
+                <pre>
+                    /\
+                   /  \
+                  /E2E \
+                 /      \
+                /  Integ  \
+               /           \
+              / Unit Tests  \
+             /_________________\
+                </pre>
+            </div>
+            
+            <h3>Unit Tests</h3>
+            
+            <p>Unit tests verify that individual functions or methods work correctly in isolation.</p>
+            
+            <ul>
+                <li><strong>Scope:</strong> Single function, method, or class</li>
+                <li><strong>Isolation:</strong> Dependencies are replaced with test doubles (mocks, stubs)</li>
+                <li><strong>Speed:</strong> Very fast (milliseconds)</li>
+                <li><strong>Quantity:</strong> Many (often 70-80% of your test suite)</li>
+            </ul>
+            
+            <pre><code># Example unit test for a function that calculates discounted price
+import unittest
+
+def calculate_discount(price, discount_percentage):
+    """Calculate the final price after discount."""
+    if not (0 <= discount_percentage <= 100):
+        raise ValueError("Discount percentage must be between 0 and 100")
+    
+    discount_amount = price * (discount_percentage / 100)
+    return price - discount_amount
+
+class TestCalculateDiscount(unittest.TestCase):
+    def test_zero_discount(self):
+        """Test that zero discount returns the original price."""
+        original_price = 100
+        self.assertEqual(calculate_discount(original_price, 0), original_price)
+    
+    def test_full_discount(self):
+        """Test that 100% discount returns zero."""
+        original_price = 100
+        self.assertEqual(calculate_discount(original_price, 100), 0)
+    
+    def test_normal_discount(self):
+        """Test a typical discount calculation."""
+        original_price = 100
+        self.assertEqual(calculate_discount(original_price, 20), 80)
+    
+    def test_invalid_discount(self):
+        """Test that invalid discount percentages raise ValueError."""
+        with self.assertRaises(ValueError):
+            calculate_discount(100, -10)
+        
+        with self.assertRaises(ValueError):
+            calculate_discount(100, 110)</code></pre>
+            
+            <h3>Integration Tests</h3>
+            
+            <p>Integration tests verify that multiple components work together correctly.</p>
+            
+            <ul>
+                <li><strong>Scope:</strong> Multiple functions, classes, or modules</li>
+                <li><strong>Context:</strong> Focus on interactions between components</li>
+                <li><strong>Speed:</strong> Moderately fast (often milliseconds to seconds)</li>
+                <li><strong>Quantity:</strong> Moderate (often 15-20% of your test suite)</li>
+            </ul>
+            
+            <pre><code># Example integration test for a user registration system
+import unittest
+from unittest.mock import patch
+
+from app.models import User
+from app.database import Database
+from app.services import UserService
+from app.email import EmailSender
+
+class TestUserRegistration(unittest.TestCase):
+    def setUp(self):
+        """Set up test database and service objects."""
+        self.db = Database(":memory:")  # Use in-memory SQLite database
+        self.email_sender = EmailSender()
+        self.user_service = UserService(self.db, self.email_sender)
+    
+    def tearDown(self):
+        """Clean up resources after each test."""
+        self.db.close()
+    
+    @patch('app.email.EmailSender.send_welcome_email')
+    def test_register_user(self, mock_send_email):
+        """Test that registering a user creates DB record and sends email."""
+        # Arrange
+        username = "testuser"
+        email = "test@example.com"
+        password = "SecurePass123"
+        
+        # Act
+        result = self.user_service.register_user(username, email, password)
+        
+        # Assert
+        # Check that user was saved to database
+        user = self.db.query(User).filter_by(username=username).first()
+        self.assertIsNotNone(user)
+        self.assertEqual(user.email, email)
+        
+        # Check password was hashed, not stored as plaintext
+        self.assertNotEqual(user.password_hash, password)
+        
+        # Check welcome email would have been sent
+        mock_send_email.assert_called_once_with(email, username)
+        
+        # Check expected result was returned
+        self.assertTrue(result)
+    
+    def test_register_duplicate_username(self):
+        """Test that registration fails for duplicate username."""
+        # Arrange - Create initial user
+        self.user_service.register_user("existinguser", "existing@example.com", "SecurePass123")
+        
+        # Act & Assert - Attempt to register same username
+        with self.assertRaises(ValueError):
+            self.user_service.register_user("existinguser", "new@example.com", "AnotherPass456")</code></pre>
+            
+            <h3>End-to-End Tests (E2E)</h3>
+            
+            <p>End-to-end tests verify that the complete system works correctly from a user's perspective.</p>
+            
+            <ul>
+                <li><strong>Scope:</strong> Entire application</li>
+                <li><strong>Context:</strong> Tests user workflows across the system</li>
+                <li><strong>Speed:</strong> Slowest (often seconds to minutes)</li>
+                <li><strong>Quantity:</strong> Fewest (often 5-10% of your test suite)</li>
+            </ul>
+            
+            <pre><code># Example end-to-end test for a web application using Selenium
+import unittest
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+
+class TestUserRegistrationE2E(unittest.TestCase):
+    def setUp(self):
+        """Set up the browser automation."""
+        self.driver = webdriver.Chrome()
+        self.driver.get("http://localhost:5000")
+    
+    def tearDown(self):
+        """Clean up after the test."""
+        self.driver.quit()
+    
+    def test_user_registration_journey(self):
+        """Test the full user registration journey."""
+        # Click the register link
+        self.driver.find_element(By.LINK_TEXT, "Register").click()
+        
+        # Fill out the registration form
+        self.driver.find_element(By.ID, "username").send_keys("selenium_user")
+        self.driver.find_element(By.ID, "email").send_keys("selenium@example.com")
+        self.driver.find_element(By.ID, "password").send_keys("TestPassword123")
+        self.driver.find_element(By.ID, "confirm_password").send_keys("TestPassword123")
+        self.driver.find_element(By.ID, "register_button").click()
+        
+        # Verify we're redirected to the login page with a success message
+        success_message = self.driver.find_element(By.CLASS_NAME, "flash-success").text
+        self.assertIn("Registration successful", success_message)
+        
+        # Now try logging in
+        self.driver.find_element(By.ID, "username").send_keys("selenium_user")
+        self.driver.find_element(By.ID, "password").send_keys("TestPassword123")
+        self.driver.find_element(By.ID, "login_button").click()
+        
+        # Verify we're on the dashboard
+        welcome_text = self.driver.find_element(By.TAG_NAME, "h1").text
+        self.assertIn("Welcome, selenium_user", welcome_text)</code></pre>
+            
+            <h3>Other Types of Tests</h3>
+            
+            <p>Beyond the main types, there are specialized tests for different purposes:</p>
+            
+            <ul>
+                <li><strong>Functional Tests:</strong> Verify the software meets business requirements</li>
+                <li><strong>Acceptance Tests:</strong> Determine if the software is ready for delivery</li>
+                <li><strong>Performance Tests:</strong> Measure response times, throughput, and resource usage</li>
+                <li><strong>Load Tests:</strong> Evaluate behavior under expected load</li>
+                <li><strong>Stress Tests:</strong> Find breaking points under extreme conditions</li>
+                <li><strong>Security Tests:</strong> Identify vulnerabilities and security weaknesses</li>
+                <li><strong>Usability Tests:</strong> Assess how real users interact with the software</li>
+                <li><strong>Regression Tests:</strong> Ensure new changes don't break existing functionality</li>
+            </ul>
+            
+            <p><strong>Balance is Key:</strong> The ideal test mix depends on your application, but following the pyramid ensures a strong foundation of fast, reliable unit tests with appropriate coverage at higher levels.</p>
+        </section>
+
+        <section>
+            <h2>Testing Terminology and Concepts</h2>
+            
+            <p>Understanding testing terminology helps communicate effectively about testing:</p>
+            
+            <h3>Test Fixtures</h3>
+            
+            <p>Fixtures are the fixed state and resources used by tests:</p>
+            <ul>
+                <li>Test data</li>
+                <li>Prepared database objects</li>
+                <li>Temporary files or directories</li>
+                <li>URLs to test servers</li>
+            </ul>
+            
+            <pre><code>import pytest
+import tempfile
+import os
+
+@pytest.fixture
+def temp_directory():
+    """Fixture that creates and returns a temporary directory."""
+    temp_dir = tempfile.mkdtemp()
+    yield temp_dir  # This is returned to the test
+    # Cleanup after the test is done (teardown)
+    os.rmdir(temp_dir)
+
+def test_file_creation(temp_directory):
+    """Test that uses the temp_directory fixture."""
+    filename = os.path.join(temp_directory, "test.txt")
+    with open(filename, "w") as f:
+        f.write("Hello, world!")
+    
+    assert os.path.exists(filename)
+    assert os.path.getsize(filename) > 0</code></pre>
+            
+            <h3>Test Doubles</h3>
+            
+            <p>Test doubles are replacement objects that simulate the behavior of real components:</p>
+            
+            <ul>
+                <li><strong>Stub:</strong> Provides predetermined answers to calls</li>
+                <li><strong>Mock:</strong> Records calls and can verify interactions</li>
+                <li><strong>Fake:</strong> Working implementation with shortcuts (like in-memory database)</li>
+                <li><strong>Spy:</strong> Records calls without changing behavior</li>
+                <li><strong>Dummy:</strong> Passed around but never actually used</li>
+            </ul>
+            
+            <pre><code>from unittest.mock import Mock, patch
+
+# Mock example
+def test_user_upload_with_mock():
+    # Create a mock file service
+    mock_file_service = Mock()
+    mock_file_service.upload.return_value = "http://example.com/profile.jpg"
+    
+    # Create the object under test with the mock
+    user_profile = UserProfile(file_service=mock_file_service)
+    
+    # Call the method we're testing
+    result = user_profile.upload_profile_picture("profile.jpg")
+    
+    # Verify the file service was called correctly
+    mock_file_service.upload.assert_called_once_with("profile.jpg", folder="profiles")
+    
+    # Verify the result
+    assert result == "http://example.com/profile.jpg"
+
+# Patch example (replacing a function/object at import time)
+@patch('app.services.email.send_email')
+def test_password_reset(mock_send_email):
+    # Configure the mock
+    mock_send_email.return_value = True
+    
+    # Call the function that would normally send a real email
+    success = password_reset_service.request_reset("user@example.com")
+    
+    # Check that an email would have been sent
+    mock_send_email.assert_called_once()
+    assert "reset" in mock_send_email.call_args[0][0]  # Check email subject
+    assert "user@example.com" in mock_send_email.call_args[0][1]  # Check recipient
+    
+    # Check the function returned the expected result
+    assert success is True</code></pre>
+            
+            <h3>Assertions</h3>
+            
+            <p>Assertions are statements that verify expected conditions:</p>
+            
+            <pre><code># Common assertions in unittest
+self.assertEqual(a, b)  # a == b
+self.assertNotEqual(a, b)  # a != b
+self.assertTrue(x)  # bool(x) is True
+self.assertFalse(x)  # bool(x) is False
+self.assertIs(a, b)  # a is b
+self.assertIsNot(a, b)  # a is not b
+self.assertIsNone(x)  # x is None
+self.assertIsNotNone(x)  # x is not None
+self.assertIn(a, b)  # a in b
+self.assertNotIn(a, b)  # a not in b
+self.assertIsInstance(a, b)  # isinstance(a, b)
+self.assertNotIsInstance(a, b)  # not isinstance(a, b)
+self.assertRaises(Exception, callable, *args, **kwargs)  # Check exception raised
+self.assertAlmostEqual(a, b)  # For floating point comparisons
+
+# Common assertions in pytest
+assert a == b
+assert a != b
+assert x
+assert not x
+assert a is b
+assert a is not b
+assert a in b
+assert a not in b
+assert isinstance(a, b)
+with pytest.raises(Exception):
+    # Code that should raise Exception</code></pre>
+            
+            <h3>Test Coverage</h3>
+            
+            <p>Test coverage measures how much of your code is executed by your tests:</p>
+            
+            <ul>
+                <li><strong>Line Coverage:</strong> Percentage of code lines executed</li>
+                <li><strong>Branch Coverage:</strong> Percentage of code branches (if/else) executed</li>
+                <li><strong>Path Coverage:</strong> Percentage of possible code paths executed</li>
+            </ul>
+            
+            <pre><code># Installing the coverage tool
+pip install pytest-cov
+
+# Running tests with coverage reporting
+pytest --cov=myapp tests/
+
+# Coverage report output example
+Name                Stmts   Miss  Cover
+---------------------------------------
+myapp/__init__.py       5      0   100%
+myapp/models.py        42      8    81%
+myapp/views.py         67     21    69%
+myapp/utils.py         29      4    86%
+---------------------------------------
+TOTAL                 143     33    77%</code></pre>
+            
+            <p><strong>What's a Good Coverage Target?</strong> While 100% coverage isn't always practical, aim for >80% line coverage. More important than the percentage is ensuring critical paths and edge cases are covered.</p>
+        </section>
+
+        <section>
+            <h2>Testing Frameworks in Python</h2>
+            
+            <p>Python offers several excellent testing frameworks:</p>
+            
+            <h3>unittest</h3>
+            
+            <p>Part of the Python standard library, inspired by Java's JUnit:</p>
+            
+            <ul>
+                <li>Class-based approach</li>
+                <li>Built-in assertions</li>
+                <li>Test discovery</li>
+                <li>Test fixtures via setUp/tearDown methods</li>
+            </ul>
+            
+            <pre><code>import unittest
+
+class TestStringMethods(unittest.TestCase):
+    def setUp(self):
+        """Set up test fixtures before each test."""
+        self.empty_string = ""
+        self.mixed_case_string = "Hello World"
+    
+    def tearDown(self):
+        """Clean up after each test."""
+        pass
+    
+    def test_upper(self):
+        """Test the upper() method."""
+        self.assertEqual(self.mixed_case_string.upper(), "HELLO WORLD")
+    
+    def test_isupper(self):
+        """Test the isupper() method."""
+        self.assertFalse(self.mixed_case_string.isupper())
+        self.assertTrue(self.mixed_case_string.upper().isupper())
+    
+    def test_split(self):
+        """Test the split() method."""
+        self.assertEqual(self.mixed_case_string.split(), ["Hello", "World"])
+        with self.assertRaises(TypeError):
+            self.mixed_case_string.split(2)
+
+if __name__ == '__main__':
+    unittest.main()</code></pre>
+            
+            <h3>pytest</h3>
+            
+            <p>A more modern and flexible testing framework:</p>
+            
+            <ul>
+                <li>Function-based approach (simpler)</li>
+                <li>Powerful fixture system</li>
+                <li>Rich plugin ecosystem</li>
+                <li>Auto-discovery of tests</li>
+                <li>Detailed assertion messages</li>
+            </ul>
+            
+            <pre><code># Same tests in pytest style
+import pytest
+
+@pytest.fixture
+def string_fixtures():
+    """Fixture providing test strings."""
+    return {
+        "empty": "",
+        "mixed_case": "Hello World"
+    }
+
+def test_upper(string_fixtures):
+    """Test the upper() method."""
+    assert string_fixtures["mixed_case"].upper() == "HELLO WORLD"
+
+def test_isupper(string_fixtures):
+    """Test the isupper() method."""
+    assert not string_fixtures["mixed_case"].isupper()
+    assert string_fixtures["mixed_case"].upper().isupper()
+
+def test_split(string_fixtures):
+    """Test the split() method."""
+    assert string_fixtures["mixed_case"].split() == ["Hello", "World"]
+    with pytest.raises(TypeError):
+        string_fixtures["mixed_case"].split(2)</code></pre>
+            
+            <h3>doctest</h3>
+            
+            <p>A unique approach that embeds tests in docstrings:</p>
+            
+            <pre><code>def add(a, b):
+    """
+    Return the sum of a and b.
+    
+    >>> add(1, 2)
+    3
+    >>> add(-1, 1)
+    0
+    >>> add(0, 0)
+    0
+    >>> add('a', 'b')  # String concatenation
+    'ab'
+    """
+    return a + b</code></pre>
+            
+            <p><strong>When to Use Each:</strong></p>
+            <ul>
+                <li><strong>unittest:</strong> Good for complex test architectures, Java/JUnit background, or standard library-only constraints</li>
+                <li><strong>pytest:</strong> Recommended for most new projects due to simplicity and power</li>
+                <li><strong>doctest:</strong> Excellent for simple examples and ensuring documentation stays up-to-date with code</li>
+            </ul>
+            
+            <p><strong>Real-world Example:</strong> In a web application, you might use pytest for most of your testing, with the pytest-flask plugin to help test your Flask routes. Your core utility functions might include doctests to serve as both documentation and verification.</p>
+        </section>
+
+        <section>
+            <h2>Test-Driven Development (TDD)</h2>
+            
+            <p><strong>Metaphor:</strong> TDD is like building a ship in a bottle by first creating a mold (the test) that ensures the ship will fit perfectly. You're defining what success looks like before you start building.</p>
+            
+            <h3>The TDD Cycle</h3>
+            
+            <p>TDD follows a simple cycle:</p>
+            
+            <ol>
+                <li><strong>Red:</strong> Write a failing test that defines the behavior you want</li>
+                <li><strong>Green:</strong> Write the simplest code that passes the test</li>
+                <li><strong>Refactor:</strong> Improve the code without changing its behavior</li>
+            </ol>
+            
+            <div class="diagram" style="text-align: center;">
+                <pre>
+                   ┌─────────┐
+                   │  Write  │
+               ┌───│  Test   │───┐
+               │   └─────────┘   │
+               │                 │
+          ┌────▼────┐      ┌────▼────┐
+          │         │      │         │
+          │   Red   │◄─────│  Green  │
+          │         │      │         │
+          └────┬────┘      └────▲────┘
+               │                │
+               │   ┌────────┐   │
+               └───►Refactor├───┘
+                   └────────┘
+                </pre>
+            </div>
+            
+            <h3>TDD Example</h3>
+            
+            <p>Let's develop a function that validates email addresses using TDD:</p>
+            
+            <pre><code># Step 1: Red - Write a failing test
+def test_email_validator():
+    # Test basic valid email
+    assert is_valid_email("user@example.com") is True
+    
+    # Test invalid emails
+    assert is_valid_email("user@example") is False  # Missing TLD
+    assert is_valid_email("user@.com") is False     # Missing domain
+    assert is_valid_email("@example.com") is False  # Missing username
+    assert is_valid_email("user.example.com") is False  # Missing @ symbol
+
+# Running this test will fail because is_valid_email doesn't exist yet
+
+# Step 2: Green - Write the simplest code to pass the test
+import re
+
+def is_valid_email(email):
+    """Validate that a string is a proper email address."""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email))
+
+# Running the test now passes
+
+# Step 3: Refactor - Improve the code without changing behavior
+def is_valid_email(email):
+    """
+    Validate that a string is a properly formatted email address.
+    
+    An email must have a username, an @ symbol, a domain name, and a TLD.
+    
+    Args:
+        email (str): The email address to validate
+        
+    Returns:
+        bool: True if the email is valid, False otherwise
+    """
+    if not isinstance(email, str):
+        return False
+    
+    # More readable pattern with comments
+    pattern = r'^[a-zA-Z0-9._%+-]+' # Username
+    pattern += '@'                   # @ symbol
+    pattern += '[a-zA-Z0-9.-]+'      # Domain name
+    pattern += '\.'                  # Dot
+    pattern += '[a-zA-Z]{2,}$'       # TLD
+    
+    return bool(re.match(pattern, email))
+
+# The test still passes, but the code is more readable and robust</code></pre>
+            
+            <h3>Benefits of TDD</h3>
+            
+            <ul>
+                <li><strong>Clarity:</strong> Forces you to define what you want before writing code</li>
+                <li><strong>Confidence:</strong> Every feature has tests from the start</li>
+                <li><strong>Design:</strong> Promotes better API design and modularity</li>
+                <li><strong>Documentation:</strong> Tests serve as executable specifications</li>
+                <li><strong>Focus:</strong> Helps you work incrementally on one thing at a time</li>
+                <li><strong>Regression Prevention:</strong> Ensures you don't break existing functionality</li>
+            </ul>
+            
+            <p><strong>When to Use TDD:</strong> TDD shines when building new features, fixing bugs, or working in complex domains where the requirements need clarification. It may be less beneficial for exploratory programming or UI development.</p>
+            
+            <p><strong>Real-world Example:</strong> A payment processing API would be an excellent candidate for TDD. You'd want to test various payment scenarios, error conditions, and edge cases before implementing them to ensure the financial operations are rock-solid.</p>
+        </section>
+
+        <section>
+            <h2>Practical Application: Testing a Web Function</h2>
+            
+            <p>Let's walk through testing a function you might use in a web application:</p>
+            
+            <h3>The Function: User Input Sanitization</h3>
+            
+            <pre><code># utils.py
+def sanitize_user_input(input_text):
+    """
+    Sanitize user input by removing potentially dangerous characters.
+    
+    Args:
+        input_text (str): The user input to sanitize
+        
+    Returns:
+        str: The sanitized input text
+    """
+    if not isinstance(input_text, str):
+        return ""
+    
+    # Remove HTML tags
+    import re
+    sanitized = re.sub(r'<[^>]*>', '', input_text)
+    
+    # Remove script tags and content
+    sanitized = re.sub(r'<script.*?>.*?</script>', '', sanitized, flags=re.DOTALL)
+    
+    # Remove other potentially dangerous patterns
+    sanitized = sanitized.replace('javascript:', '')
+    sanitized = sanitized.replace('on', '')
+    
+    # Limit length
+    max_length = 1000
+    if len(sanitized) > max_length:
+        sanitized = sanitized[:max_length]
+    
+    return sanitized</code></pre>
+            
+            <h3>Writing Unit Tests</h3>
+            
+            <pre><code># test_utils.py
+import pytest
+from app.utils import sanitize_user_input
+
+def test_sanitize_user_input_normal_text():
+    """Test sanitization of normal text."""
+    input_text = "Hello, World! This is a normal text."
+    result = sanitize_user_input(input_text)
+    assert result == input_text
+
+def test_sanitize_user_input_html_tags():
+    """Test removal of HTML tags."""
+    input_text = "Hello <b>World</b>! This has <i>HTML</i> tags."
+    expected = "Hello World! This has HTML tags."
+    result = sanitize_user_input(input_text)
+    assert result == expected
+
+def test_sanitize_user_input_script_tags():
+    """Test removal of script tags and content."""
+    input_text = "Hello World! <script>alert('XSS');</script> Some text."
+    expected = "Hello World!  Some text."
+    result = sanitize_user_input(input_text)
+    assert result == expected
+
+def test_sanitize_user_input_javascript_links():
+    """Test removal of javascript: links."""
+    input_text = "Click <a href='javascript:alert(1)'>here</a>"
+    expected = "Click <a href='alert(1)'>here</a>"
+    result = sanitize_user_input(input_text)
+    assert result == expected
+
+def test_sanitize_user_input_long_text():
+    """Test truncation of long text."""
+    input_text = "A" * 2000  # Text longer than max_length
+    result = sanitize_user_input(input_text)
+    assert len(result) == 1000
+
+def test_sanitize_user_input_non_string():
+    """Test handling of non-string inputs."""
+    inputs = [None, 123, True, {'key': 'value'}, [1, 2, 3]]
+    for input_value in inputs:
+        result = sanitize_user_input(input_value)
+        assert result == ""</code></pre>
+            
+            <h3>Integration Testing with Flask</h3>
+            
+            <p>Let's assume our sanitization function is used in a web form:</p>
+            
+            <pre><code># app.py
+from flask import Flask, request, render_template
+from app.utils import sanitize_user_input
+
+app = Flask(__name__)
+
+@app.route('/submit', methods=['POST'])
+def submit_form():
+    raw_comment = request.form.get('comment', '')
+    sanitized_comment = sanitize_user_input(raw_comment)
+    # Save to database, etc.
+    return render_template('success.html', comment=sanitized_comment)
+
+# test_app.py
+import pytest
+from app import app as flask_app
+
+@pytest.fixture
+def client():
+    """Create a test client for the app."""
+    flask_app.config['TESTING'] = True
+    with flask_app.test_client() as client:
+        yield client
+
+def test_submit_form_sanitizes_input(client):
+    """Test that form submission properly sanitizes input."""
+    # Arrange
+    form_data = {'comment': 'Hello <script>alert("XSS")</script> World'}
+    
+    # Act
+    response = client.post('/submit', data=form_data)
+    
+    # Assert
+    assert response.status_code == 200
+    assert b'&lt;script>' not in response.data
+    assert b'Hello  World' in response.data
+
+  </code>
+</pre>
+            
+            <p><strong>End-to-End Testing</strong></p>
+            
+            <p>Finally, we might add an E2E test using Selenium to verify the entire flow:</p>
+            
+            <pre><code># test_e2e.py
+import pytest
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+
+@pytest.fixture
+def driver():
+    """Set up and tear down the WebDriver."""
+    driver = webdriver.Chrome()
+    yield driver
+    driver.quit()
+
+def test_comment_submission_flow(driver, live_server):
+    """Test the full comment submission flow with sanitization."""
+    # Navigate to the comment form
+    driver.get(f"{live_server.url}/comment-form")
+    
+    # Find the comment textarea and submit button
+    comment_input = driver.find_element(By.ID, "comment")
+    submit_button = driver.find_element(By.ID, "submit")
+    
+    # Enter a comment with malicious content
+    comment_input.send_keys('Hello <script>alert("XSS")</script> World')
+    
+    # Submit the form
+    submit_button.click()
+    
+    # Verify we reach the success page
+    assert "Success" in driver.title
+    
+    # Verify the displayed comment is sanitized
+    displayed_comment = driver.find_element(By.ID, "submitted-comment").text
+    assert 'Hello  World' in displayed_comment
+    assert '&lt;script>' not in displayed_comment</code></pre>
+            
+            <p><strong>Real-world Impact:</strong> In a web application, input sanitization is a critical security measure. Comprehensive testing ensures that malicious inputs are properly neutralized, protecting your application from cross-site scripting (XSS) attacks that could compromise user data or hijack sessions.</p>
+        </section>
+
+        <section>
+            <h2>Testing Web Applications</h2>
+            
+            <p>Web applications present unique testing challenges and opportunities:</p>
+            
+            <h3>What Makes Web Applications Different?</h3>
+            
+            <ul>
+                <li><strong>Statelessness:</strong> HTTP is stateless, requiring session management</li>
+                <li><strong>Multiple Layers:</strong> Client, server, database all need testing</li>
+                <li><strong>Asynchronous Operations:</strong> AJAX, WebSockets, etc.</li>
+                <li><strong>Browser Compatibility:</strong> Different browsers may behave differently</li>
+                <li><strong>Security Concerns:</strong> CSRF, XSS, SQL injection, etc.</li>
+            </ul>
+            
+            <h3>Web-Specific Testing Tools</h3>
+            
+            <h4>For Python Flask/Django</h4>
+            <ul>
+                <li><strong>pytest-flask:</strong> Flask-specific testing utilities</li>
+                <li><strong>django.test:</strong> Django's built-in testing framework</li>
+                <li><strong>WebTest:</strong> Testing WSGI applications without a server</li>
+            </ul>
+            
+            <h4>For Frontend/Browser Testing</h4>
+            <ul>
+                <li><strong>Selenium:</strong> Browser automation</li>
+                <li><strong>Playwright:</strong> Modern browser automation framework</li>
+                <li><strong>Cypress:</strong> JavaScript end-to-end testing framework</li>
+            </ul>
+            
+            <h4>For API Testing</h4>
+            <ul>
+                <li><strong>Requests:</strong> HTTP library for API testing</li>
+                <li><strong>Postman:</strong> API development and testing platform</li>
+                <li><strong>pytest-httpx:</strong> Testing async HTTP clients</li>
+            </ul>
+            
+            <h3>Example: Testing a Flask API Endpoint</h3>
+            
+            <pre><code># app.py
+from flask import Flask, jsonify, request
+
+app = Flask(__name__)
+
+# In-memory database for example
+users = [
+    {"id": 1, "name": "Alice", "email": "alice@example.com"},
+    {"id": 2, "name": "Bob", "email": "bob@example.com"}
+]
+
+@app.route('/api/users', methods=['GET'])
+def get_users():
+    return jsonify(users)
+
+@app.route('/api/users/<int:user_id>', methods=['GET'])
+def get_user(user_id):
+    user = next((u for u in users if u["id"] == user_id), None)
+    if user:
+        return jsonify(user)
+    return jsonify({"error": "User not found"}), 404
+
+@app.route('/api/users', methods=['POST'])
+def create_user():
+    data = request.json
+    if not data or not all(key in data for key in ("name", "email")):
+        return jsonify({"error": "Invalid data"}), 400
+    
+    # Generate new ID
+    new_id = max(u["id"] for u in users) + 1
+    new_user = {
+        "id": new_id,
+        "name": data["name"],
+        "email": data["email"]
+    }
+    users.append(new_user)
+    return jsonify(new_user), 201
+
+# test_app.py
+import json
+import pytest
+from app import app, users
+
+@pytest.fixture
+def client():
+    app.config['TESTING'] = True
+    with app.test_client() as client:
+        # Reset users to initial state before each test
+        global users
+        users = [
+            {"id": 1, "name": "Alice", "email": "alice@example.com"},
+            {"id": 2, "name": "Bob", "email": "bob@example.com"}
+        ]
+        yield client
+
+def test_get_users(client):
+    """Test getting all users."""
+    response = client.get('/api/users')
+    data = json.loads(response.data)
+    
+    assert response.status_code == 200
+    assert len(data) == 2
+    assert data[0]["name"] == "Alice"
+    assert data[1]["name"] == "Bob"
+
+def test_get_user_exists(client):
+    """Test getting a specific user that exists."""
+    response = client.get('/api/users/1')
+    data = json.loads(response.data)
+    
+    assert response.status_code == 200
+    assert data["name"] == "Alice"
+    assert data["email"] == "alice@example.com"
+
+def test_get_user_not_exists(client):
+    """Test getting a user that doesn't exist."""
+    response = client.get('/api/users/999')
+    data = json.loads(response.data)
+    
+    assert response.status_code == 404
+    assert "error" in data
+
+def test_create_user_valid(client):
+    """Test creating a valid user."""
+    new_user = {"name": "Charlie", "email": "charlie@example.com"}
+    response = client.post(
+        '/api/users',
+        data=json.dumps(new_user),
+        content_type='application/json'
+    )
+    data = json.loads(response.data)
+    
+    assert response.status_code == 201
+    assert data["name"] == "Charlie"
+    assert data["id"] == 3  # Should be assigned a new ID
+    
+    # Verify the user was actually added
+    get_response = client.get('/api/users/3')
+    assert get_response.status_code == 200
+
+def test_create_user_invalid(client):
+    """Test creating a user with invalid data."""
+    invalid_user = {"name": "Missing Email"}
+    response = client.post(
+        '/api/users',
+        data=json.dumps(invalid_user),
+        content_type='application/json'
+    )
+    data = json.loads(response.data)
+    
+    assert response.status_code == 400
+    assert "error" in data</code></pre>
+            
+            <p><strong>Key Web Testing Strategies:</strong></p>
+            
+            <ul>
+                <li><strong>Test Across Layers:</strong> Unit test business logic, integration test API endpoints, E2E test critical user flows</li>
+                <li><strong>Mock External Dependencies:</strong> Use test doubles for databases, APIs, etc.</li>
+                <li><strong>Test for Web-Specific Issues:</strong> Security vulnerabilities, performance under load, etc.</li>
+                <li><strong>Use Realistic Test Data:</strong> Test with data that resembles production</li>
+                <li><strong>Test Both Happy Paths and Edge Cases:</strong> What happens when things go wrong?</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Getting Started with Testing in Your Projects</h2>
+            
+            <p>Here's a practical roadmap to begin implementing testing in your projects:</p>
+            
+            <h3>Step 1: Set Up Your Testing Environment</h3>
+            
+            <pre><code># Install pytest and common plugins
+pip install pytest pytest-cov
+
+# Create a basic test structure
+project/
+├── my_app/
+│   ├── __init__.py
+│   ├── app.py
+│   └── utils.py
+└── tests/
+    ├── __init__.py
+    ├── test_app.py
+    └── test_utils.py
+
+# Create a pytest.ini configuration file
+# pytest.ini
+[pytest]
+testpaths = tests
+python_files = test_*.py
+python_functions = test_*</code></pre>
+            
+            <h3>Step 2: Write Your First Tests</h3>
+            
+            <p>Start simple with unit tests for standalone functions:</p>
+            
+            <pre><code># Example function in my_app/utils.py
+def is_palindrome(text):
+    """Check if a string is a palindrome."""
+    if not isinstance(text, str):
+        return False
+    
+    # Remove spaces and convert to lowercase
+    text = text.replace(" ", "").lower()
+    return text == text[::-1]
+
+# Example test in tests/test_utils.py
+from my_app.utils import is_palindrome
+
+def test_is_palindrome_with_simple_palindromes():
+    assert is_palindrome("radar") is True
+    assert is_palindrome("A man a plan a canal Panama") is True
+    
+def test_is_palindrome_with_non_palindromes():
+    assert is_palindrome("hello") is False
+    assert is_palindrome("Python") is False
+    
+def test_is_palindrome_with_edge_cases():
+    assert is_palindrome("") is True  # Empty string reads the same backward
+    assert is_palindrome("a") is True  # Single character is a palindrome
+    assert is_palindrome(123) is False  # Non-string input</code></pre>
+            
+            <h3>Step 3: Run Your Tests</h3>
+            
+            <pre><code># Run all tests
+pytest
+
+# Run with verbose output
+pytest -v
+
+# Run a specific test file
+pytest tests/test_utils.py
+
+# Run a specific test function
+pytest tests/test_utils.py::test_is_palindrome_with_simple_palindromes
+
+# Run with coverage reporting
+pytest --cov=my_app tests/</code></pre>
+            
+            <h3>Step 4: Gradually Expand Test Coverage</h3>
+            
+            <p>Focus on these areas first:</p>
+            
+            <ol>
+                <li>Core business logic</li>
+                <li>Complex algorithms</li>
+                <li>Code that handles user input</li>
+                <li>Areas with known bugs</li>
+                <li>Recently changed code</li>
+            </ol>
+            
+            <h3>Step 5: Integrate Testing into Your Workflow</h3>
+            
+            <ul>
+                <li>Run tests before committing code</li>
+                <li>Set up a continuous integration (CI) system to run tests automatically</li>
+                <li>Practice TDD for new features</li>
+                <li>Write tests when fixing bugs</li>
+            </ul>
+            
+            <p><strong>Remember:</strong> Perfect is the enemy of good. Start small, focus on critical functionality, and gradually build your test suite over time. It's better to have some tests than none at all.</p>
+        </section>
+
+        <section>
+            <h2>Conclusion</h2>
+            
+            <p>Testing is not an optional add-on to software development—it's an integral part of the process. As you continue your journey into web development, the testing concepts we've explored today will become increasingly valuable.</p>
+            
+            <p>Effective testing gives you confidence in your code, catches bugs before users do, documents how your code should work, and enables you to change your code without fear of breaking existing functionality.</p>
+            
+            <p>In the coming weeks, as we dive deeper into web frameworks like Flask and Django, we'll build on these foundational testing concepts. Those frameworks include specialized testing tools designed for web applications, making it even easier to write comprehensive tests.</p>
+            
+            <p>Start incorporating testing into your projects now, even in small ways. With practice, it will become second nature—an essential skill that separates professional developers from amateurs.</p>
+            
+            <p><strong>Final Thought:</strong> Testing might seem like extra work initially, but it's an investment that pays dividends in code quality, reduced debugging time, and your professional reputation. Embrace it as a core part of your development process.</p>
+        </section>
+
+        <section class="resources">
+            <h2>Additional Resources</h2>
+            <ul>
+                <li><a href="https://docs.pytest.org/en/latest/" target="_blank">pytest Documentation</a></li>
+                <li><a href="https://docs.python.org/3/library/unittest.html" target="_blank">unittest Documentation</a></li>
+                <li><a href="https://coverage.readthedocs.io/en/coverage-5.5/" target="_blank">Coverage.py Documentation</a></li>
+                <li><a href="https://flask.palletsprojects.com/en/2.0.x/testing/" target="_blank">Flask Testing Documentation</a></li>
+                <li><a href="https://docs.djangoproject.com/en/3.2/topics/testing/" target="_blank">Django Testing Documentation</a></li>
+                <li><a href="https://www.selenium.dev/documentation/en/" target="_blank">Selenium Documentation</a></li>
+                <li><a href="https://martinfowler.com/articles/practical-test-pyramid.html" target="_blank">The Practical Test Pyramid</a></li>
+                <li><a href="https://www.obeythetestinggoat.com/" target="_blank">Test-Driven Development with Python (free online book)</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Python Full Stack Developer Course - File: week3_friday_testing_concepts.html</p>
+        <p>Located in course root directory</p>
+    </footer>
+</body>
+</html>

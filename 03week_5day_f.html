@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review of Python Fundamentals</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Full Stack Web Developer Course</h1>
+        <h2>Week 3: Python Fundamentals (Part 2)</h2>
+        <h3>Friday Afternoon: Review of Python Fundamentals</h3>
+    </header>
+
+    <main>
+        <section class="lecture_intro">
+            <h2>Consolidating Our Python Foundation</h2>
+            <p>Welcome to our comprehensive review of Python fundamentals! Over the past three weeks, we've covered a tremendous amount of ground, from basic syntax to advanced object-oriented programming concepts. Today, we'll strengthen and solidify this knowledge by revisiting key concepts, exploring their connections, and understanding how they'll apply to web development.</p>
+            
+            <p>This review isn't just about repetition—it's about synthesis. We're connecting the dots between seemingly disparate concepts to build a holistic understanding of Python that will serve as the foundation for our journey into web development. By the end of this session, you should feel confident in your mastery of Python's core concepts and ready to apply them in more complex web development scenarios.</p>
+        </section>
+
+        <section>
+            <h2>Data Types and Variables</h2>
+            
+            <p><strong>Analogy:</strong> If Python is a vast kitchen for creating culinary masterpieces, data types are the different ingredients—each with specific properties and purposes. Variables are the labeled containers that store these ingredients until you're ready to use them.</p>
+            
+            <h3>Python's Primary Data Types</h3>
+            
+            <table>
+                <tr>
+                    <th>Data Type</th>
+                    <th>Description</th>
+                    <th>Usage Example</th>
+                    <th>Web Development Application</th>
+                </tr>
+                <tr>
+                    <td><code>int</code></td>
+                    <td>Whole numbers</td>
+                    <td><code>user_id = 42</code></td>
+                    <td>Database IDs, counts, pagination</td>
+                </tr>
+                <tr>
+                    <td><code>float</code></td>
+                    <td>Decimal numbers</td>
+                    <td><code>price = 19.99</code></td>
+                    <td>Financial calculations, measurements</td>
+                </tr>
+                <tr>
+                    <td><code>str</code></td>
+                    <td>Text data</td>
+                    <td><code>username = "johndoe"</code></td>
+                    <td>Content, user input, HTML generation</td>
+                </tr>
+                <tr>
+                    <td><code>bool</code></td>
+                    <td>True/False values</td>
+                    <td><code>is_active = True</code></td>
+                    <td>Conditional rendering, permissions</td>
+                </tr>
+                <tr>
+                    <td><code>list</code></td>
+                    <td>Ordered, mutable collections</td>
+                    <td><code>tags = ["python", "web"]</code></td>
+                    <td>Multiple items (e.g., posts, comments)</td>
+                </tr>
+                <tr>
+                    <td><code>tuple</code></td>
+                    <td>Ordered, immutable collections</td>
+                    <td><code>coordinates = (x, y)</code></td>
+                    <td>Fixed collections, dictionary keys</td>
+                </tr>
+                <tr>
+                    <td><code>dict</code></td>
+                    <td>Key-value mappings</td>
+                    <td><code>user = {"name": "John"}</code></td>
+                    <td>JSON data, configurations, objects</td>
+                </tr>
+                <tr>
+                    <td><code>set</code></td>
+                    <td>Unordered collections of unique items</td>
+                    <td><code>unique_tags = {"python", "web"}</code></td>
+                    <td>Eliminating duplicates, fast lookups</td>
+                </tr>
+                <tr>
+                    <td><code>None</code></td>
+                    <td>Absence of value</td>
+                    <td><code>result = None</code></td>
+                    <td>Default parameters, missing values</td>
+                </tr>
+            </table>
+            
+            <h3>Type Conversion in Web Contexts</h3>
+            
+            <p>In web development, type conversion is particularly important because data often crosses system boundaries:</p>
+            
+            <pre><code># Converting URL parameters (strings) to other types
+user_id = int(request.args.get('id', '0'))
+show_details = request.args.get('details', 'false').lower() == 'true'
+
+# Converting form data for database storage
+new_product = Product(
+    name=form.name.data,  # str
+    price=float(form.price.data),  # str -> float
+    quantity=int(form.quantity.data),  # str -> int
+    is_available=form.is_available.data  # bool
+)
+
+# Converting database results to JSON
+def user_to_dict(user):
+    return {
+        "id": user.id,  # int
+        "username": user.username,  # str
+        "joined_date": user.joined_date.isoformat(),  # date -> str
+        "posts_count": len(user.posts)  # list -> int
+    }</code></pre>
+            
+            <p><strong>Real-world Example:</strong> When handling e-commerce checkout, you'll convert string input from form fields to appropriate types: product IDs to integers, prices to floats, and quantities to integers, all while validating the conversions to prevent errors.</p>
+        </section>
+
+        <section>
+            <h2>Control Flow and Functions</h2>
+            
+            <p><strong>Metaphor:</strong> If variables and data types are the ingredients, control flow structures are the cooking techniques that determine how those ingredients combine and transform. Functions are like recipes that package these techniques into reusable, consistent procedures.</p>
+            
+            <h3>Conditional Logic in Web Applications</h3>
+            
+            <p>Conditional statements drive dynamic behavior in web applications:</p>
+            
+            <pre><code># User authentication logic
+def login_view(request):
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        user = find_user(username)
+        
+        if not user:
+            return render_template('login.html', error="User not found")
+        elif not check_password(user, password):
+            return render_template('login.html', error="Invalid password")
+        else:
+            # Success case
+            set_user_session(user)
+            return redirect('/dashboard')
+    else:
+        # GET request
+        return render_template('login.html')</code></pre>
+            
+            <h3>Loops for Data Processing</h3>
+            
+            <p>Loops are essential for handling collections of data:</p>
+            
+            <pre><code># Rendering a list of items
+@app.route('/products')
+def products_view():
+    products = get_all_products()
+    
+    # Process each product before display
+    for product in products:
+        # Calculate discount price
+        if product.on_sale:
+            product.display_price = product.price * 0.9
+        else:
+            product.display_price = product.price
+            
+        # Format currency
+        product.display_price = f"${product.display_price:.2f}"
+    
+    return render_template('products.html', products=products)
+
+# Processing pagination with a while loop
+def paginate_results(items, page_size, page_num):
+    start_idx = (page_num - 1) * page_size
+    end_idx = start_idx + page_size
+    
+    # Get items for the current page
+    current_items = items[start_idx:end_idx]
+    
+    # Calculate total pages
+    total_items = len(items)
+    total_pages = (total_items + page_size - 1) // page_size
+    
+    return {
+        'items': current_items,
+        'page': page_num,
+        'total_pages': total_pages,
+        'has_next': page_num < total_pages,
+        'has_prev': page_num > 1
+    }</code></pre>
+            
+            <h3>Functions in Web Development</h3>
+            
+            <p>Well-designed functions are crucial for maintainable web applications:</p>
+            
+            <pre><code># Separation of concerns with functions
+def get_user_by_id(user_id):
+    """Retrieve a user from the database by ID."""
+    # Database logic here
+    return User.query.get(user_id)
+
+def format_user_profile(user):
+    """Format user data for profile display."""
+    return {
+        'display_name': user.first_name + ' ' + user.last_name,
+        'joined': user.created_at.strftime('%B %d, %Y'),
+        'bio': user.bio or "No bio provided",
+        'avatar_url': user.avatar_url or "/static/default-avatar.png"
+    }
+
+def check_user_permissions(user, resource):
+    """Check if a user has permission to access a resource."""
+    if user.is_admin:
+        return True
+    
+    if resource.owner_id == user.id:
+        return True
+        
+    if resource.is_public:
+        return True
+        
+    return False
+
+# Using these functions in a view
+@app.route('/profile/<int:user_id>')
+def profile_view(user_id):
+    current_user = get_current_user()
+    profile_user = get_user_by_id(user_id)
+    
+    if not profile_user:
+        return render_template('error.html', message="User not found"), 404
+        
+    if not check_user_permissions(current_user, profile_user):
+        return render_template('error.html', message="Access denied"), 403
+    
+    profile_data = format_user_profile(profile_user)
+    return render_template('profile.html', user=profile_data)</code></pre>
+            
+            <h3>Lambda Functions for Quick Operations</h3>
+            
+            <pre><code># Sorting a list of products by price
+products.sort(key=lambda product: product.price)
+
+# Filtering active users
+active_users = filter(lambda user: user.is_active, all_users)
+
+# Mapping user objects to just usernames
+usernames = map(lambda user: user.username, users)</code></pre>
+            
+            <p><strong>Real-world Example:</strong> In a content management system, you might use functions to encapsulate operations like formatting text, checking permissions, generating slugs from titles, and handling media uploads—keeping your view code clean and focused on orchestrating these operations rather than implementing them.</p>
+        </section>
+
+        <section>
+            <h2>Data Structures and Collections</h2>
+            
+            <p><strong>Analogy:</strong> If Python's basic data types are ingredients, data structures are like the prepared components of a complex dish—organized in specific ways to be useful for different purposes. Like choosing between storing ingredients in a spice rack, refrigerator, or pantry, each data structure offers different access patterns and capabilities.</p>
+            
+            <h3>Lists and Tuples in Web Development</h3>
+            
+            <pre><code># Lists for ordered, mutable data
+def recent_posts_view():
+    posts = get_recent_posts(10)  # Returns a list of post objects
+    featured_posts = []
+    
+    # Process posts
+    for post in posts:
+        if post.is_featured:
+            featured_posts.append(post)
+            posts.remove(post)  # Modify the list (mutable)
+    
+    return render_template('blog.html', 
+                           featured=featured_posts, 
+                           regular=posts)
+
+# Tuples for fixed data structures
+def get_geolocation(ip_address):
+    # Returns (latitude, longitude) as a tuple
+    return (37.7749, -122.4194)  # Example coordinates
+
+coordinates = get_geolocation(request.remote_addr)
+# Tuple unpacking
+latitude, longitude = coordinates
+
+# Tuples in database operations
+def execute_query(query, params):
+    # Many database APIs use tuples for parameters
+    cursor.execute(
+        "SELECT * FROM users WHERE age > %s AND country = %s",
+        (21, "Canada")  # Parameter tuple
+    )</code></pre>
+            
+            <h3>Dictionaries: The Backbone of Web Data</h3>
+            
+            <p>Dictionaries are particularly important in web development because they closely match JSON structure:</p>
+            
+            <pre><code># User data representation
+user = {
+    "id": 123,
+    "username": "johndoe",
+    "email": "john@example.com",
+    "profile": {
+        "full_name": "John Doe",
+        "bio": "Python developer",
+        "social_links": {
+            "twitter": "@johndoe",
+            "github": "johndoe"
+        }
+    },
+    "preferences": {
+        "theme": "dark",
+        "notifications": True
+    }
+}
+
+# Converting to JSON for an API response
+return jsonify(user)
+
+# Form data processing
+def process_signup_form(form_data):
+    # Validate required fields
+    required_fields = ['username', 'email', 'password']
+    
+    for field in required_fields:
+        if field not in form_data or not form_data[field]:
+            raise ValueError(f"Missing required field: {field}")
+    
+    # Dictionary comprehension for cleaning data
+    cleaned_data = {
+        key: value.strip() 
+        for key, value in form_data.items() 
+        if isinstance(value, str)
+    }
+    
+    return cleaned_data</code></pre>
+            
+            <h3>Sets for Unique Collections</h3>
+            
+            <pre><code># Efficient tag handling
+def process_article_tags(article, tag_string):
+    # Split comma-separated tag string and remove whitespace
+    tags = [tag.strip() for tag in tag_string.split(',')]
+    
+    # Use a set to eliminate duplicates
+    unique_tags = set(tags)
+    
+    # Remove empty tags
+    if '' in unique_tags:
+        unique_tags.remove('')
+    
+    # Update article tags
+    article.tags = list(unique_tags)
+    return article
+
+# Quick lookups for permissions
+def check_access(user, required_permissions):
+    # user.permissions is a set of permission strings
+    # required_permissions is a set of required permissions
+    
+    # Check if user has all required permissions
+    return required_permissions.issubset(user.permissions)
+    
+    # Alternative with intersection
+    # return len(required_permissions.intersection(user.permissions)) == len(required_permissions)</code></pre>
+            
+            <h3>Advanced Collection Techniques</h3>
+            
+            <pre><code># List comprehensions for transforming data
+def format_comments(comments):
+    return [
+        {
+            'author': comment.author.username,
+            'text': comment.text,
+            'posted_at': comment.created_at.strftime('%Y-%m-%d %H:%M'),
+            'is_edited': comment.edited_at is not None
+        }
+        for comment in comments
+        if not comment.is_deleted
+    ]
+
+# Nested dictionaries for complex data
+def build_category_tree(categories):
+    # Start with an empty tree
+    tree = {}
+    
+    # Build the tree
+    for category in categories:
+        if category.parent_id is None:
+            # Top-level category
+            tree[category.id] = {
+                'name': category.name,
+                'children': {}
+            }
+        else:
+            # Child category
+            if category.parent_id in tree:
+                tree[category.parent_id]['children'][category.id] = {
+                    'name': category.name,
+                    'children': {}
+                }
+    
+    return tree
+
+# Collections module for specialized collections
+from collections import Counter, defaultdict
+
+def analyze_page_views(views):
+    # Count views by page
+    page_counts = Counter(view.page for view in views)
+    
+    # Group by user
+    user_views = defaultdict(list)
+    for view in views:
+        user_views[view.user_id].append(view.page)
+    
+    return page_counts, user_views</code></pre>
+            
+            <p><strong>Real-world Example:</strong> In a social media application, you might use dictionaries to structure user data, lists to maintain ordered posts, sets to track unique likes, and collections.Counter to analyze hashtag frequency—each data structure chosen for its specific advantages.</p>
+        </section>
+
+        <section>
+            <h2>Object-Oriented Programming</h2>
+            
+            <p><strong>Metaphor:</strong> If functions are recipes, classes are like restaurant franchises—they define not just a single recipe, but an entire system of recipes, procedures, and state that work together to create a consistent experience. Each restaurant location (object instance) follows the same blueprint but has its own state.</p>
+            
+            <h3>Classes as Models in Web Applications</h3>
+            
+            <pre><code># A simple user model
+class User:
+    def __init__(self, username, email, password):
+        self.username = username
+        self.email = email
+        self._password = self._hash_password(password)
+        self.is_active = True
+        self.created_at = datetime.now()
+        self.roles = []
+    
+    def _hash_password(self, password):
+        # In a real app, use proper password hashing
+        return f"hashed_{password}"
+    
+    def check_password(self, password):
+        return self._hash_password(password) == self._password
+    
+    def add_role(self, role):
+        if role not in self.roles:
+            self.roles.append(role)
+    
+    def has_role(self, role):
+        return role in self.roles
+    
+    def deactivate(self):
+        self.is_active = False
+    
+    def __str__(self):
+        return f"User: {self.username} ({self.email})"</code></pre>
+            
+            <h3>Inheritance for Extending Functionality</h3>
+            
+            <pre><code># Base model class
+class Model:
+    def __init__(self):
+        self.id = None
+        self.created_at = datetime.now()
+        self.updated_at = self.created_at
+    
+    def save(self):
+        if self.id is None:
+            # Insert new record
+            self.id = database.insert(self.__class__.__name__, self.__dict__)
+        else:
+            # Update existing record
+            self.updated_at = datetime.now()
+            database.update(self.__class__.__name__, self.id, self.__dict__)
+    
+    def delete(self):
+        if self.id is not None:
+            database.delete(self.__class__.__name__, self.id)
+            self.id = None
+    
+    @classmethod
+    def find_by_id(cls, id):
+        data = database.find(cls.__name__, id)
+        if data:
+            instance = cls()
+            for key, value in data.items():
+                setattr(instance, key, value)
+            return instance
+        return None
+
+# User model inheriting from Model
+class User(Model):
+    def __init__(self, username="", email="", password=""):
+        super().__init__()
+        self.username = username
+        self.email = email
+        self._password = self._hash_password(password) if password else ""
+        self.is_active = True
+        self.roles = []
+    
+    # User-specific methods as before
+    
+# Post model inheriting from Model
+class Post(Model):
+    def __init__(self, title="", content="", author=None):
+        super().__init__()
+        self.title = title
+        self.content = content
+        self.author_id = author.id if author else None
+        self.is_published = False
+        self.views = 0
+    
+    def publish(self):
+        self.is_published = True
+        self.save()
+    
+    def increment_view(self):
+        self.views += 1
+        self.save()</code></pre>
+            
+            <h3>Composition for Complex Behaviors</h3>
+            
+            <pre><code># Separate functionality into component classes
+class EmailValidator:
+    def validate(self, email):
+        # Simple validation for example
+        return '@' in email and '.' in email.split('@')[1]
+
+class PasswordManager:
+    def hash_password(self, password):
+        # In reality, use a proper hashing library
+        import hashlib
+        return hashlib.sha256(password.encode()).hexdigest()
+    
+    def verify_password(self, password, hashed_password):
+        return self.hash_password(password) == hashed_password
+
+class UserAuthenticator:
+    def __init__(self, user_repository):
+        self.user_repository = user_repository
+        self.password_manager = PasswordManager()
+    
+    def authenticate(self, username, password):
+        user = self.user_repository.find_by_username(username)
+        if not user:
+            return None
+        
+        if not self.password_manager.verify_password(password, user.password_hash):
+            return None
+        
+        return user
+
+# Using composition in the main User class
+class User(Model):
+    def __init__(self, username="", email="", password=""):
+        super().__init__()
+        self.username = username
+        self.email = email
+        self.password_hash = ""
+        
+        # Components
+        self.email_validator = EmailValidator()
+        self.password_manager = PasswordManager()
+        
+        # Set password if provided
+        if password:
+            self.set_password(password)
+    
+    def set_password(self, password):
+        self.password_hash = self.password_manager.hash_password(password)
+    
+    def check_password(self, password):
+        return self.password_manager.verify_password(password, self.password_hash)
+    
+    def set_email(self, email):
+        if not self.email_validator.validate(email):
+            raise ValueError("Invalid email address")
+        self.email = email</code></pre>
+            
+            <h3>Practical OOP for Web Applications</h3>
+            
+            <p>In web frameworks, OOP is used to create reusable components:</p>
+            
+            <pre><code># Form handling with OOP
+class Form:
+    def __init__(self, data=None):
+        self.data = data or {}
+        self.errors = {}
+        self._validated = False
+    
+    def validate(self):
+        self._validated = True
+        return len(self.errors) == 0
+    
+    def is_valid(self):
+        if not self._validated:
+            self.validate()
+        return len(self.errors) == 0
+
+class RegistrationForm(Form):
+    def validate(self):
+        # Reset errors
+        self.errors = {}
+        
+        # Check required fields
+        required_fields = ['username', 'email', 'password', 'confirm_password']
+        for field in required_fields:
+            if field not in self.data or not self.data[field]:
+                self.errors[field] = f"{field} is required"
+        
+        # Check email format
+        if 'email' in self.data and self.data['email']:
+            if '@' not in self.data['email']:
+                self.errors['email'] = "Invalid email format"
+        
+        # Check password match
+        if ('password' in self.data and self.data['password'] and
+            'confirm_password' in self.data and self.data['confirm_password']):
+            if self.data['password'] != self.data['confirm_password']:
+                self.errors['confirm_password'] = "Passwords do not match"
+        
+        super().validate()
+        return len(self.errors) == 0
+
+# Using the form in a view
+@app.route('/register', methods=['GET', 'POST'])
+def register_view():
+    if request.method == 'POST':
+        form = RegistrationForm(request.form)
+        
+        if form.is_valid():
+            # Create user
+            user = User(
+                username=form.data['username'],
+                email=form.data['email']
+            )
+            user.set_password(form.data['password'])
+            user.save()
+            
+            return redirect('/login')
+        else:
+            # Re-render form with errors
+            return render_template('register.html', form=form)
+    else:
+        # Empty form for GET request
+        form = RegistrationForm()
+        return render_template('register.html', form=form)</code></pre>
+            
+            <p><strong>Real-world Example:</strong> In a content management system, you might define a base <code>Content</code> class with common properties and methods, then use inheritance to create specific types like <code>Article</code>, <code>Page</code>, and <code>MediaFile</code>. Each would inherit core content functionality while adding its own specialized behaviors.</p>
+        </section>
+
+        <section>
+            <h2>Modules and Packages</h2>
+            
+            <p><strong>Analogy:</strong> If classes are restaurant franchises, modules and packages are like the supply chain and corporate structure that support those franchises. They organize code at a higher level, ensuring that different parts of your application can find and use each other efficiently.</p>
+            
+            <h3>Module Organization in Web Applications</h3>
+            
+            <pre><code># utils.py - Utility functions module
+def generate_slug(text):
+    """Convert text to URL-friendly slug."""
+    # Remove special chars, replace spaces with hyphens
+    import re
+    text = text.lower()
+    text = re.sub(r'[^\w\s-]', '', text)
+    text = re.sub(r'[\s_-]+', '-', text)
+    return text.strip('-')
+
+def format_date(date, format_str="%B %d, %Y"):
+    """Format a date object as a string."""
+    return date.strftime(format_str)
+
+def truncate_text(text, max_length=100):
+    """Truncate text to max_length and add ellipsis."""
+    if len(text) <= max_length:
+        return text
+    return text[:max_length].rsplit(' ', 1)[0] + '...'
+
+# Using the module
+from myapp.utils import generate_slug, truncate_text
+
+@app.route('/create-article', methods=['POST'])
+def create_article():
+    title = request.form.get('title')
+    content = request.form.get('content')
+    
+    # Use utility functions
+    slug = generate_slug(title)
+    excerpt = truncate_text(content, 150)
+    
+    article = Article(
+        title=title,
+        slug=slug,
+        content=content,
+        excerpt=excerpt
+    )
+    article.save()
+    
+    return redirect(f'/articles/{slug}')</code></pre>
+            
+            <h3>Package Structure for Scalability</h3>
+            
+            <pre><code># Example package structure
+myapp/
+    __init__.py
+    models/
+        __init__.py
+        user.py
+        article.py
+        comment.py
+    views/
+        __init__.py
+        auth.py
+        blog.py
+        admin.py
+    utils/
+        __init__.py
+        text.py
+        security.py
+        date.py
+    templates/
+    static/
+
+# models/__init__.py - Exposing models at package level
+from .user import User
+from .article import Article
+from .comment import Comment
+
+# Using the package structure
+from myapp.models import User, Article
+from myapp.utils.text import generate_slug, truncate_text
+from myapp.views.auth import login_required
+
+@app.route('/new-article')
+@login_required
+def new_article_view():
+    return render_template('articles/new.html')</code></pre>
+            
+            <h3>Circular Import Resolution</h3>
+            
+            <p>A common issue in larger web applications:</p>
+            
+            <pre><code># Problem: Circular imports
+# user.py wants to import Article from article.py
+# article.py wants to import User from user.py
+
+# Solution 1: Import inside functions
+def get_user_articles(user_id):
+    # Import inside function to avoid circular import
+    from myapp.models.article import Article
+    return Article.query.filter_by(author_id=user_id).all()
+
+# Solution 2: Import only what's needed
+# Instead of "from myapp.models import User"
+import myapp.models
+# Then use myapp.models.User
+
+# Solution 3: Restructure your code
+# Move shared functionality to a separate module
+# Create clear dependency hierarchies</code></pre>
+            
+            <h3>Import Best Practices</h3>
+            
+            <pre><code># Explicit relative imports
+from . import config  # Import from current package
+from .models import User  # Import from models in current package
+from ..utils import helpers  # Import from utils in parent package
+
+# Preferred import style for readability
+# Standard library imports
+import os
+import json
+from datetime import datetime
+
+# Third-party imports
+import flask
+from flask import Flask, request
+import sqlalchemy
+
+# Local application imports
+from myapp.models import User
+from myapp.utils import generate_slug</code></pre>
+            
+            <p><strong>Real-world Example:</strong> The Flask framework itself is organized as a package with modules for different responsibilities: routing, templating, CLI commands, and more. This clear separation allows the framework to be maintained and extended by many developers.</p>
+        </section>
+
+        <section>
+            <h2>File Handling and I/O</h2>
+            
+            <p><strong>Metaphor:</strong> If your application is a living organism, file I/O represents its interaction with the external environment—consuming input, producing output, and storing memories for later retrieval. In web development, this often extends to handling uploaded files, reading configurations, and generating downloadable content.</p>
+            
+            <h3>Handling File Uploads</h3>
+            
+            <pre><code>@app.route('/upload', methods=['POST'])
+def upload_file():
+    # Check if file was uploaded
+    if 'file' not in request.files:
+        return 'No file part', 400
+    
+    file = request.files['file']
+    
+    # Check if filename is empty
+    if file.filename == '':
+        return 'No selected file', 400
+    
+    # Check if file type is allowed
+    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
+    if '.' not in file.filename or \
+       file.filename.rsplit('.', 1)[1].lower() not in allowed_extensions:
+        return 'File type not allowed', 400
+    
+    # Generate a secure filename
+    from werkzeug.utils import secure_filename
+    filename = secure_filename(file.filename)
+    
+    # Save the file
+    upload_folder = app.config['UPLOAD_FOLDER']
+    file_path = os.path.join(upload_folder, filename)
+    file.save(file_path)
+    
+    return f'File uploaded successfully: {filename}'</code></pre>
+            
+            <h3>Reading and Writing Configuration Files</h3>
+            
+            <pre><code># Reading JSON configuration
+def load_config(config_file='config.json'):
+    try:
+        with open(config_file, 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Error loading configuration: {e}")
+        return {}
+
+# Reading YAML configuration
+def load_yaml_config(config_file='config.yaml'):
+    import yaml
+    try:
+        with open(config_file, 'r') as f:
+            return yaml.safe_load(f)
+    except (FileNotFoundError, yaml.YAMLError) as e:
+        print(f"Error loading configuration: {e}")
+        return {}
+
+# Writing configuration
+def save_config(config, config_file='config.json'):
+    try:
+        with open(config_file, 'w') as f:
+            json.dump(config, f, indent=2)
+        return True
+    except Exception as e:
+        print(f"Error saving configuration: {e}")
+        return False</code></pre>
+            
+            <h3>Generating Downloadable Content</h3>
+            
+            <pre><code>@app.route('/export/users')
+def export_users():
+    # Generate CSV of users
+    import csv
+    from io import StringIO
+    
+    users = User.query.all()
+    
+    # Create in-memory file
+    output = StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow(['ID', 'Username', 'Email', 'Created At'])
+    
+    # Write data
+    for user in users:
+        writer.writerow([
+            user.id,
+            user.username,
+            user.email,
+            user.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        ])
+    
+    # Prepare response
+    response = make_response(output.getvalue())
+    response.headers['Content-Disposition'] = 'attachment; filename=users.csv'
+    response.headers['Content-type'] = 'text/csv'
+    
+    return response
+
+@app.route('/export/report/<int:report_id>')
+def export_report(report_id):
+    # Generate PDF report
+    import tempfile
+    from reportlab.pdfgen import canvas
+    
+    report = Report.query.get_or_404(report_id)
+    
+    # Create temporary file
+    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp:
+        # Generate PDF
+        c = canvas.Canvas(temp.name)
+        c.drawString(100, 750, f"Report: {report.title}")
+        c.drawString(100, 730, f"Generated: {datetime.now().strftime('%Y-%m-%d')}")
+        # Add more content...
+        c.save()
+        
+        # Read the file
+        with open(temp.name, 'rb') as f:
+            pdf_data = f.read()
+    
+    # Prepare response
+    response = make_response(pdf_data)
+    response.headers['Content-Disposition'] = f'attachment; filename={report.title}.pdf'
+    response.headers['Content-type'] = 'application/pdf'
+    
+    return response</code></pre>
+            
+            <h3>Context Managers for Resource Management</h3>
+            
+            <pre><code># Using context managers for file handling
+def process_log_file(log_file):
+    try:
+        with open(log_file, 'r') as f:
+            logs = f.readlines()
+        
+        error_logs = [log for log in logs if 'ERROR' in log]
+        return error_logs
+    except FileNotFoundError:
+        print(f"Log file not found: {log_file}")
+        return []
+
+# Custom context manager
+class DatabaseConnection:
+    def __init__(self, config):
+        self.config = config
+        self.connection = None
+    
+    def __enter__(self):
+        # Set up and return the resource
+        self.connection = create_db_connection(self.config)
+        return self.connection
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # Clean up the resource
+        if self.connection:
+            self.connection.close()
+        
+        # Return True to suppress exceptions, False to propagate
+        return False
+
+# Using the custom context manager
+def get_user_data(user_id):
+    with DatabaseConnection(app.config['DATABASE']) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        return cursor.fetchone()</code></pre>
+            
+            <p><strong>Real-world Example:</strong> In a document management system, you might handle file uploads (validating file types and scanning for viruses), process those uploads (extracting text, generating thumbnails), store metadata in a database, and later serve those files for download or preview. All these operations involve file I/O, often with careful attention to resource management and security.</p>
+        </section>
+
+        <section>
+            <h2>Error Handling and Exceptions</h2>
+            
+            <p><strong>Analogy:</strong> If your code is a road trip, exceptions are the unexpected detours and roadblocks you might encounter. Good error handling is like having a GPS with real-time traffic updates—it helps you navigate around problems and reach your destination safely, or at least explain clearly why you can't.</p>
+            
+            <h3>Exception Handling in Web Applications</h3>
+            
+            <pre><code>@app.route('/user/<username>')
+def user_profile(username):
+    try:
+        user = User.query.filter_by(username=username).one()
+        return render_template('profile.html', user=user)
+    except NoResultFound:
+        # User not found
+        return render_template('error.html', 
+                              message=f"User {username} not found"), 404
+    except MultipleResultsFound:
+        # Multiple users with the same username (shouldn't happen with unique constraint)
+        app.logger.error(f"Multiple users found with username: {username}")
+        return render_template('error.html', 
+                              message="An unexpected error occurred"), 500
+    except SQLAlchemyError as e:
+        # Database error
+        app.logger.error(f"Database error when fetching user {username}: {e}")
+        return render_template('error.html', 
+                              message="Database error"), 500
+    except Exception as e:
+        # Unexpected error
+        app.logger.error(f"Unexpected error in user_profile: {e}")
+        return render_template('error.html', 
+                              message="An unexpected error occurred"), 500</code></pre>
+            
+            <h3>Custom Exceptions for Domain Logic</h3>
+            
+            <pre><code># Custom exceptions
+class ApplicationError(Exception):
+    """Base exception for all application errors."""
+    status_code = 500
+    
+    def __init__(self, message, status_code=None, payload=None):
+        Exception.__init__(self)
+        self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+        self.payload = payload
+    
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['message'] = self.message
+        return rv
+
+class ResourceNotFoundError(ApplicationError):
+    """Raised when a requested resource does not exist."""
+    status_code = 404
+
+class ValidationError(ApplicationError):
+    """Raised when input validation fails."""
+    status_code = 400
+
+class AuthenticationError(ApplicationError):
+    """Raised for authentication failures."""
+    status_code = 401
+
+class AuthorizationError(ApplicationError):
+    """Raised when a user lacks permission for an action."""
+    status_code = 403
+
+# Global exception handler
+@app.errorhandler(ApplicationError)
+def handle_application_error(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
+
+# Using custom exceptions in views
+@app.route('/articles/<slug>')
+def article_detail(slug):
+    article = Article.query.filter_by(slug=slug).first()
+    
+    if not article:
+        raise ResourceNotFoundError(f"Article '{slug}' not found")
+    
+    if not article.is_published and not current_user.is_admin:
+        raise AuthorizationError("You don't have permission to view this article")
+    
+    return render_template('articles/detail.html', article=article)</code></pre>
+            
+            <h3>Form Validation with Exception Handling</h3>
+            
+            <pre><code>def validate_registration_data(data):
+    errors = {}
+    
+    # Check required fields
+    required_fields = ['username', 'email', 'password']
+    for field in required_fields:
+        if field not in data or not data[field]:
+            errors[field] = f"{field} is required"
+    
+    # If basic validation fails, raise exception
+    if errors:
+        raise ValidationError("Validation failed", payload={'errors': errors})
+    
+    # Validate username format
+    if not re.match(r'^[a-zA-Z0-9_]+$', data['username']):
+        errors['username'] = "Username can only contain letters, numbers, and underscores"
+    
+    # Check username availability
+    if User.query.filter_by(username=data['username']).first():
+        errors['username'] = "Username already taken"
+    
+    # Validate email format
+    if not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', data['email']):
+        errors['email'] = "Invalid email format"
+    
+    # Check email availability
+    if User.query.filter_by(email=data['email']).first():
+        errors['email'] = "Email already registered"
+    
+    # Validate password strength
+    if len(data['password']) < 8:
+        errors['password'] = "Password must be at least 8 characters"
+    
+    # If validation fails, raise exception
+    if errors:
+        raise ValidationError("Validation failed", payload={'errors': errors})
+    
+    # If we get here, validation passed
+    return data
+
+@app.route('/register', methods=['POST'])
+def register():
+    try:
+        # Validate form data
+        valid_data = validate_registration_data(request.form)
+        
+        # Create user
+        user = User(
+            username=valid_data['username'],
+            email=valid_data['email']
+        )
+        user.set_password(valid_data['password'])
+        
+        # Save user
+        db.session.add(user)
+        db.session.commit()
+        
+        # Success response
+        return redirect('/login')
+    
+    except ValidationError as e:
+        # Render form with validation errors
+        return render_template('register.html', 
+                              errors=e.payload['errors'], 
+                              form_data=request.form)
+    
+    except SQLAlchemyError as e:
+        # Database error
+        db.session.rollback()
+        app.logger.error(f"Database error during registration: {e}")
+        return render_template('error.html', 
+                              message="Database error during registration"), 500
+    
+    except Exception as e:
+        # Unexpected error
+        app.logger.error(f"Unexpected error during registration: {e}")
+        return render_template('error.html', 
+                              message="An unexpected error occurred"), 500</code></pre>
+            
+            <p><strong>Real-world Example:</strong> In a financial application, you might use exceptions to handle various error conditions: ValidationError for invalid transaction inputs, InsufficientFundsError for account balance issues, RateLimitError for too many requests, and AuthorizationError for unauthorized access attempts. Each exception would include appropriate data for generating user-friendly messages and taking recovery actions.</p>
+        </section>
+
+        <section>
+            <h2>Making the Connection to Web Development</h2>
+            
+            <p>Now that we've reviewed Python fundamentals, let's explicit connect them to web development contexts:</p>
+            
+            <h3>Flask: Lightweight and Flexible</h3>
+            
+            <p>Flask leverages many Python fundamentals:</p>
+            <ul>
+                <li><strong>Functions and Decorators:</strong> Route handlers are decorated functions</li>
+                <li><strong>Dictionaries:</strong> Request and response data is often dictionary-like</li>
+                <li><strong>Packages:</strong> Flask applications are typically organized as packages</li>
+                <li><strong>OOP:</strong> Extensions and blueprints use classes for modular functionality</li>
+            </ul>
+            
+            <pre><code># Flask example combining multiple concepts
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+# Dictionary for simple in-memory "database"
+users = {}
+
+# Function decorated as a route handler
+@app.route('/users', methods=['GET'])
+def get_users():
+    # Return dictionary as JSON
+    return jsonify(list(users.values()))
+
+# Route handler with path parameter and HTTP methods
+@app.route('/users/<user_id>', methods=['GET', 'PUT', 'DELETE'])
+def user_operations(user_id):
+    # GET: Retrieve user
+    if request.method == 'GET':
+        # Dictionary get with default
+        user = users.get(user_id)
+        if user:
+            return jsonify(user)
+        return jsonify({"error": "User not found"}), 404
+    
+    # PUT: Update user
+    elif request.method == 'PUT':
+        # Dictionary request data
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        # Dictionary update
+        if user_id in users:
+            users[user_id].update(data)
+            return jsonify(users[user_id])
+        
+        return jsonify({"error": "User not found"}), 404
+    
+    # DELETE: Remove user
+    elif request.method == 'DELETE':
+        # Dictionary pop with default
+        user = users.pop(user_id, None)
+        if user:
+            return jsonify({"message": f"User {user_id} deleted"})
+        
+        return jsonify({"error": "User not found"}), 404
+
+# POST route for creating users
+@app.route('/users', methods=['POST'])
+def create_user():
+    # Get JSON data
+    data = request.json
+    
+    # Validate required fields
+    required_fields = ['id', 'name', 'email']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Missing required field: {field}"}), 400
+    
+    # Check if user already exists
+    if data['id'] in users:
+        return jsonify({"error": "User ID already exists"}), 409
+    
+    # Add to users dictionary
+    users[data['id']] = data
+    
+    # Return created user
+    return jsonify(data), 201
+
+if __name__ == '__main__':
+    app.run(debug=True)</code></pre>
+            
+            <h3>Django: Batteries-Included Framework</h3>
+            
+            <p>Django makes heavy use of:</p>
+            <ul>
+                <li><strong>OOP:</strong> Models, views, and forms are all class-based</li>
+                <li><strong>Modules and Packages:</strong> Django projects are organized into apps</li>
+                <li><strong>Decorators:</strong> Used for views, admin customization, and more</li>
+                <li><strong>List/Dictionary Comprehensions:</strong> Common in data processing</li>
+            </ul>
+            
+            <pre><code># Django model example
+from django.db import models
+from django.contrib.auth.models import User
+
+class Article(models.Model):
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True)
+    content = models.TextField()
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    published = models.BooleanField(default=False)
+    tags = models.ManyToManyField('Tag', blank=True)
+    
+    def __str__(self):
+        return self.title
+    
+    def save(self, *args, **kwargs):
+        # Auto-generate slug if not provided
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+    
+    @property
+    def excerpt(self):
+        """Return the first 50 words of the content."""
+        words = self.content.split()[:50]
+        return ' '.join(words) + '...' if len(words) >= 50 else self.content
+    
+    class Meta:
+        ordering = ['-created_at']
+
+# Django view with OOP
+from django.views.generic import ListView, DetailView
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+class ArticleListView(ListView):
+    model = Article
+    template_name = 'articles/list.html'
+    context_object_name = 'articles'
+    paginate_by = 10
+    
+    def get_queryset(self):
+        # Filter articles based on query parameters
+        queryset = Article.objects.all()
+        
+        # Filter by tag if provided
+        tag = self.request.GET.get('tag')
+        if tag:
+            queryset = queryset.filter(tags__name=tag)
+        
+        # Only show published articles to non-staff users
+        if not self.request.user.is_staff:
+            queryset = queryset.filter(published=True)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        # Add extra context data
+        context = super().get_context_data(**kwargs)
+        context['tags'] = Tag.objects.all()
+        return context
+
+class ArticleDetailView(LoginRequiredMixin, DetailView):
+    model = Article
+    template_name = 'articles/detail.html'
+    context_object_name = 'article'
+    slug_url_kwarg = 'article_slug'
+    
+    def get_queryset(self):
+        # Only show published articles to non-staff users
+        queryset = super().get_queryset()
+        if not self.request.user.is_staff:
+            queryset = queryset.filter(published=True)
+        return queryset</code></pre>
+            
+            <h3>API Development with Python</h3>
+            
+            <p>Building APIs utilizes:</p>
+            <ul>
+                <li><strong>JSON Serialization:</strong> Converting Python objects to JSON</li>
+                <li><strong>HTTP Status Codes:</strong> Using constants for response types</li>
+                <li><strong>Authentication:</strong> Implementing security with decorators</li>
+                <li><strong>Data Validation:</strong> Ensuring requests meet expectations</li>
+            </ul>
+            
+            <pre><code># Flask API with token authentication
+from functools import wraps
+import jwt
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your-secret-key'
+
+# User database (in-memory for example)
+users = {
+    "john": {"password": "password123", "role": "admin"},
+    "jane": {"password": "password456", "role": "user"}
+}
+
+# Authentication decorator
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        
+        if not token:
+            return jsonify({"error": "Token is missing"}), 401
+        
+        try:
+            # Remove 'Bearer ' prefix if present
+            if token.startswith('Bearer '):
+                token = token[7:]
+            
+            # Decode token
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            current_user = data['username']
+        except:
+            return jsonify({"error": "Invalid token"}), 401
+            
+        return f(current_user, *args, **kwargs)
+    
+    return decorated
+
+# Login endpoint
+@app.route('/login', methods=['POST'])
+def login():
+    auth = request.json
+    
+    if not auth or not auth.get('username') or not auth.get('password'):
+        return jsonify({"error": "Login required"}), 401
+    
+    username = auth['username']
+    password = auth['password']
+    
+    if username not in users or users[username]['password'] != password:
+        return jsonify({"error": "Invalid credentials"}), 401
+    
+    # Generate token
+    token = jwt.encode({
+        'username': username,
+        'role': users[username]['role']
+    }, app.config['SECRET_KEY'], algorithm="HS256")
+    
+    return jsonify({"token": token})
+
+# Protected endpoint
+@app.route('/protected', methods=['GET'])
+@token_required
+def protected(current_user):
+    return jsonify({"message": f"Hello, {current_user}!"})
+
+# Admin-only endpoint
+@app.route('/admin', methods=['GET'])
+@token_required
+def admin(current_user):
+    # Check if user is admin
+    if users[current_user]['role'] != 'admin':
+        return jsonify({"error": "Admin access required"}), 403
+    
+    return jsonify({"message": "Welcome to the admin area"})
+
+if __name__ == '__main__':
+    app.run(debug=True)</code></pre>
+            
+            <p><strong>Real-world Example:</strong> A modern e-commerce platform might use Python across different layers: Django models to represent products and orders, ORM queries to analyze sales data, cached property methods to optimize performance, JSON serialization for API responses, and decorator-based permissions to control access to administrative functions.</p>
+        </section>
+
+        <section>
+            <h2>Preparing for the Next Steps</h2>
+            
+            <p>As we move into web development, these Python fundamentals will be applied in new contexts:</p>
+            
+            <h3>From Python Scripts to Web Applications</h3>
+            
+            <table>
+                <tr>
+                    <th>Python Concept</th>
+                    <th>Web Development Application</th>
+                </tr>
+                <tr>
+                    <td>Functions</td>
+                    <td>Route handlers, API endpoints, utility helpers</td>
+                </tr>
+                <tr>
+                    <td>Classes</td>
+                    <td>Models, forms, views, controllers</td>
+                </tr>
+                <tr>
+                    <td>Dictionaries</td>
+                    <td>Configuration, JSON data, query parameters</td>
+                </tr>
+                <tr>
+                    <td>Exception Handling</td>
+                    <td>Error pages, API error responses, validation</td>
+                </tr>
+                <tr>
+                    <td>Context Managers</td>
+                    <td>Database transactions, file operations</td>
+                </tr>
+                <tr>
+                    <td>Decorators</td>
+                    <td>Route definitions, authentication, permissions</td>
+                </tr>
+                <tr>
+                    <td>Module Organization</td>
+                    <td>Project structure, blueprint organization</td>
+                </tr>
+            </table>
+            
+            <h3>Key Takeaways for Web Development</h3>
+            
+            <ul>
+                <li><strong>Object-Oriented Design:</strong> Web frameworks heavily utilize OOP</li>
+                <li><strong>Function Composition:</strong> Complex web logic often involves function chaining</li>
+                <li><strong>Request/Response Cycle:</strong> Understanding state and context becomes critical</li>
+                <li><strong>Asynchronous Operations:</strong> Many web tasks require async patterns</li>
+                <li><strong>Security Mindset:</strong> Web applications need careful validation and protection</li>
+                <li><strong>Separation of Concerns:</strong> Clean architecture helps manage complexity</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Conclusion</h2>
+            
+            <p>Today, we've revisited the Python fundamentals that will serve as the foundation for our web development journey. From basic data types to advanced object-oriented patterns, these concepts will reappear throughout our exploration of web frameworks, databases, APIs, and deployment strategies.</p>
+            
+            <p>Remember that building web applications is less about learning entirely new concepts and more about applying familiar Python patterns in a web context. The core principles remain the same—we're just using them to solve different problems.</p>
+            
+            <p>As we move forward, don't hesitate to revisit these fundamentals. Even the most complex web frameworks are built on these basic building blocks, and a solid understanding of Python's core concepts will make learning web development much more intuitive.</p>
+            
+            <p>In the coming weeks, we'll see how these fundamentals are applied in Flask, Django, and other frameworks to create powerful, scalable web applications. The time you've invested in mastering Python will pay dividends as we build increasingly sophisticated web projects together.</p>
+        </section>
+
+        <section class="resources">
+            <h2>Additional Resources</h2>
+            <ul>
+                <li><a href="https://flask.palletsprojects.com/en/2.0.x/" target="_blank">Flask Documentation</a></li>
+                <li><a href="https://docs.djangoproject.com/en/3.2/" target="_blank">Django Documentation</a></li>
+                <li><a href="https://realpython.com/" target="_blank">Real Python Tutorials</a></li>
+                <li><a href="https://docs.python.org/3/library/index.html" target="_blank">Python Standard Library</a></li>
+                <li><a href="https://www.fullstackpython.com/" target="_blank">Full Stack Python</a></li>
+                <li><a href="https://python-patterns.guide/" target="_blank">Python Patterns</a></li>
+                <li><a href="https://testdriven.io/" target="_blank">Test-Driven Development with Python</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Python Full Stack Developer Course - File: week3_friday_python_review.html</p>
+        <p>Located in course root directory</p>
+    </footer>
+</body>
+</html>

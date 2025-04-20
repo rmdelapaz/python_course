@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekend Project: Data Processing Application</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Weekend Project: Data Processing Application</h1>
+        <h2>Creating a Python Application That Demonstrates Key Concepts</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h2>Project Overview</h2>
+            <p>In this weekend project, you'll develop a comprehensive data processing application that applies many of the Python concepts we've covered during our first three weeks. You'll build a program that reads data from files, processes it in various ways, and outputs useful information.</p>
+            
+            <p>The project challenges you to create a temperature data analyzer that processes weather data from multiple cities, performs various calculations, and generates reports. This application will reinforce your understanding of file I/O, data structures, functions, error handling, object-oriented programming, and modular code organization.</p>
+            
+            <p>We'll use George Polya's 4-step problem-solving method to approach this challenge:</p>
+            <ol>
+                <li><strong>Understand the Problem</strong>: Clarify what we're trying to achieve</li>
+                <li><strong>Devise a Plan</strong>: Create a step-by-step approach</li>
+                <li><strong>Execute the Plan</strong>: Implement our solution in code</li>
+                <li><strong>Review/Extend</strong>: Evaluate our solution and consider enhancements</li>
+            </ol>
+        </section>
+
+        <section class="problem_understanding">
+            <h2>Step 1: Understand the Problem</h2>
+            
+            <h3>Problem Statement</h3>
+            <p>Create a Python application that processes temperature data for multiple cities. The application should:</p>
+            <ul>
+                <li>Read temperature data from text files</li>
+                <li>Calculate statistics (average, min, max, etc.)</li>
+                <li>Allow filtering data by date ranges</li>
+                <li>Compare data between cities</li>
+                <li>Output reports in different formats</li>
+                <li>Handle errors gracefully</li>
+            </ul>
+            
+            <h3>Expected Input</h3>
+            <p>The application will read text files containing temperature data in the following format:</p>
+            <pre><code># Example content of city_name.txt
+# Format: date,temperature(°C)
+2023-01-01,5.2
+2023-01-02,6.1
+2023-01-03,4.5
+...</code></pre>
+            
+            <h3>Expected Output</h3>
+            <p>The application should be able to generate:</p>
+            <ul>
+                <li>Statistical summaries for each city</li>
+                <li>Comparative analyses between cities</li>
+                <li>Filtered reports for specific date ranges</li>
+                <li>Results saved to files in various formats</li>
+            </ul>
+            
+            <p>Example output:</p>
+            <pre><code>Temperature Statistics for New York:
+Average temperature: 12.3°C
+Minimum temperature: -2.5°C (2023-01-15)
+Maximum temperature: 28.4°C (2023-07-21)
+...</code></pre>
+        </section>
+
+        <section class="planning">
+            <h2>Step 2: Devise a Plan</h2>
+            
+            <p>Let's break down our solution into manageable steps:</p>
+            
+            <h3>Whiteboard Plan</h3>
+            <ol>
+                <li>Create a project structure with modules for different functionalities</li>
+                <li>Implement a data model to represent temperature records</li>
+                <li>Create file handling utilities to read temperature data</li>
+                <li>Develop analysis functions to calculate statistics</li>
+                <li>Implement filtering mechanisms for date ranges</li>
+                <li>Create comparison tools for multiple cities</li>
+                <li>Build reporting modules for different output formats</li>
+                <li>Develop a main CLI interface to interact with the application</li>
+                <li>Implement error handling throughout the application</li>
+                <li>Add comments and documentation</li>
+            </ol>
+            
+            <h3>Project Structure</h3>
+            <pre><code>temp_analyzer/
+├── data/                 # Directory for data files
+│   ├── new_york.txt
+│   ├── london.txt
+│   └── tokyo.txt
+├── temp_analyzer/        # Main package directory
+│   ├── __init__.py       # Package initialization
+│   ├── models.py         # Data models
+│   ├── file_utils.py     # File handling utilities
+│   ├── analyzer.py       # Analysis functions
+│   ├── comparator.py     # City comparison tools
+│   └── reporter.py       # Report generation
+├── tests/                # Test directory
+│   ├── __init__.py
+│   ├── test_models.py
+│   ├── test_file_utils.py
+│   └── ...
+├── main.py               # Entry point script
+└── README.md             # Project documentation</code></pre>
+            
+            <h3>Pseudocode for Core Functions</h3>
+            <pre><code># Reading data
+function read_temperature_data(filename):
+    initialize empty list for records
+    try to open and read the file
+    for each line in the file:
+        parse date and temperature
+        create temperature record object
+        add to records list
+    handle file not found and format errors
+    return records list
+
+# Analysis
+function calculate_statistics(records):
+    if records is empty, return error
+    compute min, max, average
+    find dates for min and max
+    return statistics dictionary
+
+# Filtering
+function filter_by_date_range(records, start_date, end_date):
+    initialize empty result list
+    for each record in records:
+        if record's date is between start_date and end_date:
+            add record to result list
+    return result list
+
+# Comparing
+function compare_cities(city1_records, city2_records):
+    get statistics for city1 and city2
+    calculate differences
+    find correlation
+    return comparison results
+
+# Reporting
+function generate_report(data, format_type):
+    if format_type is 'text':
+        format data as text
+    else if format_type is 'csv':
+        format data as CSV
+    else if format_type is 'json':
+        format data as JSON
+    return formatted data</code></pre>
+        </section>
+
+        <section class="implementation">
+            <h2>Step 3: Execute the Plan</h2>
+            
+            <p>Now let's implement our solution. We'll create each component step by step.</p>
+            
+            <h3>Creating the Project Structure</h3>
+            <p>First, let's set up the project directory:</p>
+            <pre><code># In your terminal, create the project structure
+mkdir -p temp_analyzer/data
+mkdir -p temp_analyzer/temp_analyzer
+mkdir -p temp_analyzer/tests
+touch temp_analyzer/temp_analyzer/__init__.py
+touch temp_analyzer/tests/__init__.py
+touch temp_analyzer/main.py
+touch temp_analyzer/README.md</code></pre>
+            
+            <h3>Creating Sample Data</h3>
+            <p>Let's create some sample data files:</p>
+            <pre><code># File: temp_analyzer/data/new_york.txt
+2023-01-01,3.5
+2023-01-02,2.7
+2023-01-03,1.8
+2023-01-04,0.5
+2023-01-05,-1.2
+2023-01-06,0.8
+2023-01-07,2.4
+
+# File: temp_analyzer/data/london.txt
+2023-01-01,8.2
+2023-01-02,7.5
+2023-01-03,7.1
+2023-01-04,6.8
+2023-01-05,6.2
+2023-01-06,5.9
+2023-01-07,6.4
+
+# File: temp_analyzer/data/tokyo.txt
+2023-01-01,10.1
+2023-01-02,9.8
+2023-01-03,10.5
+2023-01-04,11.2
+2023-01-05,10.6
+2023-01-06,9.9
+2023-01-07,10.3</code></pre>
+            
+            <h3>Implementing the Data Model</h3>
+            <p>Let's create our data model for temperature records:</p>
+            <pre><code># File: temp_analyzer/temp_analyzer/models.py
+from datetime import datetime
+from dataclasses import dataclass
+
+@dataclass
+class TemperatureRecord:
+    """Class representing a temperature measurement at a specific date."""
+    date: datetime
+    temperature: float
+    
+    @classmethod
+    def from_line(cls, line):
+        """Create a TemperatureRecord from a text line in the format 'YYYY-MM-DD,temp'."""
+        try:
+            date_str, temp_str = line.strip().split(',')
+            date = datetime.strptime(date_str, '%Y-%m-%d')
+            temperature = float(temp_str)
+            return cls(date=date, temperature=temperature)
+        except (ValueError, IndexError) as e:
+            # Re-raise with more context
+            raise ValueError(f"Invalid data format: {line}. Error: {e}")
+
+class CityData:
+    """Class representing temperature data for a city."""
+    def __init__(self, city_name, records=None):
+        self.city_name = city_name
+        self.records = records or []
+    
+    def add_record(self, record):
+        """Add a temperature record to the city data."""
+        self.records.append(record)
+    
+    def __len__(self):
+        return len(self.records)
+    
+    def __str__(self):
+        return f"{self.city_name} (records: {len(self.records)})"</code></pre>
+            
+            <h3>Implementing File Utilities</h3>
+            <p>Next, let's implement file handling utilities:</p>
+            <pre><code># File: temp_analyzer/temp_analyzer/file_utils.py
+import os
+from datetime import datetime
+from .models import TemperatureRecord, CityData
+
+def read_city_data(file_path):
+    """
+    Read temperature data for a city from a text file.
+    
+    Args:
+        file_path (str): Path to the data file
+        
+    Returns:
+        CityData: CityData object containing temperature records
+        
+    Raises:
+        FileNotFoundError: If the specified file doesn't exist
+        ValueError: If the file contains invalid data
+    """
+    # Extract city name from file name (without extension)
+    city_name = os.path.splitext(os.path.basename(file_path))[0]
+    
+    try:
+        with open(file_path, 'r') as file:
+            records = []
+            for line_num, line in enumerate(file, 1):
+                # Skip empty lines and comments
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                
+                try:
+                    record = TemperatureRecord.from_line(line)
+                    records.append(record)
+                except ValueError as e:
+                    print(f"Warning: Skipping line {line_num} in {file_path}: {e}")
+            
+            return CityData(city_name, records)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Data file not found: {file_path}")
+
+def write_report(report_data, file_path):
+    """
+    Write report data to a file.
+    
+    Args:
+        report_data (str): Report content
+        file_path (str): Output file path
+    """
+    directory = os.path.dirname(file_path)
+    if directory and not os.path.exists(directory):
+        os.makedirs(directory)
+        
+    with open(file_path, 'w') as file:
+        file.write(report_data)
+    
+    print(f"Report saved to: {file_path}")</code></pre>
+            
+            <h3>Implementing Analysis Functions</h3>
+            <p>Now, let's create the analysis module:</p>
+            <pre><code># File: temp_analyzer/temp_analyzer/analyzer.py
+from datetime import datetime
+from statistics import mean, stdev
+import json
+import csv
+from io import StringIO
+
+def calculate_statistics(city_data):
+    """
+    Calculate temperature statistics for a city.
+    
+    Args:
+        city_data (CityData): CityData object containing temperature records
+        
+    Returns:
+        dict: Dictionary containing temperature statistics
+        
+    Raises:
+        ValueError: If city_data contains no records
+    """
+    if not city_data.records:
+        raise ValueError(f"No temperature records found for {city_data.city_name}")
+    
+    temperatures = [record.temperature for record in city_data.records]
+    
+    # Find min and max records
+    min_record = min(city_data.records, key=lambda r: r.temperature)
+    max_record = max(city_data.records, key=lambda r: r.temperature)
+    
+    stats = {
+        'city': city_data.city_name,
+        'count': len(temperatures),
+        'min': {
+            'temperature': min_record.temperature,
+            'date': min_record.date.strftime('%Y-%m-%d')
+        },
+        'max': {
+            'temperature': max_record.temperature,
+            'date': max_record.date.strftime('%Y-%m-%d')
+        },
+        'average': round(mean(temperatures), 2)
+    }
+    
+    # Calculate standard deviation if there are enough records
+    if len(temperatures) > 1:
+        stats['std_dev'] = round(stdev(temperatures), 2)
+    
+    return stats
+
+def filter_by_date_range(city_data, start_date=None, end_date=None):
+    """
+    Filter temperature records by date range.
+    
+    Args:
+        city_data (CityData): CityData object containing temperature records
+        start_date (datetime, optional): Start date for filtering
+        end_date (datetime, optional): End date for filtering
+        
+    Returns:
+        CityData: New CityData object with filtered records
+    """
+    filtered_records = []
+    
+    for record in city_data.records:
+        if start_date and record.date < start_date:
+            continue
+        if end_date and record.date > end_date:
+            continue
+        filtered_records.append(record)
+    
+    return CityData(city_data.city_name, filtered_records)
+
+def format_statistics(stats, format_type='text'):
+    """
+    Format statistics in different output formats.
+    
+    Args:
+        stats (dict): Statistics dictionary
+        format_type (str): Output format ('text', 'csv', or 'json')
+        
+    Returns:
+        str: Formatted statistics
+    """
+    if format_type == 'json':
+        return json.dumps(stats, indent=2)
+    
+    elif format_type == 'csv':
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['city', 'count', 'min_temp', 'min_date', 'max_temp', 'max_date', 'average', 'std_dev'])
+        row = [
+            stats['city'],
+            stats['count'],
+            stats['min']['temperature'],
+            stats['min']['date'],
+            stats['max']['temperature'],
+            stats['max']['date'],
+            stats['average'],
+            stats.get('std_dev', 'N/A')
+        ]
+        writer.writerow(row)
+        return output.getvalue()
+    
+    else:  # text format
+        result = [
+            f"Temperature Statistics for {stats['city']}:",
+            f"Number of readings: {stats['count']}",
+            f"Minimum temperature: {stats['min']['temperature']}°C ({stats['min']['date']})",
+            f"Maximum temperature: {stats['max']['temperature']}°C ({stats['max']['date']})",
+            f"Average temperature: {stats['average']}°C",
+        ]
+        
+        if 'std_dev' in stats:
+            result.append(f"Standard deviation: {stats['std_dev']}°C")
+        
+        return '\n'.join(result)</code></pre>
+            
+            <h3>Implementing the Comparator</h3>
+            <p>Now, let's implement city comparison functionality:</p>
+            <pre><code># File: temp_analyzer/temp_analyzer/comparator.py
+from statistics import mean
+from math import sqrt
+
+def compare_cities(city_data1, city_data2):
+    """
+    Compare temperature data between two cities.
+    
+    Args:
+        city_data1 (CityData): First city data
+        city_data2 (CityData): Second city data
+        
+    Returns:
+        dict: Comparison results
+        
+    Raises:
+        ValueError: If the cities don't have matching dates
+    """
+    # Create date-to-temperature mapping for both cities
+    temps1 = {record.date: record.temperature for record in city_data1.records}
+    temps2 = {record.date: record.temperature for record in city_data2.records}
+    
+    # Find common dates
+    common_dates = set(temps1.keys()) & set(temps2.keys())
+    
+    if not common_dates:
+        raise ValueError(f"No matching dates found between {city_data1.city_name} and {city_data2.city_name}")
+    
+    # Extract paired temperatures for common dates
+    paired_temps = [(temps1[date], temps2[date]) for date in sorted(common_dates)]
+    
+    # Calculate temperature differences
+    differences = [temp1 - temp2 for temp1, temp2 in paired_temps]
+    avg_diff = round(mean(differences), 2)
+    
+    # Calculate which city is warmer overall
+    warmer_city = city_data1.city_name if avg_diff > 0 else city_data2.city_name
+    if avg_diff == 0:
+        warmer_city = "Neither (same average temperature)"
+    
+    # Calculate correlation coefficient if there are enough data points
+    correlation = None
+    if len(paired_temps) > 1:
+        correlation = calculate_correlation([t1 for t1, _ in paired_temps], [t2 for _, t2 in paired_temps])
+    
+    return {
+        'city1': city_data1.city_name,
+        'city2': city_data2.city_name,
+        'common_dates': len(common_dates),
+        'average_difference': abs(avg_diff),
+        'warmer_city': warmer_city,
+        'correlation': round(correlation, 2) if correlation is not None else None
+    }
+
+def calculate_correlation(x, y):
+    """Calculate Pearson correlation coefficient between two data sets."""
+    n = len(x)
+    if n != len(y) or n < 2:
+        return None
+    
+    # Calculate means
+    mean_x = mean(x)
+    mean_y = mean(y)
+    
+    # Calculate variances and covariance
+    var_x = sum((xi - mean_x) ** 2 for xi in x) / n
+    var_y = sum((yi - mean_y) ** 2 for yi in y) / n
+    
+    if var_x == 0 or var_y == 0:
+        return 0  # No correlation if there's no variance
+    
+    cov = sum((xi - mean_x) * (yi - mean_y) for xi, yi in zip(x, y)) / n
+    
+    # Calculate correlation coefficient
+    return cov / (sqrt(var_x) * sqrt(var_y))
+
+def format_comparison(comparison, format_type='text'):
+    """
+    Format comparison results in different output formats.
+    
+    Args:
+        comparison (dict): Comparison results
+        format_type (str): Output format ('text', 'csv', or 'json')
+        
+    Returns:
+        str: Formatted comparison
+    """
+    import json
+    import csv
+    from io import StringIO
+    
+    if format_type == 'json':
+        return json.dumps(comparison, indent=2)
+    
+    elif format_type == 'csv':
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['city1', 'city2', 'common_dates', 'average_difference', 'warmer_city', 'correlation'])
+        row = [
+            comparison['city1'],
+            comparison['city2'],
+            comparison['common_dates'],
+            comparison['average_difference'],
+            comparison['warmer_city'],
+            comparison.get('correlation', 'N/A')
+        ]
+        writer.writerow(row)
+        return output.getvalue()
+    
+    else:  # text format
+        correlation_text = ""
+        if 'correlation' in comparison and comparison['correlation'] is not None:
+            correlation_value = comparison['correlation']
+            if correlation_value > 0.7:
+                correlation_desc = "strong positive"
+            elif correlation_value > 0.3:
+                correlation_desc = "moderate positive"
+            elif correlation_value > -0.3:
+                correlation_desc = "weak or no"
+            elif correlation_value > -0.7:
+                correlation_desc = "moderate negative"
+            else:
+                correlation_desc = "strong negative"
+            correlation_text = f"Temperature patterns show a {correlation_desc} correlation ({correlation_value})."
+        
+        return (
+            f"Comparison between {comparison['city1']} and {comparison['city2']}:\n"
+            f"Data points compared: {comparison['common_dates']}\n"
+            f"Average temperature difference: {comparison['average_difference']}°C\n"
+            f"Warmer city: {comparison['warmer_city']}\n"
+            f"{correlation_text}"
+        )</code></pre>
+            
+            <h3>Implementing the Reporter</h3>
+            <p>Now, let's implement the reporting functionality:</p>
+            <pre><code># File: temp_analyzer/temp_analyzer/reporter.py
+import os
+from datetime import datetime
+import json
+import csv
+
+class Reporter:
+    """Class for generating and saving reports."""
+    
+    def __init__(self, output_dir='reports'):
+        self.output_dir = output_dir
+        # Create output directory if it doesn't exist
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+    
+    def generate_filename(self, city_name, report_type, file_format):
+        """Generate a filename for a report."""
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        return f"{city_name}_{report_type}_{timestamp}.{file_format}"
+    
+    def save_statistics(self, stats, file_format='txt'):
+        """Save statistics report to a file."""
+        from .analyzer import format_statistics
+        
+        city_name = stats['city']
+        
+        # Determine file format
+        output_format = 'text'
+        if file_format == 'json':
+            output_format = 'json'
+        elif file_format == 'csv':
+            output_format = 'csv'
+        
+        # Generate report content
+        content = format_statistics(stats, output_format)
+        
+        # Generate filename and save
+        filename = self.generate_filename(city_name, 'stats', file_format)
+        file_path = os.path.join(self.output_dir, filename)
+        
+        with open(file_path, 'w') as file:
+            file.write(content)
+        
+        return file_path
+    
+    def save_comparison(self, comparison, file_format='txt'):
+        """Save comparison report to a file."""
+        from .comparator import format_comparison
+        
+        # Create a name combining both cities
+        name = f"{comparison['city1']}_vs_{comparison['city2']}"
+        
+        # Determine file format
+        output_format = 'text'
+        if file_format == 'json':
+            output_format = 'json'
+        elif file_format == 'csv':
+            output_format = 'csv'
+        
+        # Generate report content
+        content = format_comparison(comparison, output_format)
+        
+        # Generate filename and save
+        filename = self.generate_filename(name, 'comparison', file_format)
+        file_path = os.path.join(self.output_dir, filename)
+        
+        with open(file_path, 'w') as file:
+            file.write(content)
+        
+        return file_path</code></pre>
+            
+            <h3>Implementing the Main Script</h3>
+            <p>Finally, let's create the main script to tie everything together:</p>
+            <pre><code># File: temp_analyzer/main.py
+#!/usr/bin/env python3
+"""
+Temperature Data Analyzer
+
+A command-line application for analyzing temperature data from multiple cities.
+"""
+
+import os
+import sys
+import argparse
+from datetime import datetime
+
+# Add the parent directory to sys.path to import the package
+parent_dir = os.path.dirname(os.path.abspath(__file__))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+from temp_analyzer.file_utils import read_city_data
+from temp_analyzer.analyzer import calculate_statistics, filter_by_date_range
+from temp_analyzer.comparator import compare_cities
+from temp_analyzer.reporter import Reporter
+
+def parse_date(date_str):
+    """Parse a date string in the format YYYY-MM-DD."""
+    if not date_str:
+        return None
+    try:
+        return datetime.strptime(date_str, '%Y-%m-%d')
+    except ValueError:
+        raise ValueError(f"Invalid date format: {date_str}. Use YYYY-MM-DD.")
+
+def main():
+    # Set up argument parsing
+    parser = argparse.ArgumentParser(description='Analyze temperature data from multiple cities.')
+    
+    # Add subparsers for different commands
+    subparsers = parser.add_subparsers(dest='command', help='Command to run')
+    
+    # Parser for the 'analyze' command
+    analyze_parser = subparsers.add_parser('analyze', help='Analyze data for a single city')
+    analyze_parser.add_argument('city_file', help='Path to the city data file')
+    analyze_parser.add_argument('--start-date', help='Start date for filtering (YYYY-MM-DD)')
+    analyze_parser.add_argument('--end-date', help='End date for filtering (YYYY-MM-DD)')
+    analyze_parser.add_argument('--format', choices=['txt', 'json', 'csv'], default='txt',
+                               help='Output format (default: txt)')
+    
+    # Parser for the 'compare' command
+    compare_parser = subparsers.add_parser('compare', help='Compare data between two cities')
+    compare_parser.add_argument('city_file1', help='Path to the first city data file')
+    compare_parser.add_argument('city_file2', help='Path to the second city data file')
+    compare_parser.add_argument('--start-date', help='Start date for filtering (YYYY-MM-DD)')
+    compare_parser.add_argument('--end-date', help='End date for filtering (YYYY-MM-DD)')
+    compare_parser.add_argument('--format', choices=['txt', 'json', 'csv'], default='txt',
+                               help='Output format (default: txt)')
+    
+    # Parse arguments
+    args = parser.parse_args()
+    
+    if not args.command:
+        parser.print_help()
+        return 1
+    
+    try:
+        # Parse date arguments
+        start_date = parse_date(args.start_date) if hasattr(args, 'start_date') else None
+        end_date = parse_date(args.end_date) if hasattr(args, 'end_date') else None
+        
+        # Initialize reporter
+        reporter = Reporter()
+        
+        if args.command == 'analyze':
+            # Read city data
+            city_data = read_city_data(args.city_file)
+            print(f"Loaded {len(city_data)} records for {city_data.city_name}")
+            
+            # Filter by date range if specified
+            if start_date or end_date:
+                city_data = filter_by_date_range(city_data, start_date, end_date)
+                print(f"Filtered to {len(city_data)} records")
+            
+            # Calculate statistics
+            stats = calculate_statistics(city_data)
+            
+            # Save report
+            file_path = reporter.save_statistics(stats, args.format)
+            print(f"Statistics saved to: {file_path}")
+            
+        elif args.command == 'compare':
+            # Read city data for both cities
+            city_data1 = read_city_data(args.city_file1)
+            city_data2 = read_city_data(args.city_file2)
+            
+            print(f"Loaded {len(city_data1)} records for {city_data1.city_name}")
+            print(f"Loaded {len(city_data2)} records for {city_data2.city_name}")
+            
+            # Filter by date range if specified
+            if start_date or end_date:
+                city_data1 = filter_by_date_range(city_data1, start_date, end_date)
+                city_data2 = filter_by_date_range(city_data2, start_date, end_date)
+                print(f"Filtered to {len(city_data1)} records for {city_data1.city_name}")
+                print(f"Filtered to {len(city_data2)} records for {city_data2.city_name}")
+            
+            # Compare cities
+            comparison = compare_cities(city_data1, city_data2)
+            
+            # Save report
+            file_path = reporter.save_comparison(comparison, args.format)
+            print(f"Comparison saved to: {file_path}")
+        
+        return 0
+    
+    except Exception as e:
+        print(f"Error: {e}")
+        return 1
+
+if __name__ == '__main__':
+    sys.exit(main())</code></pre>
+            
+            <h3>Creating a README File</h3>
+            <p>Let's also create a README file for documentation:</p>
+            <pre><code># File: temp_analyzer/README.md
+# Temperature Data Analyzer
+
+A Python application for analyzing temperature data from multiple cities.
+
+## Features
+
+- Read temperature data from text files
+- Calculate statistics (average, min, max, etc.)
+- Filter data by date ranges
+- Compare data between cities
+- Output reports in different formats (text, CSV, JSON)
+- Handle errors gracefully
+
+## Requirements
+
+- Python 3.7 or higher
+
+## Installation
+
+1. Clone the repository:
+```
+git clone https://github.com/yourusername/temp_analyzer.git
+cd temp_analyzer
+```
+
+2. (Optional) Create and activate a virtual environment:
+```
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. Install the package in development mode:
+```
+pip install -e .
+```
+
+## Usage
+
+### Analyzing a Single City
+
+```
+python main.py analyze data/new_york.txt
+python main.py analyze data/london.txt --format json
+python main.py analyze data/tokyo.txt --start-date 2023-01-03 --end-date 2023-01-05
+```
+
+### Comparing Two Cities
+
+```
+python main.py compare data/new_york.txt data/london.txt
+python main.py compare data/london.txt data/tokyo.txt --format csv
+python main.py compare data/new_york.txt data/tokyo.txt --start-date 2023-01-02 --end-date 2023-01-06
+```
+
+## Data File Format
+
+The application expects temperature data files in the following format:
+
+```
+YYYY-MM-DD,temperature
+```
+
+For example:
+```
+2023-01-01,5.2
+2023-01-02,6.1
+2023-01-03,4.5
+```
+
+## Project Structure
+
+- `data/`: Directory for data files
+- `temp_analyzer/`: Main package directory
+  - `models.py`: Data models
+  - `file_utils.py`: File handling utilities
+  - `analyzer.py`: Analysis functions
+  - `comparator.py`: City comparison tools
+  - `reporter.py`: Report generation
+- `tests/`: Test directory
+- `main.py`: Entry point script
+- `README.md`: Project documentation</code></pre>
+        </section>
+
+        <section class="package_setup">
+            <h2>Setting Up the Package</h2>
+            
+            <p>To make our code installable as a package, let's create a setup.py file:</p>
+            
+            <pre><code># File: temp_analyzer/setup.py
+from setuptools import setup, find_packages
+
+setup(
+    name="temp_analyzer",
+    version="0.1.0",
+    packages=find_packages(),
+    install_requires=[],
+    python_requires=">=3.7",
+    entry_points={
+        "console_scripts": [
+            "temp_analyzer=main:main",
+        ],
+    },
+    author="Your Name",
+    author_email="your.email@example.com",
+    description="A Python application for analyzing temperature data",
+    keywords="data-analysis, temperature, weather",
+    url="https://github.com/yourusername/temp_analyzer",
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+    ],
+)</code></pre>
+        </section>
+
+        <section class="testing">
+            <h2>Running the Application</h2>
+            
+            <p>Let's run our application to see it in action:</p>
+            
+            <h3>Analyzing a Single City</h3>
+            <pre><code># From the project root directory
+python main.py analyze data/new_york.txt
+
+# Expected output:
+# Loaded 7 records for new_york
+# Statistics saved to: reports/new_york_stats_20230501_120000.txt</code></pre>
+            
+            <p>The generated statistics file should contain:</p>
+            <pre><code>Temperature Statistics for new_york:
+Number of readings: 7
+Minimum temperature: -1.2°C (2023-01-05)
+Maximum temperature: 3.5°C (2023-01-01)
+Average temperature: 1.5°C
+Standard deviation: 1.51°C</code></pre>
+            
+            <h3>Comparing Two Cities</h3>
+            <pre><code># From the project root directory
+python main.py compare data/new_york.txt data/london.txt
+
+# Expected output:
+# Loaded 7 records for new_york
+# Loaded 7 records for london
+# Comparison saved to: reports/new_york_vs_london_comparison_20230501_120005.txt</code></pre>
+            
+            <p>The generated comparison file should contain:</p>
+            <pre><code>Comparison between new_york and london:
+Data points compared: 7
+Average temperature difference: 5.11°C
+Warmer city: london
+Temperature patterns show a moderate positive correlation (0.59).</code></pre>
+            
+            <h3>Filtering by Date Range</h3>
+            <pre><code># From the project root directory
+python main.py analyze data/tokyo.txt --start-date 2023-01-03 --end-date 2023-01-05
+
+# Expected output:
+# Loaded 7 records for tokyo
+# Filtered to 3 records
+# Statistics saved to: reports/tokyo_stats_20230501_120010.txt</code></pre>
+        </section>
+
+        <section class="review">
+            <h2>Step 4: Review and Extend</h2>
+            
+            <h3>Evaluating Our Solution</h3>
+            <p>Let's review what we've accomplished:</p>
+            <ul>
+                <li>Created a modular, object-oriented application</li>
+                <li>Implemented file I/O with proper error handling</li>
+                <li>Used data classes to represent temperature records</li>
+                <li>Developed analysis and comparison functionality</li>
+                <li>Created a reporting system with multiple output formats</li>
+                <li>Built a command-line interface for user interaction</li>
+                <li>Added documentation throughout the code</li>
+            </ul>
+            
+            <h3>Python Concepts Demonstrated</h3>
+            <p>This project demonstrates many Python concepts covered in the first three weeks:</p>
+            <ul>
+                <li><strong>File I/O:</strong> Reading from and writing to files</li>
+                <li><strong>Data Structures:</strong> Lists, dictionaries, sets</li>
+                <li><strong>Functions:</strong> Definition, parameters, return values</li>
+                <li><strong>Error Handling:</strong> Try-except blocks, raising exceptions</li>
+                <li><strong>Object-Oriented Programming:</strong> Classes, methods, inheritance</li>
+                <li><strong>Modules and Packages:</strong> Organizing code into modules</li>
+                <li><strong>Command-Line Arguments:</strong> Using argparse</li>
+                <li><strong>Date and Time Handling:</strong> Working with datetime</li>
+                <li><strong>String Formatting:</strong> f-strings</li>
+                <li><strong>List Comprehensions:</strong> For concise data transformations</li>
+                <li><strong>Context Managers:</strong> Using with statements</li>
+            </ul>
+            
+            <h3>Possible Extensions</h3>
+            <p>Here are some ways you could extend this project:</p>
+            <ul>
+                <li><strong>Data Visualization:</strong> Add plotting capabilities using matplotlib or seaborn</li>
+                <li><strong>Database Integration:</strong> Store temperature data in a database like SQLite</li>
+                <li><strong>Web Interface:</strong> Create a web dashboard using Flask</li>
+                <li><strong>Data Fetching:</strong> Add functionality to fetch weather data from APIs</li>
+                <li><strong>Advanced Statistics:</strong> Implement trend analysis or forecasting</li>
+                <li><strong>Unit Tests:</strong> Add comprehensive test suite</li>
+                <li><strong>Logging:</strong> Implement proper logging instead of print statements</li>
+            </ul>
+        </section>
+
+        <section class="advanced_solution">
+            <h2>Advanced Solution: Using pandas</h2>
+            
+            <p>For a more advanced solution, we could use the pandas library, which is specifically designed for data analysis:</p>
+            
+            <pre><code># File: temp_analyzer/advanced_solution.py
+#!/usr/bin/env python3
+"""
+Advanced Temperature Data Analyzer using pandas
+
+This version demonstrates a more concise implementation using pandas.
+"""
+
+import os
+import sys
+import argparse
+from datetime import datetime
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from pathlib import Path
+
+def load_city_data(file_path):
+    """Load temperature data from a CSV file into a pandas DataFrame."""
+    # Extract city name from file name
+    city_name = Path(file_path).stem
+    
+    try:
+        # Read data with appropriate column names and parse dates
+        df = pd.read_csv(file_path, comment='#', names=['date', 'temperature'], 
+                         parse_dates=['date'])
+        
+        # Add city name column
+        df['city'] = city_name
+        
+        return df
+    except Exception as e:
+        print(f"Error loading data for {city_name}: {e}")
+        sys.exit(1)
+
+def analyze_city(df, output_format='txt'):
+    """Analyze temperature data for a city."""
+    city_name = df['city'].iloc[0]
+    
+    # Calculate statistics
+    stats = {
+        'city': city_name,
+        'count': len(df),
+        'min': {
+            'temperature': df['temperature'].min(),
+            'date': df.loc[df['temperature'].idxmin(), 'date'].strftime('%Y-%m-%d')
+        },
+        'max': {
+            'temperature': df['temperature'].max(),
+            'date': df.loc[df['temperature'].idxmax(), 'date'].strftime('%Y-%m-%d')
+        },
+        'average': round(df['temperature'].mean(), 2),
+        'std_dev': round(df['temperature'].std(), 2) if len(df) > 1 else None
+    }
+    
+    # Format output
+    if output_format == 'json':
+        import json
+        return json.dumps(stats, indent=2)
+    
+    elif output_format == 'csv':
+        result_df = pd.DataFrame({
+            'city': [stats['city']],
+            'count': [stats['count']],
+            'min_temp': [stats['min']['temperature']],
+            'min_date': [stats['min']['date']],
+            'max_temp': [stats['max']['temperature']],
+            'max_date': [stats['max']['date']],
+            'average': [stats['average']],
+            'std_dev': [stats['std_dev']]
+        })
+        return result_df.to_csv(index=False)
+    
+    else:  # text format
+        result = [
+            f"Temperature Statistics for {stats['city']}:",
+            f"Number of readings: {stats['count']}",
+            f"Minimum temperature: {stats['min']['temperature']}°C ({stats['min']['date']})",
+            f"Maximum temperature: {stats['max']['temperature']}°C ({stats['max']['date']})",
+            f"Average temperature: {stats['average']}°C",
+        ]
+        
+        if stats['std_dev']:
+            result.append(f"Standard deviation: {stats['std_dev']}°C")
+        
+        return '\n'.join(result)
+
+def compare_cities(df1, df2, output_format='txt'):
+    """Compare temperature data between two cities."""
+    city1 = df1['city'].iloc[0]
+    city2 = df2['city'].iloc[0]
+    
+    # Merge data on date
+    merged = pd.merge(df1, df2, on='date', suffixes=('_1', '_2'))
+    
+    if merged.empty:
+        print(f"No matching dates found between {city1} and {city2}")
+        sys.exit(1)
+    
+    # Calculate differences
+    merged['temp_diff'] = merged['temperature_1'] - merged['temperature_2']
+    avg_diff = round(merged['temp_diff'].mean(), 2)
+    
+    # Determine which city is warmer
+    warmer_city = city1 if avg_diff > 0 else city2
+    if avg_diff == 0:
+        warmer_city = "Neither (same average temperature)"
+    
+    # Calculate correlation
+    correlation = round(merged['temperature_1'].corr(merged['temperature_2']), 2)
+    
+    comparison = {
+        'city1': city1,
+        'city2': city2,
+        'common_dates': len(merged),
+        'average_difference': abs(avg_diff),
+        'warmer_city': warmer_city,
+        'correlation': correlation
+    }
+    
+    # Format output
+    if output_format == 'json':
+        import json
+        return json.dumps(comparison, indent=2)
+    
+    elif output_format == 'csv':
+        result_df = pd.DataFrame({
+            'city1': [comparison['city1']],
+            'city2': [comparison['city2']],
+            'common_dates': [comparison['common_dates']],
+            'average_difference': [comparison['average_difference']],
+            'warmer_city': [comparison['warmer_city']],
+            'correlation': [comparison['correlation']]
+        })
+        return result_df.to_csv(index=False)
+    
+    else:  # text format
+        correlation_value = comparison['correlation']
+        if correlation_value > 0.7:
+            correlation_desc = "strong positive"
+        elif correlation_value > 0.3:
+            correlation_desc = "moderate positive"
+        elif correlation_value > -0.3:
+            correlation_desc = "weak or no"
+        elif correlation_value > -0.7:
+            correlation_desc = "moderate negative"
+        else:
+            correlation_desc = "strong negative"
+        
+        return (
+            f"Comparison between {comparison['city1']} and {comparison['city2']}:\n"
+            f"Data points compared: {comparison['common_dates']}\n"
+            f"Average temperature difference: {comparison['average_difference']}°C\n"
+            f"Warmer city: {comparison['warmer_city']}\n"
+            f"Temperature patterns show a {correlation_desc} correlation ({correlation_value})."
+        )
+
+def create_visualization(df, title, output_file=None):
+    """Create a visualization of temperature data."""
+    plt.figure(figsize=(10, 6))
+    plt.plot(df['date'], df['temperature'], marker='o', linestyle='-')
+    plt.title(title)
+    plt.xlabel('Date')
+    plt.ylabel('Temperature (°C)')
+    plt.grid(True)
+    
+    if output_file:
+        plt.savefig(output_file)
+        print(f"Visualization saved to: {output_file}")
+    else:
+        plt.show()
+
+def compare_visualization(df1, df2, output_file=None):
+    """Create a visualization comparing two cities."""
+    city1 = df1['city'].iloc[0]
+    city2 = df2['city'].iloc[0]
+    
+    # Merge data on date
+    merged = pd.merge(df1, df2, on='date', suffixes=('_1', '_2'))
+    
+    if merged.empty:
+        print(f"No matching dates found between {city1} and {city2}")
+        return
+    
+    plt.figure(figsize=(12, 8))
+    
+    # Temperature comparison
+    plt.subplot(2, 1, 1)
+    plt.plot(merged['date'], merged['temperature_1'], marker='o', linestyle='-', label=city1)
+    plt.plot(merged['date'], merged['temperature_2'], marker='s', linestyle='--', label=city2)
+    plt.title(f'Temperature Comparison: {city1} vs {city2}')
+    plt.xlabel('Date')
+    plt.ylabel('Temperature (°C)')
+    plt.legend()
+    plt.grid(True)
+    
+    # Temperature difference
+    plt.subplot(2, 1, 2)
+    plt.bar(merged['date'], merged['temperature_1'] - merged['temperature_2'])
+    plt.title(f'Temperature Difference ({city1} - {city2})')
+    plt.xlabel('Date')
+    plt.ylabel('Difference (°C)')
+    plt.grid(True)
+    
+    plt.tight_layout()
+    
+    if output_file:
+        plt.savefig(output_file)
+        print(f"Comparison visualization saved to: {output_file}")
+    else:
+        plt.show()
+
+def main():
+    # Set up argument parsing
+    parser = argparse.ArgumentParser(description='Analyze temperature data using pandas.')
+    
+    # Add subparsers for different commands
+    subparsers = parser.add_subparsers(dest='command', help='Command to run')
+    
+    # Parser for the 'analyze' command
+    analyze_parser = subparsers.add_parser('analyze', help='Analyze data for a single city')
+    analyze_parser.add_argument('city_file', help='Path to the city data file')
+    analyze_parser.add_argument('--start-date', help='Start date for filtering (YYYY-MM-DD)')
+    analyze_parser.add_argument('--end-date', help='End date for filtering (YYYY-MM-DD)')
+    analyze_parser.add_argument('--format', choices=['txt', 'json', 'csv'], default='txt',
+                               help='Output format (default: txt)')
+    analyze_parser.add_argument('--visualize', action='store_true', help='Create visualization')
+    analyze_parser.add_argument('--output-dir', default='reports', help='Output directory')
+    
+    # Parser for the 'compare' command
+    compare_parser = subparsers.add_parser('compare', help='Compare data between two cities')
+    compare_parser.add_argument('city_file1', help='Path to the first city data file')
+    compare_parser.add_argument('city_file2', help='Path to the second city data file')
+    compare_parser.add_argument('--start-date', help='Start date for filtering (YYYY-MM-DD)')
+    compare_parser.add_argument('--end-date', help='End date for filtering (YYYY-MM-DD)')
+    compare_parser.add_argument('--format', choices=['txt', 'json', 'csv'], default='txt',
+                               help='Output format (default: txt)')
+    compare_parser.add_argument('--visualize', action='store_true', help='Create visualization')
+    compare_parser.add_argument('--output-dir', default='reports', help='Output directory')
+    
+    # Parse arguments
+    args = parser.parse_args()
+    
+    if not args.command:
+        parser.print_help()
+        return 1
+    
+    try:
+        # Create output directory if it doesn't exist
+        os.makedirs(args.output_dir, exist_ok=True)
+        
+        # Generate timestamp for filenames
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        
+        if args.command == 'analyze':
+            # Load city data
+            df = load_city_data(args.city_file)
+            city_name = df['city'].iloc[0]
+            print(f"Loaded {len(df)} records for {city_name}")
+            
+            # Filter by date range if specified
+            if args.start_date:
+                df = df[df['date'] >= pd.to_datetime(args.start_date)]
+            if args.end_date:
+                df = df[df['date'] <= pd.to_datetime(args.end_date)]
+            
+            if args.start_date or args.end_date:
+                print(f"Filtered to {len(df)} records")
+            
+            # Analyze data
+            result = analyze_city(df, args.format)
+            
+            # Save report
+            report_file = os.path.join(args.output_dir, 
+                                      f"{city_name}_stats_{timestamp}.{args.format}")
+            with open(report_file, 'w') as f:
+                f.write(result)
+            print(f"Statistics saved to: {report_file}")
+            
+            # Create visualization if requested
+            if args.visualize:
+                vis_file = os.path.join(args.output_dir, 
+                                      f"{city_name}_temps_{timestamp}.png")
+                create_visualization(df, f"Temperature Data for {city_name}", vis_file)
+            
+        elif args.command == 'compare':
+            # Load city data for both cities
+            df1 = load_city_data(args.city_file1)
+            df2 = load_city_data(args.city_file2)
+            city1 = df1['city'].iloc[0]
+            city2 = df2['city'].iloc[0]
+            
+            print(f"Loaded {len(df1)} records for {city1}")
+            print(f"Loaded {len(df2)} records for {city2}")
+            
+            # Filter by date range if specified
+            if args.start_date:
+                df1 = df1[df1['date'] >= pd.to_datetime(args.start_date)]
+                df2 = df2[df2['date'] >= pd.to_datetime(args.start_date)]
+            if args.end_date:
+                df1 = df1[df1['date'] <= pd.to_datetime(args.end_date)]
+                df2 = df2[df2['date'] <= pd.to_datetime(args.end_date)]
+            
+            if args.start_date or args.end_date:
+                print(f"Filtered to {len(df1)} records for {city1}")
+                print(f"Filtered to {len(df2)} records for {city2}")
+            
+            # Compare cities
+            result = compare_cities(df1, df2, args.format)
+            
+            # Save report
+            report_file = os.path.join(args.output_dir, 
+                                     f"{city1}_vs_{city2}_{timestamp}.{args.format}")
+            with open(report_file, 'w') as f:
+                f.write(result)
+            print(f"Comparison saved to: {report_file}")
+            
+            # Create visualization if requested
+            if args.visualize:
+                vis_file = os.path.join(args.output_dir, 
+                                      f"{city1}_vs_{city2}_{timestamp}.png")
+                compare_visualization(df1, df2, vis_file)
+        
+        return 0
+    
+    except Exception as e:
+        print(f"Error: {e}")
+        return 1
+
+if __name__ == '__main__':
+    sys.exit(main())</code></pre>
+            
+            <p>This advanced solution demonstrates several additional concepts:</p>
+            <ul>
+                <li><strong>Data Analysis with pandas:</strong> Using a specialized library for data manipulation</li>
+                <li><strong>Data Visualization with matplotlib:</strong> Creating plots and charts</li>
+                <li><strong>Vectorized Operations:</strong> Performing operations on entire columns at once</li>
+                <li><strong>DataFrame Merging:</strong> Combining datasets based on common values</li>
+            </ul>
+        </section>
+
+        <section class="real_world">
+            <h2>Real-World Applications</h2>
+            
+            <p>The skills demonstrated in this project have numerous real-world applications:</p>
+            
+            <ul>
+                <li><strong>Climate Science:</strong> Analyzing weather patterns and climate trends</li>
+                <li><strong>Environmental Monitoring:</strong> Tracking temperature changes in natural habitats</li>
+                <li><strong>Energy Management:</strong> Optimizing heating and cooling systems based on temperature patterns</li>
+                <li><strong>Agricultural Planning:</strong> Using temperature data to inform planting and harvesting decisions</li>
+                <li><strong>Urban Planning:</strong> Identifying urban heat islands and planning green spaces</li>
+                <li><strong>Data Journalism:</strong> Creating reports and visualizations about climate change</li>
+            </ul>
+            
+            <p>The fundamental techniques of data processing, analysis, and reporting are transferable to many domains beyond temperature data. Similar approaches can be used for financial data, health statistics, website analytics, and many other types of structured data.</p>
+        </section>
+
+        <section class="conclusion">
+            <h2>Conclusion</h2>
+            
+            <p>This weekend project has demonstrated how to apply key Python concepts to build a practical data processing application. By working through this project, you've practiced:</p>
+            
+            <ul>
+                <li>Breaking down a complex problem into manageable steps</li>
+                <li>Designing a modular, object-oriented application</li>
+                <li>Working with files and handling errors</li>
+                <li>Processing and analyzing data</li>
+                <li>Generating reports in multiple formats</li>
+                <li>Creating a user-friendly command-line interface</li>
+            </ul>
+            
+            <p>As you continue to develop as a programmer, these fundamental skills will serve as building blocks for more complex applications, including web applications that we'll begin exploring in the next week of the course.</p>
+            
+            <p>By completing this project, you've demonstrated your ability to integrate multiple Python concepts into a cohesive, functional application—an essential skill for any software developer.</p>
+        </section>
+
+        <section class="resources">
+            <h2>Additional Resources</h2>
+            <ul>
+                <li><a href="https://docs.python.org/3/library/argparse.html" target="_blank">Argparse Documentation</a> - For command-line interfaces</li>
+                <li><a href="https://docs.python.org/3/library/datetime.html" target="_blank">Datetime Documentation</a> - For working with dates and times</li>
+                <li><a href="https://docs.python.org/3/library/statistics.html" target="_blank">Statistics Documentation</a> - For statistical calculations</li>
+                <li><a href="https://pandas.pydata.org/docs/" target="_blank">Pandas Documentation</a> - For data analysis</li>
+                <li><a href="https://matplotlib.org/stable/index.html" target="_blank">Matplotlib Documentation</a> - For data visualization</li>
+                <li><a href="https://docs.python.org/3/tutorial/errors.html" target="_blank">Error Handling Documentation</a> - For working with exceptions</li>
+                <li><a href="https://docs.python.org/3/library/csv.html" target="_blank">CSV Module Documentation</a> - For working with CSV files</li>
+                <li><a href="https://docs.python.org/3/library/json.html" target="_blank">JSON Module Documentation</a> - For working with JSON data</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Python Full Stack Developer Course - Week 3 Weekend Project</p>
+        <p>File: weekend_project.html</p>
+        <p>Located in course root directory</p>
+    </footer>
+</body>
+</html>

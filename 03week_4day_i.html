@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Standard Library: functools and itertools for Functional Programming</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Standard Library: functools and itertools for Functional Programming</h1>
+        <h2>Week 3: Thursday Afternoon Session</h2>
+    </header>
+
+    <main>
+        <section class="intro">
+            <h2>Introduction to Functional Programming in Python</h2>
+            <p>Welcome to our deep dive into the <code>functools</code> and <code>itertools</code> modules! Today, we'll explore how Python supports functional programming paradigms through these powerful standard library modules.</p>
+            
+            <p>Functional programming is like building with LEGO blocks - you create small, reusable pieces (functions) and combine them in different ways to solve problems. This approach leads to code that is more predictable, testable, and often more concise than traditional imperative programming.</p>
+            
+            <p>This tutorial will be stored in your course folder as: <code>/03week_3day_a.html</code></p>
+        </section>
+
+        <section>
+            <h2>Why Functional Programming Matters</h2>
+            <p>Before diving into the specific modules, let's understand why functional programming concepts are valuable:</p>
+            
+            <ul>
+                <li><strong>Readability</strong>: Functional code often expresses the "what" rather than the "how"</li>
+                <li><strong>Testability</strong>: Pure functions with no side effects are easier to test</li>
+                <li><strong>Composability</strong>: Functions can be combined like building blocks</li>
+                <li><strong>Concurrency</strong>: Functions without side effects are safer in concurrent environments</li>
+                <li><strong>Debugging</strong>: Predictable function behavior makes debugging easier</li>
+            </ul>
+            
+            <p>While Python is not a purely functional language like Haskell or Lisp, it embraces many functional concepts. The <code>functools</code> and <code>itertools</code> modules provide tools that facilitate functional approaches to problem-solving.</p>
+            
+            <p>Think of these modules as specialized toolkits - <code>functools</code> gives you tools for working with functions themselves, while <code>itertools</code> provides tools for working with data streams efficiently.</p>
+        </section>
+
+        <section>
+            <h2>The functools Module: Function Tools</h2>
+            <p>The <code>functools</code> module provides higher-order functions (functions that act on or return other functions). It's like a toolkit for manipulating and enhancing functions.</p>
+            
+            <h3>partial: Pre-filling Function Arguments</h3>
+            <p>The <code>partial</code> function allows you to create a new function with some arguments pre-filled:</p>
+            
+            <pre><code>
+import functools
+
+def greet(greeting, name):
+    return f"{greeting}, {name}!"
+
+# Create specialized versions of the greet function
+hello = functools.partial(greet, "Hello")
+goodbye = functools.partial(greet, "Goodbye")
+
+print(hello("Alice"))    # Output: "Hello, Alice!"
+print(goodbye("Bob"))    # Output: "Goodbye, Bob!"
+            </code></pre>
+            
+            <p>This is like having a general-purpose power tool with attachments - <code>partial</code> lets you create specialized versions of functions for specific use cases.</p>
+            
+            <p>Real-world example: Imagine a web application where you have a generic function to render templates with different configurations:</p>
+            
+            <pre><code>
+def render_template(template_name, theme, user, language):
+    # Template rendering logic
+    pass
+
+# Create specialized renderers
+render_dark_theme = functools.partial(render_template, theme="dark")
+render_admin_view = functools.partial(render_template, theme="admin", user="admin")
+render_spanish = functools.partial(render_template, language="es")
+
+# Later in the code:
+render_dark_theme("homepage.html", user=current_user, language="en")
+render_admin_view("dashboard.html", language="en")
+render_spanish("homepage.html", theme="light", user=current_user)
+            </code></pre>
+        </section>
+
+        <section>
+            <h3>lru_cache: Memorization for Performance</h3>
+            <p><code>lru_cache</code> implements a decorator that caches the results of a function using a Least Recently Used (LRU) strategy:</p>
+            
+            <pre><code>
+import functools
+import time
+
+@functools.lru_cache(maxsize=128)
+def expensive_computation(n):
+    print(f"Computing {n}...")
+    time.sleep(1)  # Simulate expensive operation
+    return n * n
+
+# First call - will be computed
+print(expensive_computation(10))
+
+# Second call with same argument - returned from cache
+print(expensive_computation(10))
+
+# Different argument - will be computed
+print(expensive_computation(20))
+
+# Check cache statistics
+print(expensive_computation.cache_info())
+            </code></pre>
+            
+            <p>Think of <code>lru_cache</code> as a smart assistant who remembers the answers to questions they've heard before, so they don't have to recalculate them. The LRU part means they'll forget the oldest answers if their memory gets full.</p>
+            
+            <p>Real-world example: In a web application, caching expensive database queries or API calls:</p>
+            
+            <pre><code>
+@functools.lru_cache(maxsize=100)
+def get_user_permissions(user_id):
+    # Expensive database query
+    print(f"Fetching permissions for user {user_id} from database")
+    return db.query(f"SELECT permissions FROM users WHERE id = {user_id}")
+
+# First request for a user
+get_user_permissions(42)  # Hits the database
+
+# Subsequent requests for the same user
+get_user_permissions(42)  # Uses cached result
+get_user_permissions(42)  # Uses cached result
+
+# Useful for APIs with rate limits or slow databases
+            </code></pre>
+            
+            <p>The <code>maxsize</code> parameter determines how many different function calls to cache. If set to <code>None</code>, the cache can grow without bounds.</p>
+        </section>
+
+        <section>
+            <h3>wraps: Preserving Function Metadata</h3>
+            <p>When creating decorators, <code>wraps</code> helps maintain the original function's metadata:</p>
+            
+            <pre><code>
+import functools
+
+# Without wraps
+def simple_decorator(func):
+    def wrapper(*args, **kwargs):
+        print("Before function call")
+        result = func(*args, **kwargs)
+        print("After function call")
+        return result
+    return wrapper
+
+@simple_decorator
+def hello(name):
+    """Say hello to someone."""
+    return f"Hello, {name}!"
+
+print(hello.__name__)  # Output: "wrapper" 
+print(hello.__doc__)   # Output: None
+
+# With wraps
+def better_decorator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        print("Before function call")
+        result = func(*args, **kwargs)
+        print("After function call")
+        return result
+    return wrapper
+
+@better_decorator
+def hello_better(name):
+    """Say hello to someone."""
+    return f"Hello, {name}!"
+
+print(hello_better.__name__)  # Output: "hello_better"
+print(hello_better.__doc__)   # Output: "Say hello to someone."
+            </code></pre>
+            
+            <p>This is like properly transferring the title deed when you renovate a house - the ownership information stays intact even though you've modified the structure.</p>
+            
+            <p>Why does this matter? Proper metadata is essential for:</p>
+            <ul>
+                <li>Documentation generation tools</li>
+                <li>Debugging and error messages</li>
+                <li>Introspection and framework functionality</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>reduce: Accumulating Results</h3>
+            <p><code>reduce</code> applies a function of two arguments cumulatively to the items of a sequence:</p>
+            
+            <pre><code>
+import functools
+
+# Sum a list of numbers
+numbers = [1, 2, 3, 4, 5]
+sum_result = functools.reduce(lambda x, y: x + y, numbers)
+print(sum_result)  # Output: 15
+
+# Find the maximum value
+max_result = functools.reduce(lambda x, y: x if x > y else y, numbers)
+print(max_result)  # Output: 5
+
+# Flatten a list of lists
+nested = [[1, 2], [3, 4], [5, 6]]
+flattened = functools.reduce(lambda x, y: x + y, nested)
+print(flattened)  # Output: [1, 2, 3, 4, 5, 6]
+
+# You can provide an initial value
+product = functools.reduce(lambda x, y: x * y, numbers, 1)
+print(product)  # Output: 120
+            </code></pre>
+            
+            <p>Think of <code>reduce</code> as a factory line where each worker takes two items, combines them according to some rule, and passes the result to the next worker along with the next item.</p>
+            
+            <p>Real-world example: Calculating an order total in an e-commerce application:</p>
+            
+            <pre><code>
+order_items = [
+    {"name": "Laptop", "price": 1200, "quantity": 1},
+    {"name": "Mouse", "price": 25, "quantity": 2},
+    {"name": "Keyboard", "price": 45, "quantity": 1}
+]
+
+# Calculate order total
+total = functools.reduce(
+    lambda acc, item: acc + (item["price"] * item["quantity"]),
+    order_items, 
+    0  # Start with 0
+)
+print(f"Order total: ${total}")  # Output: "Order total: $1295"
+            </code></pre>
+        </section>
+
+        <section>
+            <h3>Other functools Utilities</h3>
+            
+            <h4>singledispatch: Function Overloading</h4>
+            <p><code>singledispatch</code> enables function overloading based on the type of the first argument:</p>
+            
+            <pre><code>
+import functools
+
+@functools.singledispatch
+def process_data(data):
+    raise NotImplementedError(f"Cannot process data of type {type(data)}")
+
+@process_data.register
+def _(data: list):
+    print(f"Processing a list with {len(data)} items")
+    return sum(data)
+
+@process_data.register
+def _(data: dict):
+    print(f"Processing a dictionary with {len(data)} keys")
+    return list(data.values())
+
+@process_data.register(str)  # Alternative syntax
+def _(data):
+    print(f"Processing a string of length {len(data)}")
+    return data.upper()
+
+# Now we can call process_data with different types
+print(process_data([1, 2, 3]))         # Output: 6
+print(process_data({"a": 1, "b": 2}))  # Output: [1, 2]
+print(process_data("hello"))           # Output: "HELLO"
+            </code></pre>
+            
+            <p>This is like having a universal remote with specific button layouts for different devices - one interface, specialized implementations.</p>
+            
+            <h4>total_ordering: Complete Comparison Operations</h4>
+            <p><code>total_ordering</code> generates all comparison methods from a single comparison method:</p>
+            
+            <pre><code>
+import functools
+
+@functools.total_ordering
+class Version:
+    def __init__(self, major, minor, patch):
+        self.major = major
+        self.minor = minor
+        self.patch = patch
+    
+    def __eq__(self, other):
+        return (self.major, self.minor, self.patch) == (other.major, other.minor, other.patch)
+    
+    def __lt__(self, other):
+        return (self.major, self.minor, self.patch) < (other.major, other.minor, other.patch)
+    
+    def __str__(self):
+        return f"{self.major}.{self.minor}.{self.patch}"
+
+# With just __eq__ and __lt__, we get all comparison operations
+v1 = Version(1, 2, 3)
+v2 = Version(1, 3, 0)
+v3 = Version(1, 2, 3)
+
+print(f"{v1} < {v2}: {v1 < v2}")    # Output: "1.2.3 < 1.3.0: True"
+print(f"{v1} > {v2}: {v1 > v2}")    # Output: "1.2.3 > 1.3.0: False"
+print(f"{v1} == {v3}: {v1 == v3}")  # Output: "1.2.3 == 1.2.3: True"
+print(f"{v1} <= {v3}: {v1 <= v3}")  # Output: "1.2.3 <= 1.2.3: True"
+            </code></pre>
+            
+            <p>This is like defining a north-south axis and an east-west axis - once you have those, you can describe any direction.</p>
+            
+            <h4>cache: Simple Unbounded Caching</h4>
+            <p>Python 3.9+ includes <code>cache</code>, a simpler version of <code>lru_cache</code> with no size limit:</p>
+            
+            <pre><code>
+@functools.cache
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+# Without caching, this would be extremely slow
+print(fibonacci(100))  # Output: 354224848179261915075
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>The itertools Module: Iterator Tools</h2>
+            <p>The <code>itertools</code> module provides functions for creating efficient iterators. It's like a suite of power tools for working with data streams and sequences.</p>
+            
+            <h3>Infinite Iterators</h3>
+            <p>These iterators will continue indefinitely unless you limit them:</p>
+            
+            <h4>count: Counting from a Starting Point</h4>
+            <pre><code>
+import itertools
+
+# Basic counting
+for i in itertools.count(10):
+    print(i)
+    if i >= 15:
+        break  # Without this, it would count forever
+# Output: 10, 11, 12, 13, 14, 15
+
+# With a step
+for i in itertools.count(1, 0.5):
+    print(i)
+    if i >= 3:
+        break
+# Output: 1, 1.5, 2, 2.5, 3
+            </code></pre>
+            
+            <p>Real-world example: Generating unique IDs in a system:</p>
+            
+            <pre><code>
+id_generator = itertools.count(1)
+user_ids = {}
+
+def register_user(username):
+    user_ids[username] = next(id_generator)
+    return user_ids[username]
+
+print(register_user("alice"))  # Output: 1
+print(register_user("bob"))    # Output: 2
+print(register_user("charlie"))  # Output: 3
+            </code></pre>
+            
+            <h4>cycle: Looping Through a Sequence Indefinitely</h4>
+            <pre><code>
+# Cycle through a sequence
+status_indicator = itertools.cycle(['Loading', 'Processing', 'Saving'])
+
+for _ in range(10):
+    status = next(status_indicator)
+    print(status)
+# Output: Loading, Processing, Saving, Loading, Processing, Saving, Loading, Processing, Saving, Loading
+            </code></pre>
+            
+            <p>Real-world example: Round-robin load balancing across servers:</p>
+            
+            <pre><code>
+servers = ['server1.example.com', 'server2.example.com', 'server3.example.com']
+server_pool = itertools.cycle(servers)
+
+def get_next_server():
+    return next(server_pool)
+
+for _ in range(10):
+    print(f"Routing request to {get_next_server()}")
+            </code></pre>
+            
+            <h4>repeat: Repeating a Value</h4>
+            <pre><code>
+# Repeat indefinitely
+repeater = itertools.repeat("Hello")
+for _ in range(3):
+    print(next(repeater))
+# Output: Hello, Hello, Hello
+
+# Repeat a specific number of times
+for value in itertools.repeat("Vote!", 3):
+    print(value)
+# Output: Vote!, Vote!, Vote!
+            </code></pre>
+            
+            <p>This is useful for providing a constant value to functions that accept iterables:</p>
+            
+            <pre><code>
+numbers = [1, 2, 3, 4]
+squares = list(map(pow, numbers, itertools.repeat(2)))
+print(squares)  # Output: [1, 4, 9, 16]
+            </code></pre>
+        </section>
+
+        <section>
+            <h3>Iterators for Finite Sequences</h3>
+            
+            <h4>chain: Combining Multiple Iterables</h4>
+            <pre><code>
+# Combine multiple iterables into one
+result = itertools.chain([1, 2, 3], ['a', 'b'], [True, False])
+print(list(result))  # Output: [1, 2, 3, 'a', 'b', True, False]
+
+# Chain from an iterable of iterables
+iterables = [[1, 2], [3, 4, 5], [6]]
+result = itertools.chain.from_iterable(iterables)
+print(list(result))  # Output: [1, 2, 3, 4, 5, 6]
+            </code></pre>
+            
+            <p>Real-world example: Combining data from multiple sources in a web application:</p>
+            
+            <pre><code>
+def get_all_users():
+    active_users = db.query("SELECT * FROM users WHERE status = 'active'")
+    pending_users = db.query("SELECT * FROM users WHERE status = 'pending'")
+    trial_users = db.query("SELECT * FROM trial_users")
+    
+    # Efficiently iterate through all users without loading everything into memory
+    return itertools.chain(active_users, pending_users, trial_users)
+
+# Process users efficiently
+for user in get_all_users():
+    send_notification(user)
+            </code></pre>
+            
+            <h4>islice: Slicing Iterators</h4>
+            <pre><code>
+# Create a slice of an iterator
+result = itertools.islice(range(10), 5)  # First 5 elements
+print(list(result))  # Output: [0, 1, 2, 3, 4]
+
+# With start and stop
+result = itertools.islice(range(10), 3, 8)  # Elements 3 through 7
+print(list(result))  # Output: [3, 4, 5, 6, 7]
+
+# With step
+result = itertools.islice(range(20), 0, 20, 2)  # Even numbers
+print(list(result))  # Output: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+            </code></pre>
+            
+            <p>Real-world example: Pagination in a web API:</p>
+            
+            <pre><code>
+def get_paginated_results(items, page=1, page_size=10):
+    """Return a specific page of items."""
+    start = (page - 1) * page_size
+    return itertools.islice(items, start, start + page_size)
+
+# All items (in a real app, this might be a database cursor)
+all_products = range(1, 101)  # Products 1-100
+
+# Get different pages
+page1 = list(get_paginated_results(all_products, page=1, page_size=10))
+page5 = list(get_paginated_results(all_products, page=5, page_size=10))
+
+print(f"Page 1: {page1}")  # Output: [1, 2, 3, ..., 10]
+print(f"Page 5: {page5}")  # Output: [41, 42, 43, ..., 50]
+            </code></pre>
+        </section>
+
+        <section>
+            <h4>zip_longest: Parallel Iteration with Filling</h4>
+            <pre><code>
+# Regular zip stops at the shortest iterable
+list(zip([1, 2], [3, 4, 5]))  # Output: [(1, 3), (2, 4)]
+
+# zip_longest continues until the longest iterable
+result = itertools.zip_longest([1, 2], [3, 4, 5], fillvalue=0)
+print(list(result))  # Output: [(1, 3), (2, 4), (0, 5)]
+            </code></pre>
+            
+            <p>Real-world example: Processing data from multiple sources that might have different lengths:</p>
+            
+            <pre><code>
+def compare_datasets(dataset1, dataset2):
+    """Compare two datasets, filling in missing values."""
+    for data1, data2 in itertools.zip_longest(dataset1, dataset2, fillvalue=None):
+        if data1 is None:
+            print(f"Dataset 1 missing, Dataset 2: {data2}")
+        elif data2 is None:
+            print(f"Dataset 1: {data1}, Dataset 2 missing")
+        else:
+            print(f"Dataset 1: {data1}, Dataset 2: {data2}")
+
+# Example datasets
+temps_city1 = [25, 26, 27, 28]
+temps_city2 = [22, 21, 20]
+
+compare_datasets(temps_city1, temps_city2)
+            </code></pre>
+        </section>
+
+        <section>
+            <h3>Combinatoric Generators</h3>
+            <p>These functions generate all possible combinations or permutations:</p>
+            
+            <h4>product: Cartesian Product</h4>
+            <pre><code>
+# Cartesian product (all combinations of elements from each iterable)
+sizes = ['S', 'M', 'L']
+colors = ['red', 'blue']
+result = itertools.product(sizes, colors)
+print(list(result))
+# Output: [('S', 'red'), ('S', 'blue'), ('M', 'red'), ('M', 'blue'), ('L', 'red'), ('L', 'blue')]
+
+# With repeat
+result = itertools.product('AB', repeat=2)
+print(list(result))
+# Output: [('A', 'A'), ('A', 'B'), ('B', 'A'), ('B', 'B')]
+            </code></pre>
+            
+            <p>Real-world example: Generating product variants for an e-commerce site:</p>
+            
+            <pre><code>
+def generate_product_variants(product_name, attributes):
+    """Generate all possible product variants from attributes."""
+    # Get all possible attribute combinations
+    attribute_names = attributes.keys()
+    attribute_values = attributes.values()
+    variants = []
+    
+    for combo in itertools.product(*attribute_values):
+        variant = {
+            'product_name': product_name,
+            **dict(zip(attribute_names, combo))
+        }
+        variants.append(variant)
+    
+    return variants
+
+# Example: T-shirt variants
+t_shirt_attributes = {
+    'size': ['S', 'M', 'L', 'XL'],
+    'color': ['Black', 'White', 'Blue'],
+    'material': ['Cotton', 'Polyester']
+}
+
+variants = generate_product_variants('Classic T-Shirt', t_shirt_attributes)
+print(f"Generated {len(variants)} variants")  # Output: "Generated 24 variants"
+print(variants[0])  # First variant
+            </code></pre>
+            
+            <h4>permutations: All Possible Orderings</h4>
+            <pre><code>
+# All permutations of elements
+result = itertools.permutations(['A', 'B', 'C'])
+print(list(result))
+# Output: [('A', 'B', 'C'), ('A', 'C', 'B'), ('B', 'A', 'C'), ('B', 'C', 'A'), ('C', 'A', 'B'), ('C', 'B', 'A')]
+
+# Permutations of a specific length
+result = itertools.permutations(['A', 'B', 'C', 'D'], 2)
+print(list(result))
+# Output: [('A', 'B'), ('A', 'C'), ('A', 'D'), ('B', 'A'), ...]
+            </code></pre>
+            
+            <p>Real-world example: Analyzing possible routes for a delivery application:</p>
+            
+            <pre><code>
+def calculate_route_distance(route, distances):
+    """Calculate the total distance of a route."""
+    total = 0
+    for i in range(len(route) - 1):
+        total += distances[(route[i], route[i + 1])]
+    return total
+
+def find_shortest_route(locations, start, distances):
+    """Find the shortest route visiting all locations."""
+    other_locations = [loc for loc in locations if loc != start]
+    shortest_distance = float('inf')
+    shortest_route = None
+    
+    for perm in itertools.permutations(other_locations):
+        route = (start,) + perm + (start,)  # Start and end at the same place
+        distance = calculate_route_distance(route, distances)
+        if distance < shortest_distance:
+            shortest_distance = distance
+            shortest_route = route
+    
+    return shortest_route, shortest_distance
+
+# Example distances between locations
+distances = {
+    ('A', 'B'): 10, ('B', 'A'): 10,
+    ('A', 'C'): 15, ('C', 'A'): 15,
+    ('A', 'D'): 20, ('D', 'A'): 20,
+    ('B', 'C'): 35, ('C', 'B'): 35,
+    ('B', 'D'): 25, ('D', 'B'): 25,
+    ('C', 'D'): 30, ('D', 'C'): 30
+}
+
+route, distance = find_shortest_route(['A', 'B', 'C', 'D'], 'A', distances)
+print(f"Shortest route: {route}, Distance: {distance}")
+            </code></pre>
+            
+            <h4>combinations and combinations_with_replacement</h4>
+            <pre><code>
+# All combinations of a specific length
+result = itertools.combinations(['A', 'B', 'C', 'D'], 2)
+print(list(result))
+# Output: [('A', 'B'), ('A', 'C'), ('A', 'D'), ('B', 'C'), ('B', 'D'), ('C', 'D')]
+
+# Combinations with replacement (elements can be repeated)
+result = itertools.combinations_with_replacement(['A', 'B', 'C'], 2)
+print(list(result))
+# Output: [('A', 'A'), ('A', 'B'), ('A', 'C'), ('B', 'B'), ('B', 'C'), ('C', 'C')]
+            </code></pre>
+            
+            <p>Real-world example: Building a promotional bundle system for an e-commerce site:</p>
+            
+            <pre><code>
+def generate_product_bundles(products, bundle_size):
+    """Generate all possible product bundles of a specific size."""
+    return list(itertools.combinations(products, bundle_size))
+
+def calculate_bundle_price(bundle, prices, discount=0.1):
+    """Calculate the price of a bundle with a discount."""
+    original_price = sum(prices[product] for product in bundle)
+    return original_price * (1 - discount)
+
+# Product catalog
+products = ['Laptop', 'Mouse', 'Keyboard', 'Monitor', 'Headphones']
+prices = {
+    'Laptop': 1200,
+    'Mouse': 25,
+    'Keyboard': 45,
+    'Monitor': 150,
+    'Headphones': 75
+}
+
+# Generate all possible 3-product bundles
+bundles = generate_product_bundles(products, 3)
+print(f"Number of possible 3-product bundles: {len(bundles)}")
+
+# Calculate prices for each bundle
+for bundle in bundles[:3]:  # Show just a few examples
+    price = calculate_bundle_price(bundle, prices)
+    print(f"Bundle: {bundle}, Price: ${price:.2f}")
+            </code></pre>
+        </section>
+
+        <section>
+            <h3>Other Useful itertools Functions</h3>
+            
+            <h4>groupby: Grouping Elements by a Key</h4>
+            <pre><code>
+from operator import itemgetter
+
+# Data needs to be sorted by the grouping key first
+data = [
+    {'name': 'Alice', 'department': 'Engineering'},
+    {'name': 'Bob', 'department': 'Engineering'},
+    {'name': 'Charlie', 'department': 'Marketing'},
+    {'name': 'Dave', 'department': 'Marketing'},
+    {'name': 'Eve', 'department': 'Sales'}
+]
+
+# Sort by department
+data.sort(key=itemgetter('department'))
+
+# Group by department
+for department, group in itertools.groupby(data, key=itemgetter('department')):
+    print(f"Department: {department}")
+    for employee in group:
+        print(f"  - {employee['name']}")
+            </code></pre>
+            
+            <p>Real-world example: Generating a report by grouping log entries by status code:</p>
+            
+            <pre><code>
+log_entries = [
+    {'url': '/home', 'status': 200, 'time': '12:00'},
+    {'url': '/about', 'status': 200, 'time': '12:01'},
+    {'url': '/login', 'status': 404, 'time': '12:02'},
+    {'url': '/dashboard', 'status': 500, 'time': '12:03'},
+    {'url': '/profile', 'status': 404, 'time': '12:04'},
+    {'url': '/settings', 'status': 200, 'time': '12:05'}
+]
+
+# Sort by status code
+log_entries.sort(key=itemgetter('status'))
+
+# Generate report
+print("HTTP Status Report:")
+for status, entries in itertools.groupby(log_entries, key=itemgetter('status')):
+    entries = list(entries)  # Convert iterator to list
+    print(f"Status {status}: {len(entries)} requests")
+    for entry in entries:
+        print(f"  - {entry['time']}: {entry['url']}")
+            </code></pre>
+            
+            <h4>starmap: Mapping a Function with Argument Tuples</h4>
+            <pre><code>
+# Like map(), but unpacks argument tuples
+data = [(2, 5), (3, 2), (10, 3)]
+result = itertools.starmap(pow, data)
+print(list(result))  # Output: [32, 9, 1000]
+            </code></pre>
+            
+            <p>Real-world example: Processing geometry calculations:</p>
+            
+            <pre><code>
+import math
+
+def calculate_area(shape, *dimensions):
+    if shape == 'circle':
+        return math.pi * dimensions[0] ** 2
+    elif shape == 'rectangle':
+        return dimensions[0] * dimensions[1]
+    elif shape == 'triangle':
+        base, height = dimensions
+        return 0.5 * base * height
+    return 0
+
+# List of shapes to calculate
+shapes = [
+    ('circle', 5),
+    ('rectangle', 4, 6),
+    ('triangle', 8, 3)
+]
+
+# Calculate areas
+areas = itertools.starmap(calculate_area, shapes)
+print(list(areas))
+            </code></pre>
+            
+            <h4>accumulate: Cumulative Results</h4>
+            <pre><code>
+import operator
+
+# Cumulative sum (default)
+result = itertools.accumulate([1, 2, 3, 4, 5])
+print(list(result))  # Output: [1, 3, 6, 10, 15]
+
+# Cumulative product
+result = itertools.accumulate([1, 2, 3, 4], operator.mul)
+print(list(result))  # Output: [1, 2, 6, 24]
+
+# Find maximum so far
+result = itertools.accumulate([5, 2, 10, 3, 7], max)
+print(list(result))  # Output: [5, 5, 10, 10, 10]
+            </code></pre>
+            
+            <p>Real-world example: Calculating running balances for financial transactions:</p>
+            
+            <pre><code>
+transactions = [
+    {'date': '2023-07-01', 'description': 'Initial deposit', 'amount': 1000},
+    {'date': '2023-07-02', 'description': 'Grocery shopping', 'amount': -85.20},
+    {'date': '2023-07-03', 'description': 'Salary', 'amount': 2000},
+    {'date': '2023-07-04', 'description': 'Rent payment', 'amount': -800},
+    {'date': '2023-07-05', 'description': 'Dinner', 'amount': -45.30}
+]
+
+# Extract just the amounts
+amounts = [transaction['amount'] for transaction in transactions]
+
+# Calculate running balance
+balances = list(itertools.accumulate(amounts))
+
+# Generate statement
+print("Date       | Description     | Amount  | Balance")
+print("-" * 50)
+for transaction, balance in zip(transactions, balances):
+    print(f"{transaction['date']} | {transaction['description']:<15} | {transaction['amount']:7.2f} | {balance:7.2f}")
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Combining functools and itertools</h2>
+            <p>The real power comes from combining these modules to create elegant, efficient solutions:</p>
+            
+            <pre><code>
+import functools
+import itertools
+import operator
+
+# Calculate the sum of squares for a range of numbers
+numbers = range(1, 6)  # 1, 2, 3, 4, 5
+
+# Using map and reduce
+squares = map(lambda x: x ** 2, numbers)
+sum_of_squares = functools.reduce(operator.add, squares)
+print(sum_of_squares)  # Output: 55
+
+# Alternative approach with sum
+sum_of_squares2 = sum(map(lambda x: x ** 2, numbers))
+print(sum_of_squares2)  # Output: 55
+
+# Get all possible pairs of numbers with their product
+pairs = itertools.combinations(numbers, 2)
+pair_products = list(itertools.starmap(operator.mul, pairs))
+print(pair_products)  # Output: [2, 3, 4, 5, 6, 8, 10, 12, 15, 20]
+
+# Find pairs where the product is even
+is_even = functools.partial(operator.eq, 0)
+is_even_product = lambda pair: is_even(operator.mul(*pair) % 2)
+even_product_pairs = list(filter(is_even_product, itertools.combinations(numbers, 2)))
+print(even_product_pairs)  # Output: [(1, 2), (1, 4), (2, 3), (2, 4), (2, 5), (3, 4), (4, 5)]
+            </code></pre>
+            
+            <p>Real-world example: A data processing pipeline for a web analytics application:</p>
+            
+            <pre><code>
+import datetime
+import functools
+import itertools
+import operator
+
+# Sample web log data
+log_entries = [
+    {'url': '/home', 'user_agent': 'Mozilla', 'timestamp': '2023-07-01T10:00:00', 'response_time': 150},
+    {'url': '/products', 'user_agent': 'Chrome', 'timestamp': '2023-07-01T10:01:00', 'response_time': 320},
+    {'url': '/home', 'user_agent': 'Safari', 'timestamp': '2023-07-01T10:02:00', 'response_time': 200},
+    {'url': '/about', 'user_agent': 'Chrome', 'timestamp': '2023-07-01T10:03:00', 'response_time': 180},
+    {'url': '/products', 'user_agent': 'Edge', 'timestamp': '2023-07-01T10:04:00', 'response_time': 220},
+    {'url': '/contact', 'user_agent': 'Firefox', 'timestamp': '2023-07-01T10:05:00', 'response_time': 170},
+    {'url': '/home', 'user_agent': 'Chrome', 'timestamp': '2023-07-01T10:06:00', 'response_time': 190}
+]
+
+# Parse timestamp string to datetime object
+parse_timestamp = lambda entry: {
+    **entry,
+    'datetime': datetime.datetime.fromisoformat(entry['timestamp'])
+}
+
+# Calculate metrics
+def analyze_logs(logs):
+    # Parse timestamps
+    logs_with_datetime = list(map(parse_timestamp, logs))
+    
+    # Group by URL
+    logs_by_url = {}
+    for url, group in itertools.groupby(sorted(logs_with_datetime, key=operator.itemgetter('url')), 
+                                      key=operator.itemgetter('url')):
+        logs_by_url[url] = list(group)
+    
+    # Calculate average response time per URL
+    avg_response_times = {
+        url: functools.reduce(operator.add, [log['response_time'] for log in url_logs], 0) / len(url_logs)
+        for url, url_logs in logs_by_url.items()
+    }
+    
+    # Find the most common user agent
+    all_user_agents = [log['user_agent'] for log in logs_with_datetime]
+    user_agent_counts = {}
+    for agent in all_user_agents:
+        user_agent_counts[agent] = user_agent_counts.get(agent, 0) + 1
+    most_common_agent = max(user_agent_counts.items(), key=operator.itemgetter(1))[0]
+    
+    # Find pages with response time above threshold
+    slow_threshold = 200
+    slow_pages = [log['url'] for log in logs_with_datetime if log['response_time'] > slow_threshold]
+    slow_page_counts = {
+        url: slow_pages.count(url) for url in set(slow_pages)
+    }
+    
+    return {
+        'total_requests': len(logs),
+        'unique_pages': len(logs_by_url),
+        'avg_response_times': avg_response_times,
+        'most_common_user_agent': most_common_agent,
+        'slow_pages': slow_page_counts
+    }
+
+# Run the analysis
+analytics = analyze_logs(log_entries)
+print("Web Analytics Report:")
+print(f"Total Requests: {analytics['total_requests']}")
+print(f"Unique Pages: {analytics['unique_pages']}")
+print("Average Response Times:")
+for url, avg_time in analytics['avg_response_times'].items():
+    print(f"  - {url}: {avg_time:.2f}ms")
+print(f"Most Common User Agent: {analytics['most_common_user_agent']}")
+print("Pages with Slow Response Times:")
+for url, count in analytics['slow_pages'].items():
+    print(f"  - {url}: {count} slow requests")
+            </code></pre>
+        </section>
+
+        <section>
+            <h2>Best Practices for Functional Programming in Python</h2>
+            <p>To make the most of functional programming concepts in Python:</p>
+            
+            <ul>
+                <li><strong>Keep functions pure</strong> when possible (no side effects)</li>
+                <li><strong>Use comprehensions</strong> for simple transformations</li>
+                <li><strong>Leverage higher-order functions</strong> like map, filter, and reduce</li>
+                <li><strong>Chain operations</strong> instead of using intermediate variables</li>
+                <li><strong>Use iterators</strong> for memory efficiency with large datasets</li>
+                <li><strong>Consider readability</strong> - sometimes a for loop is clearer</li>
+                <li><strong>Document functions well</strong> since they're your building blocks</li>
+                <li><strong>Test functions thoroughly</strong> since they're self-contained</li>
+            </ul>
+            
+            <p>Remember, Python is pragmatic - mix functional and imperative styles when appropriate.</p>
+        </section>
+
+        <section>
+            <h2>Lab Exercise: Building a Data Pipeline</h2>
+            <p>Now it's your turn to apply what you've learned! Create a data processing pipeline using <code>functools</code> and <code>itertools</code> for a web development scenario.</p>
+            
+            <p>Your task is to create a system that:</p>
+            <ol>
+                <li>Loads user data from a simulated database (a list of dictionaries)</li>
+                <li>Filters users based on specific criteria</li>
+                <li>Transforms the data for a dashboard view</li>
+                <li>Calculates aggregate statistics</li>
+                <li>Formats the results for display</li>
+            </ol>
+            
+            <p>Start with this sample data:</p>
+            
+            <pre><code>
+users = [
+    {'id': 1, 'name': 'Alice', 'email': 'alice@example.com', 'age': 25, 
+     'active': True, 'last_login': '2023-07-10', 'purchases': [120, 45, 30]},
+    {'id': 2, 'name': 'Bob', 'email': 'bob@example.com', 'age': 32, 
+     'active': True, 'last_login': '2023-07-05', 'purchases': [55, 120]},
+    {'id': 3, 'name': 'Charlie', 'email': 'charlie@example.com', 'age': 19, 
+     'active': False, 'last_login': '2023-06-20', 'purchases': []},
+    {'id': 4, 'name': 'Diana', 'email': 'diana@example.com', 'age': 42, 
+     'active': True, 'last_login': '2023-07-15', 'purchases': [300, 40, 60, 20]},
+    {'id': 5, 'name': 'Eve', 'email': 'eve@example.com', 'age': 28, 
+     'active': True, 'last_login': '2023-07-08', 'purchases': [80, 25]}
+]
+            </code></pre>
+            
+            <p>Your implementation should use as many appropriate functions from <code>functools</code> and <code>itertools</code> as possible.</p>
+            
+            <p>Bonus challenges:</p>
+            <ul>
+                <li>Implement caching for expensive operations</li>
+                <li>Create a function to find the best customers based on multiple criteria</li>
+                <li>Generate combinations of products that might appeal to specific user segments</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Conclusion</h2>
+            <p>The <code>functools</code> and <code>itertools</code> modules provide powerful tools for functional programming in Python. By mastering these modules, you can write more elegant, efficient, and maintainable code.</p>
+            
+            <p>Key takeaways:</p>
+            <ul>
+                <li><code>functools</code> helps you work with functions as first-class objects</li>
+                <li><code>itertools</code> provides memory-efficient tools for working with iterables</li>
+                <li>Combining these modules allows for expressive data processing pipelines</li>
+                <li>Functional programming concepts lead to more testable, predictable code</li>
+                <li>Python's pragmatic approach lets you mix paradigms for the best solution</li>
+            </ul>
+            
+            <p>As you continue your journey as a Python web developer, look for opportunities to apply these functional tools to simplify complex operations, improve performance, and make your code more expressive.</p>
+        </section>
+
+        <section>
+            <h2>Further Resources</h2>
+            <ul>
+                <li><a href="https://docs.python.org/3/library/functools.html" target="_blank">functools documentation</a></li>
+                <li><a href="https://docs.python.org/3/library/itertools.html" target="_blank">itertools documentation</a></li>
+                <li><a href="https://docs.python.org/3/library/operator.html" target="_blank">operator module documentation</a> (pairs well with functools and itertools)</li>
+                <li><a href="https://docs.python.org/3/howto/functional.html" target="_blank">Functional Programming HOWTO</a></li>
+                <li><a href="https://realpython.com/python-functional-programming/" target="_blank">Real Python: Functional Programming in Python</a></li>
+                <li><a href="https://github.com/pytoolz/toolz" target="_blank">toolz library</a> - extended functional utilities</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

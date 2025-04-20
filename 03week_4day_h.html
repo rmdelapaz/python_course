@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Standard Library: logging for Application Logging</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Python Standard Library: logging for Application Logging</h1>
+        <h2>Week 3: Thursday Afternoon Session</h2>
+    </header>
+
+    <main>
+        <section class="intro">
+            <h2>Introduction to Application Logging</h2>
+            <p>Welcome to our deep dive into the <code>logging</code> module! Today, we'll explore how to implement professional-grade logging in your Python applications.</p>
+            
+            <p>Application logging is like the black box recorder on an airplane - it captures what happens during the flight of your application, providing crucial information for troubleshooting when things don't go as planned. Just as pilots rely on flight recorders to understand incidents, developers rely on good logging to understand application behavior.</p>
+            
+            <p>This tutorial will be stored in your course folder as: <code>/03week_3day_a.html</code></p>
+        </section>
+
+        <section>
+            <h2>Why Proper Logging Matters</h2>
+            <p>Before diving into the <code>logging</code> module, let's understand why we need more than just <code>print()</code> statements:</p>
+            
+            <ul>
+                <li><strong>Production Visibility</strong>: In production, you don't have access to a console to see print statements</li>
+                <li><strong>Severity Levels</strong>: Different messages have different importance levels</li>
+                <li><strong>Configurability</strong>: Logging should be adjustable without code changes</li>
+                <li><strong>Structured Format</strong>: Logs need consistent formatting for analysis</li>
+                <li><strong>Multiple Destinations</strong>: You might want logs in files, databases, network services, etc.</li>
+                <li><strong>Performance</strong>: Logging should have minimal performance impact</li>
+            </ul>
+            
+            <p>Consider a real-world web application scenario: A user reports they can't complete a purchase. Without proper logging, you're in the dark. With good logging, you can trace their session, see database queries, identify errors, and diagnose the issue - often without having to reproduce it.</p>
+        </section>
+
+        <section>
+            <h2>Logging vs. Print Debugging</h2>
+            <p>Many developers start with <code>print()</code> statements for debugging:</p>
+            
+            <pre><code>
+def process_payment(user_id, amount):
+    print(f"Processing payment of ${amount} for user {user_id}")
+    # ... payment processing logic
+    print("Payment processed successfully")
+            </code></pre>
+            
+            <p>This approach has major limitations:</p>
+            <ul>
+                <li>All messages have the same importance level</li>
+                <li>No timestamps or contextual information</li>
+                <li>Can't easily disable in production</li>
+                <li>No easy way to redirect output to files</li>
+                <li>Need to manually remove before deployment (and often forget)</li>
+            </ul>
+            
+            <p>The <code>logging</code> module solves all these problems with a flexible, configurable system designed for production-ready applications.</p>
+        </section>
+
+        <section>
+            <h2>Getting Started with the logging Module</h2>
+            <p>Let's start with a simple example:</p>
+            
+            <pre><code>
+import logging
+
+# Configure the basic logger
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+# Now we can log messages
+logging.debug("This is a debug message")  # Won't be displayed (below INFO level)
+logging.info("User login successful")
+logging.warning("Database connection pool running low")
+logging.error("Payment processing failed")
+logging.critical("System is unable to process requests, shutting down")
+            </code></pre>
+            
+            <p>Running this code produces output like:</p>
+            
+            <pre><code>
+2023-07-20 14:52:10,123 - root - INFO - User login successful
+2023-07-20 14:52:10,124 - root - WARNING - Database connection pool running low
+2023-07-20 14:52:10,124 - root - ERROR - Payment processing failed
+2023-07-20 14:52:10,124 - root - CRITICAL - System is unable to process requests, shutting down
+            </code></pre>
+            
+            <p>Notice how each log message now has:</p>
+            <ul>
+                <li>A timestamp showing exactly when it occurred</li>
+                <li>The name of the logger (we'll cover this soon)</li>
+                <li>The severity level of the message</li>
+                <li>The actual message content</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Logging Levels: Communication with Nuance</h2>
+            <p>The <code>logging</code> module provides five standard levels, allowing you to indicate the severity of each message:</p>
+            
+            <table>
+                <tr>
+                    <th>Level</th>
+                    <th>Numeric Value</th>
+                    <th>Function</th>
+                    <th>When to Use</th>
+                </tr>
+                <tr>
+                    <td>DEBUG</td>
+                    <td>10</td>
+                    <td><code>logging.debug()</code></td>
+                    <td>Detailed information, typically only valuable when diagnosing problems</td>
+                </tr>
+                <tr>
+                    <td>INFO</td>
+                    <td>20</td>
+                    <td><code>logging.info()</code></td>
+                    <td>Confirmation that things are working as expected</td>
+                </tr>
+                <tr>
+                    <td>WARNING</td>
+                    <td>30</td>
+                    <td><code>logging.warning()</code></td>
+                    <td>An indication that something unexpected happened, or may happen soon</td>
+                </tr>
+                <tr>
+                    <td>ERROR</td>
+                    <td>40</td>
+                    <td><code>logging.error()</code></td>
+                    <td>Due to a more serious problem, the software couldn't perform some function</td>
+                </tr>
+                <tr>
+                    <td>CRITICAL</td>
+                    <td>50</td>
+                    <td><code>logging.critical()</code></td>
+                    <td>A serious error indicating the program itself may be unable to continue running</td>
+                </tr>
+            </table>
+            
+            <p>Think of these levels like emergency broadcast systems:</p>
+            <ul>
+                <li><strong>DEBUG</strong> is like a technical bulletin only specialists care about</li>
+                <li><strong>INFO</strong> is like a regular news update</li>
+                <li><strong>WARNING</strong> is like a weather advisory - something to watch</li>
+                <li><strong>ERROR</strong> is like a severe weather warning - action needed</li>
+                <li><strong>CRITICAL</strong> is like an emergency broadcast - immediate action required</li>
+            </ul>
+            
+            <p>When you set a logging level (e.g., <code>logging.INFO</code>), you'll receive messages at that level and all higher levels. For example, setting <code>level=logging.WARNING</code> will show WARNING, ERROR, and CRITICAL messages, but filter out INFO and DEBUG.</p>
+        </section>
+
+        <section>
+            <h2>Basic Configuration</h2>
+            <p>The <code>basicConfig()</code> function sets up a basic configuration for the root logger. Here's a more detailed example:</p>
+            
+            <pre><code>
+import logging
+
+# Configure with more options
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    filename='app.log',  # Log to a file instead of console
+    filemode='w'  # 'w' for overwrite, 'a' for append
+)
+
+logging.debug("Debug message will now be saved to app.log")
+logging.info("Info message")
+            </code></pre>
+            
+            <p>Key parameters for <code>basicConfig()</code>:</p>
+            <ul>
+                <li><code>level</code>: The minimum level to log</li>
+                <li><code>format</code>: The format string for log messages</li>
+                <li><code>datefmt</code>: The format string for dates/times</li>
+                <li><code>filename</code>: If specified, logs go to this file instead of the console</li>
+                <li><code>filemode</code>: 'a' to append (default) or 'w' to overwrite the log file</li>
+                <li><code>stream</code>: Stream to use instead of a file (e.g., <code>sys.stdout</code>)</li>
+            </ul>
+            
+            <p><strong>Important Note:</strong> <code>basicConfig()</code> only works the first time it's called in a program. Subsequent calls have no effect unless you reset the logging system.</p>
+        </section>
+
+        <section>
+            <h2>Format Strings: The Structure of Your Logs</h2>
+            <p>Format strings control how your log messages look, using special placeholders:</p>
+            
+            <table>
+                <tr>
+                    <th>Format</th>
+                    <th>Description</th>
+                    <th>Example</th>
+                </tr>
+                <tr>
+                    <td><code>%(asctime)s</code></td>
+                    <td>Human-readable date/time</td>
+                    <td>2023-07-20 15:25:36,123</td>
+                </tr>
+                <tr>
+                    <td><code>%(name)s</code></td>
+                    <td>Name of the logger</td>
+                    <td>myapp.database</td>
+                </tr>
+                <tr>
+                    <td><code>%(levelname)s</code></td>
+                    <td>Text level name</td>
+                    <td>WARNING</td>
+                </tr>
+                <tr>
+                    <td><code>%(levelno)s</code></td>
+                    <td>Numeric level</td>
+                    <td>30</td>
+                </tr>
+                <tr>
+                    <td><code>%(pathname)s</code></td>
+                    <td>Full path of the source file</td>
+                    <td>/app/mymodule.py</td>
+                </tr>
+                <tr>
+                    <td><code>%(filename)s</code></td>
+                    <td>Just the filename</td>
+                    <td>mymodule.py</td>
+                </tr>
+                <tr>
+                    <td><code>%(module)s</code></td>
+                    <td>Module name</td>
+                    <td>mymodule</td>
+                </tr>
+                <tr>
+                    <td><code>%(funcName)s</code></td>
+                    <td>Function name</td>
+                    <td>process_data</td>
+                </tr>
+                <tr>
+                    <td><code>%(lineno)d</code></td>
+                    <td>Line number</td>
+                    <td>42</td>
+                </tr>
+                <tr>
+                    <td><code>%(process)d</code></td>
+                    <td>Process ID</td>
+                    <td>12345</td>
+                </tr>
+                <tr>
+                    <td><code>%(thread)d</code></td>
+                    <td>Thread ID</td>
+                    <td>67890</td>
+                </tr>
+                <tr>
+                    <td><code>%(message)s</code></td>
+                    <td>The actual log message</td>
+                    <td>User authentication failed</td>
+                </tr>
+            </table>
+            
+            <p>For example, to include the file and line number where the log was generated:</p>
+            
+            <pre><code>
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s'
+)
+            </code></pre>
+            
+            <p>This would produce logs like:</p>
+            
+            <pre><code>
+2023-07-20 15:30:45 - myapp.py:42 - ERROR - Database connection failed
+            </code></pre>
+            
+            <p>In production environments, this detailed location information is invaluable for quickly tracking down issues.</p>
+        </section>
+
+        <section>
+            <h2>Loggers: Organizing by Component</h2>
+            <p>Using the root logger (via <code>logging.info()</code> directly) works for simple scripts, but larger applications need more organization. Enter named loggers:</p>
+            
+            <pre><code>
+import logging
+
+# Get a named logger
+logger = logging.getLogger('myapp.user_service')
+
+# Configure the root logger (affects all loggers)
+logging.basicConfig(level=logging.INFO)
+
+# Use the named logger
+logger.info("User service starting up")
+logger.warning("User database connection pool low")
+            </code></pre>
+            
+            <p>Loggers are organized in a hierarchy based on their names:</p>
+            <ul>
+                <li>Names are dot-separated, like Python packages</li>
+                <li>A logger is the child of another logger if its name extends the parent's name</li>
+                <li><code>myapp.database</code> is a child of <code>myapp</code></li>
+                <li><code>myapp</code> is a child of the root logger</li>
+            </ul>
+            
+            <p>This hierarchy is like an organizational chart for your application's components, allowing you to manage logging settings at different levels of granularity.</p>
+        </section>
+
+        <section>
+            <h2>Handlers: Directing Your Logs</h2>
+            <p>Handlers determine where log messages go. You can have multiple handlers, each with its own configuration:</p>
+            
+            <pre><code>
+import logging
+import sys
+
+# Create a logger
+logger = logging.getLogger('myapp')
+logger.setLevel(logging.DEBUG)  # Set logger level
+
+# Create handlers
+console_handler = logging.StreamHandler(sys.stdout)  # Console handler
+file_handler = logging.FileHandler('myapp.log')      # File handler
+
+# Set handler levels (independent of logger level)
+console_handler.setLevel(logging.INFO)      # Only INFO and above to console
+file_handler.setLevel(logging.DEBUG)        # All messages to file
+
+# Create formatters
+console_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+file_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# Add formatters to handlers
+console_handler.setFormatter(console_format)
+file_handler.setFormatter(file_format)
+
+# Add handlers to logger
+logger.addHandler(console_handler)
+logger.addHandler(file_handler)
+
+# Now when we log, it goes to both handlers
+logger.debug("This debug message goes only to the file")
+logger.info("This info message goes to both console and file")
+logger.warning("This warning also goes to both outputs")
+            </code></pre>
+            
+            <p>This is like having multiple communication channels for different audiences - some messages go to your team's chat (console), while a complete record is kept in the company archives (log file).</p>
+            
+            <h3>Common Handler Types</h3>
+            <ul>
+                <li><code>StreamHandler</code>: Sends logs to a stream (like stdout or stderr)</li>
+                <li><code>FileHandler</code>: Writes logs to a file</li>
+                <li><code>RotatingFileHandler</code>: Writes to files with rotation (size-based)</li>
+                <li><code>TimedRotatingFileHandler</code>: Rotates logs based on time</li>
+                <li><code>SocketHandler</code>: Sends logs over a network socket</li>
+                <li><code>SMTPHandler</code>: Sends logs via email</li>
+                <li><code>SysLogHandler</code>: Sends logs to the system logger</li>
+                <li><code>NullHandler</code>: Does nothing (useful for libraries)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Log Rotation: Managing Log Growth</h2>
+            <p>Log files can grow rapidly in production. Rotation helps manage this:</p>
+            
+            <pre><code>
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Create a logger
+logger = logging.getLogger('myapp')
+logger.setLevel(logging.INFO)
+
+# Create a rotating file handler (max 5MB, keep 5 backup files)
+handler = RotatingFileHandler(
+    'app.log',               # Log file name
+    maxBytes=5 * 1024 * 1024,  # 5 MB per file
+    backupCount=5              # Keep 5 backup files
+)
+handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+logger.addHandler(handler)
+
+# This will start rotating once app.log exceeds 5MB
+logger.info("Application starting")
+            </code></pre>
+            
+            <p>With this setup, you'll get files like <code>app.log</code>, <code>app.log.1</code>, <code>app.log.2</code>, etc., with the newest logs in <code>app.log</code>.</p>
+            
+            <p>For time-based rotation (e.g., daily):</p>
+            
+            <pre><code>
+from logging.handlers import TimedRotatingFileHandler
+
+# Rotate at midnight every day, keep 30 days of logs
+handler = TimedRotatingFileHandler(
+    'app.log',
+    when='midnight',
+    interval=1,      # Every 1 day
+    backupCount=30   # Keep 30 backup files
+)
+            </code></pre>
+            
+            <p>This is like maintaining an organized filing system - current files are easily accessible, history is preserved, but old records don't overwhelm your storage.</p>
+        </section>
+
+        <section>
+            <h2>Logging Exceptions</h2>
+            <p>When exceptions occur, you want full details in your logs:</p>
+            
+            <pre><code>
+import logging
+
+logger = logging.getLogger(__name__)
+
+try:
+    # Some risky operation
+    result = 10 / 0
+except Exception as e:
+    # BAD: Only logs the error message
+    logger.error(f"Error occurred: {str(e)}")
+    
+    # GOOD: Logs the full traceback
+    logger.exception("Error occurred during calculation")
+    
+    # ALSO GOOD: Explicit with exc_info
+    logger.error("Error occurred during calculation", exc_info=True)
+            </code></pre>
+            
+            <p>The <code>logger.exception()</code> method is a shortcut for <code>logger.error()</code> with <code>exc_info=True</code>. It automatically includes the full traceback in the log.</p>
+            
+            <p>This is like the difference between saying "There was a car accident" versus providing a detailed accident report with photos, measurements, and witness statements.</p>
+        </section>
+
+        <section>
+            <h2>Filters: Fine-Tuning Your Logs</h2>
+            <p>Filters allow for more complex log filtering beyond just levels:</p>
+            
+            <pre><code>
+import logging
+
+# Custom filter that only allows logs about database operations
+class DatabaseFilter(logging.Filter):
+    def filter(self, record):
+        return 'database' in record.getMessage().lower()
+
+# Create logger and handler
+logger = logging.getLogger('myapp')
+logger.setLevel(logging.INFO)
+
+handler = logging.StreamHandler()
+handler.addFilter(DatabaseFilter())  # Add our custom filter
+logger.addHandler(handler)
+
+# Only the database-related message will appear
+logger.info("Application starting")  # This won't be logged
+logger.info("Connecting to database")  # This will be logged
+logger.info("User logged in")  # This won't be logged
+            </code></pre>
+            
+            <p>Filters give you surgical precision in controlling which logs get processed - like a spam filter for your email, but for log messages.</p>
+        </section>
+
+        <section>
+            <h2>Logging Configuration</h2>
+            <p>For complex applications, configuring logging directly in code becomes unwieldy. There are better approaches:</p>
+            
+            <h3>Configuration via Dictionary</h3>
+            <pre><code>
+import logging
+import logging.config
+
+# Configuration dictionary
+config = {
+    'version': 1,
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s - %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'INFO',
+            'formatter': 'simple',
+            'stream': 'ext://sys.stdout'
+        },
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'level': 'DEBUG',
+            'formatter': 'standard',
+            'filename': 'app.log',
+            'maxBytes': 10485760,  # 10MB
+            'backupCount': 5
+        },
+    },
+    'loggers': {
+        '': {  # Root logger
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+        },
+        'myapp.database': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+    }
+}
+
+# Apply configuration
+logging.config.dictConfig(config)
+
+# Get loggers
+root_logger = logging.getLogger()
+db_logger = logging.getLogger('myapp.database')
+
+# Use them
+root_logger.info("Application starting")
+db_logger.debug("Connecting to database...")
+            </code></pre>
+            
+            <h3>Configuration via File</h3>
+            <p>You can also load the configuration from a file (typically JSON or YAML):</p>
+            
+            <pre><code>
+import logging
+import logging.config
+import json
+
+# Load configuration from a JSON file
+with open('logging_config.json', 'r') as f:
+    config = json.load(f)
+
+logging.config.dictConfig(config)
+            </code></pre>
+            
+            <p>This separation of configuration from code allows you to change logging behavior without modifying your application code - a key principle of the 12-factor app methodology.</p>
+        </section>
+
+        <section>
+            <h2>Context: Adding Extra Information</h2>
+            <p>Sometimes you need to add context to your logs that isn't part of the message:</p>
+            
+            <pre><code>
+import logging
+import time
+from logging.config import dictConfig
+
+# Configure a custom formatter that includes extra fields
+config = {
+    'version': 1,
+    'formatters': {
+        'detailed': {
+            'format': '%(asctime)s - %(name)s - %(levelname)s - [%(user_id)s] - %(message)s'
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'detailed',
+            'level': 'DEBUG'
+        }
+    },
+    'loggers': {
+        'myapp': {
+            'handlers': ['console'],
+            'level': 'DEBUG'
+        }
+    }
+}
+
+dictConfig(config)
+logger = logging.getLogger('myapp')
+
+# Use the extra parameter to add context
+def process_request(user_id, action):
+    logger.info(f"Processing {action} request", extra={'user_id': user_id})
+    # ... process the request
+    
+# Will output something like:
+# 2023-07-20 16:25:12,345 - myapp - INFO - [user123] - Processing login request
+process_request('user123', 'login')
+            </code></pre>
+            
+            <p>This approach is like adding metadata to a photo - the image itself (the log message) is enhanced with additional information (location, date, camera settings) that provides context.</p>
+        </section>
+
+        <section>
+            <h2>LogRecord Attributes</h2>
+            <p>When a logging event occurs, a <code>LogRecord</code> object is created with these attributes:</p>
+            
+            <table>
+                <tr>
+                    <th>Attribute</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>args</td>
+                    <td>Arguments merged into msg to create message</td>
+                </tr>
+                <tr>
+                    <td>asctime</td>
+                    <td>Human-readable time when LogRecord was created</td>
+                </tr>
+                <tr>
+                    <td>created</td>
+                    <td>Time when LogRecord was created (seconds since epoch)</td>
+                </tr>
+                <tr>
+                    <td>exc_info</td>
+                    <td>Exception tuple or None</td>
+                </tr>
+                <tr>
+                    <td>filename</td>
+                    <td>Filename of the source file where logging call was made</td>
+                </tr>
+                <tr>
+                    <td>levelname</td>
+                    <td>Text logging level ('DEBUG', 'INFO', etc.)</td>
+                </tr>
+                <tr>
+                    <td>levelno</td>
+                    <td>Numeric logging level</td>
+                </tr>
+                <tr>
+                    <td>lineno</td>
+                    <td>Line number in source file where logging call was made</td>
+                </tr>
+                <tr>
+                    <td>module</td>
+                    <td>Module name where logging call was made</td>
+                </tr>
+                <tr>
+                    <td>msecs</td>
+                    <td>Millisecond portion of time when record was created</td>
+                </tr>
+                <tr>
+                    <td>message</td>
+                    <td>Formatted log message</td>
+                </tr>
+                <tr>
+                    <td>msg</td>
+                    <td>Original log message format string</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>Name of the logger used</td>
+                </tr>
+                <tr>
+                    <td>pathname</td>
+                    <td>Full path of the source file</td>
+                </tr>
+                <tr>
+                    <td>process</td>
+                    <td>Process ID</td>
+                </tr>
+                <tr>
+                    <td>processName</td>
+                    <td>Process name</td>
+                </tr>
+                <tr>
+                    <td>thread</td>
+                    <td>Thread ID</td>
+                </tr>
+                <tr>
+                    <td>threadName</td>
+                    <td>Thread name</td>
+                </tr>
+            </table>
+            
+            <p>These attributes can be referenced in format strings using <code>%(attribute)s</code> syntax.</p>
+        </section>
+
+        <section>
+            <h2>Real-World Example: Web Application Logging</h2>
+            <p>Let's put it all together with a practical web application logging setup:</p>
+            
+            <pre><code>
+# app/logging_config.py
+import os
+import logging
+from logging.handlers import RotatingFileHandler, SMTPHandler
+
+def setup_logging(app):
+    """Configure logging for a Flask application"""
+    
+    # Ensure log directory exists
+    if not os.path.exists('logs'):
+        os.mkdir('logs')
+    
+    # File handler for general logs
+    file_handler = RotatingFileHandler(
+        'logs/app.log',
+        maxBytes=10485760,  # 10MB
+        backupCount=10
+    )
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    app.logger.addHandler(file_handler)
+    
+    # File handler for errors (separate file, includes traceback)
+    error_file_handler = RotatingFileHandler(
+        'logs/error.log',
+        maxBytes=10485760,
+        backupCount=10
+    )
+    error_file_handler.setLevel(logging.ERROR)
+    error_file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    app.logger.addHandler(error_file_handler)
+    
+    # Email handler for critical errors
+    if not app.debug and app.config.get('MAIL_SERVER'):
+        auth = None
+        if app.config.get('MAIL_USERNAME') or app.config.get('MAIL_PASSWORD'):
+            auth = (app.config.get('MAIL_USERNAME'), app.config.get('MAIL_PASSWORD'))
+            
+        mail_handler = SMTPHandler(
+            mailhost=(app.config.get('MAIL_SERVER'), app.config.get('MAIL_PORT')),
+            fromaddr='no-reply@' + app.config.get('MAIL_SERVER'),
+            toaddrs=app.config.get('ADMINS'),
+            subject='Application Error',
+            credentials=auth,
+            secure=() if app.config.get('MAIL_USE_TLS') else None
+        )
+        mail_handler.setLevel(logging.ERROR)
+        app.logger.addHandler(mail_handler)
+    
+    # Set overall level
+    app.logger.setLevel(logging.INFO)
+    app.logger.info('Application startup')
+    
+# app/__init__.py
+from flask import Flask
+from app.logging_config import setup_logging
+
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+    
+    # Set up logging
+    setup_logging(app)
+    
+    # Register blueprints, setup database, etc.
+    # ...
+    
+    @app.route('/api/users', methods=['POST'])
+    def create_user():
+        app.logger.info('Request to create user')
+        try:
+            # Process user creation
+            app.logger.info(f'User {new_user.username} created successfully')
+            return jsonify(new_user.to_dict()), 201
+        except Exception as e:
+            app.logger.error(f'Error creating user: {str(e)}', exc_info=True)
+            return jsonify({'error': 'Failed to create user'}), 500
+            
+    return app
+            </code></pre>
+            
+            <p>This setup provides:</p>
+            <ul>
+                <li>Regular application logs to <code>app.log</code> (with rotation)</li>
+                <li>Error-level logs to a separate <code>error.log</code> for easier troubleshooting</li>
+                <li>Email notifications for errors in production</li>
+                <li>Detailed context for all logs (file, line number, etc.)</li>
+            </ul>
+            
+            <p>With this configuration, you'll be well-equipped to monitor and troubleshoot your application in production.</p>
+        </section>
+
+        <section>
+            <h2>Logging in Libraries</h2>
+            <p>If you're developing a library (as opposed to an application), you should follow best practices for library logging:</p>
+            
+            <pre><code>
+# mylib/__init__.py
+import logging
+
+# Create a logger with the module name
+logger = logging.getLogger(__name__)
+
+# Important: Add a NullHandler to prevent "No handlers could be found" warning
+# when the library is used by an application that doesn't configure logging
+logger.addHandler(logging.NullHandler())
+
+def some_function():
+    logger.debug("Debug information from library")
+    try:
+        # Some operation
+        logger.info("Operation completed")
+    except Exception as e:
+        logger.error(f"Error during operation: {e}", exc_info=True)
+            </code></pre>
+            
+            <p>Key principles for library logging:</p>
+            <ul>
+                <li>Always add a <code>NullHandler</code> to prevent warnings</li>
+                <li>Use the module name (<code>__name__</code>) as the logger name</li>
+                <li>Don't configure handlers or levels (that's the application's job)</li>
+                <li>Log appropriately at different severity levels</li>
+                <li>Document your logging practices for library users</li>
+            </ul>
+            
+            <p>This is like designing a component with clearly labeled connectors - the parent system decides how to use them, but you make it easy to integrate.</p>
+        </section>
+
+        <section>
+            <h2>Integrating with Web Frameworks</h2>
+            
+            <h3>Flask</h3>
+            <p>Flask uses Python's <code>logging</code> module and provides the <code>app.logger</code>:</p>
+            
+            <pre><code>
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    app.logger.info('Index page requested')
+    return 'Hello World!'
+
+@app.errorhandler(500)
+def server_error(e):
+    app.logger.error('Server error', exc_info=e)
+    return 'An error occurred', 500
+            </code></pre>
+            
+            <h3>Django</h3>
+            <p>Django has a more comprehensive logging configuration system:</p>
+            
+            <pre><code>
+# settings.py
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'debug.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'myapp': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
+
+# views.py
+import logging
+
+logger = logging.getLogger('myapp')
+
+def my_view(request):
+    logger.info(f"View accessed by user {request.user}")
+    try:
+        # View logic
+        logger.debug("Processing view logic")
+        return HttpResponse("Success")
+    except Exception as e:
+        logger.error("Error in view", exc_info=True)
+        return HttpResponse("Error", status=500)
+            </code></pre>
+            
+            <p>Both frameworks integrate well with Python's logging system, allowing you to leverage all the features we've discussed.</p>
+        </section>
+
+        <section>
+            <h2>Beyond Basic Logging: Advanced Patterns</h2>
+            
+            <h3>Structuring Logs for Machine Processing</h3>
+            <p>In modern systems, logs are often processed by tools like ELK (Elasticsearch, Logstash, Kibana) or Splunk. Structured logging helps:</p>
+            
+            <pre><code>
+import logging
+import json
+
+class JsonFormatter(logging.Formatter):
+    """Format logs as JSON for easy parsing"""
+    
+    def format(self, record):
+        log_record = {
+            'timestamp': self.formatTime(record),
+            'level': record.levelname,
+            'name': record.name,
+            'message': record.getMessage(),
+            'module': record.module,
+            'function': record.funcName,
+            'line': record.lineno,
+        }
+        
+        # Add any extra attributes
+        for key, value in record.__dict__.items():
+            if key not in log_record and not key.startswith('_') and isinstance(value, (str, int, float, bool, type(None))):
+                log_record[key] = value
+                
+        # Add exception info if present
+        if record.exc_info:
+            log_record['exception'] = self.formatException(record.exc_info)
+            
+        return json.dumps(log_record)
+
+# Use the formatter
+handler = logging.StreamHandler()
+handler.setFormatter(JsonFormatter())
+
+logger = logging.getLogger('myapp')
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+
+# Log with extra context
+logger.info("User authenticated", extra={
+    'user_id': 'user123',
+    'ip_address': '192.168.1.1',
+    'session_id': 'abc123'
+})
+            </code></pre>
+            
+            <p>This produces JSON logs that can be easily parsed and indexed by log management systems:</p>
+            
+            <pre><code>
+{"timestamp": "2023-07-20 17:15:30,123", "level": "INFO", "name": "myapp", "message": "User authenticated", "module": "auth", "function": "authenticate", "line": 45, "user_id": "user123", "ip_address": "192.168.1.1", "session_id": "abc123"}
+            </code></pre>
+            
+            <h3>Request Context Logging</h3>
+            <p>In web applications, it's useful to associate all logs from a single request:</p>
+            
+            <pre><code>
+import logging
+import uuid
+from flask import Flask, request, g
+
+app = Flask(__name__)
+
+@app.before_request
+def before_request():
+    # Generate a unique ID for this request
+    request_id = str(uuid.uuid4())
+    g.request_id = request_id
+
+class RequestIdFilter(logging.Filter):
+    """Add request_id to all log records"""
+    
+    def filter(self, record):
+        record.request_id = getattr(g, 'request_id', 'no_request_id')
+        return True
+
+# Configure logger
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter(
+    '%(asctime)s - [%(request_id)s] - %(levelname)s - %(message)s'
+))
+handler.addFilter(RequestIdFilter())
+
+app.logger.addHandler(handler)
+app.logger.setLevel(logging.INFO)
+
+@app.route('/')
+def index():
+    app.logger.info("Processing index request")
+    # More processing...
+    app.logger.info("Rendering index template")
+    return "Hello World"
+            </code></pre>
+            
+            <p>This allows you to trace a request through your system, even in high-traffic environments where logs from different requests are interleaved.</p>
+        </section>
+
+        <section>
+            <h2>Lab Exercise: Implementing Logging in a Web Application</h2>
+            
+            <p>Now it's your turn to apply what you've learned. Implement a comprehensive logging system for a Flask or Django application that includes:</p>
+            
+            <ol>
+                <li>Separate log files for different severity levels</li>
+                <li>Log rotation to manage file sizes</li>
+                <li>Contextual information in logs (request IDs, user IDs when available)</li>
+                <li>Structured log format for machine processing</li>
+                <li>Exception logging with full tracebacks</li>
+                <li>Different log levels for development and production</li>
+            </ol>
+            
+            <p>For bonus points:</p>
+            <ul>
+                <li>Implement email notifications for critical errors</li>
+                <li>Create a custom log viewer in your web application's admin interface</li>
+                <li>Set up log aggregation with a tool like ELK stack or Grafana/Loki</li>
+            </ul>
+            
+            <p>Remember, good logging is an investment that pays dividends when troubleshooting issues in production!</p>
+        </section>
+
+        <section>
+            <h2>Conclusion</h2>
+            <p>The <code>logging</code> module is a powerful tool that transforms debugging from an ad-hoc process to a systematic approach. By implementing proper logging in your applications, you:</p>
+            
+            <ul>
+                <li>Create a trail of breadcrumbs for troubleshooting</li>
+                <li>Enable visibility into production environments</li>
+                <li>Provide context for understanding application behavior</li>
+                <li>Support analysis and monitoring of your system</li>
+                <li>Demonstrate professionalism in your codebase</li>
+            </ul>
+            
+            <p>As you continue through this course, integrate good logging practices into all your projects - your future self (and colleagues) will thank you when debugging production issues at 2 AM!</p>
+        </section>
+
+        <section>
+            <h2>Further Resources</h2>
+            <ul>
+                <li><a href="https://docs.python.org/3/library/logging.html" target="_blank">Official Python logging documentation</a></li>
+                <li><a href="https://docs.python.org/3/howto/logging.html" target="_blank">Python Logging HOWTO</a></li>
+                <li><a href="https://docs.python.org/3/howto/logging-cookbook.html" target="_blank">Python Logging Cookbook</a></li>
+                <li><a href="https://flask.palletsprojects.com/en/2.0.x/logging/" target="_blank">Flask Logging Documentation</a></li>
+                <li><a href="https://docs.djangoproject.com/en/3.2/topics/logging/" target="_blank">Django Logging Documentation</a></li>
+                <li><a href="https://12factor.net/logs" target="_blank">The Twelve-Factor App: Logs</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

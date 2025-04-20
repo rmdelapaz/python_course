@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For JavaScript Developers: Comparison to Node.js Standard Libraries</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>For JavaScript Developers: Comparison to Node.js Standard Libraries</h1>
+        <h2>Week 3: Thursday Afternoon Session</h2>
+    </header>
+
+    <main>
+        <section class="intro">
+            <h2>Introduction: Bridging Two Worlds</h2>
+            <p>Welcome to our special session designed for JavaScript developers transitioning to Python! Today, we'll explore how Python's standard library compares to the Node.js ecosystem you're already familiar with.</p>
+            
+            <p>If you're coming from a JavaScript/Node.js background, you'll find that Python's philosophy regarding standard libraries is somewhat different. While Node.js has a minimal core with most functionality distributed as npm packages, Python follows the "batteries included" philosophy with a rich standard library that covers many common tasks right out of the box.</p>
+            
+            <p>This tutorial will be stored in your course folder as: <code>/03week_3day_a.html</code></p>
+        </section>
+
+        <section>
+            <h2>Philosophy Differences: Batteries Included vs. Minimal Core</h2>
+            <p>Before we dive into specific modules, let's understand the key philosophical differences:</p>
+            
+            <h3>Node.js Philosophy</h3>
+            <ul>
+                <li><strong>Minimal Core</strong>: Small standard library with limited built-in modules</li>
+                <li><strong>Package Ecosystem</strong>: Heavy reliance on npm, the world's largest package registry</li>
+                <li><strong>Specialized Tools</strong>: Tendency to use specialized packages for specific tasks</li>
+                <li><strong>Community-Driven</strong>: Rapid evolution through community contributions</li>
+            </ul>
+            
+            <h3>Python Philosophy</h3>
+            <ul>
+                <li><strong>Batteries Included</strong>: Extensive standard library covering many common use cases</li>
+                <li><strong>Consistency</strong>: Core modules maintained together ensure coherent design</li>
+                <li><strong>Stability</strong>: Standard library changes relatively slowly</li>
+                <li><strong>PyPI Growth</strong>: Third-party package ecosystem (PyPI) still important for specialized needs</li>
+            </ul>
+            
+            <p>For JavaScript developers, this means you'll find many functionalities already built into Python that would require npm packages in Node.js. It's like moving from a modular smartphone where you add components as needed to a Swiss Army knife with many tools already attached.</p>
+        </section>
+
+        <section>
+            <h2>Core System Modules Comparison</h2>
+            
+            <h3>File System Operations</h3>
+            <div class="comparison-table">
+                <div class="node">
+                    <h4>Node.js: fs module</h4>
+                    <pre><code>
+const fs = require('fs');
+
+// Read a file
+fs.readFile('file.txt', 'utf8', (err, data) => {
+  if (err) throw err;
+  console.log(data);
+});
+
+// Synchronous version
+const data = fs.readFileSync('file.txt', 'utf8');
+
+// Write to a file
+fs.writeFile('output.txt', 'Hello World!', err => {
+  if (err) throw err;
+  console.log('File written');
+});
+
+// Check if file exists
+fs.access('file.txt', fs.constants.F_OK, err => {
+  console.log(err ? 'Does not exist' : 'Exists');
+});
+                    </code></pre>
+                </div>
+                <div class="python">
+                    <h4>Python: os, io, and pathlib modules</h4>
+                    <pre><code>
+import os
+import io
+from pathlib import Path
+
+# Read a file
+with open('file.txt', 'r', encoding='utf-8') as f:
+    data = f.read()
+    print(data)
+
+# Write to a file
+with open('output.txt', 'w', encoding='utf-8') as f:
+    f.write('Hello World!')
+    print('File written')
+
+# Check if file exists
+file_exists = os.path.exists('file.txt')
+print('Exists' if file_exists else 'Does not exist')
+
+# Modern approach with pathlib (Python 3.4+)
+path = Path('file.txt')
+if path.exists():
+    content = path.read_text(encoding='utf-8')
+    print(content)
+                    </code></pre>
+                </div>
+            </div>
+            
+            <p>Key differences:</p>
+            <ul>
+                <li>Python's file operations are synchronous by default, whereas Node.js offers both async and sync versions</li>
+                <li>Python's context manager (<code>with</code> statement) handles resource cleanup automatically</li>
+                <li>Python's <code>pathlib</code> module (added in 3.4) provides an object-oriented approach to file paths</li>
+                <li>Node.js methods tend to follow callback patterns, while Python uses return values and exceptions</li>
+            </ul>
+            
+            <h3>Path Handling</h3>
+            <div class="comparison-table">
+                <div class="node">
+                    <h4>Node.js: path module</h4>
+                    <pre><code>
+const path = require('path');
+
+// Join paths
+const fullPath = path.join(__dirname, 'subfolder', 'file.txt');
+
+// Get file extension
+const ext = path.extname('file.txt');  // '.txt'
+
+// Parse path
+const pathInfo = path.parse('/home/user/file.txt');
+// { root: '/', dir: '/home/user', base: 'file.txt', 
+//   ext: '.txt', name: 'file' }
+
+// Normalize path
+const normalized = path.normalize('/home/user/../otheruser/file.txt');
+// '/home/otheruser/file.txt'
+                    </code></pre>
+                </div>
+                <div class="python">
+                    <h4>Python: os.path and pathlib</h4>
+                    <pre><code>
+import os.path
+from pathlib import Path
+
+# os.path approach
+# Join paths
+full_path = os.path.join(os.path.dirname(__file__), 
+                        'subfolder', 'file.txt')
+
+# Get file extension
+ext = os.path.splitext('file.txt')[1]  # '.txt'
+
+# Parse path
+dirname = os.path.dirname('/home/user/file.txt')  # '/home/user'
+basename = os.path.basename('/home/user/file.txt')  # 'file.txt'
+filename, ext = os.path.splitext(basename)  # 'file', '.txt'
+
+# Normalize path
+normalized = os.path.normpath('/home/user/../otheruser/file.txt')
+# '/home/otheruser/file.txt'
+
+# pathlib approach (modern, object-oriented)
+path = Path('/home/user/file.txt')
+print(path.parent)  # /home/user
+print(path.name)    # file.txt
+print(path.suffix)  # .txt
+print(path.stem)    # file
+
+# Join paths
+full_path = Path(__file__).parent / 'subfolder' / 'file.txt'
+
+# Normalize path
+normalized = Path('/home/user/../otheruser/file.txt').resolve()
+                    </code></pre>
+                </div>
+            </div>
+            
+            <p>Key differences:</p>
+            <ul>
+                <li>Python offers both a traditional approach (<code>os.path</code>) and an object-oriented approach (<code>pathlib</code>)</li>
+                <li>Path objects in Python are more powerful, supporting operations like <code>/</code> for path joining</li>
+                <li>Python's <code>pathlib</code> integrates path manipulation with file operations in a cleaner API</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>HTTP and Network Communication</h3>
+            <div class="comparison-table">
+                <div class="node">
+                    <h4>Node.js: http, https, net</h4>
+                    <pre><code>
+const http = require('http');
+
+// Make an HTTP request
+http.get('http://api.example.com/data', (res) => {
+  let data = '';
+  
+  res.on('data', (chunk) => {
+    data += chunk;
+  });
+  
+  res.on('end', () => {
+    console.log(JSON.parse(data));
+  });
+}).on('error', (err) => {
+  console.error(`Error: ${err.message}`);
+});
+
+// Create an HTTP server
+const server = http.createServer((req, res) => {
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
+  res.end('Hello World\n');
+});
+
+server.listen(3000, '127.0.0.1', () => {
+  console.log('Server running at http://127.0.0.1:3000/');
+});
+                    </code></pre>
+                </div>
+                <div class="python">
+                    <h4>Python: http.client, http.server, urllib, requests (3rd party)</h4>
+                    <pre><code>
+# Using urllib (built-in)
+import json
+from urllib.request import urlopen
+from urllib.error import URLError
+
+try:
+    with urlopen('http://api.example.com/data') as response:
+        data = json.loads(response.read().decode('utf-8'))
+        print(data)
+except URLError as e:
+    print(f'Error: {e.reason}')
+
+# Note: Most Python developers use the 'requests' 
+# third-party library instead of urllib
+import requests  # Not in standard library but widely used
+
+response = requests.get('http://api.example.com/data')
+data = response.json()
+print(data)
+
+# Create an HTTP server
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+class SimpleHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/plain')
+        self.end_headers()
+        self.wfile.write(b'Hello World\n')
+
+server = HTTPServer(('127.0.0.1', 3000), SimpleHandler)
+print('Server running at http://127.0.0.1:3000/')
+server.serve_forever()
+                    </code></pre>
+                </div>
+            </div>
+            
+            <p>Key differences:</p>
+            <ul>
+                <li>Node.js has a more streamlined API for HTTP operations as it was designed for web servers</li>
+                <li>Python's standard library HTTP modules are lower-level; most developers use the third-party <code>requests</code> library</li>
+                <li>Node.js embraces asynchronous callbacks and events, while Python's standard modules are synchronous</li>
+                <li>Python's server implementation requires more boilerplate code</li>
+            </ul>
+            
+            <div class="note">
+                <p><strong>Note:</strong> For serious web development in Python, frameworks like Flask or Django are commonly used, similar to how Express.js is common in Node.js.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>Date and Time Handling</h3>
+            <div class="comparison-table">
+                <div class="node">
+                    <h4>Node.js: Date object</h4>
+                    <pre><code>
+// Current date and time
+const now = new Date();
+console.log(now);
+
+// Create specific date
+const date = new Date('2023-07-20T12:00:00Z');
+console.log(date);
+
+// Date components
+console.log(date.getFullYear());  // 2023
+console.log(date.getMonth());     // 6 (0-based, so July = 6)
+console.log(date.getDate());      // 20
+console.log(date.getHours());     // 12 (or localized)
+
+// Format date (often use libraries like date-fns or moment.js)
+console.log(date.toISOString());  // '2023-07-20T12:00:00.000Z'
+console.log(date.toLocaleString());  // Locale-specific format
+
+// Get timestamp
+const timestamp = date.getTime();  // milliseconds since epoch
+                    </code></pre>
+                </div>
+                <div class="python">
+                    <h4>Python: datetime, time, calendar</h4>
+                    <pre><code>
+from datetime import datetime, date, time, timedelta
+import calendar
+
+# Current date and time
+now = datetime.now()
+print(now)
+
+# Create specific date
+dt = datetime(2023, 7, 20, 12, 0, 0)
+print(dt)
+
+# From ISO format
+dt = datetime.fromisoformat('2023-07-20T12:00:00')
+print(dt)
+
+# Date components
+print(dt.year)    # 2023
+print(dt.month)   # 7 (1-based, so July = 7)
+print(dt.day)     # 20
+print(dt.hour)    # 12
+
+# Format date
+print(dt.isoformat())  # '2023-07-20T12:00:00'
+print(dt.strftime('%Y-%m-%d %H:%M:%S'))  # '2023-07-20 12:00:00'
+
+# Get timestamp
+timestamp = dt.timestamp()  # seconds since epoch
+
+# Date arithmetic
+tomorrow = dt + timedelta(days=1)
+print(tomorrow)
+
+# Calendar operations
+cal = calendar.month(2023, 7)
+print(cal)  # Prints a text calendar for July 2023
+                    </code></pre>
+                </div>
+            </div>
+            
+            <p>Key differences:</p>
+            <ul>
+                <li>Python separates concerns with different types (<code>datetime</code>, <code>date</code>, <code>time</code>)</li>
+                <li>JavaScript's <code>Date</code> uses 0-based months (January = 0), while Python uses 1-based months (January = 1)</li>
+                <li>Python's <code>timedelta</code> makes date arithmetic more intuitive</li>
+                <li>Python's <code>calendar</code> module includes advanced calendar functionality</li>
+                <li>Python's date formatting with <code>strftime</code> is more consistent than JavaScript's varying methods</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Process and Environment</h3>
+            <div class="comparison-table">
+                <div class="node">
+                    <h4>Node.js: process module</h4>
+                    <pre><code>
+// Access environment variables
+const apiKey = process.env.API_KEY;
+
+// Command line arguments
+console.log(process.argv);  // Array of arguments
+
+// Exit process
+process.exit(1);  // Exit with error code 1
+
+// Current working directory
+console.log(process.cwd());
+
+// Process ID
+console.log(`Process ID: ${process.pid}`);
+
+// Event handling
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
+  process.exit(1);
+});
+                    </code></pre>
+                </div>
+                <div class="python">
+                    <h4>Python: os, sys modules</h4>
+                    <pre><code>
+import os
+import sys
+
+# Access environment variables
+api_key = os.environ.get('API_KEY')
+
+# Command line arguments
+print(sys.argv)  # List of arguments
+
+# Exit process
+sys.exit(1)  # Exit with error code 1
+
+# Current working directory
+print(os.getcwd())
+
+# Process ID
+print(f"Process ID: {os.getpid()}")
+
+# Exception handling (no direct equivalent to 'uncaughtException')
+try:
+    # Your code here
+    pass
+except Exception as e:
+    print(f"Uncaught exception: {e}")
+    sys.exit(1)
+
+# Or use sys.excepthook for global exception handling
+def custom_excepthook(exc_type, exc_value, exc_traceback):
+    print(f"Uncaught exception: {exc_value}")
+    sys.exit(1)
+
+sys.excepthook = custom_excepthook
+                    </code></pre>
+                </div>
+            </div>
+            
+            <p>Key differences:</p>
+            <ul>
+                <li>Node.js centralizes process functionality in the <code>process</code> module, while Python splits it between <code>os</code> and <code>sys</code></li>
+                <li>Node.js uses event emitters for process events, whereas Python uses different mechanisms for similar functionality</li>
+                <li>Python's environment variable access requires explicit dictionary access through <code>os.environ</code></li>
+                <li>Python has less built-in support for asynchronous process management</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>JSON Handling</h3>
+            <div class="comparison-table">
+                <div class="node">
+                    <h4>Node.js: JSON global object</h4>
+                    <pre><code>
+// Parse JSON string to object
+const jsonString = '{"name": "Alice", "age": 30}';
+const person = JSON.parse(jsonString);
+console.log(person.name);  // Alice
+
+// Convert object to JSON string
+const obj = { name: 'Bob', age: 25, active: true };
+const objString = JSON.stringify(obj);
+console.log(objString);  // '{"name":"Bob","age":25,"active":true}'
+
+// Pretty print
+console.log(JSON.stringify(obj, null, 2));
+                    </code></pre>
+                </div>
+                <div class="python">
+                    <h4>Python: json module</h4>
+                    <pre><code>
+import json
+
+# Parse JSON string to object
+json_string = '{"name": "Alice", "age": 30}'
+person = json.loads(json_string)
+print(person['name'])  # Alice
+
+# Convert object to JSON string
+obj = {'name': 'Bob', 'age': 25, 'active': True}
+obj_string = json.dumps(obj)
+print(obj_string)  # '{"name": "Bob", "age": 25, "active": true}'
+
+# Pretty print
+print(json.dumps(obj, indent=2))
+
+# Working with files
+with open('data.json', 'w') as f:
+    json.dump(obj, f, indent=2)
+
+with open('data.json', 'r') as f:
+    loaded_obj = json.load(f)
+                    </code></pre>
+                </div>
+            </div>
+            
+            <p>Key differences:</p>
+            <ul>
+                <li>JavaScript has JSON as a global object, while Python uses the standard library <code>json</code> module</li>
+                <li>Python's <code>json</code> module has separate functions for string operations (<code>loads</code>/<code>dumps</code>) and file operations (<code>load</code>/<code>dump</code>)</li>
+                <li>JavaScript uses camelCase for method names, while Python uses snake_case</li>
+                <li>Both languages handle the conversion between JSON and native data structures similarly</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Async Programming Comparison</h2>
+            <p>One of the biggest differences between Node.js and Python is their approach to asynchronous programming:</p>
+            
+            <div class="comparison-table">
+                <div class="node">
+                    <h4>Node.js: Callbacks, Promises, Async/Await</h4>
+                    <pre><code>
+// Callback-based (older style)
+fs.readFile('file.txt', 'utf8', (err, data) => {
+  if (err) throw err;
+  console.log(data);
+});
+
+// Promise-based
+const fs = require('fs').promises;
+
+fs.readFile('file.txt', 'utf8')
+  .then(data => {
+    console.log(data);
+    return fs.writeFile('output.txt', data);
+  })
+  .then(() => {
+    console.log('File written');
+  })
+  .catch(err => {
+    console.error('Error:', err);
+  });
+
+// Async/await
+async function processFile() {
+  try {
+    const data = await fs.readFile('file.txt', 'utf8');
+    console.log(data);
+    await fs.writeFile('output.txt', data);
+    console.log('File written');
+  } catch (err) {
+    console.error('Error:', err);
+  }
+}
+
+processFile();
+                    </code></pre>
+                </div>
+                <div class="python">
+                    <h4>Python: asyncio, async/await (Python 3.5+)</h4>
+                    <pre><code>
+import asyncio
+import aiofiles  # Not in standard library
+
+# Async/await style (Python 3.5+)
+async def process_file():
+    try:
+        async with aiofiles.open('file.txt', 'r') as f:
+            data = await f.read()
+            print(data)
+        
+        async with aiofiles.open('output.txt', 'w') as f:
+            await f.write(data)
+            print('File written')
+    except Exception as e:
+        print(f'Error: {e}')
+
+# Run the async function
+asyncio.run(process_file())  # Python 3.7+
+
+# Python 3.6 and earlier
+# loop = asyncio.get_event_loop()
+# loop.run_until_complete(process_file())
+# loop.close()
+
+# Note: Many standard library functions don't have async
+# versions. Third-party packages like aiofiles, aiohttp,
+# etc. are often needed.
+                    </code></pre>
+                </div>
+            </div>
+            
+            <p>Key differences:</p>
+            <ul>
+                <li>Node.js was designed from the ground up for asynchronous programming</li>
+                <li>Python added async/await support in version 3.5 (2015), while Node.js had some form of async from the beginning</li>
+                <li>Python's standard library has fewer built-in async functions; third-party packages fill this gap</li>
+                <li>Node.js async functions implicitly return Promises; Python uses coroutines and the <code>asyncio</code> event loop</li>
+                <li>Python's async model requires more explicit management of the event loop</li>
+            </ul>
+            
+            <div class="note">
+                <p><strong>Note:</strong> Python's async capabilities have been growing stronger with each release, but Node.js still has an edge in terms of ecosystem support for asynchronous programming, particularly in I/O-bound web applications.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Common Tasks Comparison</h2>
+            
+            <h3>Parsing Command-Line Arguments</h3>
+            <div class="comparison-table">
+                <div class="node">
+                    <h4>Node.js: process.argv or libraries</h4>
+                    <pre><code>
+// Basic: process.argv
+const args = process.argv.slice(2);  // Skip node and script name
+console.log('Arguments:', args);
+
+// Using minimist (common npm package)
+const minimist = require('minimist');
+const args = minimist(process.argv.slice(2));
+console.log(args);
+// node script.js --port 8080 --debug
+// { _: [], port: 8080, debug: true }
+                    </code></pre>
+                </div>
+                <div class="python">
+                    <h4>Python: argparse module</h4>
+                    <pre><code>
+import argparse
+
+parser = argparse.ArgumentParser(description='Sample program')
+parser.add_argument('--port', type=int, default=3000,
+                    help='Port to run the server on')
+parser.add_argument('--debug', action='store_true',
+                    help='Enable debug mode')
+                    
+args = parser.parse_args()
+print(f"Port: {args.port}, Debug: {args.debug}")
+# python script.py --port 8080 --debug
+# Port: 8080, Debug: True
+                    </code></pre>
+                </div>
+            </div>
+            
+            <p>Key differences:</p>
+            <ul>
+                <li>Python's <code>argparse</code> is a powerful built-in module with extensive features</li>
+                <li>Node.js requires a third-party library like <code>minimist</code>, <code>yargs</code>, or <code>commander</code> for advanced CLI argument parsing</li>
+                <li>Python's <code>argparse</code> provides automatic help generation, type conversion, and validation</li>
+            </ul>
+            
+            <h3>HTTP Requests</h3>
+            <div class="comparison-table">
+                <div class="node">
+                    <h4>Node.js: http, https, or third-party libraries</h4>
+                    <pre><code>
+// Using built-in http module
+const https = require('https');
+
+https.get('https://api.example.com/data', (res) => {
+  let data = '';
+  
+  res.on('data', (chunk) => {
+    data += chunk;
+  });
+  
+  res.on('end', () => {
+    console.log(JSON.parse(data));
+  });
+}).on('error', (err) => {
+  console.error(`Error: ${err.message}`);
+});
+
+// Using Axios (popular npm package)
+const axios = require('axios');
+
+axios.get('https://api.example.com/data')
+  .then(response => {
+    console.log(response.data);
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+                    </code></pre>
+                </div>
+                <div class="python">
+                    <h4>Python: urllib, requests (third-party but de facto standard)</h4>
+                    <pre><code>
+# Using urllib from standard library
+from urllib.request import urlopen
+import json
+
+try:
+    with urlopen('https://api.example.com/data') as response:
+        data = json.loads(response.read().decode('utf-8'))
+        print(data)
+except Exception as e:
+    print(f'Error: {e}')
+
+# Using requests (third-party but widely used)
+import requests
+
+try:
+    response = requests.get('https://api.example.com/data')
+    response.raise_for_status()  # Raise exception for 4XX/5XX status
+    data = response.json()
+    print(data)
+except requests.exceptions.RequestException as e:
+    print(f'Error: {e}')
+                    </code></pre>
+                </div>
+            </div>
+            
+            <p>Key differences:</p>
+            <ul>
+                <li>Both ecosystems have standard library solutions and popular third-party libraries</li>
+                <li>Python's <code>requests</code> library is so widely used it's almost considered part of the standard library</li>
+                <li>Node.js HTTP modules use event-based patterns, while Python's use more synchronous patterns</li>
+                <li>Python's <code>requests</code> has a cleaner and more intuitive API than <code>urllib</code></li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Working with Databases</h3>
+            <div class="comparison-table">
+                <div class="node">
+                    <h4>Node.js: Third-party packages</h4>
+                    <pre><code>
+// Using mysql package (not in standard library)
+const mysql = require('mysql');
+
+const connection = mysql.createConnection({
+  host: 'localhost',
+  user: 'user',
+  password: 'password',
+  database: 'mydb'
+});
+
+connection.connect();
+
+connection.query('SELECT * FROM users', (error, results) => {
+  if (error) throw error;
+  console.log('Users:', results);
+});
+
+connection.end();
+
+// Using mongodb package (not in standard library)
+const MongoClient = require('mongodb').MongoClient;
+
+MongoClient.connect('mongodb://localhost:27017', (err, client) => {
+  if (err) throw err;
+  
+  const db = client.db('mydb');
+  db.collection('users').find({}).toArray((err, users) => {
+    if (err) throw err;
+    console.log('Users:', users);
+    client.close();
+  });
+});
+                    </code></pre>
+                </div>
+                <div class="python">
+                    <h4>Python: sqlite3 in standard library, others as packages</h4>
+                    <pre><code>
+# Using sqlite3 from standard library
+import sqlite3
+
+conn = sqlite3.connect('database.db')
+cursor = conn.cursor()
+
+cursor.execute('SELECT * FROM users')
+users = cursor.fetchall()
+print('Users:', users)
+
+conn.close()
+
+# Using mysql-connector-python (third-party)
+import mysql.connector
+
+conn = mysql.connector.connect(
+    host='localhost',
+    user='user',
+    password='password',
+    database='mydb'
+)
+cursor = conn.cursor()
+
+cursor.execute('SELECT * FROM users')
+users = cursor.fetchall()
+print('Users:', users)
+
+conn.close()
+
+# Using pymongo (third-party)
+from pymongo import MongoClient
+
+client = MongoClient('mongodb://localhost:27017/')
+db = client['mydb']
+users = list(db.users.find({}))
+print('Users:', users)
+
+client.close()
+                    </code></pre>
+                </div>
+            </div>
+            
+            <p>Key differences:</p>
+            <ul>
+                <li>Python includes <code>sqlite3</code> in its standard library, while Node.js has no built-in database drivers</li>
+                <li>Both ecosystems rely on third-party packages for other database systems</li>
+                <li>Python's database APIs typically follow the DB-API 2.0 specification, providing some consistency across different database packages</li>
+                <li>Node.js database interfaces often use callback or Promise patterns, while Python's are generally synchronous</li>
+                <li>Both languages have ORM libraries as separate packages (e.g., Sequelize for Node.js, SQLAlchemy for Python)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Specialized Areas Comparison</h2>
+            
+            <h3>Cryptography and Security</h3>
+            <div class="comparison-table">
+                <div class="node">
+                    <h4>Node.js: crypto module</h4>
+                    <pre><code>
+const crypto = require('crypto');
+
+// Hash a string
+const hash = crypto.createHash('sha256')
+                   .update('hello world')
+                   .digest('hex');
+console.log('Hash:', hash);
+
+// Generate random bytes
+const randomBytes = crypto.randomBytes(16).toString('hex');
+console.log('Random:', randomBytes);
+
+// Encrypt/decrypt
+const algorithm = 'aes-256-cbc';
+const key = crypto.randomBytes(32);
+const iv = crypto.randomBytes(16);
+
+function encrypt(text) {
+  const cipher = crypto.createCipheriv(algorithm, key, iv);
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return encrypted;
+}
+
+function decrypt(encrypted) {
+  const decipher = crypto.createDecipheriv(algorithm, key, iv);
+  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
+}
+
+const text = 'Secret message';
+const encrypted = encrypt(text);
+console.log('Encrypted:', encrypted);
+console.log('Decrypted:', decrypt(encrypted));
+                    </code></pre>
+                </div>
+                <div class="python">
+                    <h4>Python: hashlib, secrets, cryptography (third-party)</h4>
+                    <pre><code>
+import hashlib
+import secrets
+from cryptography.fernet import Fernet
+
+# Hash a string
+hash_obj = hashlib.sha256(b'hello world')
+hash_hex = hash_obj.hexdigest()
+print('Hash:', hash_hex)
+
+# Generate random bytes
+random_bytes = secrets.token_hex(16)
+print('Random:', random_bytes)
+
+# Encrypt/decrypt using Fernet (high-level)
+# From cryptography package (third-party)
+key = Fernet.generate_key()
+f = Fernet(key)
+
+text = b'Secret message'
+encrypted = f.encrypt(text)
+print('Encrypted:', encrypted)
+print('Decrypted:', f.decrypt(encrypted).decode())
+
+# For lower-level crypto:
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
+import os
+
+def encrypt(text, key, iv):
+    cipher = Cipher(
+        algorithms.AES(key),
+        modes.CBC(iv),
+        backend=default_backend()
+    )
+    encryptor = cipher.encryptor()
+    # ... (padding logic omitted)
+    return encryptor.update(text) + encryptor.finalize()
+                    </code></pre>
+                </div>
+            </div>
+            
+            <p>Key differences:</p>
+            <ul>
+                <li>Python splits cryptographic functions across multiple modules: <code>hashlib</code>, <code>hmac</code>, <code>secrets</code></li>
+                <li>For advanced cryptography, Python developers typically use the third-party <code>cryptography</code> package</li>
+                <li>Node.js's <code>crypto</code> module provides a comprehensive set of cryptographic functions</li>
+                <li>Python's standard library cryptography modules focus on lower-level primitives, while higher-level APIs are in third-party packages</li>
+            </ul>
+            
+            <h3>Data Processing and Text Handling</h3>
+            <div class="comparison-table">
+                <div class="node">
+                    <h4>Node.js: Built-in and third-party packages</h4>
+                    <pre><code>
+// String operations
+const text = 'Hello, World!';
+console.log(text.toLowerCase());
+console.log(text.split(', '));
+
+// Regular expressions
+const re = /Hello, (\w+)!/;
+const match = re.exec(text);
+console.log(match[1]);  // 'World'
+
+// CSV parsing (using third-party library)
+const csv = require('csv-parser');
+const fs = require('fs');
+const results = [];
+
+fs.createReadStream('data.csv')
+  .pipe(csv())
+  .on('data', (data) => results.push(data))
+  .on('end', () => {
+    console.log(results);
+  });
+                    </code></pre>
+                </div>
+                <div class="python">
+                    <h4>Python: Built-in string methods, re, csv, etc.</h4>
+                    <pre><code>
+# String operations
+text = 'Hello, World!'
+print(text.lower())
+print(text.split(', '))
+
+# Regular expressions
+import re
+match = re.search(r'Hello, (\w+)!', text)
+print(match.group(1))  # 'World'
+
+# CSV parsing
+import csv
+
+with open('data.csv', 'r') as file:
+    csv_reader = csv.DictReader(file)
+    results = list(csv_reader)
+    print(results)
+
+# Text processing with more advanced features
+import string
+import unicodedata
+
+# Remove punctuation
+translator = str.maketrans('', '', string.punctuation)
+no_punct = text.translate(translator)
+print(no_punct)
+
+# Normalize Unicode
+normalized = unicodedata.normalize('NFKD', 'café')
+print(normalized)
+                    </code></pre>
+                </div>
+            </div>
+            
+            <p>Key differences:</p>
+            <ul>
+                <li>Python includes more built-in text processing functionality in its standard library</li>
+                <li>Python's standard library includes modules for CSV, JSON, XML, HTML, and other formats</li>
+                <li>Python has strong Unicode support built into the language</li>
+                <li>Node.js provides basic string operations, but often relies on npm packages for more specialized text processing</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Package Management and Project Structure</h2>
+            
+            <h3>Package Management</h3>
+            <div class="comparison-table">
+                <div class="node">
+                    <h4>Node.js: npm or yarn</h4>
+                    <pre><code>
+// package.json
+{
+  "name": "my-project",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "^4.17.1",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "jest": "^27.0.0"
+  },
+  "scripts": {
+    "start": "node app.js",
+    "test": "jest"
+  }
+}
+
+// Install dependencies
+// $ npm install
+
+// Add a new dependency
+// $ npm install axios --save
+                    </code></pre>
+                </div>
+                <div class="python">
+                    <h4>Python: pip, requirements.txt, virtualenv, poetry, etc.</h4>
+                    <pre><code>
+# requirements.txt
+flask==2.0.1
+requests==2.26.0
+pytest==6.2.5
+
+# Install dependencies
+# $ pip install -r requirements.txt
+
+# Create a virtual environment
+# $ python -m venv venv
+# $ source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Modern approach with Poetry (third-party tool)
+# pyproject.toml
+[tool.poetry]
+name = "my-project"
+version = "0.1.0"
+description = ""
+authors = ["Your Name &lt;your.email@example.com&gt;"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+flask = "^2.0.1"
+requests = "^2.26.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+
+# Install with Poetry
+# $ poetry install
+                    </code></pre>
+                </div>
+            </div>
+            
+            <p>Key differences:</p>
+            <ul>
+                <li>Node.js has a standardized package.json format for project metadata and dependencies</li>
+                <li>Python has multiple approaches: the simple requirements.txt, the newer pyproject.toml, and various tools like pip, Poetry, Pipenv</li>
+                <li>Node.js automatically creates a local node_modules directory for dependencies</li>
+                <li>Python traditionally uses virtual environments to isolate project dependencies</li>
+                <li>Node.js npm/yarn directly integrate scripts for common tasks, while Python often uses separate tools like Make or task runners</li>
+            </ul>
+            
+            <h3>Module Systems</h3>
+            <div class="comparison-table">
+                <div class="node">
+                    <h4>Node.js: require/import</h4>
+                    <pre><code>
+// CommonJS (traditional Node.js)
+const fs = require('fs');
+const { join } = require('path');
+const myModule = require('./my-module');
+
+// ES Modules (newer syntax, needs .mjs or "type": "module")
+import fs from 'fs';
+import { join } from 'path';
+import myModule from './my-module.js';
+                    </code></pre>
+                </div>
+                <div class="python">
+                    <h4>Python: import</h4>
+                    <pre><code>
+# Importing modules
+import os
+import sys
+from pathlib import Path
+
+# Import specific functions/classes
+from datetime import datetime, timedelta
+
+# Import with alias
+import numpy as np
+
+# Relative imports within packages
+from . import sibling_module
+from .subpackage import some_module
+
+# Import everything (generally discouraged)
+from math import *
+                    </code></pre>
+                </div>
+            </div>
+            
+            <p>Key differences:</p>
+            <ul>
+                <li>Node.js has two module systems (CommonJS and ES Modules) with different syntax</li>
+                <li>Python has a single, consistent import system</li>
+                <li>Node.js modules typically export a single object, while Python modules can contain multiple importable entities</li>
+                <li>Python's imports are always explicit, making it clear where each name comes from</li>
+                <li>Python packages use __init__.py files to define what's importable (though these can be empty in modern Python)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Ecosystem Overview</h2>
+            <p>Understanding the ecosystem differences will help you navigate the Python landscape:</p>
+            
+            <h3>Web Development</h3>
+            <table>
+                <tr>
+                    <th>Node.js</th>
+                    <th>Python</th>
+                </tr>
+                <tr>
+                    <td>Express.js (lightweight)</td>
+                    <td>Flask (lightweight)</td>
+                </tr>
+                <tr>
+                    <td>Nest.js (full-featured)</td>
+                    <td>Django (full-featured)</td>
+                </tr>
+                <tr>
+                    <td>Koa.js</td>
+                    <td>FastAPI</td>
+                </tr>
+                <tr>
+                    <td>Hapi.js</td>
+                    <td>Pyramid</td>
+                </tr>
+                <tr>
+                    <td>Next.js (React framework)</td>
+                    <td>Django REST framework (API)</td>
+                </tr>
+            </table>
+            
+            <h3>Data Processing</h3>
+            <table>
+                <tr>
+                    <th>Node.js</th>
+                    <th>Python</th>
+                </tr>
+                <tr>
+                    <td>Lodash (utilities)</td>
+                    <td>NumPy (scientific computing)</td>
+                </tr>
+                <tr>
+                    <td>csv-parse</td>
+                    <td>Pandas (data analysis)</td>
+                </tr>
+                <tr>
+                    <td>xlsx</td>
+                    <td>Matplotlib/Seaborn (visualization)</td>
+                </tr>
+                <tr>
+                    <td>Natural (NLP)</td>
+                    <td>NLTK/spaCy/scikit-learn (NLP/ML)</td>
+                </tr>
+                <tr>
+                    <td>Sharp (image processing)</td>
+                    <td>Pillow (image processing)</td>
+                </tr>
+            </table>
+            
+            <h3>Testing</h3>
+            <table>
+                <tr>
+                    <th>Node.js</th>
+                    <th>Python</th>
+                </tr>
+                <tr>
+                    <td>Jest</td>
+                    <td>pytest</td>
+                </tr>
+                <tr>
+                    <td>Mocha + Chai</td>
+                    <td>unittest (standard library)</td>
+                </tr>
+                <tr>
+                    <td>Supertest (API testing)</td>
+                    <td>requests-mock</td>
+                </tr>
+            </table>
+            
+            <p>Key ecosystem differences:</p>
+            <ul>
+                <li>Python's ecosystem is more diverse, covering web development, scientific computing, data science, AI/ML, and more</li>
+                <li>Node.js's ecosystem is heavily focused on web development and JavaScript environments</li>
+                <li>Python has stronger scientific computing and data analysis libraries</li>
+                <li>Node.js has more frontend-oriented tooling</li>
+                <li>Both have mature web frameworks, but with different philosophies</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Best Practices for Transition</h2>
+            <p>Here are some tips for JavaScript developers transitioning to Python:</p>
+            
+            <h3>Syntax and Style Differences</h3>
+            <ul>
+                <li><strong>Indentation matters</strong>: In Python, indentation defines code blocks (not braces)</li>
+                <li><strong>snake_case</strong>: Python conventionally uses snake_case for variables and function names, not camelCase</li>
+                <li><strong>No semicolons</strong>: Python statements don't end with semicolons</li>
+                <li><strong>Strong typing</strong>: Python is dynamically typed but strongly typed (e.g., "1" + 1 is an error)</li>
+                <li><strong>Explicit self</strong>: In class methods, the first parameter (usually 'self') refers to the instance</li>
+                <li><strong>Truthiness</strong>: Empty values like [], {}, and 0 are False, but other truthiness rules differ from JavaScript</li>
+            </ul>
+            
+            <h3>Conceptual Differences</h3>
+            <ul>
+                <li><strong>Standard library</strong>: Rely on Python's rich standard library before reaching for third-party packages</li>
+                <li><strong>Default synchronous</strong>: Most Python code is synchronous by default, unlike Node.js</li>
+                <li><strong>Batteries included</strong>: Look for built-in solutions first</li>
+                <li><strong>Duck typing</strong>: Python follows "duck typing" - if it behaves like a duck, treat it as a duck</li>
+                <li><strong>List comprehensions</strong>: Learn to use list comprehensions instead of .map()/.filter()</li>
+                <li><strong>Context managers</strong>: Use 'with' statements for resource management (like files)</li>
+            </ul>
+            
+            <h3>Practical Tips</h3>
+            <ul>
+                <li><strong>Use a good IDE</strong>: VSCode with Python extension, PyCharm, etc.</li>
+                <li><strong>Learn virtual environments</strong>: They're crucial for Python development</li>
+                <li><strong>Follow PEP 8</strong>: Python's style guide (like ESLint for JavaScript)</li>
+                <li><strong>Explore the standard library</strong>: Read the Python documentation</li>
+                <li><strong>Start with similarities</strong>: JSON, HTTP, file operations work similarly</li>
+                <li><strong>Join Python communities</strong>: r/python, Python Discord, etc.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Lab Exercise: Port a Node.js Script to Python</h2>
+            <p>Let's practice by porting a Node.js utility script to Python:</p>
+            
+            <h3>Original Node.js Script</h3>
+            <pre><code>
+// file_stats.js - Get statistics about files in a directory
+const fs = require('fs').promises;
+const path = require('path');
+
+async function getFileStats(directory) {
+  try {
+    const files = await fs.readdir(directory);
+    
+    const stats = {
+      totalFiles: 0,
+      byExtension: {},
+      totalSize: 0,
+      newest: { name: null, date: 0 },
+      oldest: { name: null, date: Date.now() }
+    };
+    
+    for (const file of files) {
+      const filePath = path.join(directory, file);
+      const fileStat = await fs.stat(filePath);
+      
+      if (fileStat.isFile()) {
+        stats.totalFiles++;
+        stats.totalSize += fileStat.size;
+        
+        // Track by extension
+        const ext = path.extname(file).toLowerCase() || 'none';
+        stats.byExtension[ext] = (stats.byExtension[ext] || 0) + 1;
+        
+        // Track newest/oldest
+        if (fileStat.mtime.getTime() > stats.newest.date) {
+          stats.newest = { name: file, date: fileStat.mtime.getTime() };
+        }
+        if (fileStat.mtime.getTime() < stats.oldest.date) {
+          stats.oldest = { name: file, date: fileStat.mtime.getTime() };
+        }
+      }
+    }
+    
+    // Convert timestamps to readable dates
+    stats.newest.date = new Date(stats.newest.date).toISOString();
+    stats.oldest.date = new Date(stats.oldest.date).toISOString();
+    
+    return stats;
+  } catch (err) {
+    console.error('Error:', err.message);
+    return null;
+  }
+}
+
+// Usage
+async function main() {
+  const directory = process.argv[2] || '.';
+  const stats = await getFileStats(directory);
+  console.log(JSON.stringify(stats, null, 2));
+}
+
+main();
+            </code></pre>
+            
+            <h3>Your Task</h3>
+            <p>Port this script to Python, using Python's standard library. Pay attention to:</p>
+            <ul>
+                <li>Appropriate Python idioms and patterns</li>
+                <li>Error handling differences</li>
+                <li>Command-line argument parsing</li>
+                <li>File system interactions</li>
+            </ul>
+            
+            <h3>Python Solution (Try it yourself first!)</h3>
+            <pre><code>
+# file_stats.py - Get statistics about files in a directory
+import os
+import sys
+import json
+from datetime import datetime
+from pathlib import Path
+
+def get_file_stats(directory):
+    try:
+        directory_path = Path(directory)
+        
+        stats = {
+            'totalFiles': 0,
+            'byExtension': {},
+            'totalSize': 0,
+            'newest': {'name': None, 'date': 0},
+            'oldest': {'name': None, 'date': datetime.now().timestamp()}
+        }
+        
+        for file in directory_path.iterdir():
+            if file.is_file():
+                file_stat = file.stat()
+                stats['totalFiles'] += 1
+                stats['totalSize'] += file_stat.st_size
+                
+                # Track by extension
+                ext = file.suffix.lower() or 'none'
+                stats['byExtension'][ext] = stats['byExtension'].get(ext, 0) + 1
+                
+                # Track newest/oldest
+                mtime = file_stat.st_mtime
+                if mtime > stats['newest']['date']:
+                    stats['newest'] = {'name': file.name, 'date': mtime}
+                if mtime < stats['oldest']['date']:
+                    stats['oldest'] = {'name': file.name, 'date': mtime}
+        
+        # Convert timestamps to readable dates
+        stats['newest']['date'] = datetime.fromtimestamp(
+            stats['newest']['date']).isoformat()
+        stats['oldest']['date'] = datetime.fromtimestamp(
+            stats['oldest']['date']).isoformat()
+        
+        return stats
+    
+    except Exception as e:
+        print(f'Error: {str(e)}')
+        return None
+
+def main():
+    directory = sys.argv[1] if len(sys.argv) > 1 else '.'
+    stats = get_file_stats(directory)
+    print(json.dumps(stats, indent=2))
+
+if __name__ == '__main__':
+    main()
+            </code></pre>
+            
+            <h3>Key Differences in the Python Version</h3>
+            <ul>
+                <li>Using <code>Path</code> from <code>pathlib</code> for more Pythonic file handling</li>
+                <li>Using <code>get()</code> method for dictionaries instead of the <code>||</code> operator</li>
+                <li>Exception handling with a general <code>except</code> clause rather than specific errors</li>
+                <li>Using <code>datetime</code> for timestamp conversion</li>
+                <li>Checking script execution with <code>if __name__ == '__main__'</code> (Python idiom)</li>
+                <li>No async/await needed since Python's file operations are synchronous by default</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Conclusion</h2>
+            <p>As a JavaScript developer, you'll find Python's standard library to be more comprehensive than Node.js's, but with a different organization and philosophy. Here are the key takeaways:</p>
+            
+            <ul>
+                <li><strong>Batteries Included</strong>: Python's standard library is more extensive, covering many tasks that would require npm packages in Node.js</li>
+                <li><strong>Synchronous First</strong>: Python's standard library is primarily synchronous, with async capabilities added later</li>
+                <li><strong>Different Organization</strong>: Node.js centralizes related functionality (e.g., <code>fs</code>), while Python spreads it across modules (<code>os</code>, <code>io</code>, <code>pathlib</code>)</li>
+                <li><strong>Complementary Strengths</strong>: Node.js excels at web servers and asynchronous operations, while Python shines in data processing, scientific computing, and general-purpose scripting</li>
+            </ul>
+            
+            <p>Learning Python's standard library will make you a more versatile developer. The skills are transferable, and understanding both ecosystems allows you to choose the right tool for each job. Welcome to the Python world!</p>
+        </section>
+
+        <section>
+            <h2>Further Resources</h2>
+            <ul>
+                <li><a href="https://docs.python.org/3/library/" target="_blank">Python Standard Library Documentation</a></li>
+                <li><a href="https://nodejs.org/api/" target="_blank">Node.js API Documentation</a></li>
+                <li><a href="https://realpython.com/" target="_blank">Real Python - Tutorials and Articles</a></li>
+                <li><a href="https://peps.python.org/pep-0008/" target="_blank">PEP 8 - Python Style Guide</a></li>
+                <li><a href="https://docs.python-guide.org/" target="_blank">The Hitchhiker's Guide to Python</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

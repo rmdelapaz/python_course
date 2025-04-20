@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building a Multi-Feature Command-Line Utility</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Building a Multi-Feature Command-Line Utility</h1>
+        <h2>Using Python Standard Library Modules</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h2>Introduction</h2>
+            <p>
+                In this tutorial, we'll build a comprehensive command-line utility tool called <code>pyutil</code> that demonstrates the power of Python's standard library modules. We'll create a tool that combines multiple useful features for file operations, system information, networking, data processing, and more—all without relying on external dependencies.
+            </p>
+            <p>
+                Our utility will be structured as a multi-command tool similar to popular utilities like <code>git</code> or <code>docker</code>, where the first argument specifies which command to run, followed by command-specific arguments.
+            </p>
+            <p>
+                File location: <code>/projects/week3/pyutil.py</code>
+            </p>
+        </section>
+
+        <section class="problem-understanding">
+            <h2>Understanding the Problem (Polya Step 1)</h2>
+            <p>
+                We need to create a command-line utility with multiple features. Let's break down what that means:
+            </p>
+            <ul>
+                <li>It should be a single Python script that can be run from the command line</li>
+                <li>It should support multiple commands through a subcommand structure</li>
+                <li>Each subcommand should implement a useful feature using standard library modules</li>
+                <li>The tool should have good error handling and help documentation</li>
+                <li>The code should be well-organized and maintainable</li>
+            </ul>
+            <p>
+                What are some useful features we could include? Let's consider common tasks developers and system administrators need to perform:
+            </p>
+            <ul>
+                <li>File operations: finding, copying, moving files</li>
+                <li>System monitoring: checking disk space, memory usage, running processes</li>
+                <li>Networking: checking connectivity, downloading files</li>
+                <li>Data processing: parsing CSV/JSON files, basic transformations</li>
+                <li>Text utilities: searching in files, basic transformations</li>
+                <li>Security: generating secure random passwords or tokens</li>
+                <li>Date and time: conversions, calculations</li>
+            </ul>
+            <p>
+                Let's select a subset of these features to implement in our utility.
+            </p>
+        </section>
+
+        <section class="solution-plan">
+            <h2>Devising a Plan (Polya Step 2)</h2>
+            <p>
+                Here's our whiteboard plan for implementing the command-line utility:
+            </p>
+            <ol>
+                <li>Create a main script structure with argument parsing using <code>argparse</code></li>
+                <li>Set up subparser for different commands</li>
+                <li>Implement individual command functions using standard library modules</li>
+                <li>Create a help system for the overall tool and individual commands</li>
+                <li>Add error handling and user-friendly output</li>
+                <li>Test the utility with various inputs and edge cases</li>
+            </ol>
+            <p>
+                Let's define the commands we'll implement:
+            </p>
+            <ol>
+                <li><strong>findfiles</strong>: Find files matching patterns using <code>glob</code> and <code>os</code> modules</li>
+                <li><strong>diskusage</strong>: Show disk usage of files and directories using <code>os</code> and <code>shutil</code></li>
+                <li><strong>sysinfo</strong>: Display system information using <code>platform</code> and <code>psutil</code></li>
+                <li><strong>httpget</strong>: Download content from URLs using <code>urllib</code></li>
+                <li><strong>csvview</strong>: Parse and display CSV files using <code>csv</code> module</li>
+                <li><strong>genpass</strong>: Generate secure random passwords using <code>secrets</code> and <code>string</code></li>
+                <li><strong>webserver</strong>: Run a simple HTTP server using <code>http.server</code></li>
+            </ol>
+            <p>
+                Our implementation approach will be:
+            </p>
+            <ol>
+                <li>Create a modular design where each command is a separate function</li>
+                <li>Use <code>argparse</code> for clean command-line argument handling</li>
+                <li>Handle errors gracefully with informative messages</li>
+                <li>Include helpful documentation for each command</li>
+            </ol>
+        </section>
+
+        <section class="solution-implementation">
+            <h2>Carrying Out the Plan (Polya Step 3)</h2>
+            <p>
+                Now, let's implement our solution step by step. We'll start by setting up the main script structure and then implement each command.
+            </p>
+
+            <h3>Setting Up the Main Script Structure</h3>
+            <p>
+                Let's begin by creating the main script file and setting up the argument parser:
+            </p>
+            <pre><code>
+#!/usr/bin/env python3
+# /projects/week3/pyutil.py
+# A multi-feature command-line utility using standard library modules
+
+import argparse
+import sys
+import os
+import glob
+import shutil
+import platform
+import urllib.request
+import csv
+import secrets
+import string
+import http.server
+import socketserver
+import socket
+import json
+import datetime
+import textwrap
+from pathlib import Path
+
+def main():
+    """Main entry point for the utility."""
+    # Create the top-level parser
+    parser = argparse.ArgumentParser(
+        description='PyUtil - A multi-feature command-line utility',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=textwrap.dedent('''
+            examples:
+              pyutil findfiles "*.txt" --directory ~/Documents
+              pyutil diskusage ~/Downloads --sort size
+              pyutil sysinfo --all
+              pyutil httpget https://example.com --output example.html
+              pyutil csvview data.csv --limit 10
+              pyutil genpass --length 16 --symbols
+              pyutil webserver --directory ~/public_html --port 8080
+        ''')
+    )
+    
+    # Create subparsers for commands
+    subparsers = parser.add_subparsers(dest='command', help='Command to run')
+    
+    # Add parser for the 'findfiles' command
+    findfiles_parser = subparsers.add_parser('findfiles', help='Find files matching patterns')
+    findfiles_parser.add_argument('pattern', help='File pattern to search for (e.g., "*.txt")')
+    findfiles_parser.add_argument('--directory', '-d', default='.', help='Directory to search in (default: current directory)')
+    findfiles_parser.add_argument('--recursive', '-r', action='store_true', help='Search recursively')
+    
+    # Add parser for the 'diskusage' command
+    diskusage_parser = subparsers.add_parser('diskusage', help='Show disk usage of files and directories')
+    diskusage_parser.add_argument('path', nargs='?', default='.', help='Path to analyze (default: current directory)')
+    diskusage_parser.add_argument('--sort', choices=['name', 'size'], default='name', help='Sort by name or size (default: name)')
+    diskusage_parser.add_argument('--limit', type=int, help='Limit the number of results')
+    
+    # Add parser for the 'sysinfo' command
+    sysinfo_parser = subparsers.add_parser('sysinfo', help='Display system information')
+    sysinfo_parser.add_argument('--all', action='store_true', help='Show all system information')
+    sysinfo_parser.add_argument('--os', action='store_true', help='Show operating system information')
+    sysinfo_parser.add_argument('--cpu', action='store_true', help='Show CPU information')
+    sysinfo_parser.add_argument('--memory', action='store_true', help='Show memory information')
+    sysinfo_parser.add_argument('--disk', action='store_true', help='Show disk information')
+    sysinfo_parser.add_argument('--network', action='store_true', help='Show network information')
+    
+    # Add parser for the 'httpget' command
+    httpget_parser = subparsers.add_parser('httpget', help='Download content from URLs')
+    httpget_parser.add_argument('url', help='URL to download')
+    httpget_parser.add_argument('--output', '-o', help='Output file (default: print to stdout)')
+    httpget_parser.add_argument('--timeout', type=int, default=30, help='Timeout in seconds (default: 30)')
+    
+    # Add parser for the 'csvview' command
+    csvview_parser = subparsers.add_parser('csvview', help='Parse and display CSV files')
+    csvview_parser.add_argument('file', help='CSV file to view')
+    csvview_parser.add_argument('--delimiter', '-d', default=',', help='Field delimiter (default: ,)')
+    csvview_parser.add_argument('--limit', '-l', type=int, help='Limit the number of rows to display')
+    csvview_parser.add_argument('--columns', '-c', help='Columns to display (comma-separated indices or names)')
+    
+    # Add parser for the 'genpass' command
+    genpass_parser = subparsers.add_parser('genpass', help='Generate secure random passwords')
+    genpass_parser.add_argument('--length', '-l', type=int, default=12, help='Password length (default: 12)')
+    genpass_parser.add_argument('--count', '-c', type=int, default=1, help='Number of passwords to generate (default: 1)')
+    genpass_parser.add_argument('--symbols', '-s', action='store_true', help='Include symbols')
+    genpass_parser.add_argument('--no-uppercase', action='store_true', help='Exclude uppercase letters')
+    genpass_parser.add_argument('--no-digits', action='store_true', help='Exclude digits')
+    
+    # Add parser for the 'webserver' command
+    webserver_parser = subparsers.add_parser('webserver', help='Run a simple HTTP server')
+    webserver_parser.add_argument('--directory', '-d', default='.', help='Directory to serve (default: current directory)')
+    webserver_parser.add_argument('--port', '-p', type=int, default=8000, help='Port to listen on (default: 8000)')
+    webserver_parser.add_argument('--bind', '-b', default='localhost', help='Address to bind to (default: localhost)')
+    
+    # Parse arguments
+    args = parser.parse_args()
+    
+    # Check if a command was specified
+    if not args.command:
+        parser.print_help()
+        return 1
+    
+    # Execute the appropriate command function
+    try:
+        if args.command == 'findfiles':
+            return cmd_findfiles(args)
+        elif args.command == 'diskusage':
+            return cmd_diskusage(args)
+        elif args.command == 'sysinfo':
+            return cmd_sysinfo(args)
+        elif args.command == 'httpget':
+            return cmd_httpget(args)
+        elif args.command == 'csvview':
+            return cmd_csvview(args)
+        elif args.command == 'genpass':
+            return cmd_genpass(args)
+        elif args.command == 'webserver':
+            return cmd_webserver(args)
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user.")
+        return 130  # Standard exit code for SIGINT
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+    
+    return 0
+            </code></pre>
+
+            <h3>Implementing the Command Functions</h3>
+            <p>
+                Now, let's implement each of the command functions:
+            </p>
+
+            <h4>Finding Files</h4>
+            <pre><code>
+def cmd_findfiles(args):
+    """Find files matching the given pattern."""
+    # Normalize the directory path
+    directory = os.path.expanduser(args.directory)
+    
+    # Check if the directory exists
+    if not os.path.isdir(directory):
+        print(f"Error: Directory '{directory}' does not exist.", file=sys.stderr)
+        return 1
+    
+    # Search for files
+    pattern = args.pattern
+    found_files = []
+    
+    if args.recursive:
+        # For recursive search, use glob with ** pattern or os.walk
+        # Using pathlib for this is cleaner
+        search_pattern = os.path.join(directory, '**', pattern)
+        found_files = glob.glob(search_pattern, recursive=True)
+    else:
+        # For non-recursive search, just use glob in the specified directory
+        search_pattern = os.path.join(directory, pattern)
+        found_files = glob.glob(search_pattern)
+    
+    # Display results
+    if found_files:
+        print(f"Found {len(found_files)} file(s) matching '{pattern}' in '{directory}':")
+        for file in sorted(found_files):
+            # Get relative path if possible
+            try:
+                rel_path = os.path.relpath(file, os.getcwd())
+                print(f"  {rel_path}")
+            except ValueError:
+                # If files are on different drives (Windows), use the absolute path
+                print(f"  {file}")
+    else:
+        print(f"No files found matching '{pattern}' in '{directory}'.")
+    
+    return 0
+            </code></pre>
+
+            <h4>Disk Usage Analysis</h4>
+            <pre><code>
+def cmd_diskusage(args):
+    """Show disk usage of files and directories."""
+    # Normalize the path
+    path = os.path.expanduser(args.path)
+    
+    # Check if the path exists
+    if not os.path.exists(path):
+        print(f"Error: Path '{path}' does not exist.", file=sys.stderr)
+        return 1
+    
+    # Function to get size of a file or directory
+    def get_size(path):
+        if os.path.isfile(path):
+            return os.path.getsize(path)
+        elif os.path.isdir(path):
+            total_size = 0
+            for dirpath, dirnames, filenames in os.walk(path):
+                # Add size of all files in the directory
+                for f in filenames:
+                    fp = os.path.join(dirpath, f)
+                    if os.path.isfile(fp):
+                        total_size += os.path.getsize(fp)
+            return total_size
+        return 0
+    
+    # Function to format size in a human-readable format
+    def format_size(size):
+        # Convert bytes to a human-readable string
+        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+            if size < 1024.0:
+                return f"{size:.2f} {unit}"
+            size /= 1024.0
+        return f"{size:.2f} PB"
+    
+    results = []
+    
+    # If path is a directory, analyze its contents
+    if os.path.isdir(path):
+        for item in os.listdir(path):
+            item_path = os.path.join(path, item)
+            try:
+                size = get_size(item_path)
+                results.append((item_path, size))
+            except (PermissionError, OSError) as e:
+                print(f"Warning: Cannot access '{item_path}': {e}", file=sys.stderr)
+    else:
+        # If path is a file, just get its size
+        size = get_size(path)
+        results.append((path, size))
+    
+    # Sort results
+    if args.sort == 'size':
+        results.sort(key=lambda x: x[1], reverse=True)
+    else:  # sort by name
+        results.sort(key=lambda x: x[0])
+    
+    # Limit results if requested
+    if args.limit and args.limit > 0:
+        results = results[:args.limit]
+    
+    # Display results
+    print(f"Disk usage for '{path}':")
+    for item_path, size in results:
+        name = os.path.basename(item_path)
+        type_indicator = 'D' if os.path.isdir(item_path) else 'F'
+        print(f"  [{type_indicator}] {name:30} {format_size(size):10}")
+    
+    # Show total
+    if os.path.isdir(path):
+        total_size = sum(size for _, size in results)
+        print(f"\nTotal: {format_size(total_size)}")
+    
+    return 0
+            </code></pre>
+
+            <h4>System Information</h4>
+            <pre><code>
+def cmd_sysinfo(args):
+    """Display system information."""
+    # Function to format memory size
+    def format_size(bytes_value):
+        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+            if bytes_value < 1024.0:
+                return f"{bytes_value:.2f} {unit}"
+            bytes_value /= 1024.0
+        return f"{bytes_value:.2f} PB"
+    
+    # Check if any specific information was requested
+    any_specific = args.os or args.cpu or args.memory or args.disk or args.network
+    
+    # If all or no specific flags, show everything
+    show_all = args.all or not any_specific
+    
+    # Initialize results dictionary
+    sysinfo = {}
+    
+    # Collect OS information
+    if show_all or args.os:
+        os_info = {
+            'System': platform.system(),
+            'Node Name': platform.node(),
+            'Release': platform.release(),
+            'Version': platform.version(),
+            'Machine': platform.machine(),
+            'Processor': platform.processor()
+        }
+        sysinfo['Operating System'] = os_info
+    
+    # Collect CPU information
+    if show_all or args.cpu:
+        try:
+            cpu_info = {
+                'Physical Cores': os.cpu_count() or 'Unknown',
+                'Architecture': platform.architecture()[0]
+            }
+            sysinfo['CPU'] = cpu_info
+        except Exception as e:
+            sysinfo['CPU'] = {'Error': str(e)}
+    
+    # Collect memory information
+    if show_all or args.memory:
+        try:
+            # Note: psutil would be better here, but we're sticking to standard library
+            # This is a simplified version that works on Linux-like systems
+            mem_info = {}
+            if os.path.exists('/proc/meminfo'):
+                with open('/proc/meminfo', 'r') as f:
+                    for line in f:
+                        if ':' in line:
+                            key, value = line.split(':', 1)
+                            mem_info[key.strip()] = value.strip()
+            
+            if mem_info:
+                sysinfo['Memory'] = mem_info
+            else:
+                sysinfo['Memory'] = {'Note': 'Memory info not available on this platform without psutil'}
+        except Exception as e:
+            sysinfo['Memory'] = {'Error': str(e)}
+    
+    # Collect disk information
+    if show_all or args.disk:
+        try:
+            disk_info = {}
+            for path in ['/', '/home', '/tmp']:
+                try:
+                    usage = shutil.disk_usage(path)
+                    disk_info[path] = {
+                        'Total': format_size(usage.total),
+                        'Used': format_size(usage.used),
+                        'Free': format_size(usage.free),
+                        'Percent Used': f"{usage.used * 100 / usage.total:.1f}%"
+                    }
+                except:
+                    pass
+            
+            if not disk_info:
+                # Try Windows paths
+                for path in ['C:\\', 'D:\\']:
+                    try:
+                        usage = shutil.disk_usage(path)
+                        disk_info[path] = {
+                            'Total': format_size(usage.total),
+                            'Used': format_size(usage.used),
+                            'Free': format_size(usage.free),
+                            'Percent Used': f"{usage.used * 100 / usage.total:.1f}%"
+                        }
+                    except:
+                        pass
+            
+            sysinfo['Disk'] = disk_info if disk_info else {'Note': 'No disk information available'}
+        except Exception as e:
+            sysinfo['Disk'] = {'Error': str(e)}
+    
+    # Collect network information
+    if show_all or args.network:
+        try:
+            network_info = {
+                'Hostname': socket.gethostname(),
+                'IP Address': socket.gethostbyname(socket.gethostname())
+            }
+            sysinfo['Network'] = network_info
+        except Exception as e:
+            sysinfo['Network'] = {'Error': str(e)}
+    
+    # Display results
+    for category, info in sysinfo.items():
+        print(f"\n{category}:")
+        if isinstance(info, dict):
+            for key, value in info.items():
+                if isinstance(value, dict):
+                    print(f"  {key}:")
+                    for k, v in value.items():
+                        print(f"    {k}: {v}")
+                else:
+                    print(f"  {key}: {value}")
+        else:
+            print(f"  {info}")
+    
+    return 0
+            </code></pre>
+
+            <h4>HTTP Content Retrieval</h4>
+            <pre><code>
+def cmd_httpget(args):
+    """Download content from a URL."""
+    url = args.url
+    output_file = args.output
+    timeout = args.timeout
+    
+    try:
+        print(f"Downloading from {url}...")
+        
+        # Create a request with a User-Agent to avoid being blocked
+        req = urllib.request.Request(
+            url,
+            headers={
+                'User-Agent': 'PyUtil/1.0 (Python Command-Line Utility)'
+            }
+        )
+        
+        # Open the URL with a timeout
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            content = response.read()
+            
+            # Get content type
+            content_type = response.getheader('Content-Type', '')
+            print(f"Content type: {content_type}")
+            
+            # Determine if content is text or binary
+            is_text = 'text' in content_type or 'json' in content_type or 'xml' in content_type
+            
+            # If output file is specified, write to file
+            if output_file:
+                mode = 'w' if is_text else 'wb'
+                encoding = 'utf-8' if is_text else None
+                
+                with open(output_file, mode, encoding=encoding) as f:
+                    if is_text:
+                        # Try to decode as UTF-8, fall back to latin1 if needed
+                        try:
+                            text_content = content.decode('utf-8')
+                        except UnicodeDecodeError:
+                            text_content = content.decode('latin1')
+                        f.write(text_content)
+                    else:
+                        f.write(content)
+                
+                print(f"Downloaded {len(content)} bytes to {output_file}")
+            else:
+                # Print content to stdout if it's text and not too large
+                if is_text and len(content) < 10000:  # Limit to 10KB for terminal display
+                    try:
+                        text_content = content.decode('utf-8')
+                    except UnicodeDecodeError:
+                        text_content = content.decode('latin1')
+                    print("\nContent:")
+                    print(text_content)
+                else:
+                    print(f"Downloaded {len(content)} bytes. Use --output to save to a file.")
+    
+    except urllib.error.URLError as e:
+        print(f"Error: Failed to download URL: {e}", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+    
+    return 0
+            </code></pre>
+
+            <h4>CSV Viewer</h4>
+            <pre><code>
+def cmd_csvview(args):
+    """Parse and display CSV files."""
+    file_path = args.file
+    delimiter = args.delimiter
+    limit = args.limit
+    columns_arg = args.columns
+    
+    # Check if file exists
+    if not os.path.isfile(file_path):
+        print(f"Error: File '{file_path}' does not exist.", file=sys.stderr)
+        return 1
+    
+    try:
+        with open(file_path, 'r', newline='') as csvfile:
+            # Try to detect the dialect
+            sample = csvfile.read(4096)
+            csvfile.seek(0)  # Reset file position
+            
+            try:
+                dialect = csv.Sniffer().sniff(sample)
+                has_header = csv.Sniffer().has_header(sample)
+            except csv.Error:
+                # If detection fails, use the provided delimiter
+                dialect = csv.excel
+                dialect.delimiter = delimiter
+                has_header = True  # Assume there's a header
+            
+            # Create CSV reader
+            reader = csv.reader(csvfile, dialect)
+            
+            # Read header if present
+            header = next(reader) if has_header else None
+            
+            # Read rows with an optional limit
+            rows = []
+            for i, row in enumerate(reader):
+                rows.append(row)
+                if limit and i + 1 >= limit:
+                    break
+            
+            # Process column selection
+            selected_columns = None
+            if columns_arg:
+                # Parse column indices or names
+                selected_columns = []
+                for col in columns_arg.split(','):
+                    col = col.strip()
+                    if col.isdigit():
+                        # Column index
+                        col_idx = int(col)
+                        if header and col_idx < len(header):
+                            selected_columns.append(col_idx)
+                    elif header:
+                        # Column name
+                        try:
+                            col_idx = header.index(col)
+                            selected_columns.append(col_idx)
+                        except ValueError:
+                            print(f"Warning: Column '{col}' not found in header.")
+            
+            # Display the data
+            if header:
+                # Display selected header columns
+                if selected_columns:
+                    header_row = [header[i] for i in selected_columns if i < len(header)]
+                else:
+                    header_row = header
+                
+                # Print header
+                print(",".join(header_row))
+                
+                # Print separator
+                print("-" * (sum(len(h) + 1 for h in header_row)))
+            
+            # Display rows
+            for row in rows:
+                if selected_columns:
+                    row_data = [row[i] if i < len(row) else '' for i in selected_columns]
+                else:
+                    row_data = row
+                print(",".join(row_data))
+            
+            # Show summary
+            print(f"\nDisplayed {len(rows)} of {sum(1 for _ in reader) + len(rows) + (1 if header else 0)} rows.")
+            
+    except Exception as e:
+        print(f"Error processing CSV file: {e}", file=sys.stderr)
+        return 1
+    
+    return 0
+            </code></pre>
+
+            <h4>Password Generator</h4>
+            <pre><code>
+def cmd_genpass(args):
+    """Generate secure random passwords."""
+    length = args.length
+    count = args.count
+    include_symbols = args.symbols
+    include_uppercase = not args.no_uppercase
+    include_digits = not args.no_digits
+    
+    # Validate inputs
+    if length < 1:
+        print("Error: Password length must be at least 1.", file=sys.stderr)
+        return 1
+    
+    if count < 1:
+        print("Error: Password count must be at least 1.", file=sys.stderr)
+        return 1
+    
+    # Define character sets
+    lowercase_letters = string.ascii_lowercase
+    uppercase_letters = string.ascii_uppercase if include_uppercase else ''
+    digits = string.digits if include_digits else ''
+    symbols = string.punctuation if include_symbols else ''
+    
+    # Combine character sets
+    all_chars = lowercase_letters + uppercase_letters + digits + symbols
+    
+    if not all_chars:
+        print("Error: No character set selected. At least one character type must be included.", 
+              file=sys.stderr)
+        return 1
+    
+    # Function to generate a password
+    def generate_password():
+        # Ensure at least one character from each enabled set
+        password_chars = []
+        if lowercase_letters:
+            password_chars.append(secrets.choice(lowercase_letters))
+        if uppercase_letters:
+            password_chars.append(secrets.choice(uppercase_letters))
+        if digits:
+            password_chars.append(secrets.choice(digits))
+        if symbols:
+            password_chars.append(secrets.choice(symbols))
+        
+        # Fill the rest with random characters from all sets
+        remaining_length = length - len(password_chars)
+        if remaining_length > 0:
+            password_chars.extend(secrets.choice(all_chars) for _ in range(remaining_length))
+        
+        # Shuffle the characters to ensure randomness
+        secrets.SystemRandom().shuffle(password_chars)
+        
+        return ''.join(password_chars)
+    
+    # Generate and display passwords
+    print(f"Generating {count} password(s) of length {length}:")
+    for i in range(count):
+        password = generate_password()
+        print(f"{i+1}. {password}")
+    
+    return 0
+            </code></pre>
+
+            <h4>Simple Web Server</h4>
+            <pre><code>
+def cmd_webserver(args):
+    """Run a simple HTTP server."""
+    directory = os.path.expanduser(args.directory)
+    port = args.port
+    bind = args.bind
+    
+    # Check if directory exists
+    if not os.path.isdir(directory):
+        print(f"Error: Directory '{directory}' does not exist.", file=sys.stderr)
+        return 1
+    
+    # Change to the specified directory
+    os.chdir(directory)
+    
+    # Create a custom request handler to handle requests
+    class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+        def log_message(self, format, *args):
+            """Log an arbitrary message to stderr."""
+            sys.stderr.write(f"{self.address_string()} - [{datetime.datetime.now().strftime('%d/%b/%Y %H:%M:%S')}] {format % args}\n")
+    
+    # Set up the server
+    handler = CustomHTTPRequestHandler
+    
+    try:
+        with socketserver.TCPServer((bind, port), handler) as httpd:
+            host = bind if bind != '' else 'localhost'
+            print(f"Serving HTTP on {host} port {port} (http://{host}:{port}/) from directory: {directory}")
+            print("Press Ctrl+C to stop the server...")
+            httpd.serve_forever()
+    except OSError as e:
+        if e.errno == 98:  # Address already in use
+            print(f"Error: Port {port} is already in use.", file=sys.stderr)
+        else:
+            print(f"Error starting server: {e}", file=sys.stderr)
+        return 1
+    except KeyboardInterrupt:
+        print("\nServer stopped.")
+    
+    return 0
+            </code></pre>
+
+            <h3>Running the Script</h3>
+            <pre><code>
+if __name__ == '__main__':
+    sys.exit(main())
+            </code></pre>
+        </section>
+
+        <section class="solution-reflection">
+            <h2>Looking Back (Polya Step 4)</h2>
+            <p>
+                Now that we've implemented our multi-feature command-line utility, let's review our solution and consider improvements or extensions.
+            </p>
+            
+            <h3>What We've Accomplished</h3>
+            <ul>
+                <li>Created a well-structured command-line utility with multiple useful features</li>
+                <li>Used the <code>argparse</code> module for clean argument handling and built-in help</li>
+                <li>Implemented robust error handling for a better user experience</li>
+                <li>Demonstrated the power of Python's standard library modules</li>
+                <li>Created modular code where each command is implemented in its own function</li>
+            </ul>
+            
+            <h3>Possible Improvements</h3>
+            <ul>
+                <li><strong>Code Organization</strong>: For a larger utility, we might want to split the code into multiple files or modules for better maintainability</li>
+                <li><strong>More Commands</strong>: We could add more useful commands like text processing, encryption, compression, etc.</li>
+                <li><strong>Configuration</strong>: Add support for configuration files using the <code>configparser</code> module</li>
+                <li><strong>Logging</strong>: Implement more sophisticated logging using the <code>logging</code> module</li>
+                <li><strong>Testing</strong>: Add unit tests for each command to ensure reliability</li>
+                <li><strong>Documentation</strong>: Generate comprehensive documentation, perhaps using tools like Sphinx</li>
+                <li><strong>Packaging</strong>: Package the utility for distribution using <code>setuptools</code></li>
+            </ul>
+            
+            <h3>Alternative Approaches</h3>
+            <p>
+                Here are a few alternative approaches to building a command-line utility:
+            </p>
+            
+            <h4>Using Click Library (Third-Party)</h4>
+            <p>
+                While our focus was on the standard library, the Click library provides a more elegant way to build command-line interfaces:
+            </p>
+            <pre><code>
+import click
+
+@click.group()
+def cli():
+    """PyUtil - A multi-feature command-line utility"""
+    pass
+
+@cli.command()
+@click.argument('pattern')
+@click.option('--directory', '-d', default='.', help='Directory to search in')
+@click.option('--recursive', '-r', is_flag=True, help='Search recursively')
+def findfiles(pattern, directory, recursive):
+    """Find files matching patterns."""
+    # Implementation here
+    pass
+
+if __name__ == '__main__':
+    cli()
+            </code></pre>
+            
+            <h4>Using Object-Oriented Approach</h4>
+            <p>
+                We could structure our utility using classes to better encapsulate functionality:
+            </p>
+            <pre><code>
+class Command:
+    """Base class for all commands."""
+    name = ''
+    help = ''
+    
+    @classmethod
+    def add_parser(cls, subparsers):
+        """Add this command's parser to the subparsers."""
+        pass
+    
+    @classmethod
+    def run(cls, args):
+        """Run the command with the given arguments."""
+        pass
+
+class FindFilesCommand(Command):
+    name = 'findfiles'
+    help = 'Find files matching patterns'
+    
+    @classmethod
+    def add_parser(cls, subparsers):
+        parser = subparsers.add_parser(cls.name, help=cls.help)
+        parser.add_argument('pattern', help='File pattern to search for')
+        parser.add_argument('--directory', '-d', default='.', help='Directory to search in')
+        parser.add_argument('--recursive', '-r', action='store_true', help='Search recursively')
+        return parser
+    
+    @classmethod
+    def run(cls, args):
+        # Implementation here
+        pass
+
+def main():
+    parser = argparse.ArgumentParser(description='PyUtil - A multi-feature command-line utility')
+    subparsers = parser.add_subparsers(dest='command', help='Command to run')
+    
+    # Register commands
+    commands = [FindFilesCommand, DiskUsageCommand, ...]
+    command_map = {}
+    
+    for command_class in commands:
+        command_class.add_parser(subparsers)
+        command_map[command_class.name] = command_class
+    
+    args = parser.parse_args()
+    
+    if not args.command:
+        parser.print_help()
+        return 1
+    
+    # Run the selected command
+    return command_map[args.command].run(args)
+            </code></pre>
+        </section>
+
+        <section class="usage-examples">
+            <h2>Usage Examples</h2>
+            <p>
+                Here are some examples of how to use our <code>pyutil</code> command-line utility:
+            </p>
+            
+            <h3>Finding Files</h3>
+            <pre><code>
+# Find all Python files in the current directory
+$ python pyutil.py findfiles "*.py"
+
+# Find all text files in the Documents directory, recursively
+$ python pyutil.py findfiles "*.txt" --directory ~/Documents --recursive
+
+# Find all image files in a specific directory
+$ python pyutil.py findfiles "*.jpg" -d /path/to/photos
+            </code></pre>
+            
+            <h3>Analyzing Disk Usage</h3>
+            <pre><code>
+# Show disk usage of the current directory
+$ python pyutil.py diskusage
+
+# Show disk usage of the Downloads directory, sorted by size
+$ python pyutil.py diskusage ~/Downloads --sort size
+
+# Show the top 5 largest items in a directory
+$ python pyutil.py diskusage /var/log --sort size --limit 5
+            </code></pre>
+            
+            <h3>Displaying System Information</h3>
+            <pre><code>
+# Show all system information
+$ python pyutil.py sysinfo --all
+
+# Show only OS and CPU information
+$ python pyutil.py sysinfo --os --cpu
+
+# Show disk usage information
+$ python pyutil.py sysinfo --disk
+            </code></pre>
+            
+            <h3>Downloading Content</h3>
+            <pre><code>
+# Download a webpage and display it
+$ python pyutil.py httpget https://example.com
+
+# Download a file and save it with a specific name
+$ python pyutil.py httpget https://example.com/image.jpg --output downloaded_image.jpg
+
+# Download with a custom timeout
+$ python pyutil.py httpget https://slow-server.com/data.json --timeout 60
+            </code></pre>
+            
+            <h3>Viewing CSV Files</h3>
+            <pre><code>
+# View a CSV file
+$ python pyutil.py csvview data.csv
+
+# View the first 10 rows of a CSV file
+$ python pyutil.py csvview large_data.csv --limit 10
+
+# View specific columns of a CSV file
+$ python pyutil.py csvview users.csv --columns name,email,age
+
+# View a CSV file with a different delimiter
+$ python pyutil.py csvview data.tsv --delimiter $'\t'
+            </code></pre>
+            
+            <h3>Generating Passwords</h3>
+            <pre><code>
+# Generate a single password with default settings
+$ python pyutil.py genpass
+
+# Generate a longer password with symbols
+$ python pyutil.py genpass --length 20 --symbols
+
+# Generate multiple passwords
+$ python pyutil.py genpass --count 5 --length 16
+
+# Generate a password without digits
+$ python pyutil.py genpass --no-digits
+            </code></pre>
+            
+            <h3>Running a Web Server</h3>
+            <pre><code>
+# Serve files from the current directory
+$ python pyutil.py webserver
+
+# Serve files from a specific directory on a custom port
+$ python pyutil.py webserver --directory ~/public_html --port 8080
+
+# Make the server accessible from other devices on the network
+$ python pyutil.py webserver --bind 0.0.0.0
+            </code></pre>
+        </section>
+
+        <section class="real-world-applications">
+            <h2>Real-World Applications</h2>
+            <p>
+                Our command-line utility has many practical applications in real-world scenarios:
+            </p>
+            
+            <h3>System Administration</h3>
+            <ul>
+                <li><strong>Server Monitoring</strong>: Use the <code>sysinfo</code> command to check system resources on servers</li>
+                <li><strong>Disk Space Management</strong>: Use <code>diskusage</code> to find large files consuming disk space</li>
+                <li><strong>File Organization</strong>: Use <code>findfiles</code> to locate and organize scattered files</li>
+            </ul>
+            
+            <h3>Development Workflows</h3>
+            <ul>
+                <li><strong>Local Testing</strong>: Use <code>webserver</code> to quickly serve and test web applications</li>
+                <li><strong>Data Analysis</strong>: Use <code>csvview</code> to quickly examine data files</li>
+                <li><strong>API Testing</strong>: Use <code>httpget</code> to test API endpoints and download responses</li>
+            </ul>
+            
+            <h3>Security</h3>
+            <ul>
+                <li><strong>Password Management</strong>: Use <code>genpass</code> to create secure passwords for accounts</li>
+                <li><strong>System Auditing</strong>: Combine commands to gather information for security assessments</li>
+            </ul>
+            
+            <h3>Automation</h3>
+            <ul>
+                <li><strong>Batch Processing</strong>: Use the utility in scripts to automate routine tasks</li>
+                <li><strong>Data Pipelines</strong>: Combine with other tools to create data processing pipelines</li>
+            </ul>
+        </section>
+
+        <section class="extensions">
+            <h2>Extending the Utility</h2>
+            <p>
+                Here are some ideas for extending our command-line utility:
+            </p>
+            
+            <h3>Additional Commands</h3>
+            <ul>
+                <li><strong>compress</strong>: Compress and decompress files using <code>zipfile</code> or <code>tarfile</code></li>
+                <li><strong>encrypt</strong>: Encrypt and decrypt files using <code>cryptography</code> (third-party) or built-in modules</li>
+                <li><strong>jsonview</strong>: Parse and display JSON files with pretty-printing</li>
+                <li><strong>search</strong>: Search for text patterns in files using <code>re</code></li>
+                <li><strong>schedule</strong>: Schedule commands to run at specific times using <code>sched</code></li>
+                <li><strong>logwatch</strong>: Monitor log files for patterns and trigger actions</li>
+                <li><strong>notify</strong>: Send notifications via email using <code>smtplib</code></li>
+            </ul>
+            
+            <h3>Infrastructure Improvements</h3>
+            <ul>
+                <li><strong>Plugins</strong>: Add a plugin system to allow users to extend the utility</li>
+                <li><strong>Configuration Files</strong>: Support loading settings from configuration files</li>
+                <li><strong>Shell Completion</strong>: Add shell completion support for faster command typing</li>
+                <li><strong>User Profiles</strong>: Allow saving and loading user-specific configurations</li>
+                <li><strong>Logging</strong>: Add comprehensive logging for better diagnostics</li>
+                <li><strong>Internationalization</strong>: Add support for multiple languages</li>
+            </ul>
+        </section>
+
+        <section class="conclusion">
+            <h2>Conclusion</h2>
+            <p>
+                In this tutorial, we've built a comprehensive command-line utility using Python's standard library modules. Our <code>pyutil</code> tool demonstrates how to create a professional-grade command-line application with multiple features, good error handling, and helpful documentation.
+            </p>
+            <p>
+                We've followed George Polya's 4-step problem-solving method:
+            </p>
+            <ol>
+                <li><strong>Understanding the Problem</strong>: We defined what we wanted to build and identified key requirements</li>
+                <li><strong>Devising a Plan</strong>: We created a structured plan and decided on the features to implement</li>
+                <li><strong>Carrying Out the Plan</strong>: We implemented the solution step by step</li>
+                <li><strong>Looking Back</strong>: We reviewed our solution, identified improvements, and considered alternatives</li>
+            </ol>
+            <p>
+                By building this utility, we've gained hands-on experience with several important Python standard library modules, including <code>argparse</code>, <code>os</code>, <code>glob</code>, <code>shutil</code>, <code>platform</code>, <code>urllib</code>, <code>csv</code>, <code>secrets</code>, and <code>http.server</code>. These modules provide powerful functionality without requiring external dependencies, making our utility portable and easy to distribute.
+            </p>
+            <p>
+                We've also demonstrated important software engineering principles, such as modular design, error handling, and user interface considerations. These skills are transferable to many other Python projects and will help you build more robust and user-friendly applications.
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Programming Course. All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Queries in Responsive Web Design</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Media Queries in Responsive Web Design</h1>
+        <h2>Week 4: Wednesday Morning Session</h2>
+    </header>
+
+    <main>
+        <section class="introduction">
+            <h3>What are Media Queries?</h3>
+            <p>Media queries are the backbone of responsive web design, allowing CSS to apply different styles based on the characteristics of the device or browser viewport. Think of media queries as filters that examine the current state of the browsing environment and apply CSS rules only when specific conditions are met.</p>
+            
+            <p>Just as a thermostat in your home triggers the heating system when the temperature drops below a certain threshold, media queries trigger specific CSS rules when the viewport meets particular conditions (like being narrower than 768 pixels).</p>
+            
+            <p>Before media queries, creating websites that adapted to different screen sizes required separate versions of the site or complex JavaScript solutions. Media queries revolutionized web development by providing a pure CSS approach to responsive design.</p>
+        </section>
+
+        <section class="anatomy">
+            <h3>Anatomy of a Media Query</h3>
+            <p>Let's break down the structure of a media query to understand its components:</p>
+            
+            <pre><code>@media media-type and (media-feature-rule) {
+    /* CSS rules to be applied when media query matches */
+    selector {
+        property: value;
+    }
+}</code></pre>
+            
+            <p>The key components are:</p>
+            <ul>
+                <li><strong>@media</strong> - The keyword that begins every media query</li>
+                <li><strong>media-type</strong> - The type of media you're targeting (screen, print, speech, all)</li>
+                <li><strong>logical operators</strong> - Keywords like 'and', 'not', or 'only' that combine conditions</li>
+                <li><strong>media-feature-rule</strong> - Conditions that test for specific device characteristics</li>
+                <li><strong>CSS rules</strong> - The styles to apply when conditions are met</li>
+            </ul>
+            
+            <p><strong>Real-world analogy:</strong> Think of media queries like a bouncer at a club. The media type is like checking if someone is on the guest list (are they using a screen, printer, etc.). Media features are like additional entry requirements (are they over 21, dressed appropriately, etc.). Only when all conditions are met does the person (or in our case, the CSS rules) get to enter.</p>
+        </section>
+
+        <section class="media_types">
+            <h3>Media Types</h3>
+            <p>Media types define the broad category of device. While there are several media types in the specification, these are the most commonly used:</p>
+            
+            <ul>
+                <li><strong>all</strong> - Applies to all devices (default if not specified)</li>
+                <li><strong>screen</strong> - Applies to computer screens, tablets, smartphones, etc.</li>
+                <li><strong>print</strong> - Applies when the content is being printed or viewed in print preview</li>
+                <li><strong>speech</strong> - Applies to screen readers and other audio-based browsers</li>
+            </ul>
+            
+            <h4>Print Media Example</h4>
+            <pre><code>/* Normal screen styles */
+body {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+/* Print-specific styles */
+@media print {
+    body {
+        background-color: white;
+        color: black;
+        font-size: 12pt;
+    }
+    
+    /* Hide navigation and interactive elements when printing */
+    nav, button, .ads, .comments {
+        display: none;
+    }
+    
+    /* Ensure links show their URLs */
+    a[href]:after {
+        content: " (" attr(href) ")";
+    }
+}</code></pre>
+            
+            <p><strong>Practical application:</strong> Print media queries are incredibly useful for creating printer-friendly versions of your content. They allow you to strip away navigation, adjust typography for paper, and even add content (like URLs) that makes the printed page more useful without cluttering the screen version.</p>
+        </section>
+
+        <section class="media_features">
+            <h3>Media Features</h3>
+            <p>Media features are the conditions we test for within media queries. They allow us to target specific characteristics of the user's device or browser.</p>
+            
+            <h4>Width-based Media Features</h4>
+            <ul>
+                <li><strong>width</strong> - Viewport width</li>
+                <li><strong>min-width</strong> - Minimum viewport width</li>
+                <li><strong>max-width</strong> - Maximum viewport width</li>
+            </ul>
+            
+            <pre><code>/* Base mobile styles */
+.container {
+    padding: 10px;
+}
+
+/* Tablets and larger */
+@media screen and (min-width: 768px) {
+    .container {
+        padding: 20px;
+    }
+}
+
+/* Desktops and larger */
+@media screen and (min-width: 1024px) {
+    .container {
+        padding: 30px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+}</code></pre>
+            
+            <p><strong>Note:</strong> min-width and max-width are more commonly used than the exact width, as they allow for more flexible designs that work across a range of screen sizes.</p>
+            
+            <h4>Height-based Media Features</h4>
+            <ul>
+                <li><strong>height</strong> - Viewport height</li>
+                <li><strong>min-height</strong> - Minimum viewport height</li>
+                <li><strong>max-height</strong> - Maximum viewport height</li>
+            </ul>
+            
+            <pre><code>/* Adjust hero section for shorter screens */
+@media screen and (max-height: 600px) {
+    .hero {
+        min-height: auto;
+        padding: 20px 0;
+    }
+    
+    .hero h1 {
+        font-size: 1.5rem;
+    }
+}</code></pre>
+            
+            <p><strong>Real-world use case:</strong> Height-based queries are particularly useful for adjusting full-height elements on shorter screens, such as when a mobile device is in landscape orientation or on netbooks with limited vertical space.</p>
+            
+            <h4>Device Pixel Ratio Media Features</h4>
+            <ul>
+                <li><strong>device-pixel-ratio</strong> - Ratio of device pixels to CSS pixels</li>
+                <li><strong>min-device-pixel-ratio</strong> - Minimum ratio</li>
+                <li><strong>max-device-pixel-ratio</strong> - Maximum ratio</li>
+                <li><strong>resolution</strong> - Pixel density in dpi or dpcm</li>
+            </ul>
+            
+            <pre><code>/* Standard resolution */
+.logo {
+    background-image: url('logo.png');
+}
+
+/* High resolution screens (like Retina displays) */
+@media (-webkit-min-device-pixel-ratio: 2), 
+       (min-resolution: 192dpi) { 
+    .logo {
+        background-image: url('logo@2x.png');
+    }
+}</code></pre>
+            
+            <p><strong>Real-world application:</strong> Device pixel ratio queries allow you to serve higher-resolution images to devices with high-density displays (like Apple's Retina displays), while still serving appropriately sized images to standard displays. This helps maintain visual quality without unnecessarily increasing load times for all users.</p>
+            
+            <h4>Orientation Media Features</h4>
+            <ul>
+                <li><strong>orientation: portrait</strong> - Height is greater than or equal to width</li>
+                <li><strong>orientation: landscape</strong> - Width is greater than height</li>
+            </ul>
+            
+            <pre><code>/* Default layout */
+.gallery {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+/* Landscape orientation - more horizontal space */
+@media screen and (orientation: landscape) {
+    .gallery {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}</code></pre>
+            
+            <p><strong>Real-world use case:</strong> Orientation queries are excellent for creating interfaces that adapt to how a user is holding their device. For example, a photo gallery might display in a single column in portrait mode but expand to multiple columns in landscape mode to take advantage of the wider screen.</p>
+            
+            <h4>Other Useful Media Features</h4>
+            <ul>
+                <li><strong>aspect-ratio</strong> - Ratio of width to height of the viewport</li>
+                <li><strong>color</strong> - Number of bits per color component</li>
+                <li><strong>display-mode</strong> - How the web application is displayed (browser, standalone, fullscreen)</li>
+                <li><strong>prefers-reduced-motion</strong> - User has requested minimal animations</li>
+                <li><strong>prefers-color-scheme</strong> - User prefers light or dark color themes</li>
+                <li><strong>hover</strong> - Primary input mechanism can hover</li>
+                <li><strong>pointer</strong> - Primary input mechanism is coarse (touch) or fine (mouse)</li>
+            </ul>
+            
+            <p>These additional features allow for even more tailored experiences based on user preferences and device capabilities.</p>
+        </section>
+
+        <section class="logical_operators">
+            <h3>Logical Operators in Media Queries</h3>
+            <p>Media queries support logical operators that allow you to create more complex conditions:</p>
+            
+            <h4>The 'and' Operator</h4>
+            <p>The 'and' operator combines multiple conditions that must all be true for the query to apply.</p>
+            
+            <pre><code>/* Apply only when both conditions are met */
+@media screen and (min-width: 768px) and (max-width: 1023px) {
+    /* Tablet-specific styles */
+    body {
+        font-size: 16px;
+    }
+}</code></pre>
+            
+            <p><strong>Real-world use case:</strong> The 'and' operator is perfect for targeting specific ranges, like creating styles exclusively for tablets by targeting screen widths between 768px and 1023px.</p>
+            
+            <h4>The 'not' Operator</h4>
+            <p>The 'not' operator negates the query, applying styles when the conditions are NOT met.</p>
+            
+            <pre><code>/* Apply to everything except screens */
+@media not screen {
+    /* Styles for print, speech, etc. */
+    body {
+        background: none;
+    }
+}</code></pre>
+            
+            <p><strong>Note:</strong> The 'not' operator applies to the entire query, not just a part of it.</p>
+            
+            <h4>The 'only' Operator</h4>
+            <p>The 'only' operator is primarily used to hide media queries from older browsers that don't support them.</p>
+            
+            <pre><code>@media only screen and (min-width: 768px) {
+    /* These styles will be ignored by very old browsers */
+    .container {
+        width: 750px;
+    }
+}</code></pre>
+            
+            <p><strong>Note:</strong> Modern browsers no longer need the 'only' operator, but it's sometimes still included for backwards compatibility.</p>
+            
+            <h4>Using Commas for 'OR' Logic</h4>
+            <p>Commas function like the 'OR' operator, allowing you to apply styles when any of the comma-separated conditions are true.</p>
+            
+            <pre><code>/* Apply when either condition is met */
+@media screen and (max-width: 767px), print {
+    /* Styles for both mobile devices and print */
+    .sidebar {
+        display: none;
+    }
+}</code></pre>
+            
+            <p><strong>Real-world use case:</strong> This approach is useful when you want to apply the same styles in multiple contexts - for example, hiding a sidebar both on small screens and when printing.</p>
+        </section>
+
+        <section class="mobile_first">
+            <h3>Mobile-First vs. Desktop-First with Media Queries</h3>
+            
+            <h4>Desktop-First Approach (Traditional)</h4>
+            <p>In a desktop-first approach, you design for the desktop experience first and then use media queries with max-width to adapt the design for smaller screens.</p>
+            
+            <pre><code>/* Desktop styles (default) */
+.container {
+    width: 1140px;
+    margin: 0 auto;
+}
+
+/* Tablet styles */
+@media screen and (max-width: 1023px) {
+    .container {
+        width: 90%;
+    }
+}
+
+/* Mobile styles */
+@media screen and (max-width: 767px) {
+    .container {
+        width: 100%;
+        padding: 0 15px;
+    }
+}</code></pre>
+            
+            <p><strong>Analogy:</strong> Desktop-first is like starting with a large, fully-furnished house and then figuring out what furniture to remove to fit into a smaller apartment. You begin with everything and then start taking away.</p>
+            
+            <h4>Mobile-First Approach (Recommended)</h4>
+            <p>In a mobile-first approach, you design for the mobile experience first and then use media queries with min-width to enhance the design for larger screens.</p>
+            
+            <pre><code>/* Mobile styles (default) */
+.container {
+    width: 100%;
+    padding: 0 15px;
+}
+
+/* Tablet styles */
+@media screen and (min-width: 768px) {
+    .container {
+        width: 90%;
+        margin: 0 auto;
+    }
+}
+
+/* Desktop styles */
+@media screen and (min-width: 1024px) {
+    .container {
+        width: 1140px;
+    }
+}</code></pre>
+            
+            <p><strong>Analogy:</strong> Mobile-first is like starting with a backpack containing only essential items for a hike, and then adding more items as you get a bigger backpack. You begin with the essentials and progressively enhance.</p>
+            
+            <h4>Why Mobile-First is Often Better</h4>
+            <ul>
+                <li><strong>Progressive enhancement</strong> - Start with a baseline experience and enhance it for larger screens and more capable devices</li>
+                <li><strong>Performance optimization</strong> - Mobile devices often have less processing power and potentially slower connections</li>
+                <li><strong>Content prioritization</strong> - Forces you to focus on what's most important when space is limited</li>
+                <li><strong>Future-proofing</strong> - As mobile usage continues to grow, designing for mobile first aligns with user trends</li>
+                <li><strong>Simpler CSS</strong> - Generally results in cleaner, more maintainable CSS</li>
+            </ul>
+            
+            <p><strong>Real-world impact:</strong> Many major websites and frameworks (like Bootstrap) have shifted to a mobile-first approach over the years, recognizing that starting with the constraints of mobile creates more focused, efficient designs that scale up well to larger screens.</p>
+        </section>
+
+        <section class="common_breakpoints">
+            <h3>Common Breakpoints for Media Queries</h3>
+            <p>While you should ideally set breakpoints based on your content rather than specific devices, these standard breakpoints provide a good starting point:</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Device Category</th>
+                        <th>Breakpoint Range</th>
+                        <th>Common Values</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Small mobile devices</td>
+                        <td>320px - 575px</td>
+                        <td>320px, 480px</td>
+                    </tr>
+                    <tr>
+                        <td>Large mobile devices</td>
+                        <td>576px - 767px</td>
+                        <td>576px</td>
+                    </tr>
+                    <tr>
+                        <td>Tablets</td>
+                        <td>768px - 991px</td>
+                        <td>768px</td>
+                    </tr>
+                    <tr>
+                        <td>Laptops/small desktops</td>
+                        <td>992px - 1199px</td>
+                        <td>992px</td>
+                    </tr>
+                    <tr>
+                        <td>Large desktops</td>
+                        <td>1200px and above</td>
+                        <td>1200px, 1400px</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Bootstrap 5 Breakpoints</h4>
+            <p>For reference, these are the breakpoints used by the popular Bootstrap framework:</p>
+            
+            <pre><code>// Small devices (landscape phones, 576px and up)
+@media (min-width: 576px) { ... }
+
+// Medium devices (tablets, 768px and up)
+@media (min-width: 768px) { ... }
+
+// Large devices (desktops, 992px and up)
+@media (min-width: 992px) { ... }
+
+// X-Large devices (large desktops, 1200px and up)
+@media (min-width: 1200px) { ... }
+
+// XX-Large devices (larger desktops, 1400px and up)
+@media (min-width: 1400px) { ... }</code></pre>
+            
+            <p><strong>Important consideration:</strong> Rather than targeting specific devices, focus on where your content and layout naturally need to adjust. This approach, known as "content-first" breakpoints, results in designs that work well across a wider range of devices.</p>
+        </section>
+
+        <section class="practical_examples">
+            <h3>Practical Examples of Media Queries</h3>
+            
+            <h4>Responsive Navigation</h4>
+            <p>One of the most common uses for media queries is creating a responsive navigation menu:</p>
+            
+            <pre><code>/* Mobile-first navigation (hamburger menu) */
+.nav-toggle {
+    display: block; /* Show hamburger icon */
+}
+
+.nav-menu {
+    display: none; /* Hide menu by default */
+}
+
+.nav-menu.active {
+    display: block; /* Show when toggled */
+    position: absolute;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.nav-menu li {
+    display: block;
+    border-bottom: 1px solid #eee;
+}
+
+/* Desktop navigation */
+@media screen and (min-width: 768px) {
+    .nav-toggle {
+        display: none; /* Hide hamburger icon */
+    }
+    
+    .nav-menu {
+        display: flex; /* Always show menu */
+        position: static;
+        box-shadow: none;
+    }
+    
+    .nav-menu li {
+        display: inline-block;
+        border-bottom: none;
+        margin-left: 20px;
+    }
+}</code></pre>
+            
+            <p><strong>Real-world implementation:</strong> This pattern is used on countless websites to transform a horizontal navigation on desktop into a space-saving hamburger menu on mobile devices.</p>
+            
+            <h4>Responsive Grid Layout</h4>
+            <p>Creating a grid layout that adjusts columns based on screen size:</p>
+            
+            <pre><code>/* Mobile: Single column */
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+/* Tablet: Two columns */
+@media screen and (min-width: 768px) {
+    .grid-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Desktop: Four columns */
+@media screen and (min-width: 1024px) {
+    .grid-container {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}</code></pre>
+            
+            <p><strong>Real-world application:</strong> This approach is ideal for product listings, image galleries, blog posts, and any content that benefits from a grid layout.</p>
+            
+            <h4>Font Size Adjustments</h4>
+            <p>Adjusting typography for different screen sizes:</p>
+            
+            <pre><code>/* Base typography (mobile) */
+body {
+    font-size: 16px;
+}
+
+h1 {
+    font-size: 1.75rem;
+    line-height: 1.2;
+}
+
+h2 {
+    font-size: 1.5rem;
+    line-height: 1.2;
+}
+
+/* Tablet typography */
+@media screen and (min-width: 768px) {
+    body {
+        font-size: 17px;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    h2 {
+        font-size: 1.75rem;
+    }
+}
+
+/* Desktop typography */
+@media screen and (min-width: 1024px) {
+    body {
+        font-size: 18px;
+    }
+    
+    h1 {
+        font-size: 2.5rem;
+    }
+    
+    h2 {
+        font-size: 2rem;
+    }
+}</code></pre>
+            
+            <p><strong>Design principle:</strong> Typography should scale proportionally with screen size, but not in a strictly linear fashion. Reading comfort requires different sizing adjustments at different screen sizes.</p>
+            
+            <h4>Responsive Images</h4>
+            <p>Using media queries with the picture element for art direction:</p>
+            
+            <pre><code>&lt;picture&gt;
+    &lt;source media="(min-width: 1024px)" srcset="image-large.jpg"&gt;
+    &lt;source media="(min-width: 768px)" srcset="image-medium.jpg"&gt;
+    &lt;img src="image-small.jpg" alt="Responsive Image"&gt;
+&lt;/picture&gt;</code></pre>
+            
+            <p><strong>Use case:</strong> This approach allows you to not only serve differently sized images but also differently cropped or composed images based on screen size. For example, a landscape-oriented hero image on desktop might be replaced with a portrait-oriented version on mobile.</p>
+        </section>
+
+        <section class="advanced_techniques">
+            <h3>Advanced Media Query Techniques</h3>
+            
+            <h4>Nested Media Queries in Sass/SCSS</h4>
+            <p>CSS preprocessors like Sass allow you to nest media queries within selectors, making your code more organized:</p>
+            
+            <pre><code>// SCSS
+.card {
+    padding: 15px;
+    
+    @media screen and (min-width: 768px) {
+        padding: 20px;
+    }
+    
+    .card-title {
+        font-size: 1.2rem;
+        
+        @media screen and (min-width: 768px) {
+            font-size: 1.5rem;
+        }
+    }
+}</code></pre>
+            
+            <p>This compiles to:</p>
+            
+            <pre><code>/* Compiled CSS */
+.card {
+    padding: 15px;
+}
+
+@media screen and (min-width: 768px) {
+    .card {
+        padding: 20px;
+    }
+}
+
+.card .card-title {
+    font-size: 1.2rem;
+}
+
+@media screen and (min-width: 768px) {
+    .card .card-title {
+        font-size: 1.5rem;
+    }
+}</code></pre>
+            
+            <p><strong>Development benefit:</strong> Nesting media queries keeps related styles together in your source code, making maintenance easier and helping developers understand the relationship between base styles and their responsive variations.</p>
+            
+            <h4>Feature Queries with @supports</h4>
+            <p>Combine media queries with feature queries for progressive enhancement:</p>
+            
+            <pre><code>/* Basic styling for all browsers */
+.container {
+    display: block;
+}
+
+/* Enhanced with Flexbox for browsers that support it */
+@supports (display: flex) {
+    .container {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    
+    /* Make flexbox responsive */
+    @media screen and (max-width: 767px) {
+        .container {
+            flex-direction: column;
+        }
+    }
+}</code></pre>
+            
+            <p><strong>Progressive enhancement:</strong> This approach allows you to provide a baseline experience for all browsers while enhancing the experience for those that support modern features. The media query inside the @supports block creates responsive behavior only when the feature is supported.</p>
+            
+            <h4>Container Queries (Emerging Standard)</h4>
+            <p>Container queries are an evolving feature that allows components to respond to their parent container's size rather than the viewport:</p>
+            
+            <pre><code>/* Define a containment context */
+.card-container {
+    container-type: inline-size;
+}
+
+/* Base card styles */
+.card {
+    padding: 15px;
+}
+
+/* When the container is at least 400px wide */
+@container (min-width: 400px) {
+    .card {
+        padding: 20px;
+        display: flex;
+    }
+}</code></pre>
+            
+            <p><strong>The future of responsive design:</strong> Container queries represent a shift from viewport-centric to component-centric responsive design. They allow reusable components to adapt based on their immediate context rather than the overall page size, which is especially valuable for design systems and component libraries.</p>
+            
+            <h4>Preference Queries</h4>
+            <p>Media queries that respond to user preferences:</p>
+            
+            <pre><code>/* Default light theme */
+:root {
+    --background-color: #fff;
+    --text-color: #333;
+}
+
+/* Dark theme for users who prefer it */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-color: #222;
+        --text-color: #f0f0f0;
+    }
+}
+
+/* Reduce animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}</code></pre>
+            
+            <p><strong>Accessibility benefit:</strong> Preference queries allow your design to respect user needs and preferences at the operating system level, which is particularly important for accessibility and user experience. For example, users with vestibular disorders often enable reduced motion settings to prevent discomfort from animations.</p>
+        </section>
+
+        <section class="common_mistakes">
+            <h3>Common Media Query Mistakes and Best Practices</h3>
+            
+            <h4>Common Mistakes</h4>
+            <ul>
+                <li><strong>Using too many breakpoints</strong> - This creates maintenance headaches and often results in brittle designs</li>
+                <li><strong>Designing for specific devices</strong> - Device dimensions constantly change; focus on content needs instead</li>
+                <li><strong>Forgetting to include the viewport meta tag</strong> - Without this, mobile browsers won't respect your media queries</li>
+                <li><strong>Inconsistent units</strong> - Mixing pixels, ems, and rems can lead to unexpected behavior</li>
+                <li><strong>Overriding too many styles</strong> - Excessive overrides indicate your base styles might not be well-structured</li>
+                <li><strong>Not testing actual devices</strong> - Emulators and responsive design mode aren't perfect substitutes</li>
+            </ul>
+            
+            <h4>Best Practices</h4>
+            <ul>
+                <li><strong>Start mobile-first</strong> - Begin with styles for the smallest screens and enhance for larger ones</li>
+                <li><strong>Use relative units</strong> - Prefer percentages, ems, and rems over fixed pixels</li>
+                <li><strong>Group media queries by component</strong> - Keeps related styles together for easier maintenance</li>
+                <li><strong>Test on actual devices</strong> - Use real hardware when possible to catch issues emulators might miss</li>
+                <li><strong>Use developer tools</strong> - Browser dev tools include responsive design modes for quick testing</li>
+                <li><strong>Focus on content breakpoints</strong> - Let your content determine when layout should change</li>
+                <li><strong>Document your approach</strong> - Comment your breakpoint strategy for other developers</li>
+            </ul>
+            
+            <h4>Performance Considerations</h4>
+            <p>Media queries can impact performance if not handled carefully:</p>
+            <ul>
+                <li><strong>Avoid unnecessary downloads</strong> - Use media queries in link tags to conditionally load stylesheets</li>
+                <li><strong>Minimize repaints and reflows</strong> - Change properties that cause minimal layout recalculation</li>
+                <li><strong>Consider using JavaScript judiciously</strong> - For complex responsive behaviors, sometimes JS is more efficient</li>
+            </ul>
+            
+            <pre><code>&lt;!-- Conditionally load CSS based on viewport size --&gt;
+&lt;link rel="stylesheet" href="base.css"&gt;
+&lt;link rel="stylesheet" href="tablet.css" media="screen and (min-width: 768px)"&gt;
+&lt;link rel="stylesheet" href="desktop.css" media="screen and (min-width: 1024px)"&gt;</code></pre>
+            
+            <p><strong>Performance benefit:</strong> With this approach, browsers will only download the CSS files relevant to the current viewport size, reducing initial load time, particularly for mobile users.</p>
+        </section>
+
+        <section class="practical_workshop">
+            <h3>Practical Workshop: Building a Responsive Component</h3>
+            <p>Let's apply what we've learned by building a responsive card component that adapts across different screen sizes:</p>
+            
+            <h4>HTML Structure</h4>
+            <pre><code>&lt;div class="product-card"&gt;
+    &lt;div class="product-image"&gt;
+        &lt;img src="product.jpg" alt="Product Name"&gt;
+    &lt;/div&gt;
+    &lt;div class="product-info"&gt;
+        &lt;h3 class="product-title"&gt;Product Name&lt;/h3&gt;
+        &lt;p class="product-description"&gt;This is a short description of the product and its features.&lt;/p&gt;
+        &lt;div class="product-meta"&gt;
+            &lt;span class="product-price"&gt;$29.99&lt;/span&gt;
+            &lt;button class="product-button"&gt;Add to Cart&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+            
+            <h4>CSS with Media Queries</h4>
+            <pre><code>/* Base styles (mobile-first) */
+.product-card {
+    border: 1px solid #eee;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.product-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.product-info {
+    padding: 15px;
+}
+
+.product-title {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+.product-description {
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.product-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.product-price {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.product-button {
+    background: #0066cc;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Tablet styles */
+@media screen and (min-width: 768px) {
+    .product-card {
+        display: flex;
+        max-height: 200px;
+    }
+    
+    .product-image {
+        flex: 0 0 200px;
+    }
+    
+    .product-image img {
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .product-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .product-title {
+        font-size: 1.3rem;
+    }
+}
+
+/* Desktop styles */
+@media screen and (min-width: 1024px) {
+    .product-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .product-button {
+        opacity: 0.9;
+        transition: opacity 0.3s ease, background-color 0.3s ease;
+    }
+    
+    .product-button:hover {
+        opacity: 1;
+        background-color: #0055aa;
+    }
+}
+
+/* Large desktop styles */
+@media screen and (min-width: 1400px) {
+    .product-info {
+        padding: 20px;
+    }
+    
+    .product-title {
+        font-size: 1.5rem;
+    }
+    
+    .product-description {
+        font-size: 1rem;
+    }
+}</code></pre>
+            
+            <p><strong>This responsive component demonstrates:</strong></p>
+            <ul>
+                <li>Mobile-first approach starting with a vertical card layout</li>
+                <li>Transition to a horizontal layout for tablets and larger screens</li>
+                <li>Progressive enhancement with hover effects only on desktop</li>
+                <li>Subtle refinements to spacing and typography as screen size increases</li>
+                <li>Use of flexbox for layout changes instead of completely rewriting styles</li>
+            </ul>
+            
+            <p><strong>Real-world application:</strong> This card pattern is commonly used for product listings in e-commerce, article previews in blogs, and content cards in dashboards and apps.</p>
+        </section>
+
+        <section class="testing">
+            <h3>Testing Media Queries</h3>
+            
+            <h4>Browser Developer Tools</h4>
+            <p>Most modern browsers include responsive design mode in their developer tools:</p>
+            <ul>
+                <li><strong>Chrome/Edge</strong>: Open Dev Tools (F12) → Click the device icon or press Ctrl+Shift+M</li>
+                <li><strong>Firefox</strong>: Open Dev Tools (F12) → Click the responsive design mode icon or press Ctrl+Shift+M</li>
+                <li><strong>Safari</strong>: Open Dev Tools → Click on the Responsive Design Mode icon</li>
+            </ul>
+            
+            <h4>Browser Extensions</h4>
+            <p>Extensions can enhance your media query testing workflow:</p>
+            <ul>
+                <li><strong>Responsive Viewer</strong> - Shows your site in multiple viewports simultaneously</li>
+                <li><strong>Window Resizer</strong> - Quickly resize your browser window to common dimensions</li>
+                <li><strong>What's My Browser Size</strong> - Displays the current viewport dimensions</li>
+            </ul>
+            
+            <h4>Online Testing Tools</h4>
+            <ul>
+                <li><strong>Responsively App</strong> - Desktop application for responsive development</li>
+                <li><strong>BrowserStack</strong> - Test on real mobile devices in the cloud</li>
+                <li><strong>Am I Responsive</strong> - Quick visualization of your site on multiple devices</li>
+            </ul>
+            
+            <h4>Testing Checklist</h4>
+            <p>When testing your media queries, check the following:</p>
+            <ul>
+                <li>Does the layout adapt smoothly across different screen sizes?</li>
+                <li>Is the text readable at all viewport widths?</li>
+                <li>Are touch targets big enough on small screens?</li>
+                <li>Does the site work in both portrait and landscape orientations?</li>
+                <li>Is the navigation usable across all breakpoints?</li>
+                <li>Are images loading appropriately for each screen size?</li>
+                <li>Does the site perform well on low-power devices?</li>
+            </ul>
+        </section>
+
+        <section class="conclusion">
+            <h3>Conclusion: The Power of Media Queries</h3>
+            <p>Media queries are the foundation that makes responsive web design possible. They allow us to create websites that provide optimal experiences across an ever-expanding range of devices and screen sizes.</p>
+            
+            <p>Remember that effective responsive design isn't just about making things fit on different screens—it's about delivering the right experience for each context. Media queries give us the tool to create these contextual experiences, adapting not just layout but typography, interaction, and even content to meet users where they are.</p>
+            
+            <p>As web technology continues to evolve, the role of media queries is expanding beyond just screen sizes to include user preferences, device capabilities, and environmental conditions. By mastering media queries, you're equipping yourself with a fundamental skill that will remain relevant even as the specifics of web design continue to evolve.</p>
+            
+            <p>In our next session, we'll explore how to combine media queries with modern layout techniques like Flexbox and CSS Grid to create even more powerful responsive designs with less code.</p>
+        </section>
+
+        <section class="assignment">
+            <h3>Daily Assignment: Media Query Mastery</h3>
+            <p>Apply today's concepts by creating a responsive webpage that demonstrates effective use of media queries:</p>
+            
+            <ol>
+                <li>Create a webpage with a header, main content area with cards, sidebar, and footer</li>
+                <li>Implement a mobile-first approach with at least 3 breakpoints</li>
+                <li>The layout should stack vertically on mobile, with the sidebar below the main content</li>
+                <li>On tablets, implement a 2-column card layout and keep the sidebar below</li>
+                <li>On desktop, create a 3-column layout for cards and move the sidebar to the right</li>
+                <li>Include at least one print media query that optimizes the page for printing</li>
+                <li>Implement at least one preference query (dark mode or reduced motion)</li>
+            </ol>
+            
+            <p><strong>Requirements:</strong></p>
+            <ul>
+                <li>Use semantic HTML elements</li>
+                <li>Include proper viewport meta tag</li>
+                <li>Comment your media queries to explain your approach</li>
+                <li>Test on at least three different viewport sizes</li>
+                <li>Use relative units throughout your CSS</li>
+            </ul>
+            
+            <p>Create this in a file called <code>04week/media_queries_assignment.html</code> and submit it to the course repository by the end of day.</p>
+        </section>
+
+        <section class="resources">
+            <h3>Additional Resources</h3>
+            <ul>
+                <li><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Media_Queries" target="_blank">MDN Web Docs: Media Queries</a></li>
+                <li><a href="https://css-tricks.com/a-complete-guide-to-css-media-queries/" target="_blank">CSS-Tricks: A Complete Guide to CSS Media Queries</a></li>
+                <li><a href="https://www.freecodecamp.org/news/css-media-queries-breakpoints-media-types-standard-resolutions-and-more/" target="_blank">FreeCodeCamp: CSS Media Queries Tutorial</a></li>
+                <li><a href="https://web.dev/customize-install/" target="_blank">Web.dev: Responsive Design and User Preferences</a></li>
+                <li><a href="https://ishadeed.com/article/responsive-design/" target="_blank">Ahmad Shadeed: Responsive Design Detailed Guide</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Week 4: Web Fundamentals - Python Full Stack Web Developer Course</p>
+        <p>File location: <code>04week/04week_3day_media_queries.html</code></p>
+    </footer>
+</body>
+</html>

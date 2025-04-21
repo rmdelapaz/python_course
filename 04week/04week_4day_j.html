@@ -3,1795 +3,1391 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>For JavaScript Developers: Advanced DOM Patterns and Optimization</title>
+    <title>Advanced DOM Patterns and Optimization</title>
     <link rel="stylesheet" href="/styles/main.css">
     <link rel="icon" href="/favicon.png">
+    <style>
+        .code-example {
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            padding: 15px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            font-family: monospace;
+        }
+        
+        .comparison {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .comparison-item {
+            flex: 1;
+            min-width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        
+        .comparison-item h4 {
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .note {
+            background-color: #e8f4f8;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .warning {
+            background-color: #fdebd0;
+            border-left: 4px solid #f39c12;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .tip {
+            background-color: #e9f7ef;
+            border-left: 4px solid #27ae60;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f5f5f5;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <h1>For JavaScript Developers: Advanced DOM Patterns and Optimization</h1>
-        <h2>Week 4: Web Fundamentals - Thursday Afternoon Session</h2>
+        <h1>Advanced DOM Patterns and Optimization</h1>
+        <h2>Week 4: Thursday: Afternoon Session</h2>
+        <h3>For JavaScript Developers</h3>
     </header>
 
     <main>
-        <section class="lecture_intro">
-            <h3>Elevating Your DOM Manipulation Skills</h3>
-            <p>Welcome to our advanced session on DOM patterns and optimization! As experienced JavaScript developers, you already understand the basics of DOM manipulation. Now we'll dive deeper into advanced patterns, performance optimization techniques, and modern approaches that will help you build faster, more maintainable web applications.</p>
-            
-            <p>This lecture belongs to Week 4: Web Fundamentals and is part of our Python Full Stack Developer course. You'll find this content in the folder structure: <code>/04week/04week_4day_j.html</code></p>
-            
-            <p>While the DOM provides powerful capabilities for creating dynamic web interfaces, it can also be a significant performance bottleneck if not handled properly. In this session, we'll explore patterns and techniques that balance flexibility, maintainability, and performance.</p>
+        <section id="introduction">
+            <h2>Introduction</h2>
+            <p>
+                As JavaScript developers transitioning to full-stack development with Python, you already understand the basics of DOM manipulation. This session will focus on advanced patterns and optimization techniques that will help you build more performant web applications. We'll explore how these patterns integrate with backend Python frameworks and the broader full-stack architecture.
+            </p>
+            <p>
+                By the end of this session, you'll have a deeper understanding of efficient DOM manipulation techniques that go beyond the basics, allowing you to create responsive and smooth user experiences regardless of which backend technology you're using.
+            </p>
         </section>
 
-        <section class="dom_performance_fundamentals">
-            <h3>Understanding DOM Performance Fundamentals</h3>
-            <p>Before diving into specific patterns, let's establish a solid understanding of what makes DOM operations expensive and why optimization matters.</p>
+        <section id="performance-considerations">
+            <h2>Understanding DOM Performance</h2>
+            <p>
+                Before diving into advanced patterns, it's crucial to understand what makes DOM operations expensive and how browsers process them.
+            </p>
             
-            <div class="rendering_pipeline">
-                <h4>The Browser Rendering Pipeline</h4>
-                <p>When you modify the DOM, the browser often needs to go through multiple steps before the changes appear on screen:</p>
-                
-                <ol>
-                    <li><strong>JavaScript:</strong> Your code runs, making DOM changes</li>
-                    <li><strong>Style Calculation:</strong> The browser recalculates which CSS rules apply to which elements</li>
-                    <li><strong>Layout (Reflow):</strong> The browser calculates the position and size of each element</li>
-                    <li><strong>Paint:</strong> The browser fills in pixels for each element</li>
-                    <li><strong>Composite:</strong> The browser draws the layers to the screen</li>
-                </ol>
-                
-                <p><strong>Factory Assembly Line Metaphor:</strong> Think of the rendering pipeline as a factory assembly line. Every time you make a DOM change, you potentially trigger the entire production line to restart. Minor changes (like changing a text color) might only affect the later stages of the line, while major changes (like changing an element's size) could require running the entire production line from scratch.</p>
+            <h3>The Critical Rendering Path</h3>
+            <ol>
+                <li><strong>JavaScript</strong>: Execute scripts that might modify the DOM</li>
+                <li><strong>Style Calculations</strong>: Compute styles based on CSS rules</li>
+                <li><strong>Layout</strong>: Calculate the geometry of elements (reflow)</li>
+                <li><strong>Paint</strong>: Fill in pixels for each element</li>
+                <li><strong>Composite</strong>: Layer elements together to render on screen</li>
+            </ol>
+            
+            <div class="note">
+                <h4>Key Insight</h4>
+                <p>
+                    Modifying the DOM can trigger a partial or complete re-execution of this rendering pipeline. The deeper in the pipeline the change affects, the more expensive it becomes.
+                </p>
             </div>
             
-            <div class="expensive_operations">
-                <h4>Most Expensive DOM Operations</h4>
-                <p>These operations often cause significant performance impact:</p>
-                
-                <ul>
-                    <li><strong>Layout Thrashing:</strong> Repeatedly alternating between reading and writing DOM properties that trigger layout</li>
-                    <li><strong>Forced Synchronous Layout:</strong> Reading layout properties immediately after making changes that affect layout</li>
-                    <li><strong>Complex Selectors:</strong> Using overly complex CSS selectors for finding elements</li>
-                    <li><strong>DOM Traversal:</strong> Repeatedly walking through large portions of the DOM tree</li>
-                    <li><strong>Frequent DOM Modifications:</strong> Making many small changes rather than batching updates</li>
-                </ul>
-                
-                <div class="code_example">
-                    <h5>Layout Thrashing Example</h5>
-                    <pre><code>// Bad: Forces multiple layouts
-function resizeAllParagraphs() {
-    const paragraphs = document.querySelectorAll('p');
-    
-    for (let i = 0; i < paragraphs.length; i++) {
-        const width = paragraphs[i].offsetWidth; // Read - forces layout
-        paragraphs[i].style.width = (width * 2) + 'px'; // Write - invalidates layout
-        const height = paragraphs[i].offsetHeight; // Read - forces layout again
-        paragraphs[i].style.height = (height * 2) + 'px'; // Write - invalidates layout
-    }
-}
+            <h3>Most Expensive DOM Operations</h3>
+            <ul>
+                <li><strong>Layout Thrashing</strong>: Repeatedly forcing the browser to recalculate layouts</li>
+                <li><strong>Forced Synchronous Layout</strong>: Reading layout properties immediately after writing to the DOM</li>
+                <li><strong>Excessive DOM Depth</strong>: Deep DOM trees take longer to process</li>
+                <li><strong>Layout-triggering CSS Properties</strong>: Properties like width, height, top, left, etc.</li>
+                <li><strong>Excessive DOM Size</strong>: Too many elements can slow down all operations</li>
+            </ul>
+        </section>
 
-// Better: Batch reads, then writes
-function resizeAllParagraphsOptimized() {
-    const paragraphs = document.querySelectorAll('p');
-    const dimensions = [];
-    
-    // Read phase - do all measurements first
-    for (let i = 0; i < paragraphs.length; i++) {
-        dimensions.push({
-            width: paragraphs[i].offsetWidth,
-            height: paragraphs[i].offsetHeight
-        });
-    }
-    
-    // Write phase - apply all updates
-    for (let i = 0; i < paragraphs.length; i++) {
-        paragraphs[i].style.width = (dimensions[i].width * 2) + 'px';
-        paragraphs[i].style.height = (dimensions[i].height * 2) + 'px';
-    }
-}</code></pre>
+        <section id="batch-operations">
+            <h2>Batch DOM Operations</h2>
+            <p>
+                One of the most effective patterns for optimizing DOM performance is batching operations to minimize browser reflows and repaints.
+            </p>
+            
+            <h3>Document Fragments</h3>
+            <p>
+                Use DocumentFragment as an off-screen DOM container for preparing multiple DOM operations before a single insertion.
+            </p>
+            
+            <div class="comparison">
+                <div class="comparison-item">
+                    <h4>Inefficient Approach</h4>
+                    <div class="code-example">
+<pre>
+// Inefficient: causes multiple reflows
+const list = document.querySelector('ul');
+for (let i = 0; i < 100; i++) {
+    const item = document.createElement('li');
+    item.textContent = `Item ${i}`;
+    list.appendChild(item); // Causes reflow on each iteration
+}
+</pre>
+                    </div>
                 </div>
-                
-                <p>Understanding which properties trigger layout is crucial for optimization. Here are some common properties that force layout when read:</p>
-                <ul>
-                    <li>offsetLeft, offsetTop, offsetWidth, offsetHeight</li>
-                    <li>clientLeft, clientTop, clientWidth, clientHeight</li>
-                    <li>scrollLeft, scrollTop, scrollWidth, scrollHeight</li>
-                    <li>getComputedStyle() for layout properties</li>
-                    <li>getBoundingClientRect()</li>
-                </ul>
+                <div class="comparison-item">
+                    <h4>Optimized Approach</h4>
+                    <div class="code-example">
+<pre>
+// Efficient: single reflow
+const list = document.querySelector('ul');
+const fragment = document.createDocumentFragment();
+for (let i = 0; i < 100; i++) {
+    const item = document.createElement('li');
+    item.textContent = `Item ${i}`;
+    fragment.appendChild(item);
+}
+list.appendChild(fragment); // Only one reflow
+</pre>
+                    </div>
+                </div>
             </div>
             
-            <div class="measuring_performance">
-                <h4>Measuring DOM Performance</h4>
-                <p>Before optimizing, you need to measure. Here are some tools and techniques:</p>
-                
-                <div class="code_example">
-                    <h5>Basic Performance Measurement</h5>
-                    <pre><code>// Using Performance API
-function measureOperation(operation, name) {
-    const start = performance.now();
-    operation();
-    const end = performance.now();
-    console.log(`${name} took ${end - start} ms`);
-}
+            <h3>Avoiding Layout Thrashing</h3>
+            <p>
+                Layout thrashing occurs when you repeatedly force the browser to perform layout calculations by alternating between reading and writing to the DOM.
+            </p>
+            
+            <div class="comparison">
+                <div class="comparison-item">
+                    <h4>Layout Thrashing Example</h4>
+                    <div class="code-example">
+<pre>
+// Bad pattern: alternating reads and writes
+const boxes = document.querySelectorAll('.box');
+boxes.forEach(box => {
+    const width = box.offsetWidth; // Read (forces layout)
+    box.style.width = (width * 2) + 'px'; // Write
+    const height = box.offsetHeight; // Read (forces another layout)
+    box.style.height = (height * 2) + 'px'; // Write
+});
+</pre>
+                    </div>
+                </div>
+                <div class="comparison-item">
+                    <h4>Optimized Batching</h4>
+                    <div class="code-example">
+<pre>
+// Good pattern: batch reads, then writes
+const boxes = document.querySelectorAll('.box');
+const dimensions = [];
 
-// Usage
-measureOperation(() => {
-    // DOM operation to measure
-    document.querySelectorAll('.complex-selector .with .many > levels');
-}, 'Complex selector query');
-
-// For comparing multiple approaches
-function compareApproaches(approaches) {
-    Object.entries(approaches).forEach(([name, fn]) => {
-        measureOperation(fn, name);
+// Read phase (all layout calculations done together)
+boxes.forEach(box => {
+    dimensions.push({
+        width: box.offsetWidth,
+        height: box.offsetHeight
     });
-}
-
-// Usage
-compareApproaches({
-    'Direct ID': () => document.getElementById('target'),
-    'QuerySelector ID': () => document.querySelector('#target'),
-    'Complex Selector': () => document.querySelector('.container .row .col #target')
-});</code></pre>
-                </div>
-                
-                <p>For more advanced profiling, use browser DevTools:</p>
-                <ul>
-                    <li><strong>Performance Panel:</strong> Record and analyze rendering performance</li>
-                    <li><strong>Performance Monitor:</strong> Real-time monitoring of metrics like DOM Nodes, layouts/sec</li>
-                    <li><strong>Rendering Tab:</strong> Enable "Paint Flashing" to visualize repaints</li>
-                    <li><strong>Lighthouse:</strong> Auditing tool that includes performance metrics</li>
-                </ul>
-            </div>
-        </section>
-
-        <section class="advanced_dom_patterns">
-            <h3>Advanced DOM Manipulation Patterns</h3>
-            <p>Now that we understand the performance implications, let's explore advanced patterns for effective DOM manipulation:</p>
-            
-            <div class="virtual_dom_pattern">
-                <h4>Virtual DOM Pattern</h4>
-                <p>While frameworks like React popularized the Virtual DOM, you can implement a simplified version yourself:</p>
-                
-                <div class="code_example">
-                    <pre><code>class VirtualDOM {
-    constructor(rootElement) {
-        this.rootElement = rootElement;
-        this.virtualRoot = this.createVirtualNode(rootElement);
-    }
-    
-    // Create a lightweight virtual representation of a DOM node
-    createVirtualNode(domNode) {
-        const nodeType = domNode.nodeType;
-        let virtualNode = {
-            nodeType,
-            changes: []
-        };
-        
-        if (nodeType === Node.ELEMENT_NODE) {
-            virtualNode.tagName = domNode.tagName;
-            virtualNode.attributes = this.getAttributes(domNode);
-            virtualNode.children = Array.from(domNode.childNodes).map(
-                child => this.createVirtualNode(child)
-            );
-        } else if (nodeType === Node.TEXT_NODE) {
-            virtualNode.textContent = domNode.textContent;
-        }
-        
-        return virtualNode;
-    }
-    
-    // Get all attributes of an element
-    getAttributes(element) {
-        const attributes = {};
-        Array.from(element.attributes).forEach(attr => {
-            attributes[attr.name] = attr.value;
-        });
-        return attributes;
-    }
-    
-    // Update a virtual node based on a new state
-    updateVirtualNode(virtualNode, updates) {
-        // Apply updates to virtual node
-        if (updates.attributes) {
-            Object.assign(virtualNode.attributes, updates.attributes);
-            virtualNode.changes.push({
-                type: 'attributes',
-                attributes: updates.attributes
-            });
-        }
-        
-        if (updates.textContent !== undefined && 
-            virtualNode.nodeType === Node.TEXT_NODE) {
-            virtualNode.textContent = updates.textContent;
-            virtualNode.changes.push({
-                type: 'text',
-                textContent: updates.textContent
-            });
-        }
-        
-        // More complex updates (children, etc.) would go here
-        
-        return virtualNode;
-    }
-    
-    // Apply all pending changes to the real DOM
-    applyChanges() {
-        this.applyNodeChanges(this.virtualRoot, this.rootElement);
-        this.clearChanges(this.virtualRoot);
-    }
-    
-    // Apply changes to a specific node and its children
-    applyNodeChanges(virtualNode, domNode) {
-        // Apply this node's changes
-        virtualNode.changes.forEach(change => {
-            if (change.type === 'attributes') {
-                Object.entries(change.attributes).forEach(([name, value]) => {
-                    domNode.setAttribute(name, value);
-                });
-            } else if (change.type === 'text') {
-                domNode.textContent = change.textContent;
-            }
-        });
-        
-        // Recursively apply changes to children
-        if (virtualNode.children) {
-            virtualNode.children.forEach((childVNode, index) => {
-                this.applyNodeChanges(childVNode, domNode.childNodes[index]);
-            });
-        }
-    }
-    
-    // Clear pending changes after they've been applied
-    clearChanges(virtualNode) {
-        virtualNode.changes = [];
-        if (virtualNode.children) {
-            virtualNode.children.forEach(this.clearChanges.bind(this));
-        }
-    }
-}
-
-// Usage example
-const container = document.getElementById('container');
-const vdom = new VirtualDOM(container);
-
-// Make virtual changes
-const paragraph = vdom.virtualRoot.children[0]; // Assuming first child is a paragraph
-vdom.updateVirtualNode(paragraph, {
-    attributes: { class: 'highlighted' },
 });
 
-// Later, apply all changes at once
-requestAnimationFrame(() => {
-    vdom.applyChanges();
-});</code></pre>
+// Write phase (all DOM updates done together)
+boxes.forEach((box, i) => {
+    box.style.width = (dimensions[i].width * 2) + 'px';
+    box.style.height = (dimensions[i].height * 2) + 'px';
+});
+</pre>
+                    </div>
                 </div>
-                
-                <p>This is a simplified implementation to demonstrate the concept. Real virtual DOM libraries include more sophisticated diffing algorithms and optimizations.</p>
-                
-                <p><strong>Key Benefits:</strong></p>
-                <ul>
-                    <li>Batches DOM updates to reduce reflows and repaints</li>
-                    <li>Provides an abstraction layer for manipulating the UI</li>
-                    <li>Can be optimized to minimize DOM operations</li>
-                </ul>
-                
-                <p><strong>Blueprint Metaphor:</strong> The virtual DOM is like having a blueprint of a building that you can freely modify. Instead of making changes directly to the building (real DOM) every time, you update the blueprint first. Then, once all changes are decided, you efficiently implement only the necessary changes to the actual building in one go.</p>
             </div>
             
-            <div class="dom_diffing">
-                <h4>DOM Diffing and Patching</h4>
-                <p>A more focused approach to the virtual DOM concept is implementing just the diffing and patching parts:</p>
-                
-                <div class="code_example">
-                    <pre><code>function createElementFromHTML(html) {
-    const template = document.createElement('template');
-    template.innerHTML = html.trim();
-    return template.content.firstElementChild;
-}
+            <div class="tip">
+                <h4>Pro Tip</h4>
+                <p>
+                    Consider using libraries like <a href="https://github.com/wilsonpage/fastdom" target="_blank">FastDOM</a> which automatically batch DOM reads and writes to prevent layout thrashing.
+                </p>
+            </div>
+        </section>
 
-function diff(oldNode, newNode) {
-    const patches = [];
-    
-    // Different node types
-    if (oldNode.nodeType !== newNode.nodeType) {
-        patches.push({ type: 'replace', oldNode, newNode });
-        return patches;
-    }
-    
-    // Text nodes
-    if (oldNode.nodeType === Node.TEXT_NODE) {
-        if (oldNode.textContent !== newNode.textContent) {
-            patches.push({ 
-                type: 'text', 
-                node: oldNode, 
-                value: newNode.textContent 
-            });
-        }
-        return patches;
-    }
-    
-    // Different element types
-    if (oldNode.nodeName !== newNode.nodeName) {
-        patches.push({ type: 'replace', oldNode, newNode });
-        return patches;
-    }
-    
-    // Diff attributes
-    const oldAttrs = Array.from(oldNode.attributes || []);
-    const newAttrs = Array.from(newNode.attributes || []);
-    
-    // Removed or changed attributes
-    oldAttrs.forEach(attr => {
-        const newVal = newNode.getAttribute(attr.name);
-        if (newVal === null) {
-            patches.push({ 
-                type: 'removeAttr', 
-                node: oldNode, 
-                name: attr.name 
-            });
-        } else if (newVal !== attr.value) {
-            patches.push({ 
-                type: 'setAttribute', 
-                node: oldNode, 
-                name: attr.name, 
-                value: newVal 
-            });
-        }
+        <section id="event-delegation">
+            <h2>Advanced Event Delegation</h2>
+            <p>
+                Event delegation is a technique that leverages event bubbling to handle events at a higher level in the DOM rather than attaching listeners to individual elements.
+            </p>
+            
+            <h3>Benefits of Event Delegation</h3>
+            <ul>
+                <li><strong>Memory Efficiency</strong>: Fewer event listeners means less memory usage</li>
+                <li><strong>Dynamic Elements</strong>: Works with elements added to the DOM after initial page load</li>
+                <li><strong>Less Code</strong>: Cleaner implementation with less setup code</li>
+                <li><strong>Better Performance</strong>: Especially for large numbers of similar elements</li>
+            </ul>
+            
+            <div class="comparison">
+                <div class="comparison-item">
+                    <h4>Without Event Delegation</h4>
+                    <div class="code-example">
+<pre>
+// Inefficient for many elements
+document.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+        // Handle menu item click
+        console.log('Menu item clicked:', this.textContent);
     });
-    
-    // New attributes
-    newAttrs.forEach(attr => {
-        if (!oldNode.hasAttribute(attr.name)) {
-            patches.push({ 
-                type: 'setAttribute', 
-                node: oldNode, 
-                name: attr.name, 
-                value: attr.value 
-            });
-        }
-    });
-    
-    // Diff children (simplified)
-    const oldChildren = Array.from(oldNode.childNodes);
-    const newChildren = Array.from(newNode.childNodes);
-    
-    // For simplicity, just handle same number of children
-    // Real diffing would handle insertions, deletions, and moves
-    const minLength = Math.min(oldChildren.length, newChildren.length);
-    
-    for (let i = 0; i < minLength; i++) {
-        const childPatches = diff(oldChildren[i], newChildren[i]);
-        patches.push(...childPatches);
-    }
-    
-    // Add new children
-    for (let i = minLength; i < newChildren.length; i++) {
-        patches.push({ 
-            type: 'append', 
-            node: oldNode, 
-            child: newChildren[i].cloneNode(true) 
-        });
-    }
-    
-    // Remove extra old children
-    for (let i = minLength; i < oldChildren.length; i++) {
-        patches.push({ 
-            type: 'remove', 
-            node: oldChildren[i] 
-        });
-    }
-    
-    return patches;
-}
+});
 
-function applyPatches(patches) {
-    requestAnimationFrame(() => {
-        patches.forEach(patch => {
-            switch (patch.type) {
-                case 'replace':
-                    patch.oldNode.parentNode.replaceChild(
-                        patch.newNode.cloneNode(true), 
-                        patch.oldNode
-                    );
-                    break;
-                case 'text':
-                    patch.node.textContent = patch.value;
-                    break;
-                case 'setAttribute':
-                    patch.node.setAttribute(patch.name, patch.value);
-                    break;
-                case 'removeAttr':
-                    patch.node.removeAttribute(patch.name);
-                    break;
-                case 'append':
-                    patch.node.appendChild(patch.child);
-                    break;
-                case 'remove':
-                    patch.node.parentNode.removeChild(patch.node);
-                    break;
-            }
-        });
-    });
-}
-
-// Usage example
-function updateUI(container, newHTML) {
-    const newNode = createElementFromHTML(newHTML);
-    const patches = diff(container, newNode);
-    applyPatches(patches);
-}</code></pre>
+// New items won't have listeners
+const newItem = document.createElement('li');
+newItem.className = 'menu-item';
+newItem.textContent = 'New Item';
+document.querySelector('.menu').appendChild(newItem);
+</pre>
+                    </div>
                 </div>
-                
-                <p>This pattern is particularly useful when you need to make significant changes to a section of the DOM but want to minimize the actual DOM operations.</p>
+                <div class="comparison-item">
+                    <h4>With Event Delegation</h4>
+                    <div class="code-example">
+<pre>
+// Single event listener
+document.querySelector('.menu').addEventListener('click', function(e) {
+    // Check if clicked element or its parent is a menu item
+    const menuItem = e.target.closest('.menu-item');
+    if (menuItem) {
+        console.log('Menu item clicked:', menuItem.textContent);
+    }
+});
+
+// New items will work automatically
+const newItem = document.createElement('li');
+newItem.className = 'menu-item';
+newItem.textContent = 'New Item';
+document.querySelector('.menu').appendChild(newItem);
+</pre>
+                    </div>
+                </div>
             </div>
             
-            <div class="dom_fragment">
-                <h4>Advanced DocumentFragment Usage</h4>
-                <p>DocumentFragment is a powerful built-in tool for efficient DOM manipulation:</p>
-                
-                <div class="code_example">
-                    <pre><code>// Basic DocumentFragment usage
-function appendItems(container, items) {
-    const fragment = document.createDocumentFragment();
-    
-    items.forEach(item => {
-        const el = document.createElement('div');
-        el.textContent = item;
-        fragment.appendChild(el);
-    });
-    
-    container.appendChild(fragment);
-}
-
-// Advanced usage: Element creation factory
-function createElementFactory(tagName, defaultAttributes = {}) {
-    return (attributes = {}, children = []) => {
-        const element = document.createElement(tagName);
-        
-        const mergedAttributes = { ...defaultAttributes, ...attributes };
-        
-        // Apply attributes
-        Object.entries(mergedAttributes).forEach(([key, value]) => {
-            if (key === 'style' && typeof value === 'object') {
-                Object.assign(element.style, value);
-            } else if (key === 'className') {
-                element.className = value;
-            } else if (key === 'dataset' && typeof value === 'object') {
-                Object.assign(element.dataset, value);
-            } else if (key.startsWith('on') && typeof value === 'function') {
-                const eventName = key.slice(2).toLowerCase();
-                element.addEventListener(eventName, value);
-            } else {
-                element.setAttribute(key, value);
-            }
-        });
-        
-        // Append children
-        if (children.length > 0) {
-            const fragment = document.createDocumentFragment();
+            <h3>Advanced Event Delegation Pattern</h3>
+            <p>
+                For complex applications, you can implement a more sophisticated event delegation system:
+            </p>
             
-            children.forEach(child => {
-                if (typeof child === 'string') {
-                    fragment.appendChild(document.createTextNode(child));
-                } else if (child instanceof Node) {
-                    fragment.appendChild(child);
-                }
-            });
-            
-            element.appendChild(fragment);
-        }
-        
-        return element;
-    };
-}
-
-// Usage of the factory
-const div = createElementFactory('div', { className: 'container' });
-const h1 = createElementFactory('h1');
-const p = createElementFactory('p');
-const button = createElementFactory('button');
-
-// Create a complex structure efficiently
-const fragment = document.createDocumentFragment();
-
-fragment.appendChild(
-    div(
-        { style: { padding: '20px', backgroundColor: '#f0f0f0' } },
-        [
-            h1({ className: 'title' }, ['Welcome to Our Site']),
-            p({}, ['This is a paragraph with some text.']),
-            button(
-                { 
-                    className: 'btn primary', 
-                    onClick: () => alert('Button clicked!') 
-                },
-                ['Click Me']
-            )
-        ]
-    )
-);
-
-document.body.appendChild(fragment);</code></pre>
-                </div>
-                
-                <p>This factory pattern combined with DocumentFragment creates a declarative API for DOM creation that remains efficient by minimizing DOM operations.</p>
-            </div>
-            
-            <div class="event_delegation_advanced">
-                <h4>Advanced Event Delegation</h4>
-                <p>Event delegation is a powerful pattern for managing events on multiple elements efficiently:</p>
-                
-                <div class="code_example">
-                    <pre><code>// Advanced event delegation manager
+            <div class="code-example">
+<pre>
+// Event delegation manager
 class EventManager {
     constructor(rootElement = document) {
         this.rootElement = rootElement;
-        this.handlers = new Map();
-        this.delegatedEvents = new Set();
+        this.handlersByEventType = {};
     }
     
-    /**
-     * Add delegated event listener
-     * @param {string} eventType - Event type (e.g., 'click', 'input')
-     * @param {string} selector - CSS selector to match elements
-     * @param {Function} handler - Event handler function
-     * @param {Object} options - addEventListener options
-     */
-    on(eventType, selector, handler, options = {}) {
-        // Create collection for this event type if it doesn't exist
-        if (!this.handlers.has(eventType)) {
-            this.handlers.set(eventType, []);
+    on(eventType, selector, handler) {
+        if (!this.handlersByEventType[eventType]) {
+            this.handlersByEventType[eventType] = [];
             
-            // Set up the delegated event listener on first use of this event type
-            this.rootElement.addEventListener(
-                eventType, 
-                this.handleEvent.bind(this, eventType),
-                options
-            );
-            
-            this.delegatedEvents.add(eventType);
-        }
-        
-        // Add the handler info to our collection
-        this.handlers.get(eventType).push({ selector, handler });
-        
-        return this; // For chaining
-    }
-    
-    /**
-     * Remove delegated event listener
-     * @param {string} eventType - Event type to remove
-     * @param {string} selector - CSS selector to match elements (optional)
-     * @param {Function} handler - Specific handler to remove (optional)
-     */
-    off(eventType, selector, handler) {
-        if (!this.delegatedEvents.has(eventType)) return this;
-        
-        if (!selector && !handler) {
-            // Remove all handlers for this event
-            this.handlers.delete(eventType);
-            this.rootElement.removeEventListener(
-                eventType, 
-                this.handleEvent.bind(this, eventType)
-            );
-            this.delegatedEvents.delete(eventType);
-        } else {
-            // Filter out the specific handler(s)
-            const handlers = this.handlers.get(eventType);
-            const filtered = handlers.filter(item => {
-                if (selector && selector !== item.selector) return true;
-                if (handler && handler !== item.handler) return true;
-                return false;
-            });
-            
-            if (filtered.length === 0) {
-                // No handlers left for this event
-                this.off(eventType);
-            } else {
-                this.handlers.set(eventType, filtered);
-            }
-        }
-        
-        return this; // For chaining
-    }
-    
-    /**
-     * Main event handler that delegates to matched element handlers
-     * @param {string} eventType - Event type being handled
-     * @param {Event} event - The event object
-     */
-    handleEvent(eventType, event) {
-        const handlers = this.handlers.get(eventType);
-        if (!handlers || handlers.length === 0) return;
-        
-        // Find the handlers that match the event target
-        let node = event.target;
-        
-        while (node && node !== this.rootElement) {
-            handlers.forEach(({ selector, handler }) => {
-                if (node.matches(selector)) {
-                    // Clone the event to set currentTarget correctly
-                    const delegateEvent = Object.create(event, {
-                        currentTarget: { value: node }
-                    });
+            // Create the delegated event handler
+            this.rootElement.addEventListener(eventType, (e) => {
+                this.handlersByEventType[eventType].forEach(entry => {
+                    const matchingElements = Array.from(
+                        this.rootElement.querySelectorAll(entry.selector)
+                    );
                     
-                    handler.call(node, delegateEvent);
-                }
+                    let element = e.target;
+                    while (element && element !== this.rootElement) {
+                        if (matchingElements.includes(element)) {
+                            entry.handler.call(element, e, element);
+                        }
+                        element = element.parentElement;
+                    }
+                });
             });
-            
-            node = node.parentElement;
         }
+        
+        this.handlersByEventType[eventType].push({ selector, handler });
+        return this;
     }
     
-    /**
-     * Add direct (non-delegated) event listener
-     * @param {string} eventType - Event type (e.g., 'click')
-     * @param {Function} handler - Event handler function
-     * @param {Object} options - addEventListener options
-     */
-    addDirectListener(eventType, handler, options = {}) {
-        this.rootElement.addEventListener(eventType, handler, options);
+    off(eventType, selector, handler) {
+        if (!this.handlersByEventType[eventType]) return this;
+        
+        this.handlersByEventType[eventType] = this.handlersByEventType[eventType]
+            .filter(entry => {
+                return !(
+                    entry.selector === selector && 
+                    (!handler || entry.handler === handler)
+                );
+            });
+            
         return this;
     }
 }
 
 // Usage example
-const tableManager = new EventManager(document.getElementById('data-table'));
+const events = new EventManager();
 
-tableManager
-    .on('click', '.edit-btn', function(event) {
-        const row = this.closest('tr');
-        const id = row.dataset.id;
-        openEditModal(id);
+// Multiple delegated handlers
+events
+    .on('click', '.btn-delete', function(e, element) {
+        console.log('Delete clicked', element.dataset.id);
+        e.preventDefault();
     })
-    .on('click', '.delete-btn', function(event) {
-        const row = this.closest('tr');
-        const id = row.dataset.id;
-        confirmDelete(id);
+    .on('click', '.btn-edit', function(e, element) {
+        console.log('Edit clicked', element.dataset.id);
+        e.preventDefault();
     })
-    .on('change', '.row-checkbox', function(event) {
-        const isChecked = this.checked;
-        updateSelection(this.value, isChecked);
+    .on('change', '.item-checkbox', function(e, element) {
+        console.log('Checkbox changed', element.checked);
     });
-
-// Later, to remove a specific handler
-tableManager.off('click', '.delete-btn');</code></pre>
-                </div>
-                
-                <p>This advanced implementation provides a more robust and flexible approach to event delegation with a clean API.</p>
-                
-                <p><strong>Key Benefits:</strong></p>
-                <ul>
-                    <li>Significantly reduces the number of event listeners</li>
-                    <li>Automatically handles dynamically added elements</li>
-                    <li>Improves memory usage for large DOMs with many interactive elements</li>
-                    <li>Provides a structured way to manage events</li>
-                </ul>
+</pre>
             </div>
+        </section>
+
+        <section id="dom-recycling">
+            <h2>DOM Recycling and Virtualization</h2>
+            <p>
+                For applications that need to display large datasets or lists, creating and destroying DOM elements can be expensive. DOM recycling and virtualization techniques reuse existing DOM elements instead of creating new ones.
+            </p>
             
-            <div class="lazy_rendering">
-                <h4>Lazy Rendering and Virtualization</h4>
-                <p>For large lists or tables, rendering only what's visible can dramatically improve performance:</p>
-                
-                <div class="code_example">
-                    <pre><code>class VirtualizedList {
-    constructor(container, options) {
-        this.container = container;
-        this.options = Object.assign({
-            itemHeight: 40,      // Fixed height for each item
-            overscan: 5,         // Extra items to render outside viewport
-            itemTemplate: null,  // Function to render an item
-            items: [],           // Data items
-            buffer: null         // Pre-created buffer element (optional)
-        }, options);
-        
-        // Create a buffer element to hold rendered items
-        this.buffer = this.options.buffer || document.createElement('div');
-        this.buffer.style.position = 'relative';
-        this.buffer.style.width = '100%';
-        
-        // State
-        this.viewportHeight = 0;
-        this.scrollTop = 0;
-        this.firstVisibleIndex = 0;
-        this.lastVisibleIndex = 0;
-        this.renderedItems = new Map(); // Track rendered nodes by index
-        
-        // Initial setup
-        if (!this.options.buffer) {
-            this.container.appendChild(this.buffer);
-        }
-        
-        // Set initial height
-        this.updateTotalHeight();
-        
-        // Set up scroll listener
-        this.scrollHandler = this.handleScroll.bind(this);
-        this.container.addEventListener('scroll', this.scrollHandler);
-        
-        // Set up resize observer
-        this.resizeObserver = new ResizeObserver(entries => {
-            this.viewportHeight = this.container.clientHeight;
-            this.renderVisibleItems();
-        });
-        this.resizeObserver.observe(this.container);
-        
-        // Initial render
-        this.viewportHeight = this.container.clientHeight;
-        this.renderVisibleItems();
+            <h3>DOM Recycling for Lists</h3>
+            <p>
+                The concept is simple: instead of removing elements from the DOM when they're no longer needed, hide them and reuse them when new data arrives.
+            </p>
+            
+            <div class="code-example">
+<pre>
+class RecycledList {
+    constructor(containerElement, itemTemplateId, itemHeight = 40) {
+        this.container = containerElement;
+        this.itemTemplate = document.getElementById(itemTemplateId).content;
+        this.itemHeight = itemHeight;
+        this.items = [];
+        this.visibleItems = [];
+        this.pool = []; // Recycled DOM elements
+        this.visibleRange = { start: 0, end: 0 };
     }
     
-    updateTotalHeight() {
-        const totalHeight = this.options.items.length * this.options.itemHeight;
-        this.buffer.style.height = `${totalHeight}px`;
+    setItems(items) {
+        this.items = items;
+        this.container.style.height = `${items.length * this.itemHeight}px`;
+        this.updateVisibleItems();
     }
     
-    getVisibleRange() {
-        const { itemHeight, overscan, items } = this.options;
-        
+    updateVisibleItems() {
+        const containerRect = this.container.getBoundingClientRect();
         const scrollTop = this.container.scrollTop;
         
-        let firstVisible = Math.floor(scrollTop / itemHeight);
-        let lastVisible = Math.ceil((scrollTop + this.viewportHeight) / itemHeight);
+        // Calculate visible range
+        const startIndex = Math.floor(scrollTop / this.itemHeight);
+        const endIndex = Math.min(
+            this.items.length - 1,
+            Math.ceil((scrollTop + containerRect.height) / this.itemHeight)
+        );
         
-        // Apply overscan
-        firstVisible = Math.max(0, firstVisible - overscan);
-        lastVisible = Math.min(items.length - 1, lastVisible + overscan);
-        
-        return { firstVisible, lastVisible };
-    }
-    
-    handleScroll() {
-        // Skip if scroll position hasn't changed enough
-        const newScrollTop = this.container.scrollTop;
-        const scrollDelta = Math.abs(newScrollTop - this.scrollTop);
-        
-        if (scrollDelta < this.options.itemHeight / 2) {
-            return;
-        }
-        
-        this.scrollTop = newScrollTop;
-        this.renderVisibleItems();
-    }
-    
-    renderVisibleItems() {
-        const { firstVisible, lastVisible } = this.getVisibleRange();
-        const { items, itemHeight, itemTemplate } = this.options;
-        
-        // Skip if range hasn't changed
-        if (firstVisible === this.firstVisibleIndex && 
-            lastVisible === this.lastVisibleIndex) {
-            return;
-        }
-        
-        // Track which existing items will still be visible
-        const stillVisible = new Set();
-        
-        // Add new items
-        for (let i = firstVisible; i <= lastVisible; i++) {
-            if (!this.renderedItems.has(i)) {
-                const item = items[i];
-                if (!item) continue;
-                
-                const node = itemTemplate(item, i);
-                node.style.position = 'absolute';
-                node.style.top = `${i * itemHeight}px`;
-                node.style.width = '100%';
-                node.style.height = `${itemHeight}px`;
-                
-                this.buffer.appendChild(node);
-                this.renderedItems.set(i, node);
-            }
-            
-            stillVisible.add(i);
-        }
-        
-        // Remove items that are no longer visible
-        for (const [index, node] of this.renderedItems.entries()) {
-            if (!stillVisible.has(index)) {
-                this.buffer.removeChild(node);
-                this.renderedItems.delete(index);
-            }
-        }
-        
-        // Update visible range
-        this.firstVisibleIndex = firstVisible;
-        this.lastVisibleIndex = lastVisible;
-    }
-    
-    updateItems(newItems) {
-        this.options.items = newItems;
-        this.updateTotalHeight();
-        
-        // Clear all rendered items
-        this.renderedItems.forEach(node => {
-            this.buffer.removeChild(node);
+        // Get currently visible items
+        const currentlyVisible = {};
+        this.visibleItems.forEach(item => {
+            currentlyVisible[item.index] = item;
         });
-        this.renderedItems.clear();
         
-        // Re-render
-        this.renderVisibleItems();
+        const newVisibleItems = [];
+        
+        // Add new visible items
+        for (let i = startIndex; i <= endIndex; i++) {
+            if (currentlyVisible[i]) {
+                // Keep existing visible item
+                newVisibleItems.push(currentlyVisible[i]);
+                delete currentlyVisible[i];
+            } else {
+                // Create new visible item
+                const itemData = this.items[i];
+                const element = this.pool.length > 0 
+                    ? this.pool.pop() 
+                    : this.createItemElement();
+                
+                // Position the element
+                element.style.transform = `translateY(${i * this.itemHeight}px)`;
+                
+                // Update content
+                this.updateItemElement(element, itemData);
+                
+                // Add to visible items
+                newVisibleItems.push({ index: i, element, data: itemData });
+            }
+        }
+        
+        // Recycle items no longer visible
+        Object.values(currentlyVisible).forEach(item => {
+            this.container.removeChild(item.element);
+            this.pool.push(item.element);
+        });
+        
+        this.visibleItems = newVisibleItems;
     }
     
-    destroy() {
-        this.container.removeEventListener('scroll', this.scrollHandler);
-        this.resizeObserver.disconnect();
-        this.renderedItems.clear();
+    createItemElement() {
+        const element = document.importNode(this.itemTemplate, true).firstElementChild;
+        element.style.position = 'absolute';
+        element.style.width = '100%';
+        element.style.height = `${this.itemHeight}px`;
+        this.container.appendChild(element);
+        return element;
+    }
+    
+    updateItemElement(element, data) {
+        // Override this method to update element content based on data
+        element.textContent = JSON.stringify(data);
     }
 }
 
 // Usage example
-const container = document.getElementById('list-container');
-const items = Array.from({ length: 10000 }, (_, i) => ({ 
-    id: i, 
-    text: `Item ${i}` 
-}));
+const listContainer = document.querySelector('.virtual-list-container');
+const virtualList = new RecycledList(listContainer, 'item-template');
 
-const virtualList = new VirtualizedList(container, {
-    items: items,
-    itemHeight: 50,
-    itemTemplate: (item, index) => {
-        const div = document.createElement('div');
-        div.className = 'list-item';
-        div.innerHTML = `
-            <span class="item-id">${item.id}</span>
-            <span class="item-text">${item.text}</span>
-        `;
-        return div;
-    }
-});</code></pre>
-                </div>
-                
-                <p>This virtualization technique is essential for handling very large datasets in the browser. It drastically reduces the number of DOM nodes created and significantly improves scrolling performance.</p>
-                
-                <p><strong>Movie Set Metaphor:</strong> Think of virtualized rendering like a movie set with just the façades of buildings. As the camera (viewport) moves, the crew quickly builds new façades in the direction the camera is moving and tears down the ones that are no longer in view. To the camera, it looks like a complete world exists, but in reality, only what's visible (plus a little extra) is actually built at any time.</p>
-            </div>
-        </section>
-
-        <section class="dom_performance_optimization">
-            <h3>Advanced Performance Optimization Techniques</h3>
-            <p>Let's explore more specific techniques to optimize DOM performance:</p>
-            
-            <div class="raf_animation">
-                <h4>Efficient Animations with requestAnimationFrame</h4>
-                <p>For smooth animations that work with the browser's rendering cycle:</p>
-                
-                <div class="code_example">
-                    <pre><code>// Simple animation function
-function animateElement(element, property, from, to, duration, easing = t => t) {
-    const startTime = performance.now();
-    
-    function update(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easedProgress = easing(progress);
-        
-        const value = from + (to - from) * easedProgress;
-        
-        // Batch style changes
-        requestAnimationFrame(() => {
-            element.style[property] = property.includes('opacity') 
-                ? value 
-                : `${value}px`;
-        });
-        
-        if (progress < 1) {
-            requestAnimationFrame(update);
-        }
-    }
-    
-    requestAnimationFrame(update);
-}
-
-// Common easing functions
-const easings = {
-    linear: t => t,
-    easeInOutQuad: t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2,
-    easeOutBack: t => 1 + 2.70158 * Math.pow(t - 1, 3) + 1.70158 * Math.pow(t - 1, 2),
-    easeOutElastic: t => {
-        const c4 = (2 * Math.PI) / 3;
-        return t === 0 ? 0 : t === 1 ? 1 : Math.pow(2, -10 * t) * 
-            Math.sin((t * 10 - 0.75) * c4) + 1;
-    }
-};
-
-// Example usage
-const box = document.getElementById('animated-box');
-
-// Animate multiple properties
-function animateBox() {
-    // Reset position
-    box.style.transform = 'translateX(0px)';
-    box.style.opacity = '0';
-    
-    // Animate movement
-    animateElement(
-        box, 
-        'transform.translateX', 
-        0, 
-        300, 
-        1000, 
-        easings.easeOutBack
-    );
-    
-    // Animate opacity
-    animateElement(
-        box, 
-        'opacity', 
-        0, 
-        1, 
-        800, 
-        easings.easeInOutQuad
-    );
-}</code></pre>
-                </div>
-                
-                <p>Using <code>requestAnimationFrame</code> ensures animations run at the optimal time in the browser's rendering cycle, reducing jank and improving performance.</p>
-                
-                <div class="code_example">
-                    <h5>Advanced Animation with FLIP Technique</h5>
-                    <pre><code>/**
- * FLIP Animation Technique
- * First - Last - Invert - Play
- * For performant animations of layout changes
- */
-function flipAnimation(element, callback) {
-    // First: capture the element's starting position
-    const first = element.getBoundingClientRect();
-    
-    // Make the change that affects layout
-    callback();
-    
-    // Last: capture the element's ending position
-    const last = element.getBoundingClientRect();
-    
-    // Invert: calculate the transform to move element back to start
-    const dx = first.left - last.left;
-    const dy = first.top - last.top;
-    const dw = first.width / last.width;
-    const dh = first.height / last.height;
-    
-    // Apply the transform to visually place element at start position
-    element.style.transform = `
-        translate(${dx}px, ${dy}px) 
-        scale(${dw}, ${dh})
-    `;
-    element.style.transformOrigin = 'top left';
-    
-    // Force a reflow to ensure the transform is applied before we animate
-    element.offsetHeight;
-    
-    // Play: animate from the inverted position to normal
-    element.style.transition = 'transform 0.3s ease-out';
-    
-    requestAnimationFrame(() => {
-        element.style.transform = '';
-        
-        // Clean up after animation finishes
-        element.addEventListener('transitionend', function cleanup() {
-            element.style.transition = '';
-            element.style.transformOrigin = '';
-            element.removeEventListener('transitionend', cleanup);
-        });
-    });
-}
-
-// Example usage
-const container = document.getElementById('grid-container');
-const items = Array.from(container.children);
-
-function repositionItems() {
-    // Capture items that will move
-    const movingItems = items.filter(item => !item.classList.contains('filtered'));
-    
-    // Record their positions
-    const firstPositions = new Map();
-    movingItems.forEach(item => {
-        firstPositions.set(item, item.getBoundingClientRect());
-    });
-    
-    // Apply the change that affects layout
-    container.classList.toggle('compact-view');
-    
-    // Apply FLIP animation to each moving item
-    movingItems.forEach(item => {
-        const first = firstPositions.get(item);
-        const last = item.getBoundingClientRect();
-        
-        // Calculate the transform
-        const dx = first.left - last.left;
-        const dy = first.top - last.top;
-        
-        // Apply animation
-        item.style.transform = `translate(${dx}px, ${dy}px)`;
-        item.style.transition = 'none';
-        
-        requestAnimationFrame(() => {
-            item.style.transition = 'transform 0.3s ease-out';
-            item.style.transform = '';
-        });
-    });
-}</code></pre>
-                </div>
-                
-                <p>The FLIP technique (First-Last-Invert-Play) is a powerful way to animate layout changes using transforms, which are much more performant than animating properties that trigger layout.</p>
-            </div>
-            
-            <div class="paint_optimization">
-                <h4>Paint and Composite Optimization</h4>
-                
-                <div class="code_example">
-                    <pre><code>/**
- * Optimize elements for compositing
- * This promotes elements to their own layer for better performance
- */
-function optimizeForAnimation(element) {
-    // Promote to a new compositing layer
-    element.style.willChange = 'transform';
-    
-    // Or use transform hack for older browsers
-    // element.style.transform = 'translateZ(0)';
-}
-
-/**
- * Release optimization when animation is complete
- * to free up memory and resources
- */
-function releaseOptimization(element) {
-    // Cleanup after animation completes
-    element.addEventListener('transitionend', function cleanup() {
-        element.style.willChange = 'auto';
-        element.removeEventListener('transitionend', cleanup);
-    });
-}
-
-/**
- * Optimize a collection of elements that will be animated
- */
-function prepareElementsForAnimation(elements) {
-    // Batch style reads before writes to avoid layout thrashing
-    const positions = new Map();
-    
-    // Read phase
-    elements.forEach(el => {
-        positions.set(el, el.getBoundingClientRect());
-    });
-    
-    // Optimize each element before animation starts
-    requestAnimationFrame(() => {
-        elements.forEach(el => {
-            optimizeForAnimation(el);
-        });
-        
-        // Schedule animation for next frame to give browser time to optimize
-        requestAnimationFrame(() => {
-            startAnimations(elements, positions);
-        });
-    });
-}
-
-/**
- * Create a staggered animation effect for a list of elements
- */
-function staggeredListAnimation(containerSelector, itemSelector, direction = 'bottom') {
-    const container = document.querySelector(containerSelector);
-    const items = Array.from(container.querySelectorAll(itemSelector));
-    
-    // Hide all items initially
-    items.forEach(item => {
-        item.style.opacity = '0';
-        
-        switch (direction) {
-            case 'bottom':
-                item.style.transform = 'translateY(20px)';
-                break;
-            case 'top':
-                item.style.transform = 'translateY(-20px)';
-                break;
-            case 'left':
-                item.style.transform = 'translateX(-20px)';
-                break;
-            case 'right':
-                item.style.transform = 'translateX(20px)';
-                break;
-        }
-    });
-    
-    // Prepare for animation
-    prepareElementsForAnimation(items);
-    
-    // Animate with staggered delay
-    items.forEach((item, index) => {
-        setTimeout(() => {
-            item.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
-            item.style.opacity = '1';
-            item.style.transform = 'translate(0, 0)';
-            releaseOptimization(item);
-        }, index * 100); // 100ms delay between each item
-    });
-}</code></pre>
-                </div>
-                
-                <p><strong>Key Optimization Properties:</strong></p>
-                <ul>
-                    <li><code>will-change</code>: Hints to the browser about properties that will animate</li>
-                    <li><code>transform</code> and <code>opacity</code>: Properties that don't trigger layout</li>
-                    <li>Layer promotion techniques to optimize rendering</li>
-                </ul>
-                
-                <p><strong>Race Track Metaphor:</strong> Think of optimizing elements for animation like moving cars to dedicated lanes on a race track before a race. By promoting elements to their own GPU-accelerated layers (using will-change or transforms), you're essentially giving them a fast lane that bypasses the traffic of the main rendering process.</p>
-            </div>
-            
-            <div class="mutation_observers">
-                <h4>Efficient DOM Monitoring with Mutation Observers</h4>
-                <p>For reacting to DOM changes without polling or event overload:</p>
-                
-                <div class="code_example">
-                    <pre><code>class DOMObserver {
-    constructor(targetNode, config = {}) {
-        this.targetNode = targetNode;
-        this.config = Object.assign({
-            attributes: true,
-            childList: true,
-            subtree: true,
-            attributeFilter: null
-        }, config);
-        
-        this.observers = new Map();
-        this.mutationObserver = null;
-    }
-    
-    /**
-     * Start observing with an action map
-     * @param {Object} actionMap - Map of mutation types to handler functions
-     */
-    observe(actionMap) {
-        if (!this.mutationObserver) {
-            this.mutationObserver = new MutationObserver(
-                this.handleMutations.bind(this)
-            );
-            
-            this.mutationObserver.observe(this.targetNode, this.config);
-        }
-        
-        // Register handlers
-        Object.entries(actionMap).forEach(([type, handler]) => {
-            if (!this.observers.has(type)) {
-                this.observers.set(type, []);
-            }
-            
-            this.observers.get(type).push(handler);
-        });
-        
-        return this;
-    }
-    
-    /**
-     * Handle all mutations and dispatch to appropriate handlers
-     */
-    handleMutations(mutations) {
-        const groupedChanges = {
-            attributes: [],
-            childList: {
-                added: [],
-                removed: []
-            },
-            characterData: []
-        };
-        
-        // Group mutations by type
-        mutations.forEach(mutation => {
-            switch (mutation.type) {
-                case 'attributes':
-                    groupedChanges.attributes.push({
-                        element: mutation.target,
-                        attributeName: mutation.attributeName,
-                        oldValue: mutation.oldValue,
-                        newValue: mutation.target.getAttribute(mutation.attributeName)
-                    });
-                    break;
-                    
-                case 'childList':
-                    if (mutation.addedNodes.length) {
-                        Array.from(mutation.addedNodes).forEach(node => {
-                            groupedChanges.childList.added.push({
-                                node,
-                                parent: mutation.target
-                            });
-                        });
-                    }
-                    
-                    if (mutation.removedNodes.length) {
-                        Array.from(mutation.removedNodes).forEach(node => {
-                            groupedChanges.childList.removed.push({
-                                node,
-                                previousParent: mutation.target
-                            });
-                        });
-                    }
-                    break;
-                    
-                case 'characterData':
-                    groupedChanges.characterData.push({
-                        element: mutation.target,
-                        oldValue: mutation.oldValue,
-                        newValue: mutation.target.nodeValue
-                    });
-                    break;
-            }
-        });
-        
-        // Call handlers with appropriate grouped changes
-        this.notifyObservers('attributes', groupedChanges.attributes);
-        this.notifyObservers('childList', groupedChanges.childList);
-        this.notifyObservers('characterData', groupedChanges.characterData);
-        this.notifyObservers('all', groupedChanges);
-    }
-    
-    /**
-     * Notify relevant observers of changes
-     */
-    notifyObservers(type, changes) {
-        if (this.observers.has(type) && changes.length > 0) {
-            this.observers.get(type).forEach(handler => {
-                try {
-                    handler(changes);
-                } catch (error) {
-                    console.error('Error in mutation handler:', error);
-                }
-            });
-        }
-    }
-    
-    /**
-     * Stop observing
-     */
-    disconnect() {
-        if (this.mutationObserver) {
-            this.mutationObserver.disconnect();
-            this.mutationObserver = null;
-        }
-        
-        this.observers.clear();
-        return this;
+// Extend the class to customize item rendering
+class UserList extends RecycledList {
+    updateItemElement(element, user) {
+        element.querySelector('.user-name').textContent = user.name;
+        element.querySelector('.user-email').textContent = user.email;
+        element.querySelector('.user-avatar').src = user.avatar;
     }
 }
 
-// Usage example
-const contentArea = document.getElementById('dynamic-content');
-
-const observer = new DOMObserver(contentArea)
-    .observe({
-        // Handle attribute changes
-        attributes: changes => {
-            changes.forEach(change => {
-                console.log(`Attribute ${change.attributeName} changed on`, change.element);
-                
-                // For example, if data-status changes, update UI
-                if (change.attributeName === 'data-status') {
-                    updateStatusIndicator(change.element, change.newValue);
-                }
-            });
-        },
-        
-        // Handle added/removed elements
-        childList: changes => {
-            // Process newly added elements
-            changes.added.forEach(({ node, parent }) => {
-                if (node.nodeType === Node.ELEMENT_NODE) {
-                    console.log('New element added:', node);
-                    
-                    // For example, initialize new components
-                    if (node.classList.contains('widget')) {
-                        initializeWidget(node);
-                    }
-                }
-            });
-            
-            // Clean up removed elements
-            changes.removed.forEach(({ node }) => {
-                if (node.nodeType === Node.ELEMENT_NODE) {
-                    console.log('Element removed:', node);
-                    
-                    // For example, clean up resources
-                    if (node.classList.contains('widget')) {
-                        cleanupWidget(node.id);
-                    }
-                }
-            });
-        }
-    });</code></pre>
-                </div>
-                
-                <p>Mutation Observers provide an efficient way to detect and respond to DOM changes without the performance drawbacks of repeatedly querying the DOM or using excessive event listeners.</p>
-            </div>
-        </section>
-
-        <section class="modern_approaches">
-            <h3>Modern Approaches for DOM Challenges</h3>
-            <p>Modern web development offers new approaches to common DOM challenges:</p>
-            
-            <div class="web_components">
-                <h4>Web Components for Encapsulated DOM</h4>
-                <p>Web Components provide a way to create encapsulated, reusable components with their own DOM:</p>
-                
-                <div class="code_example">
-                    <pre><code>// Create a custom element
-class UserCard extends HTMLElement {
-    constructor() {
-        super();
-        
-        // Create a shadow DOM
-        this.attachShadow({ mode: 'open' });
-        
-        // Initialize properties
-        this._data = null;
-    }
-    
-    // Lifecycle: when element is added to DOM
-    connectedCallback() {
-        this.render();
-        
-        // Add event listeners
-        this.shadowRoot.querySelector('.edit-btn')?.addEventListener(
-            'click', 
-            this._handleEdit.bind(this)
-        );
-    }
-    
-    // Lifecycle: when element is removed from DOM
-    disconnectedCallback() {
-        // Clean up event listeners
-        this.shadowRoot.querySelector('.edit-btn')?.removeEventListener(
-            'click', 
-            this._handleEdit
-        );
-    }
-    
-    // Lifecycle: when attributes change
-    static get observedAttributes() {
-        return ['name', 'email', 'avatar'];
-    }
-    
-    attributeChangedCallback(name, oldValue, newValue) {
-        this.render();
-    }
-    
-    // Setter for data property
-    set data(value) {
-        this._data = value;
-        this.render();
-    }
-    
-    // Handler for edit button
-    _handleEdit() {
-        const event = new CustomEvent('edit-user', {
-            bubbles: true,
-            composed: true, // Allow the event to cross shadow DOM boundary
-            detail: this._data || {
-                id: this.getAttribute('user-id'),
-                name: this.getAttribute('name'),
-                email: this.getAttribute('email')
-            }
-        });
-        
-        this.dispatchEvent(event);
-    }
-    
-    // Render the component
-    render() {
-        // Use data from properties or attributes
-        const data = this._data || {
-            name: this.getAttribute('name') || 'Unknown',
-            email: this.getAttribute('email') || '',
-            avatar: this.getAttribute('avatar') || 'default-avatar.jpg'
-        };
-        
-        this.shadowRoot.innerHTML = `
-            <style>
-                :host {
-                    display: block;
-                    border-radius: 8px;
-                    overflow: hidden;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                    font-family: var(--user-card-font, sans-serif);
-                }
-                .card {
-                    padding: 16px;
-                    background: var(--user-card-bg, white);
-                }
-                .avatar {
-                    width: 64px;
-                    height: 64px;
-                    border-radius: 50%;
-                    object-fit: cover;
-                    float: left;
-                    margin-right: 16px;
-                }
-                .name {
-                    margin: 0 0 8px;
-                    font-size: 18px;
-                    color: var(--user-card-name-color, #333);
-                }
-                .email {
-                    margin: 0;
-                    color: var(--user-card-email-color, #666);
-                }
-                .actions {
-                    margin-top: 16px;
-                    text-align: right;
-                }
-                .edit-btn {
-                    background: var(--user-card-btn-bg, #4a80f5);
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                }
-            </style>
-            <div class="card">
-                <img class="avatar" src="${data.avatar}" alt="${data.name}">
-                <h3 class="name">${data.name}</h3>
-                <p class="email">${data.email}</p>
-                <div class="actions">
-                    <button class="edit-btn">Edit</button>
-                </div>
-            </div>
-        `;
-    }
-}
-
-// Register the custom element
-customElements.define('user-card', UserCard);
-
-// Usage
-document.addEventListener('DOMContentLoaded', () => {
-    // Using HTML
-    // <user-card name="John Doe" email="john@example.com" avatar="john.jpg"></user-card>
-    
-    // Creating dynamically
-    const userCard = document.createElement('user-card');
-    userCard.data = {
-        name: 'Jane Smith',
-        email: 'jane@example.com',
-        avatar: 'jane.jpg'
-    };
-    
-    document.getElementById('user-container').appendChild(userCard);
-    
-    // Listen for custom events
-    document.addEventListener('edit-user', event => {
-        console.log('Edit user:', event.detail);
-        openUserEditor(event.detail);
-    });
-});</code></pre>
-                </div>
-                
-                <p>Web Components provide a standardized way to create reusable components with encapsulated styles and behavior. They're perfect for creating maintainable UI libraries that work across frameworks.</p>
-                
-                <p><strong>Key Benefits:</strong></p>
-                <ul>
-                    <li>Shadow DOM for style encapsulation</li>
-                    <li>Custom elements for reusable components</li>
-                    <li>HTML templates for declarative markup</li>
-                    <li>Framework-agnostic, works with vanilla JS or any framework</li>
-                </ul>
-            </div>
-            
-            <div class="intersection_observer">
-                <h4>Lazy Loading with Intersection Observer</h4>
-                <p>For efficient lazy loading of images, components, or content:</p>
-                
-                <div class="code_example">
-                    <pre><code>class LazyLoader {
-    constructor(options = {}) {
-        this.options = Object.assign({
-            rootMargin: '200px 0px',
-            threshold: 0.01,
-            loadMethod: null, // Custom load method
-            onLoad: null // Callback after loading
-        }, options);
-        
-        this.observer = null;
-        this.initialized = false;
-    }
-    
-    /**
-     * Initialize the loader with target elements
-     * @param {string|NodeList|Array} targets - Elements or selector to observe
-     */
-    observe(targets) {
-        if (!('IntersectionObserver' in window)) {
-            // Fallback for browsers without support
-            this._loadAllImmediately(targets);
-            return this;
-        }
-        
-        this._initObserver();
-        
-        const elements = this._getElements(targets);
-        elements.forEach(element => {
-            this.observer.observe(element);
-        });
-        
-        return this;
-    }
-    
-    /**
-     * Initialize intersection observer
-     */
-    _initObserver() {
-        if (this.initialized) return;
-        
-        this.observer = new IntersectionObserver(entries => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    this._loadElement(entry.target);
-                    this.observer.unobserve(entry.target);
-                }
-            });
-        }, this.options);
-        
-        this.initialized = true;
-    }
-    
-    /**
-     * Load an element when it enters viewport
-     */
-    _loadElement(element) {
-        // Use custom load method if provided
-        if (typeof this.options.loadMethod === 'function') {
-            this.options.loadMethod(element);
-            
-            if (this.options.onLoad) {
-                this.options.onLoad(element);
-            }
-            return;
-        }
-        
-        // Default lazy load behavior
-        if (element.tagName.toLowerCase() === 'img') {
-            const src = element.dataset.src;
-            if (src) {
-                element.src = src;
-                element.removeAttribute('data-src');
-            }
-        } else if (element.dataset.background) {
-            element.style.backgroundImage = `url(${element.dataset.background})`;
-            element.removeAttribute('data-background');
-        } else if (element.dataset.component) {
-            this._loadComponent(element);
-        }
-        
-        element.classList.add('loaded');
-        
-        if (this.options.onLoad) {
-            this.options.onLoad(element);
-        }
-    }
-    
-    /**
-     * Load a component in an element
-     */
-    _loadComponent(element) {
-        const component = element.dataset.component;
-        
-        // This could fetch HTML from an endpoint or use a template
-        fetch(`/components/${component}.html`)
-            .then(response => response.text())
-            .then(html => {
-                element.innerHTML = html;
-                
-                // Initialize any scripts
-                const scripts = element.querySelectorAll('script');
-                scripts.forEach(oldScript => {
-                    const newScript = document.createElement('script');
-                    Array.from(oldScript.attributes).forEach(attr => {
-                        newScript.setAttribute(attr.name, attr.value);
-                    });
-                    newScript.textContent = oldScript.textContent;
-                    oldScript.parentNode.replaceChild(newScript, oldScript);
-                });
-                
-                element.removeAttribute('data-component');
-            })
-            .catch(error => {
-                console.error('Error loading component:', error);
-                element.innerHTML = `<div class="error">Failed to load component</div>`;
-            });
-    }
-    
-    /**
-     * Get DOM elements from various input types
-     */
-    _getElements(targets) {
-        if (typeof targets === 'string') {
-            return Array.from(document.querySelectorAll(targets));
-        } else if (targets instanceof NodeList) {
-            return Array.from(targets);
-        } else if (Array.isArray(targets)) {
-            return targets;
-        } else if (targets instanceof Element) {
-            return [targets];
-        }
-        
-        return [];
-    }
-    
-    /**
-     * Fallback for browsers without IntersectionObserver
-     */
-    _loadAllImmediately(targets) {
-        const elements = this._getElements(targets);
-        elements.forEach(element => {
-            this._loadElement(element);
-        });
-    }
-    
-    /**
-     * Disconnect and clean up
-     */
-    disconnect() {
-        if (this.observer) {
-            this.observer.disconnect();
-        }
-        
-        this.initialized = false;
-        return this;
-    }
-}
-
-// Usage examples
-
-// Example 1: Lazy load images
-const imageLazyLoader = new LazyLoader({
-    rootMargin: '50px 0px',
-    onLoad: (image) => {
-        // Fade in the image
-        image.style.transition = 'opacity 0.5s';
-        image.style.opacity = '1';
-    }
+// Handle scroll events
+listContainer.addEventListener('scroll', () => {
+    virtualList.updateVisibleItems();
 });
 
-imageLazyLoader.observe('img[data-src]');
-
-// Example 2: Lazy load components
-const componentLoader = new LazyLoader({
-    rootMargin: '200px 0px',
-    onLoad: (element) => {
-        console.log(`Component ${element.dataset.component} loaded`);
-    }
-});
-
-componentLoader.observe('[data-component]');</code></pre>
-                </div>
-                
-                <p>Intersection Observer provides a way to efficiently detect when elements enter the viewport, making it perfect for lazy loading and infinite scrolling without performance issues.</p>
+// Load data
+fetch('/api/users')
+    .then(response => response.json())
+    .then(users => {
+        virtualList.setItems(users);
+    });
+</pre>
             </div>
             
-            <div class="modern_css">
-                <h4>Using Modern CSS to Reduce DOM Manipulation</h4>
-                <p>Modern CSS features can often eliminate the need for JavaScript DOM manipulation:</p>
-                
-                <div class="code_example">
-                    <pre><code>// HTML with data-* attributes and variables instead of direct style manipulation
-
-// Data-driven CSS example
-const themeSwitcher = {
-    init() {
-        // Initial state
-        document.documentElement.dataset.theme = 
-            localStorage.getItem('theme') || 'light';
-        
-        // Set up event handlers
-        document.getElementById('theme-toggle').addEventListener(
-            'click', 
-            this.toggleTheme.bind(this)
-        );
-    },
-    
-    toggleTheme() {
-        const currentTheme = document.documentElement.dataset.theme;
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        
-        // Update data attribute (CSS handles the visual changes)
-        document.documentElement.dataset.theme = newTheme;
-        
-        // Save preference
-        localStorage.setItem('theme', newTheme);
-    }
-};
-
-// CSS Variables for dynamic values
-const uiController = {
-    updateFontSize(size) {
-        // Update CSS variables instead of inline styles
-        document.documentElement.style.setProperty('--font-size-base', size + 'px');
-    },
-    
-    updateColorScheme(primary, secondary) {
-        document.documentElement.style.setProperty('--color-primary', primary);
-        document.documentElement.style.setProperty('--color-secondary', secondary);
-    }
-};
-
-// CSS Grid for layout instead of JS-based positioning
-const gridLayout = {
-    init() {
-        this.container = document.getElementById('grid-container');
-        this.setupEventListeners();
-    },
-    
-    setupEventListeners() {
-        document.getElementById('layout-controls').addEventListener('click', (e) => {
-            if (e.target.tagName === 'BUTTON') {
-                const layout = e.target.dataset.layout;
-                this.changeLayout(layout);
-            }
-        });
-    },
-    
-    changeLayout(layout) {
-        // Change layout by updating a data attribute
-        // CSS grid template areas handle the actual layout
-        this.container.dataset.layout = layout;
-    }
-};</code></pre>
-                </div>
-                
-                <p><strong>CSS Features to Leverage:</strong></p>
-                <ul>
-                    <li><strong>CSS Variables:</strong> For dynamic styling without JavaScript</li>
-                    <li><strong>Grid/Flexbox:</strong> For complex layouts without JS positioning</li>
-                    <li><strong>CSS Animations/Transitions:</strong> For smooth animation without JS</li>
-                    <li><strong>Media Queries:</strong> For responsive design without JS window resizing code</li>
-                    <li><strong>Attribute Selectors:</strong> For styling based on data-* attributes</li>
-                </ul>
-                
-                <p>By leveraging modern CSS features, you can often reduce the amount of DOM manipulation needed, improving performance and maintainability.</p>
+            <div class="note">
+                <h4>When to Use Virtualization</h4>
+                <p>
+                    Implement virtualization when you have lists with more than a few hundred items. For smaller lists, the complexity may not be worth the performance gain.
+                </p>
             </div>
         </section>
 
-        <section class="component_architecture">
-            <h3>Component-Based Architecture for DOM Management</h3>
-            <p>Even when not using a framework, a component architecture can help manage DOM complexity:</p>
+        <section id="component-patterns">
+            <h2>Component-Based Architecture Without Frameworks</h2>
+            <p>
+                While frameworks like React, Vue, and Angular provide robust component models, you can implement a similar architecture using vanilla JavaScript. This is particularly useful when integrating with Python backends that may have their own templating systems.
+            </p>
             
-            <div class="vanilla_components">
-                <h4>Creating a Component System in Vanilla JavaScript</h4>
-                
-                <div class="code_example">
-                    <pre><code>/**
- * Component base class
- */
+            <h3>Simple Component Pattern</h3>
+            <div class="code-example">
+<pre>
 class Component {
-    constructor(container, props = {}) {
-        this.container = container;
+    constructor(props = {}) {
         this.props = props;
         this.state = {};
-        this.children = [];
         this.element = null;
     }
     
-    /**
-     * Set state and trigger render
-     */
     setState(newState) {
+        const prevState = { ...this.state };
         this.state = { ...this.state, ...newState };
-        this.render();
+        this.update(prevState);
     }
     
-    /**
-     * Mount component to DOM
-     */
-    mount() {
-        if (!this.element) {
-            this.element = this.render();
-            this.container.appendChild(this.element);
-            this.afterMount();
-        }
-        
+    update(prevState) {
+        // Override in subclasses
+    }
+    
+    render() {
+        // Override in subclasses
+        return document.createElement('div');
+    }
+    
+    mount(container) {
+        this.element = this.render();
+        container.appendChild(this.element);
+        this.afterMount();
         return this;
     }
     
-    /**
+    afterMount() {
+        // Hook for after mounting
+    }
+    
+    unmount() {
+        if (this.element && this.element.parentNode) {
+            this.element.parentNode.removeChild(this.element);
+        }
+    }
+}
+
+// Example component implementation
+class TodoItem extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            completed: props.completed || false
+        };
+    }
+    
+    toggleComplete() {
+        this.setState({ completed: !this.state.completed });
+        if (this.props.onToggle) {
+            this.props.onToggle(this.props.id, this.state.completed);
+        }
+    }
+    
+    update(prevState) {
+        if (prevState.completed !== this.state.completed) {
+            this.element.classList.toggle('completed', this.state.completed);
+            this.element.querySelector('input').checked = this.state.completed;
+        }
+    }
+    
+    render() {
+        const item = document.createElement('li');
+        item.className = 'todo-item';
+        if (this.state.completed) {
+            item.classList.add('completed');
+        }
+        
+        item.innerHTML = `
+            <input type="checkbox" ${this.state.completed ? 'checked' : ''}>
+            <span>${this.props.text}</span>
+            <button class="delete-btn">×</button>
+        `;
+        
+        item.querySelector('input').addEventListener('change', () => {
+            this.toggleComplete();
+        });
+        
+        item.querySelector('.delete-btn').addEventListener('click', () => {
+            if (this.props.onDelete) {
+                this.props.onDelete(this.props.id);
+            }
+        });
+        
+        return item;
+    }
+}
+
+// Usage
+const todoList = document.getElementById('todo-list');
+const todos = [
+    { id: 1, text: 'Learn advanced DOM patterns', completed: false },
+    { id: 2, text: 'Build a component system', completed: true }
+];
+
+todos.forEach(todo => {
+    new TodoItem({
+        id: todo.id,
+        text: todo.text,
+        completed: todo.completed,
+        onToggle: (id, completed) => {
+            console.log(`Todo ${id} changed to ${completed ? 'completed' : 'active'}`);
+        },
+        onDelete: (id) => {
+            console.log(`Delete todo ${id}`);
+        }
+    }).mount(todoList);
+});
+</pre>
+            </div>
+        </section>
+
+        <section id="observer-pattern">
+            <h2>Observer Pattern for DOM Updates</h2>
+            <p>
+                The Observer pattern (or Pub/Sub) can be extremely useful for managing DOM updates in response to data changes, especially in applications connected to Python backends.
+            </p>
+            
+            <div class="code-example">
+<pre>
+class Observable {
+    constructor() {
+        this.observers = [];
+    }
+    
+    subscribe(fn) {
+        this.observers.push(fn);
+        return () => {
+            this.observers = this.observers.filter(obs => obs !== fn);
+        };
+    }
+    
+    notify(data) {
+        this.observers.forEach(fn => fn(data));
+    }
+}
+
+// Example: Todo List with Observer pattern
+class TodoStore extends Observable {
+    constructor() {
+        super();
+        this.todos = [];
+    }
+    
+    addTodo(text) {
+        const todo = {
+            id: Date.now(),
+            text,
+            completed: false
+        };
+        
+        this.todos = [...this.todos, todo];
+        this.notify(this.todos);
+    }
+    
+    toggleTodo(id) {
+        this.todos = this.todos.map(todo => 
+            todo.id === id 
+                ? { ...todo, completed: !todo.completed } 
+                : todo
+        );
+        this.notify(this.todos);
+    }
+    
+    removeTodo(id) {
+        this.todos = this.todos.filter(todo => todo.id !== id);
+        this.notify(this.todos);
+    }
+}
+
+class TodoListView {
+    constructor(container, store) {
+        this.container = container;
+        this.store = store;
+        this.unsubscribe = this.store.subscribe(todos => this.render(todos));
+        
+        // Form for adding new todos
+        this.form = document.createElement('form');
+        this.form.innerHTML = `
+            <input type="text" placeholder="Add todo...">
+            <button type="submit">Add</button>
+        `;
+        
+        this.form.addEventListener('submit', e => {
+            e.preventDefault();
+            const input = this.form.querySelector('input');
+            if (input.value.trim()) {
+                this.store.addTodo(input.value.trim());
+                input.value = '';
+            }
+        });
+        
+        this.list = document.createElement('ul');
+        this.container.appendChild(this.form);
+        this.container.appendChild(this.list);
+    }
+    
+    render(todos) {
+        // Clear previous items
+        this.list.innerHTML = '';
+        
+        // Create fragment for batch update
+        const fragment = document.createDocumentFragment();
+        
+        todos.forEach(todo => {
+            const li = document.createElement('li');
+            li.className = todo.completed ? 'completed' : '';
+            li.innerHTML = `
+                <input type="checkbox" ${todo.completed ? 'checked' : ''}>
+                <span>${todo.text}</span>
+                <button class="delete">×</button>
+            `;
+            
+            li.querySelector('input').addEventListener('change', () => {
+                this.store.toggleTodo(todo.id);
+            });
+            
+            li.querySelector('.delete').addEventListener('click', () => {
+                this.store.removeTodo(todo.id);
+            });
+            
+            fragment.appendChild(li);
+        });
+        
+        this.list.appendChild(fragment);
+    }
+    
+    destroy() {
+        // Clean up subscriptions when view is destroyed
+        this.unsubscribe();
+    }
+}
+
+// Usage
+const todoStore = new TodoStore();
+const todoListView = new TodoListView(
+    document.getElementById('todo-container'),
+    todoStore
+);
+
+// Simulate receiving data from Python backend
+function syncWithBackend() {
+    fetch('/api/todos')
+        .then(response => response.json())
+        .then(todos => {
+            todos.forEach(todo => todoStore.addTodo(todo.text));
+        });
+}
+</pre>
+            </div>
+            
+            <div class="tip">
+                <h4>Integration with Python Backends</h4>
+                <p>
+                    This pattern works well with Python frameworks like Flask or Django. You can use AJAX to fetch data from your API endpoints and then update your store, which will automatically trigger DOM updates through the observer pattern.
+                </p>
+            </div>
+        </section>
+
+        <section id="performance-monitoring">
+            <h2>Performance Monitoring</h2>
+            <p>
+                Monitoring DOM performance is crucial for identifying optimization opportunities. Here are some techniques and tools to help you measure and improve performance.
+            </p>
+            
+            <h3>Key Performance Metrics</h3>
+            <table>
+                <tr>
+                    <th>Metric</th>
+                    <th>Description</th>
+                    <th>Ideal Target</th>
+                </tr>
+                <tr>
+                    <td>First Contentful Paint (FCP)</td>
+                    <td>Time until first content is rendered</td>
+                    <td>&lt; 1.8s</td>
+                </tr>
+                <tr>
+                    <td>Largest Contentful Paint (LCP)</td>
+                    <td>Time until largest content element is visible</td>
+                    <td>&lt; 2.5s</td>
+                </tr>
+                <tr>
+                    <td>First Input Delay (FID)</td>
+                    <td>Time from user interaction to browser response</td>
+                    <td>&lt; 100ms</td>
+                </tr>
+                <tr>
+                    <td>Cumulative Layout Shift (CLS)</td>
+                    <td>Unexpected layout shifts during page loading</td>
+                    <td>&lt; 0.1</td>
+                </tr>
+                <tr>
+                    <td>Time to Interactive (TTI)</td>
+                    <td>Time until page is fully interactive</td>
+                    <td>&lt; 3.8s</td>
+                </tr>
+                <tr>
+                    <td>Framerate</td>
+                    <td>Frames per second during animations/scrolling</td>
+                    <td>60fps</td>
+                </tr>
+            </table>
+            
+            <h3>Performance Monitoring Code</h3>
+            <div class="code-example">
+<pre>
+// Simple performance monitoring utilities
+const PerformanceMonitor = {
+    // Start timing an operation
+    startMeasure(label) {
+        performance.mark(`${label}-start`);
+    },
+    
+    // End timing and log result
+    endMeasure(label) {
+        performance.mark(`${label}-end`);
+        performance.measure(label, `${label}-start`, `${label}-end`);
+        
+        const measure = performance.getEntriesByName(label)[0];
+        console.log(`${label}: ${measure.duration.toFixed(2)}ms`);
+        
+        // Cleanup
+        performance.clearMarks(`${label}-start`);
+        performance.clearMarks(`${label}-end`);
+        performance.clearMeasures(label);
+        
+        return measure.duration;
+    },
+    
+    // Monitor frame rate during an operation
+    monitorFrameRate(durationMs = 5000, callback) {
+        let frameCount = 0;
+        let startTime = performance.now();
+        
+        function countFrame() {
+            frameCount++;
+            
+            const currentTime = performance.now();
+            const elapsed = currentTime - startTime;
+            
+            if (elapsed < durationMs) {
+                requestAnimationFrame(countFrame);
+            } else {
+                const fps = (frameCount / elapsed) * 1000;
+                console.log(`Average FPS: ${fps.toFixed(1)}`);
+                if (callback) callback(fps);
+            }
+        }
+        
+        requestAnimationFrame(countFrame);
+    },
+    
+    // Check for layout thrashing
+    detectLayoutThrashing() {
+        // Override common properties that trigger layout
+        const layoutTriggeringProps = [
+            'offsetTop', 'offsetLeft', 'offsetWidth', 'offsetHeight',
+            'clientTop', 'clientLeft', 'clientWidth', 'clientHeight',
+            'getComputedStyle'
+        ];
+        
+        let layoutReads = 0;
+        let layoutReadWriteSequences = 0;
+        let lastOperationType = null;
+        
+        // Monkey patch to detect reads
+        layoutTriggeringProps.forEach(prop => {
+            if (prop === 'getComputedStyle') {
+                const original = window.getComputedStyle;
+                window.getComputedStyle = function() {
+                    layoutReads++;
+                    if (lastOperationType === 'write') {
+                        layoutReadWriteSequences++;
+                        console.warn('Layout thrashing detected: Reading style after write');
+                    }
+                    lastOperationType = 'read';
+                    return original.apply(this, arguments);
+                };
+            } else {
+                const elementProto = Element.prototype;
+                const originalDescriptor = Object.getOwnPropertyDescriptor(elementProto, prop);
+                
+                if (originalDescriptor && originalDescriptor.get) {
+                    Object.defineProperty(elementProto, prop, {
+                        get: function() {
+                            layoutReads++;
+                            if (lastOperationType === 'write') {
+                                layoutReadWriteSequences++;
+                                console.warn(`Layout thrashing detected: Reading ${prop} after write`);
+                            }
+                            lastOperationType = 'read';
+                            return originalDescriptor.get.apply(this);
+                        }
+                    });
+                }
+            }
+        });
+        
+        // Detect writes
+        const originalSetAttribute = Element.prototype.setAttribute;
+        Element.prototype.setAttribute = function() {
+            lastOperationType = 'write';
+            return originalSetAttribute.apply(this, arguments);
+        };
+        
+        const originalStyleSetter = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'style').set;
+        Object.defineProperty(HTMLElement.prototype, 'style', {
+            set: function() {
+                lastOperationType = 'write';
+                return originalStyleSetter.apply(this, arguments);
+            }
+        });
+        
+        // Report stats periodically
+        setInterval(() => {
+            console.log(`Layout reads: ${layoutReads}, Layout thrashing sequences: ${layoutReadWriteSequences}`);
+            layoutReads = 0;
+            layoutReadWriteSequences = 0;
+        }, 5000);
+    }
+};
+
+// Usage examples
+document.addEventListener('DOMContentLoaded', () => {
+    // Example: Measure rendering performance
+    PerformanceMonitor.startMeasure('initial-render');
+    renderComplexTable();
+    PerformanceMonitor.endMeasure('initial-render');
+    
+    // Example: Monitor framerate during scrolling
+    document.querySelector('.scroll-container').addEventListener('scroll', () => {
+        PerformanceMonitor.monitorFrameRate(2000, fps => {
+            if (fps < 30) {
+                console.warn('Scrolling performance is poor');
+            }
+        });
+    });
+    
+    // Example: Detect layout thrashing in development
+    if (process.env.NODE_ENV === 'development') {
+        PerformanceMonitor.detectLayoutThrashing();
+    }
+});
+</pre>
+            </div>
+        </section>
+
+        <section id="browser-tools">
+            <h2>Leveraging Browser DevTools for DOM Optimization</h2>
+            <p>
+                Modern browser developer tools provide powerful features for analyzing DOM performance.
+            </p>
+            
+            <h3>Key DevTools Features</h3>
+            <ul>
+                <li><strong>Performance Panel</strong>: Record and analyze rendering, scripting, and painting</li>
+                <li><strong>Memory Panel</strong>: Detect memory leaks and analyze heap snapshots</li>
+                <li><strong>Layers Panel</strong>: Visualize composited layers</li>
+                <li><strong>Paint Flashing</strong>: Visualize areas being repainted</li>
+                <li><strong>FPS Meter</strong>: Monitor frame rate in real-time</li>
+            </ul>
+            
+            <div class="note">
+                <h4>DevTools Performance Analysis Workflow</h4>
+                <ol>
+                    <li>Open DevTools and navigate to the Performance panel</li>
+                    <li>Click "Record" and perform the action you want to analyze</li>
+                    <li>Click "Stop" and analyze the resulting timeline</li>
+                    <li>Look for long tasks, layout recalculations, and excessive painting</li>
+                    <li>Use the "Bottom-Up" and "Call Tree" tabs to identify problematic code</li>
+                    <li>Optimize and repeat to confirm improvements</li>
+                </ol>
+            </div>
+        </section>
+
+        <section id="integration-with-python">
+            <h2>Integrating with Python Backends</h2>
+            <p>
+                As you transition to full-stack development with Python, understanding how frontend DOM patterns integrate with backend frameworks is essential.
+            </p>
+            
+            <h3>Flask Integration</h3>
+            <div class="code-example">
+<pre>
+// Example: Fetching data from a Flask API
+class FlaskApiClient {
+    constructor(baseUrl = '') {
+        this.baseUrl = baseUrl;
+        this.csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    }
+    
+    async get(endpoint) {
+        const response = await fetch(`${this.baseUrl}${endpoint}`);
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+        return response.json();
+    }
+    
+    async post(endpoint, data) {
+        const response = await fetch(`${this.baseUrl}${endpoint}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': this.csrfToken
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+        return response.json();
+    }
+}
+
+// Integrating with component architecture
+class UserList extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            users: [],
+            loading: true,
+            error: null
+        };
+        
+        this.api = new FlaskApiClient('/api');
+    }
+    
+    async loadUsers() {
+        try {
+            this.setState({ loading: true, error: null });
+            const users = await this.api.get('/users');
+            this.setState({ users, loading: false });
+        } catch (error) {
+            this.setState({ error: error.message, loading: false });
+        }
+    }
+    
+    afterMount() {
+        this.loadUsers();
+    }
+    
+    render() {
+        const container = document.createElement('div');
+        container.className = 'user-list-container';
+        
+        if (this.state.loading) {
+            container.innerHTML = '<div class="loading">Loading users...</div>';
+        } else if (this.state.error) {
+            container.innerHTML = `<div class="error">${this.state.error}</div>`;
+        } else {
+            const fragment = document.createDocumentFragment();
+            const list = document.createElement('ul');
+            list.className = 'user-list';
+            
+            this.state.users.forEach(user => {
+                const item = document.createElement('li');
+                item.className = 'user-item';
+                item.innerHTML = `
+                    <div class="user-avatar">
+                        <img src="${user.avatar || '/static/default-avatar.png'}" alt="${user.name}">
+                    </div>
+                    <div class="user-info">
+                        <h3>${user.name}</h3>
+                        <p>${user.email}</p>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+            
+            fragment.appendChild(list);
+            container.appendChild(fragment);
+        }
+        
+        return container;
+    }
+}
+
+// Usage
+new UserList().mount(document.getElementById('app'));
+</pre>
+            </div>
+            
+            <h3>Django Integration</h3>
+            <div class="code-example">
+<pre>
+// Handling Django CSRF protection
+function getCsrfToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+}
+
+// Django API client
+class DjangoApiClient {
+    async request(url, options = {}) {
+        const defaultOptions = {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            credentials: 'same-origin'
+        };
+        
+        const response = await fetch(url, {...defaultOptions, ...options});
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+        
+        return response.json();
+    }
+    
+    async get(url) {
+        return this.request(url);
+    }
+    
+    async post(url, data) {
+        return this.request(url, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+    
+    async put(url, data) {
+        return this.request(url, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    }
+    
+    async delete(url) {
+        return this.request(url, {
+            method: 'DELETE'
+        });
+    }
+}
+
+// Django form submission with optimization
+class EnhancedForm {
+    constructor(formElement) {
+        this.form = formElement;
+        this.api = new DjangoApiClient();
+        this.setupForm();
+    }
+    
+    setupForm() {
+        this.form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            try {
+                await this.submitForm();
+            } catch (error) {
+                this.showError(error.message);
+            }
+        });
+    }
+    
+    getFormData() {
+        const formData = new FormData(this.form);
+        const data = {};
+        
+        for (let [key, value] of formData.entries()) {
+            data[key] = value;
+        }
+        
+        return data;
+    }
+    
+    async submitForm() {
+        // Show loading state
+        this.form.classList.add('loading');
+        this.clearErrors();
+        
+        // Get form data
+        const data = this.getFormData();
+        
+        try {
+            // Submit to Django backend
+            const response = await this.api.post(this.form.action, data);
+            
+            // Handle successful response
+            if (response.success) {
+                this.showSuccess(response.message || 'Form submitted successfully');
+                
+                // Redirect if specified
+                if (response.redirect) {
+                    window.location.href = response.redirect;
+                }
+            } else if (response.errors) {
+                // Handle field errors
+                this.showFieldErrors(response.errors);
+            }
+        } finally {
+            // Remove loading state
+            this.form.classList.remove('loading');
+        }
+    }
+    
+    clearErrors() {
+        // Remove existing error messages
+        this.form.querySelectorAll('.error-message').forEach(el => el.remove());
+        this.form.querySelectorAll('.field-error').forEach(el => {
+            el.classList.remove('field-error');
+        });
+    }
+    
+    showFieldErrors(errors) {
+        // Efficiently add error messages using document fragment
+        const fragment = document.createDocumentFragment();
+        
+        Object.entries(errors).forEach(([field, message]) => {
+            const input = this.form.querySelector(`[name="${field}"]`);
+            if (input) {
+                input.classList.add('field-error');
+                
+                const errorElement = document.createElement('div');
+                errorElement.className = 'error-message';
+                errorElement.textContent = message;
+                
+                // Insert after the input
+                input.parentNode.insertBefore(errorElement, input.nextSibling);
+            }
+        });
+        
+        this.form.appendChild(fragment);
+    }
+    
+    showError(message) {
+        const errorContainer = this.form.querySelector('.form-error') || 
+            document.createElement('div');
+        
+        errorContainer.className = 'form-error';
+        errorContainer.textContent = message;
+        
+        if (!errorContainer.parentNode) {
+            this.form.insertBefore(errorContainer, this.form.firstChild);
+        }
+    }
+    
+    showSuccess(message) {
+        const successContainer = this.form.querySelector('.form-success') || 
+            document.createElement('div');
+        
+        successContainer.className = 'form-success';
+        successContainer.textContent = message;
+        
+        if (!successContainer.parentNode) {
+            this.form.insertBefore(successContainer, this.form.firstChild);
+        }
+    }
+}
+
+// Usage
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('form.enhanced').forEach(form => {
+        new EnhancedForm(form);
+    });
+});
+</pre>
+            </div>
+        </section>
+</pre>
+            </div>
+        </section>
+
+        <section id="exercises">
+            <h2>Exercises</h2>
+            
+            <div class="exercise">
+                <h3>Exercise 1: Performance Optimization</h3>
+                <p>
+                    Take the following code and optimize it for DOM performance:
+                </p>
+                <div class="code-example">
+<pre>
+// Original code to optimize
+function renderTable(data) {
+    const table = document.getElementById('data-table');
+    table.innerHTML = '';
+    
+    data.forEach(row => {
+        const tr = document.createElement('tr');
+        
+        // Create and append cells one by one
+        const nameCell = document.createElement('td');
+        nameCell.textContent = row.name;
+        tr.appendChild(nameCell);
+        
+        const valueCell = document.createElement('td');
+        valueCell.textContent = row.value;
+        tr.appendChild(valueCell);
+        
+        const percentCell = document.createElement('td');
+        percentCell.textContent = row.percentage + '%';
+        tr.appendChild(percentCell);
+        
+        // Calculate and set width for bar visualization
+        const barCell = document.createElement('td');
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.width = (barCell.offsetWidth * (row.percentage / 100)) + 'px';
+        bar.style.backgroundColor = row.color;
+        barCell.appendChild(bar);
+        tr.appendChild(barCell);
+        
+        table.appendChild(tr);
+    });
+}
+</pre>
+                </div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Exercise 2: Implement a Component System</h3>
+                <p>
+                    Create a simple component system that includes:
+                </p>
+                <ul>
+                    <li>A base Component class with lifecycle methods (init, render, mount, update, unmount)</li>
+                    <li>State management within components</li>
+                    <li>Event handling and delegation</li>
+                    <li>Parent-child component relationships</li>
+                </ul>
+                <p>
+                    Use this system to build a simple to-do list application that connects to a Python/Flask backend.
+                </p>
+            </div>
+            
+            <div class="exercise">
+                <h3>Exercise 3: Virtual List Implementation</h3>
+                <p>
+                    Implement a virtual list component that:
+                </p>
+                <ul>
+                    <li>Only renders elements visible in the viewport</li>
+                    <li>Recycles DOM nodes as the user scrolls</li>
+                    <li>Efficiently handles a dataset of 10,000 items</li>
+                    <li>Maintains smooth 60fps scrolling</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="summary">
+            <h2>Summary and Best Practices</h2>
+            
+            <h3>Key DOM Optimization Principles</h3>
+            <ul>
+                <li><strong>Minimize DOM Manipulations:</strong> Batch operations and use document fragments</li>
+                <li><strong>Avoid Layout Thrashing:</strong> Separate read and write operations</li>
+                <li><strong>Use Event Delegation:</strong> Attach listeners to containers instead of individual elements</li>
+                <li><strong>Optimize Rendering:</strong> Recycle DOM elements and implement virtualization for large lists</li>
+                <li><strong>Leverage Component Patterns:</strong> Organize code in a modular, maintainable way</li>
+                <li><strong>Measure Performance:</strong> Use browser tools to identify bottlenecks</li>
+                <li><strong>Update Efficiently:</strong> Only update what has changed</li>
+            </ul>
+            
+            <h3>Connecting to Python Backends</h3>
+            <p>
+                When working with Python backends like Flask or Django:
+            </p>
+            <ul>
+                <li>Use async/await for API requests to keep the UI responsive</li>
+                <li>Handle CSRF protection properly in your requests</li>
+                <li>Consider the balance between server-side and client-side rendering</li>
+                <li>Implement proper error handling for API requests</li>
+                <li>Use optimistic UI updates for better user experience</li>
+            </ul>
+        </section>
+
+        <section id="further-reading">
+            <h2>Further Reading</h2>
+            
+            <ul>
+                <li><a href="https://developers.google.com/web/fundamentals/performance/rendering" target="_blank">Google Web Fundamentals: Rendering Performance</a></li>
+                <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction" target="_blank">MDN: Introduction to the DOM</a></li>
+                <li><a href="https://github.com/wilsonpage/fastdom" target="_blank">FastDOM: Eliminates layout thrashing</a></li>
+                <li><a href="https://addyosmani.com/resources/essentialjsdesignpatterns/book/" target="_blank">JavaScript Design Patterns</a></li>
+                <li><a href="https://developers.google.com/web/tools/chrome-devtools/evaluate-performance" target="_blank">Chrome DevTools: Analyze Runtime Performance</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course. All rights reserved.</p>
+        <p><a href="/index.html">Return to Course Index</a></p>
+    </footer>
+</body>
+</html>

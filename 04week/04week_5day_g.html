@@ -1,0 +1,2261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Performance Basics | Web Fundamentals</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Web Performance Basics</h1>
+        <p>Week 4: Web Fundamentals - Friday Session</p>
+    </header>
+
+    <main>
+        <section class="intro">
+            <h2>Introduction to Web Performance</h2>
+            <p>Web performance is like the difference between a sports car and a compact sedan. Both will get you from point A to point B, but the sports car provides a smoother, faster, and more enjoyable experience. Similarly, a high-performing website delivers content quickly and responds promptly to user interactions, creating a satisfying experience that keeps users engaged.</p>
+            
+            <p>In today's world, users expect websites to load almost instantly. Studies show that 53% of mobile site visits are abandoned if pages take longer than 3 seconds to load. Performance isn't just about user satisfaction—it directly impacts business metrics like conversion rates, bounce rates, and even search engine rankings.</p>
+            
+            <div class="key-points">
+                <h3>By the end of this session, you'll understand:</h3>
+                <ul>
+                    <li>Why web performance matters from business and user experience perspectives</li>
+                    <li>Key performance metrics and how to measure them</li>
+                    <li>Common performance bottlenecks and how to identify them</li>
+                    <li>Practical techniques to optimize frontend performance</li>
+                    <li>Tools and methodologies for ongoing performance monitoring</li>
+                </ul>
+            </div>
+            
+            <div class="analogy">
+                <h3>The Restaurant Analogy</h3>
+                <p>Think of a website like a restaurant. The performance of a website is similar to the service quality at a restaurant:</p>
+                <ul>
+                    <li><strong>Load time</strong> is like waiting to be seated - if it takes too long, customers might leave</li>
+                    <li><strong>Rendering</strong> is like seeing your food arrive at the table - the visual confirmation that your order is being processed</li>
+                    <li><strong>Time to Interactive</strong> is like having the food actually ready to eat - it's there, but can you interact with it yet?</li>
+                    <li><strong>Optimization techniques</strong> are like the efficiency systems in the kitchen - they're not visible to customers but make everything run smoothly</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="why-performance">
+            <h2>Why Performance Matters</h2>
+            
+            <div class="subsection user-impact">
+                <h3>Impact on User Experience</h3>
+                <p>Performance directly affects how users perceive your website or application. Here's how:</p>
+                <ul>
+                    <li><strong>Attention Span:</strong> Users have increasingly short attention spans. A delay of just a few seconds can cause frustration and abandonment.</li>
+                    <li><strong>Perceived Quality:</strong> Performance issues are often equated with poor quality and low trustworthiness. A fast site feels professional and reliable.</li>
+                    <li><strong>Accessibility:</strong> Not all users have high-speed connections or powerful devices. Performance optimizations make your site more accessible to a broader audience.</li>
+                    <li><strong>User Satisfaction:</strong> Fast, responsive interfaces create a positive emotional response, leading to a better overall impression of your brand.</li>
+                </ul>
+                
+                <div class="real-world">
+                    <h4>Real-World Impact</h4>
+                    <ul>
+                        <li>Pinterest reduced perceived wait times by 40% and saw a 15% increase in SEO traffic and sign-ups</li>
+                        <li>BBC found they lose an additional 10% of users for every additional second their site takes to load</li>
+                        <li>Walmart observed a 2% conversion increase for every 1 second of improvement in page load time</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="subsection business-impact">
+                <h3>Business Impact</h3>
+                <p>Beyond user experience, performance has tangible business effects:</p>
+                <ul>
+                    <li><strong>Conversion Rates:</strong> Faster sites convert better. Every 100ms of improvement in load time can increase conversion rates.</li>
+                    <li><strong>Bounce Rates:</strong> Slow sites see higher bounce rates as users leave before engaging with content.</li>
+                    <li><strong>SEO Rankings:</strong> Page speed is a ranking factor for search engines like Google.</li>
+                    <li><strong>Operating Costs:</strong> Efficient sites consume less bandwidth and server resources, potentially reducing hosting costs.</li>
+                </ul>
+                
+                <div class="chart">
+                    <h4>Typical Performance Impact on Business Metrics</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Performance Improvement</th>
+                                <th>Typical Business Impact</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1 second faster</td>
+                                <td>7% increase in conversions</td>
+                            </tr>
+                            <tr>
+                                <td>50% faster load time</td>
+                                <td>12% increase in conversions</td>
+                            </tr>
+                            <tr>
+                                <td>30% faster site</td>
+                                <td>2-3x higher engagement rate</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="subsection mobile-considerations">
+                <h3>Mobile Performance Considerations</h3>
+                <p>With mobile traffic now exceeding desktop for many websites, mobile performance deserves special attention:</p>
+                <ul>
+                    <li><strong>Network Constraints:</strong> Mobile networks are often slower and less reliable than desktop connections.</li>
+                    <li><strong>Device Limitations:</strong> Mobile devices typically have less processing power and memory than desktops.</li>
+                    <li><strong>Context Sensitivity:</strong> Mobile users are often on the go and may be more sensitive to delays.</li>
+                    <li><strong>Battery Impact:</strong> Inefficient websites can drain device batteries faster, creating a negative impression.</li>
+                </ul>
+                
+                <div class="code-example">
+                    <h4>Detecting Network Conditions</h4>
+                    <pre><code>// Using the Network Information API to adapt to network conditions
+if (navigator.connection) {
+  const connection = navigator.connection;
+  
+  if (connection.saveData) {
+    // User has requested reduced data usage
+    loadLowResolutionImages();
+  } else if (connection.effectiveType === '4g') {
+    // Fast connection, load high-quality assets
+    loadHighResolutionImages();
+  } else {
+    // Slower connection, load optimized assets
+    loadOptimizedImages();
+  }
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="measuring-performance">
+            <h2>Measuring Performance</h2>
+            
+            <p>Before you can improve performance, you need to measure it. Understanding key metrics and how to track them is essential for effective optimization.</p>
+            
+            <div class="subsection key-metrics">
+                <h3>Core Web Vitals and Other Key Metrics</h3>
+                
+                <div class="metric">
+                    <h4>Largest Contentful Paint (LCP)</h4>
+                    <p>Measures loading performance. To provide a good user experience, LCP should occur within 2.5 seconds of when the page first starts loading.</p>
+                    <div class="illustration">
+                        <p>Imagine a newspaper gradually appearing on your doorstep. LCP is the moment when the main headline and featured image become visible.</p>
+                    </div>
+                </div>
+                
+                <div class="metric">
+                    <h4>First Input Delay (FID)</h4>
+                    <p>Measures interactivity. To provide a good user experience, pages should have a FID of 100 milliseconds or less.</p>
+                    <div class="illustration">
+                        <p>Think of this as how long it takes a waiter to acknowledge you after you've raised your hand to order. If they take too long, you feel ignored and frustrated.</p>
+                    </div>
+                </div>
+                
+                <div class="metric">
+                    <h4>Cumulative Layout Shift (CLS)</h4>
+                    <p>Measures visual stability. To provide a good user experience, pages should maintain a CLS of 0.1 or less.</p>
+                    <div class="illustration">
+                        <p>Imagine reading a physical book and the text and images suddenly jump around as you're trying to read. That's what a high CLS feels like to users.</p>
+                    </div>
+                </div>
+                
+                <div class="metric">
+                    <h4>Time to First Byte (TTFB)</h4>
+                    <p>Measures how long it takes for the browser to receive the first byte of response from the server.</p>
+                    <div class="illustration">
+                        <p>Like waiting for the first word of an answer after asking a question. Even if the full answer takes time, hearing that first word quickly tells you someone's responding.</p>
+                    </div>
+                </div>
+                
+                <div class="metric">
+                    <h4>First Contentful Paint (FCP)</h4>
+                    <p>Measures how long it takes for the browser to render the first piece of DOM content.</p>
+                    <div class="illustration">
+                        <p>Similar to seeing the first brush stroke appear on a previously blank canvas. It confirms that something is happening.</p>
+                    </div>
+                </div>
+                
+                <div class="metric">
+                    <h4>Time to Interactive (TTI)</h4>
+                    <p>Measures how long it takes for the page to become fully interactive.</p>
+                    <div class="illustration">
+                        <p>Imagine a theme park ride that's visible but has a "Not Yet Operating" sign. TTI is when the ride is actually available for you to use.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="subsection measuring-tools">
+                <h3>Tools for Measuring Performance</h3>
+                
+                <div class="tool">
+                    <h4>Browser Developer Tools</h4>
+                    <p>Built-in tools in browsers like Chrome, Firefox, and Safari that provide detailed performance insights.</p>
+                    <ul>
+                        <li><strong>Network Panel:</strong> Visualizes resource loading, timing, and size</li>
+                        <li><strong>Performance Panel:</strong> Records and analyzes runtime performance</li>
+                        <li><strong>Memory Panel:</strong> Identifies memory usage and leaks</li>
+                    </ul>
+                    <div class="tip">
+                        <h5>Quick Tip: Using Chrome's Performance Panel</h5>
+                        <ol>
+                            <li>Open DevTools (F12 or Right-click > Inspect)</li>
+                            <li>Go to the Performance tab</li>
+                            <li>Click the record button (circle)</li>
+                            <li>Interact with the page</li>
+                            <li>Stop recording to see detailed performance analysis</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="tool">
+                    <h4>Lighthouse</h4>
+                    <p>An open-source, automated tool for improving the quality of web pages. It runs audits for performance, accessibility, progressive web apps, SEO, and more.</p>
+                    <div class="tip">
+                        <h5>Using Lighthouse</h5>
+                        <ol>
+                            <li>In Chrome DevTools, go to the Lighthouse tab</li>
+                            <li>Select the categories you want to audit</li>
+                            <li>Click "Generate report"</li>
+                            <li>Review the results and recommendations</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="tool">
+                    <h4>WebPageTest</h4>
+                    <p>A free tool that allows you to test your website's performance from multiple locations around the world using real browsers.</p>
+                    <div class="code-example">
+                        <h5>WebPageTest API Example</h5>
+                        <pre><code>// Using the WebPageTest API with Node.js
+const WebPageTest = require('webpagetest');
+const wpt = new WebPageTest('www.webpagetest.org', 'YOUR_API_KEY');
+
+wpt.runTest('https://example.com', {
+  location: 'Sydney:Chrome',
+  connectivity: '3G',
+  runs: 3,
+  firstViewOnly: false
+}, (err, data) => {
+  if (err) {
+    console.error('Error running test:', err);
+    return;
+  }
+  
+  console.log('Test results:', data);
+});</code></pre>
+                    </div>
+                </div>
+                
+                <div class="tool">
+                    <h4>Google PageSpeed Insights</h4>
+                    <p>Analyzes the content of a web page and generates suggestions to make that page faster based on Google's PageSpeed rules.</p>
+                </div>
+                
+                <div class="tool">
+                    <h4>Real User Monitoring (RUM)</h4>
+                    <p>Collects performance data from actual users as they interact with your site.</p>
+                    <div class="code-example">
+                        <h5>Using the Performance API for Basic RUM</h5>
+                        <pre><code>// Basic Real User Monitoring using the Performance API
+window.addEventListener('load', () => {
+  // Wait for the page to fully load to get accurate metrics
+  setTimeout(() => {
+    const perfData = window.performance.timing;
+    
+    // Calculate key metrics
+    const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
+    const domContentLoaded = perfData.domContentLoadedEventEnd - perfData.navigationStart;
+    
+    // Send the data to your analytics server
+    navigator.sendBeacon('/analytics', JSON.stringify({
+      pageLoadTime,
+      domContentLoaded,
+      url: document.location.href,
+      timestamp: new Date().toISOString()
+    }));
+  }, 0);
+});</code></pre>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="subsection performance-budgets">
+                <h3>Setting Performance Budgets</h3>
+                <p>A performance budget is a set of limits on metrics that affect site performance. It's like a financial budget, but for user experience instead of money.</p>
+                
+                <div class="budget-types">
+                    <h4>Types of Performance Budgets</h4>
+                    <ul>
+                        <li><strong>Quantity-based:</strong> Limits on the number of HTTP requests, total weight of a page, etc.</li>
+                        <li><strong>Rule-based:</strong> Scores from tools like Lighthouse or WebPageTest</li>
+                        <li><strong>Timing-based:</strong> Limits on metrics like TTI, LCP, etc.</li>
+                    </ul>
+                </div>
+                
+                <div class="example-budget">
+                    <h4>Example Performance Budget</h4>
+                    <pre><code>{
+  "resources": {
+    "total": 320,           // Total weight in KB
+    "script": 120,          // JS weight in KB
+    "image": 140,           // Images weight in KB
+    "stylesheet": 40,       // CSS weight in KB
+    "document": 20,         // HTML weight in KB
+    "font": 20,             // Fonts weight in KB
+    "thirdParty": 100       // Third-party scripts in KB
+  },
+  "requests": {
+    "total": 30,            // Maximum number of requests
+    "script": 8,            // JS requests
+    "image": 12,            // Image requests
+    "stylesheet": 2,        // CSS requests
+    "font": 2,              // Font requests
+    "thirdParty": 6         // Third-party requests
+  },
+  "metrics": {
+    "LCP": 2500,            // Largest Contentful Paint in ms
+    "FID": 100,             // First Input Delay in ms
+    "CLS": 0.1,             // Cumulative Layout Shift score
+    "TTI": 5000             // Time to Interactive in ms
+  }
+}</code></pre>
+                </div>
+                
+                <div class="budget-tools">
+                    <h4>Tools for Enforcing Performance Budgets</h4>
+                    <ul>
+                        <li><strong>Lighthouse CI:</strong> Integrates into CI/CD pipelines to ensure performance metrics stay within budget</li>
+                        <li><strong>Webpack Bundle Analyzer:</strong> Visualizes bundle size and helps identify large dependencies</li>
+                        <li><strong>bundlesize:</strong> Checks if your bundle size exceeds a specified threshold</li>
+                    </ul>
+                    <div class="code-example">
+                        <h5>Setting up bundlesize in package.json</h5>
+                        <pre><code>{
+  "bundlesize": [
+    {
+      "path": "./dist/js/*.js",
+      "maxSize": "120 kB"
+    },
+    {
+      "path": "./dist/css/*.css",
+      "maxSize": "40 kB"
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="common-bottlenecks">
+            <h2>Common Performance Bottlenecks</h2>
+            
+            <p>Understanding common performance issues is crucial for effective optimization. Here are the main areas where bottlenecks typically occur:</p>
+            
+            <div class="subsection network">
+                <h3>Network and Asset Loading</h3>
+                <p>Network-related issues are often the most significant contributors to slow page loads.</p>
+                
+                <div class="bottleneck">
+                    <h4>Large File Sizes</h4>
+                    <p>Oversized images, uncompressed assets, and bloated code all contribute to slow download times.</p>
+                    <div class="solution">
+                        <h5>Solutions:</h5>
+                        <ul>
+                            <li>Optimize and compress images</li>
+                            <li>Minify CSS and JavaScript</li>
+                            <li>Use modern image formats (WebP, AVIF)</li>
+                            <li>Implement code splitting</li>
+                        </ul>
+                        <div class="code-example">
+                            <h6>Image Optimization with Modern Formats</h6>
+                            <pre><code>&lt;picture&gt;
+  &lt;source srcset="image.avif" type="image/avif"&gt;
+  &lt;source srcset="image.webp" type="image/webp"&gt;
+  &lt;img src="image.jpg" alt="Description" loading="lazy"&gt;
+&lt;/picture&gt;</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bottleneck">
+                    <h4>Too Many Requests</h4>
+                    <p>Each HTTP request adds latency, especially on high-latency connections.</p>
+                    <div class="solution">
+                        <h5>Solutions:</h5>
+                        <ul>
+                            <li>Bundle files appropriately</li>
+                            <li>Use CSS sprites for small images</li>
+                            <li>Inline critical CSS</li>
+                            <li>Implement domain sharding for concurrent downloads</li>
+                            <li>Use HTTP/2 or HTTP/3 to reduce the impact of multiple requests</li>
+                        </ul>
+                        <div class="code-example">
+                            <h6>Inlining Critical CSS</h6>
+                            <pre><code>&lt;!-- Inline critical CSS in the head --&gt;
+&lt;head&gt;
+  &lt;style&gt;
+    /* Critical CSS for above-the-fold content */
+    body { margin: 0; font-family: sans-serif; }
+    header { background: #f5f5f5; padding: 1rem; }
+    .hero { height: 50vh; background: linear-gradient(45deg, #1a2a6c, #b21f1f); color: white; display: flex; align-items: center; justify-content: center; }
+  &lt;/style&gt;
+  
+  &lt;!-- Load non-critical CSS asynchronously --&gt;
+  &lt;link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'"&gt;
+  &lt;noscript&gt;&lt;link rel="stylesheet" href="styles.css"&gt;&lt;/noscript&gt;
+&lt;/head&gt;</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bottleneck">
+                    <h4>Render-Blocking Resources</h4>
+                    <p>CSS and JavaScript that block page rendering until they're downloaded and processed.</p>
+                    <div class="solution">
+                        <h5>Solutions:</h5>
+                        <ul>
+                            <li>Load non-critical JavaScript asynchronously or defer it</li>
+                            <li>Inline critical CSS</li>
+                            <li>Prioritize above-the-fold content</li>
+                        </ul>
+                        <div class="code-example">
+                            <h6>Async and Defer Scripts</h6>
+                            <pre><code>&lt;!-- Regular script: blocks parsing --&gt;
+&lt;script src="blocking.js"&gt;&lt;/script&gt;
+
+&lt;!-- Async script: downloads in parallel, executes as soon as available --&gt;
+&lt;script src="analytics.js" async&gt;&lt;/script&gt;
+
+&lt;!-- Deferred script: downloads in parallel, executes after parsing --&gt;
+&lt;script src="non-critical.js" defer&gt;&lt;/script&gt;</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bottleneck">
+                    <h4>Inefficient Resource Loading</h4>
+                    <p>Resources that aren't loaded in the optimal order or with the right priorities.</p>
+                    <div class="solution">
+                        <h5>Solutions:</h5>
+                        <ul>
+                            <li>Use resource hints (preload, prefetch, preconnect)</li>
+                            <li>Implement server push with HTTP/2</li>
+                            <li>Prioritize critical resources</li>
+                        </ul>
+                        <div class="code-example">
+                            <h6>Resource Hints</h6>
+                            <pre><code>&lt;!-- Preconnect to required origins --&gt;
+&lt;link rel="preconnect" href="https://api.example.com"&gt;
+
+&lt;!-- Preload critical resources --&gt;
+&lt;link rel="preload" href="critical-font.woff2" as="font" type="font/woff2" crossorigin&gt;
+
+&lt;!-- Prefetch resources for the next page --&gt;
+&lt;link rel="prefetch" href="next-page.html"&gt;</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="subsection rendering">
+                <h3>Rendering Performance</h3>
+                <p>Once resources are loaded, how efficiently they're processed and rendered affects perceived performance.</p>
+                
+                <div class="bottleneck">
+                    <h4>Layout Thrashing</h4>
+                    <p>Causes the browser to recalculate layout multiple times unnecessarily.</p>
+                    <div class="solution">
+                        <h5>Solutions:</h5>
+                        <ul>
+                            <li>Batch DOM reads and writes</li>
+                            <li>Use CSS transforms instead of properties that trigger layout</li>
+                            <li>Avoid forcing synchronous layouts</li>
+                        </ul>
+                        <div class="code-example">
+                            <h6>Avoiding Layout Thrashing</h6>
+                            <pre><code>// Bad practice - causes layout thrashing
+function badLayout() {
+  const elements = document.querySelectorAll('.box');
+  
+  elements.forEach(el => {
+    // Read (forces layout calculation)
+    const height = el.offsetHeight;
+    
+    // Write (invalidates layout)
+    el.style.height = (height + 10) + 'px';
+    
+    // Read again (forces another layout calculation)
+    const width = el.offsetWidth;
+    
+    // Write again (invalidates layout again)
+    el.style.width = (width + 10) + 'px';
+  });
+}
+
+// Good practice - batch reads and writes
+function goodLayout() {
+  const elements = document.querySelectorAll('.box');
+  const measurements = [];
+  
+  // Batch all reads
+  elements.forEach(el => {
+    measurements.push({
+      height: el.offsetHeight,
+      width: el.offsetWidth
+    });
+  });
+  
+  // Batch all writes
+  elements.forEach((el, i) => {
+    const { height, width } = measurements[i];
+    el.style.height = (height + 10) + 'px';
+    el.style.width = (width + 10) + 'px';
+  });
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bottleneck">
+                    <h4>Expensive Styles and Animations</h4>
+                    <p>CSS properties and animations that are computationally expensive.</p>
+                    <div class="solution">
+                        <h5>Solutions:</h5>
+                        <ul>
+                            <li>Use CSS properties that only affect compositing (transform, opacity)</li>
+                            <li>Avoid expensive properties (box-shadow, filter, etc.) in animations</li>
+                            <li>Use will-change for elements that will animate (but use sparingly)</li>
+                            <li>Reduce paint areas</li>
+                        </ul>
+                        <div class="code-example">
+                            <h6>Performant Animations</h6>
+                            <pre><code>/* Expensive animation (triggers layout and paint) */
+.expensive {
+  animation: move-expensive 1s infinite;
+}
+
+@keyframes move-expensive {
+  from { left: 0; top: 0; }
+  to { left: 100px; top: 100px; }
+}
+
+/* Performant animation (only affects compositing) */
+.performant {
+  animation: move-performant 1s infinite;
+}
+
+@keyframes move-performant {
+  from { transform: translate(0, 0); }
+  to { transform: translate(100px, 100px); }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bottleneck">
+                    <h4>Layout Shifts</h4>
+                    <p>Elements that change position after they're initially rendered, causing a jarring experience for users.</p>
+                    <div class="solution">
+                        <h5>Solutions:</h5>
+                        <ul>
+                            <li>Set size attributes on images and other media</li>
+                            <li>Reserve space for dynamic content like ads</li>
+                            <li>Avoid inserting content above existing content</li>
+                            <li>Use CSS containment where appropriate</li>
+                        </ul>
+                        <div class="code-example">
+                            <h6>Preventing Layout Shifts</h6>
+                            <pre><code>&lt;!-- Bad: image without dimensions --&gt;
+&lt;img src="image.jpg" alt="Description"&gt;
+
+&lt;!-- Good: image with aspect ratio --&gt;
+&lt;div style="aspect-ratio: 16/9; max-width: 800px;"&gt;
+  &lt;img src="image.jpg" alt="Description" style="width: 100%; height: 100%; object-fit: cover;"&gt;
+&lt;/div&gt;
+
+&lt;!-- Good: reserved space for dynamic content --&gt;
+&lt;div class="ad-container" style="min-height: 250px;"&gt;
+  &lt;!-- Ad will load here --&gt;
+&lt;/div&gt;</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="subsection javascript">
+                <h3>JavaScript Performance</h3>
+                <p>JavaScript execution can significantly impact the responsiveness of your web application.</p>
+                
+                <div class="bottleneck">
+                    <h4>Long-Running JavaScript</h4>
+                    <p>JavaScript that blocks the main thread for extended periods, causing unresponsiveness.</p>
+                    <div class="solution">
+                        <h5>Solutions:</h5>
+                        <ul>
+                            <li>Break up long tasks into smaller chunks</li>
+                            <li>Defer non-critical work</li>
+                            <li>Use Web Workers for CPU-intensive tasks</li>
+                            <li>Implement virtualization for long lists</li>
+                        </ul>
+                        <div class="code-example">
+                            <h6>Using Web Workers for CPU-Intensive Tasks</h6>
+                            <pre><code>// In main.js
+const worker = new Worker('processor.js');
+
+// Send data to the worker
+worker.postMessage({
+  data: largeDataSet,
+  config: processingConfig
+});
+
+// Handle the result
+worker.onmessage = function(event) {
+  const result = event.data;
+  updateUI(result);
+};
+
+// In processor.js (the worker)
+self.onmessage = function(event) {
+  const { data, config } = event.data;
+  
+  // Perform CPU-intensive processing
+  const result = processData(data, config);
+  
+  // Send the result back to the main thread
+  self.postMessage(result);
+};
+
+function processData(data, config) {
+  // Computationally expensive operation
+  // that doesn't block the main thread
+  return data.map(/* ... */);
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bottleneck">
+                    <h4>Inefficient DOM Manipulation</h4>
+                    <p>Frequent or poorly optimized interactions with the DOM.</p>
+                    <div class="solution">
+                        <h5>Solutions:</h5>
+                        <ul>
+                            <li>Minimize DOM updates</li>
+                            <li>Use DocumentFragment for batch insertions</li>
+                            <li>Consider using a virtual DOM library for complex UIs</li>
+                            <li>Remove event listeners when no longer needed</li>
+                        </ul>
+                        <div class="code-example">
+                            <h6>Efficient DOM Updates</h6>
+                            <pre><code>// Inefficient - causes multiple reflows
+function addItemsInefficiently(items) {
+  const list = document.getElementById('list');
+  
+  items.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    list.appendChild(li); // Causes reflow each time
+  });
+}
+
+// Efficient - uses DocumentFragment for batch update
+function addItemsEfficiently(items) {
+  const list = document.getElementById('list');
+  const fragment = document.createDocumentFragment();
+  
+  items.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    fragment.appendChild(li);
+  });
+  
+  list.appendChild(fragment); // Single reflow
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bottleneck">
+                    <h4>Memory Leaks</h4>
+                    <p>JavaScript that continues to consume memory, eventually causing performance degradation or crashes.</p>
+                    <div class="solution">
+                        <h5>Solutions:</h5>
+                        <ul>
+                            <li>Remove event listeners when elements are removed</li>
+                            <li>Watch for circular references in objects</li>
+                            <li>Be cautious with closures that capture large objects</li>
+                            <li>Use Chrome DevTools' Memory panel to identify leaks</li>
+                        </ul>
+                        <div class="code-example">
+                            <h6>Preventing Memory Leaks</h6>
+                            <pre><code>// Memory leak example
+function setupLeakyHandler() {
+  const largeData = new Array(1000000).fill('potentially large data');
+  
+  const element = document.getElementById('button');
+  
+  // This creates a closure that captures largeData
+  element.addEventListener('click', function() {
+    console.log(largeData.length);
+  });
+  
+  // Even if element is removed from DOM, the event listener
+  // keeps largeData in memory
+}
+
+// Fixed example
+function setupEfficientHandler() {
+  const element = document.getElementById('button');
+  
+  // Reference only what you need
+  element.addEventListener('click', processClick);
+}
+
+function processClick() {
+  // Generate data only when needed
+  const data = generateData();
+  console.log(data.length);
+}
+
+// Clean up when no longer needed
+function cleanup() {
+  const element = document.getElementById('button');
+  element.removeEventListener('click', processClick);
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="optimization-techniques">
+            <h2>Key Optimization Techniques</h2>
+            
+            <p>Now that we understand common bottlenecks, let's explore practical optimization techniques. These strategies will help you improve the performance of your web applications.</p>
+            
+            <div class="subsection asset-optimization">
+                <h3>Asset Optimization</h3>
+                
+                <div class="technique">
+                    <h4>Image Optimization</h4>
+                    <ul>
+                        <li><strong>Choose the right format:</strong> JPEG for photos, PNG for transparency, SVG for vector graphics, WebP/AVIF for modern browsers</li>
+                        <li><strong>Responsive images:</strong> Use srcset and sizes attributes to serve different image sizes based on viewport</li>
+                        <li><strong>Lazy loading:</strong> Only load images when they're close to the viewport</li>
+                        <li><strong>Modern compression:</strong> Use tools like sharp, imagemin, or squoosh</li>
+                    </ul>
+                    <div class="code-example">
+                        <h5>Responsive and Lazy Loaded Images</h5>
+                        <pre><code>&lt;img 
+  src="small.jpg" 
+  srcset="small.jpg 400w, medium.jpg 800w, large.jpg 1600w" 
+  sizes="(max-width: 600px) 400px, (max-width: 1200px) 800px, 1600px"
+  alt="Responsive image"
+  loading="lazy"
+  decoding="async"
+  width="800"
+  height="600"
+&gt;</code></pre>
+                    </div>
+                </div>
+                
+                <div class="technique">
+                    <h4>CSS Optimization</h4>
+                    <ul>
+                        <li><strong>Minification:</strong> Remove unnecessary whitespace, comments, and characters</li>
+                        <li><strong>Critical CSS:</strong> Inline critical styles to reduce render-blocking</li>
+                        <li><strong>Remove unused CSS:</strong> Tools like PurgeCSS can eliminate unused rules</li>
+                        <li><strong>CSS modularization:</strong> Only load the CSS needed for each page</li>
+                    </ul>
+                    <div class="code-example">
+                        <h5>Using PurgeCSS with a Build Process</h5>
+                        <pre><code>// webpack.config.js with PurgeCSS (simplified)
+const purgecss = require('@fullhuman/postcss-purgecss');
+
+module.exports = {
+  // ...webpack config...
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          'css-loader',
+          {
+            loader: 'postcss-loader',
+            options: {
+              postcssOptions: {
+                plugins: [
+                  purgecss({
+                    content: ['./src/**/*.html', './src/**/*.js'],
+                    // Safelist patterns if needed
+                    safelist: ['whitelisted-class', /^modal-/]
+                  })
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+};</code></pre>
+                    </div>
+                </div>
+                
+                <div class="technique">
+                    <h4>JavaScript Optimization</h4>
+                    <ul>
+                        <li><strong>Minification:</strong> Reduce file size by removing unnecessary characters</li>
+                        <li><strong>Code splitting:</strong> Break your JavaScript into smaller chunks</li>
+                        <li><strong>Tree shaking:</strong> Eliminate dead code</li>
+                        <li><strong>Differential loading:</strong> Serve modern JavaScript to modern browsers, and transpiled code to older browsers</li>
+                    </ul>
+                    <div class="code-example">
+                        <h5>Code Splitting with Dynamic Imports</h5>
+                        <pre><code>// Without code splitting - loads everything upfront
+import { heavyFeature } from './heavy-feature';
+
+// With code splitting - loads on demand
+document.getElementById('feature-button').addEventListener('click', async () => {
+  try {
+    // Dynamic import - loads the module only when needed
+    const { heavyFeature } = await import('./heavy-feature');
+    heavyFeature();
+  } catch (error) {
+    console.error('Failed to load feature:', error);
+  }
+});</code></pre>
+                    </div>
+                </div>
+                
+                <div class="technique">
+                    <h4>Font Optimization</h4>
+                    <ul>
+                        <li><strong>WOFF2 format:</strong> Most efficient compression for web fonts</li>
+                        <li><strong>Font subsetting:</strong> Only include the characters you need</li>
+                        <li><strong>Font display strategies:</strong> Use font-display property to control rendering behavior</li>
+                        <li><strong>Preload critical fonts:</strong> Especially for key typographic elements</li>
+                    </ul>
+                    <div class="code-example">
+                        <h5>Optimized Font Loading</h5>
+                        <pre><code>&lt;!-- Preload the font file --&gt;
+&lt;link rel="preload" href="fonts/my-font.woff2" as="font" type="font/woff2" crossorigin&gt;
+
+&lt;style&gt;
+  /* Define the font with optimal settings */
+  @font-face {
+    font-family: 'MyFont';
+    src: url('fonts/my-font.woff2') format('woff2'),
+         url('fonts/my-font.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap; /* Show fallback font until custom font is loaded */
+  }
+  
+  /* Apply the font */
+  body {
+    font-family: 'MyFont', sans-serif;
+  }
+&lt;/style&gt;</code></pre>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="subsection delivery-optimization">
+                <h3>Delivery Optimization</h3>
+                
+                <div class="technique">
+                    <h4>Caching Strategies</h4>
+                    <ul>
+                        <li><strong>Browser caching:</strong> Set appropriate cache headers for different resource types</li>
+                        <li><strong>Content fingerprinting:</strong> Include content hashes in filenames for cache busting</li>
+                        <li><strong>Service Workers:</strong> Implement offline caching for PWAs</li>
+                        <li><strong>Cache-Control policies:</strong> Configure fine-grained caching behavior</li>
+                    </ul>
+                    <div class="code-example">
+                        <h5>Setting Cache Headers in Various Environments</h5>
+                        <pre><code>// Express.js (Node.js) example
+app.use('/static', express.static('public', {
+  maxAge: '1y',
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      // Don't cache HTML files
+      res.setHeader('Cache-Control', 'no-cache');
+    } else if (path.includes('critical.css')) {
+      // Short cache for critical CSS
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+    } else if (path.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg)$/)) {
+      // Long cache for static assets
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  }
+}));
+
+// Nginx configuration
+location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+  expires 1y;
+  add_header Cache-Control "public, max-age=31536000, immutable";
+}
+
+location ~* \.(html)$ {
+  add_header Cache-Control "no-cache";
+}</code></pre>
+                    </div>
+                </div>
+                
+                <div class="technique">
+                    <h4>Content Delivery Networks (CDNs)</h4>
+                    <ul>
+                        <li><strong>Distribute content:</strong> Serve assets from geographically distributed servers</li>
+                        <li><strong>Edge caching:</strong> Cache content at the network edge, closer to users</li>
+                        <li><strong>Advanced features:</strong> Many CDNs offer image optimization, minification, and more</li>
+                        <li><strong>HTTP/2 or HTTP/3 support:</strong> Benefit from modern protocol optimizations</li>
+                    </ul>
+                    <div class="code-example">
+                        <h5>Integrating with a CDN</h5>
+                        <pre><code>// Configure your build tool to output to your CDN
+// webpack.config.js example
+module.exports = {
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: '[name].[contenthash].js',
+    publicPath: process.env.NODE_ENV === 'production'
+      ? 'https://cdn.example.com/assets/'
+      : '/'
+  }
+};</code></pre>
+                    </div>
+                </div>
+                
+                <div class="technique">
+                    <h4>Compression</h4>
+                    <ul>
+                        <li><strong>Gzip/Brotli:</strong> Enable HTTP compression for text-based resources</li>
+                        <li><strong>Precompression:</strong> Compress files at build time rather than on-demand</li>
+                        <li><strong>Appropriate compression levels:</strong> Balance compression ratio vs. CPU usage</li>
+                    </ul>
+                    <div class="code-example">
+                        <h5>Enabling Compression in Nginx</h5>
+                        <pre><code># Nginx configuration for Brotli and Gzip
+# Enable Brotli
+brotli on;
+brotli_comp_level 6;
+brotli_types text/plain text/css application/javascript application/json image/svg+xml application/xml+rss;
+
+# Enable Gzip as fallback
+gzip on;
+gzip_vary on;
+gzip_proxied any;
+gzip_comp_level 6;
+gzip_types text/plain text/css application/javascript application/json image/svg+xml application/xml+rss;</code></pre>
+                    </div>
+                </div>
+                
+                <div class="technique">
+                    <h4>HTTP/2 and HTTP/3</h4>
+                    <ul>
+                        <li><strong>Multiplexing:</strong> Send multiple requests and responses in parallel over a single connection</li>
+                        <li><strong>Header compression:</strong> Reduce overhead of HTTP headers</li>
+                        <li><strong>Server push:</strong> Proactively send resources the client will need</li>
+                        <li><strong>HTTP/3:</strong> Uses QUIC protocol for reduced latency and improved connection migration</li>
+                    </ul>
+                    <div class="code-example">
+                        <h5>Setting Up HTTP/2 in Nginx</h5>
+                        <pre><code># Nginx configuration for HTTP/2
+server {
+    listen 443 ssl http2;
+    server_name example.com;
+
+    ssl_certificate /path/to/cert.pem;
+    ssl_certificate_key /path/to/key.pem;
+    
+    # HTTP/2 server push
+    location / {
+        http2_push /styles/main.css;
+        http2_push /scripts/main.js;
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="subsection runtime-optimization">
+                <h3>Runtime Optimization</h3>
+                
+                <div class="technique">
+                    <h4>Debouncing and Throttling</h4>
+                    <ul>
+                        <li><strong>Debouncing:</strong> Group multiple sequential calls into a single one after a period of inactivity</li>
+                        <li><strong>Throttling:</strong> Limit the number of times a function can be called over time</li>
+                        <li><strong>Common use cases:</strong> Search inputs, scroll listeners, resize events, etc.</li>
+                    </ul>
+                    <div class="code-example">
+                        <h5>Implementing Debounce and Throttle</h5>
+                        <pre><code>// Debounce function - executes after a delay of inactivity
+function debounce(func, wait) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
+// Throttle function - executes at most once per specified time period
+function throttle(func, limit) {
+  let lastCall = 0;
+  return function(...args) {
+    const now = Date.now();
+    if (now - lastCall >= limit) {
+      lastCall = now;
+      func.apply(this, args);
+    }
+  };
+}
+
+// Usage examples
+const debouncedSearch = debounce(function(query) {
+  // Search implementation - called 300ms after user stops typing
+  performSearch(query);
+}, 300);
+
+const throttledScroll = throttle(function() {
+  // Scroll handler - called at most once every 100ms
+  updateScrollIndicator();
+}, 100);
+
+// Event listeners
+document.getElementById('search').addEventListener('input', function(e) {
+  debouncedSearch(e.target.value);
+});
+
+window.addEventListener('scroll', throttledScroll);</code></pre>
+                    </div>
+                </div>
+                
+                <div class="technique">
+                    <h4>Virtualization</h4>
+                    <ul>
+                        <li><strong>Virtual scrolling/windowing:</strong> Only render visible items in long lists</li>
+                        <li><strong>Common libraries:</strong> react-window, vue-virtual-scroller, etc.</li>
+                        <li><strong>Use cases:</strong> Infinite scrolling lists, data tables, etc.</li>
+                    </ul>
+                    <div class="code-example">
+                        <h5>Basic Virtual List Implementation</h5>
+                        <pre><code>// Simplified virtual list using vanilla JS
+class VirtualList {
+  constructor(container, items, itemHeight) {
+    this.container = container;
+    this.items = items;
+    this.itemHeight = itemHeight;
+    
+    this.visibleItems = Math.ceil(container.clientHeight / itemHeight) + 2;
+    this.scrollTop = 0;
+    this.startIndex = 0;
+    
+    this.init();
+  }
+  
+  init() {
+    // Create a wrapper that will have the height of all items
+    this.wrapper = document.createElement('div');
+    this.wrapper.style.position = 'relative';
+    this.wrapper.style.height = `${this.items.length * this.itemHeight}px`;
+    this.container.appendChild(this.wrapper);
+    
+    // Handle scroll events
+    this.container.addEventListener('scroll', this.handleScroll.bind(this));
+    
+    // Initial render
+    this.render();
+  }
+  
+  handleScroll() {
+    this.scrollTop = this.container.scrollTop;
+    this.render();
+  }
+  
+  render() {
+    // Calculate visible range
+    this.startIndex = Math.floor(this.scrollTop / this.itemHeight);
+    const endIndex = Math.min(
+      this.startIndex + this.visibleItems, 
+      this.items.length
+    );
+    
+    // Clear current content
+    this.wrapper.innerHTML = '';
+    
+    // Render only visible items
+    for (let i = this.startIndex; i < endIndex; i++) {
+      const itemEl = document.createElement('div');
+      itemEl.style.position = 'absolute';
+      itemEl.style.top = `${i * this.itemHeight}px`;
+      itemEl.style.height = `${this.itemHeight}px`;
+      itemEl.style.width = '100%';
+      itemEl.textContent = this.items[i];
+      this.wrapper.appendChild(itemEl);
+    }
+  }
+}
+
+// Usage
+const container = document.getElementById('list-container');
+const items = Array.from({ length: 10000 }, (_, i) => `Item ${i + 1}`);
+new VirtualList(container, items, 40);</code></pre>
+                    </div>
+                </div>
+                
+                <div class="technique">
+                    <h4>Passive Event Listeners</h4>
+                    <ul>
+                        <li><strong>Purpose:</strong> Indicate that a listener will not call preventDefault()</li>
+                        <li><strong>Benefit:</strong> Browser can optimize scrolling and other operations</li>
+                        <li><strong>Common use cases:</strong> Scroll, touchstart, touchmove listeners</li>
+                    </ul>
+                    <div class="code-example">
+                        <h5>Using Passive Event Listeners</h5>
+                        <pre><code>// Without passive option - browser doesn't know if preventDefault() will be called
+window.addEventListener('scroll', function(event) {
+  // Scroll handler
+});
+
+// With passive option - browser knows preventDefault() won't be called
+window.addEventListener('scroll', function(event) {
+  // Same scroll handler
+}, { passive: true });
+
+// Feature detection for passive support
+let passiveSupported = false;
+try {
+  const options = {
+    get passive() {
+      passiveSupported = true;
+      return false;
+    }
+  };
+  window.addEventListener('test', null, options);
+  window.removeEventListener('test', null, options);
+} catch (err) {
+  passiveSupported = false;
+}
+
+// Use passive if supported
+window.addEventListener('scroll', handleScroll, 
+  passiveSupported ? { passive: true } : false);</code></pre>
+                    </div>
+                </div>
+                
+                <div class="technique">
+                    <h4>Efficient Animations</h4>
+                    <ul>
+                        <li><strong>Use requestAnimationFrame:</strong> Synchronize animations with the browser's refresh cycle</li>
+                        <li><strong>Promote to GPU:</strong> Use transform and opacity for hardware acceleration</li>
+                        <li><strong>Reduce paint area:</strong> Limit the region that needs repainting</li>
+                        <li><strong>Consider Web Animations API:</strong> More efficient than CSS animations in some cases</li>
+                    </ul>
+                    <div class="code-example">
+                        <h5>Efficient Animation with requestAnimationFrame</h5>
+                        <pre><code>// Inefficient animation using setTimeout
+function badAnimation() {
+  let position = 0;
+  const element = document.getElementById('moving-element');
+  
+  function update() {
+    position += 2;
+    element.style.left = position + 'px';
+    
+    if (position < 500) {
+      setTimeout(update, 16); // ~60fps, but not synchronized with screen refresh
+    }
+  }
+  
+  update();
+}
+
+// Efficient animation using requestAnimationFrame
+function goodAnimation() {
+  let position = 0;
+  const element = document.getElementById('moving-element');
+  
+  function update() {
+    position += 2;
+    // Use transform instead of left for GPU acceleration
+    element.style.transform = `translateX(${position}px)`;
+    
+    if (position < 500) {
+      requestAnimationFrame(update); // Synchronized with screen refresh
+    }
+  }
+  
+  requestAnimationFrame(update);
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="monitoring">
+            <h2>Ongoing Performance Monitoring</h2>
+            
+            <p>Web performance isn't a one-time effort—it requires ongoing monitoring and optimization. Here's how to set up a sustainable performance monitoring system.</p>
+            
+            <div class="subsection rum">
+                <h3>Real User Monitoring (RUM)</h3>
+                <p>Real User Monitoring collects performance data from actual users of your website, giving you insights into real-world conditions.</p>
+                
+                <div class="technique">
+                    <h4>Implementing Basic RUM</h4>
+                    <p>Use the Performance API to collect key metrics from real users:</p>
+                    <div class="code-example">
+                        <pre><code>// Basic implementation of Real User Monitoring
+window.addEventListener('load', () => {
+  // Ensure all the resources are loaded before measuring
+  setTimeout(() => {
+    // Get performance entries
+    const perfData = performance.getEntriesByType('navigation')[0];
+    const paintEntries = performance.getEntriesByType('paint');
+    
+    // Extract key metrics
+    const metrics = {
+      // Navigation timing
+      TTFB: perfData.responseStart - perfData.requestStart,
+      
+      // Page load time
+      loadTime: perfData.loadEventEnd - perfData.startTime,
+      
+      // DOM content loaded
+      domContentLoaded: perfData.domContentLoadedEventEnd - perfData.startTime,
+      
+      // First Paint
+      firstPaint: getFirstPaint(paintEntries),
+      
+      // First Contentful Paint
+      firstContentfulPaint: getFirstContentfulPaint(paintEntries),
+      
+      // Page URL and timestamp
+      url: window.location.href,
+      timestamp: new Date().toISOString()
+    };
+    
+    // Send metrics to analytics endpoint
+    sendMetricsToAnalytics(metrics);
+  }, 0);
+});
+
+// Helper functions
+function getFirstPaint(entries) {
+  const fp = entries.find(entry => entry.name === 'first-paint');
+  return fp ? fp.startTime : 0;
+}
+
+function getFirstContentfulPaint(entries) {
+  const fcp = entries.find(entry => entry.name === 'first-contentful-paint');
+  return fcp ? fcp.startTime : 0;
+}
+
+function sendMetricsToAnalytics(metrics) {
+  // Use Navigator.sendBeacon for reliability
+  navigator.sendBeacon('/analytics/performance', JSON.stringify(metrics));
+}</code></pre>
+                    </div>
+                </div>
+                
+                <div class="technique">
+                    <h4>Web Vitals Monitoring</h4>
+                    <p>Google's Web Vitals library makes it easy to collect Core Web Vitals metrics:</p>
+                    <div class="code-example">
+                        <pre><code>// Using the web-vitals library
+import {getLCP, getFID, getCLS} from 'web-vitals';
+
+function sendToAnalytics({name, delta, id}) {
+  // Send metric to your analytics service
+  const analyticsData = {
+    metric: name,
+    value: delta,
+    id: id,
+    page: window.location.pathname,
+    timestamp: Date.now()
+  };
+  
+  navigator.sendBeacon('/analytics/vitals', JSON.stringify(analyticsData));
+}
+
+// Monitor Core Web Vitals
+getCLS(sendToAnalytics);
+getFID(sendToAnalytics);
+getLCP(sendToAnalytics);</code></pre>
+                    </div>
+                </div>
+                
+                <div class="technique">
+                    <h4>RUM Tools and Services</h4>
+                    <p>Several services provide comprehensive RUM capabilities:</p>
+                    <ul>
+                        <li><strong>Open source:</strong> Boomerang, Perfume.js</li>
+                        <li><strong>Commercial:</strong> New Relic, Datadog, Dynatrace, SpeedCurve</li>
+                        <li><strong>Analytics platforms:</strong> Google Analytics also provides some performance insights</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="subsection synthetic">
+                <h3>Synthetic Testing</h3>
+                <p>While RUM gives you data from real users, synthetic testing allows for consistent, controlled measurements over time.</p>
+                
+                <div class="technique">
+                    <h4>Continuous Performance Testing</h4>
+                    <p>Integrate performance testing into your CI/CD pipeline:</p>
+                    <div class="code-example">
+                        <h5>Using Lighthouse CI</h5>
+                        <pre><code>// .lighthouserc.js configuration
+module.exports = {
+  ci: {
+    collect: {
+      // Number of runs
+      numberOfRuns: 3,
+      
+      // URLs to test
+      url: ['https://example.com/', 'https://example.com/about'],
+      
+      // Chrome flags
+      chromeFlags: '--headless',
+      
+      // Simulated throttling settings
+      settings: {
+        throttlingMethod: 'simulate',
+        throttling: {
+          cpuSlowdownMultiplier: 4,
+          networkDownloadSpeed: 1638400,
+          networkUploadSpeed: 675840,
+          networkRTT: 150
+        }
+      }
+    },
+    assert: {
+      // Performance budget assertions
+      assertions: {
+        'categories:performance': ['error', {minScore: 0.9}],
+        'first-contentful-paint': ['error', {maxNumericValue: 2000}],
+        'interactive': ['error', {maxNumericValue: 3500}],
+        'largest-contentful-paint': ['error', {maxNumericValue: 2500}],
+        'cumulative-layout-shift': ['error', {maxNumericValue: 0.1}],
+        'max-potential-fid': ['error', {maxNumericValue: 100}]
+      }
+    },
+    upload: {
+      // Upload results to a Lighthouse CI server
+      target: 'lhci',
+      serverBaseUrl: 'https://your-lhci-server.example.com'
+    }
+  }
+};</code></pre>
+                    </div>
+                </div>
+                
+                <div class="technique">
+                    <h4>Scheduled Performance Tests</h4>
+                    <p>Regular tests help identify performance regressions over time:</p>
+                    <ul>
+                        <li><strong>WebPageTest API:</strong> Schedule regular tests from different locations</li>
+                        <li><strong>Lighthouse on a schedule:</strong> Run via cron jobs or scheduled workflows</li>
+                        <li><strong>Puppeteer/Playwright scripts:</strong> Custom performance measurement scripts</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="subsection visualization">
+                <h3>Performance Data Visualization</h3>
+                <p>Visualizing performance data helps identify trends and communicate issues to stakeholders.</p>
+                
+                <div class="technique">
+                    <h4>Performance Dashboards</h4>
+                    <p>Create dashboards to monitor key metrics over time:</p>
+                    <ul>
+                        <li><strong>Time-series graphs:</strong> Track metrics over time to identify trends and regressions</li>
+                        <li><strong>Heatmaps:</strong> Visualize distributions of performance across users</li>
+                        <li><strong>Geographic visualizations:</strong> Understand performance differences by region</li>
+                    </ul>
+                </div>
+                
+                <div class="technique">
+                    <h4>Performance Alerts</h4>
+                    <p>Set up alerts for performance regressions:</p>
+                    <ul>
+                        <li><strong>Static thresholds:</strong> Alert when metrics exceed specific values</li>
+                        <li><strong>Statistical anomaly detection:</strong> Alert on unusual changes compared to historical data</li>
+                        <li><strong>Integration with communication tools:</strong> Send alerts to Slack, email, etc.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="subsection performance-culture">
+                <h3>Building a Performance Culture</h3>
+                <p>Technical solutions are only part of the equation. Creating a culture that values performance is equally important.</p>
+                
+                <div class="technique">
+                    <h4>Performance Budgets</h4>
+                    <p>Establish and enforce performance budgets:</p>
+                    <ul>
+                        <li><strong>Set clear limits:</strong> Define acceptable thresholds for key metrics</li>
+                        <li><strong>Enforce in CI/CD:</strong> Block deployments that breach budgets</li>
+                        <li><strong>Create visibility:</strong> Make performance metrics visible to all team members</li>
+                    </ul>
+                </div>
+                
+                <div class="technique">
+                    <h4>Performance Reviews</h4>
+                    <p>Regularly review performance as part of the development process:</p>
+                    <ul>
+                        <li><strong>Pre-release reviews:</strong> Check performance before major releases</li>
+                        <li><strong>Cross-functional reviews:</strong> Include designers, product managers, and developers</li>
+                        <li><strong>Learning reviews:</strong> Analyze what worked and what didn't after releases</li>
+                    </ul>
+                </div>
+                
+                <div class="technique">
+                    <h4>Performance Champions</h4>
+                    <p>Designate team members to advocate for performance:</p>
+                    <ul>
+                        <li><strong>Expertise development:</strong> Invest in training and tools for champions</li>
+                        <li><strong>Best practice sharing:</strong> Regular knowledge sharing sessions</li>
+                        <li><strong>Recognition:</strong> Acknowledge and reward performance improvements</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="case-studies">
+          <h2>Real-World Performance Case Studies</h2>
+          
+          <p>Learning from real examples can provide valuable insights and inspiration. Here are a few case studies showcasing effective performance optimizations:</p>
+          
+          <div class="case-study">
+              <h3>E-commerce Site Optimization</h3>
+              <p><strong>Challenge:</strong> An e-commerce site was experiencing high bounce rates on product pages, particularly on mobile devices. Analysis showed that the page load time was averaging 8 seconds on 3G connections.</p>
+              
+              <p><strong>Key Optimizations:</strong></p>
+              <ul>
+                  <li><strong>Image optimization:</strong> Implemented responsive images and WebP format with JPEG fallbacks, reducing image weight by 60%</li>
+                  <li><strong>Route-based code splitting:</strong> Only loaded JavaScript needed for the current page</li>
+                  <li><strong>Critical CSS inlining:</strong> Delivered above-the-fold CSS inline and deferred the rest</li>
+                  <li><strong>Lazy loading:</strong> Implemented for product images below the fold</li>
+                  <li><strong>CDN implementation:</strong> Distributed static assets globally to reduce latency</li>
+              </ul>
+              
+              <p><strong>Results:</strong></p>
+              <ul>
+                  <li>Page load time reduced from 8 seconds to 2.5 seconds on 3G connections</li>
+                  <li>Mobile bounce rate decreased by 28%</li>
+                  <li>Conversion rate improved by 15%</li>
+              </ul>
+              
+              <div class="code-example">
+                  <h4>Key Implementation: Responsive Images with WebP</h4>
+                  <pre><code>&lt;!-- Before optimization --&gt;
+&lt;img src="product-large.jpg" alt="Product"&gt;
+
+&lt;!-- After optimization --&gt;
+&lt;picture&gt;
+&lt;source type="image/webp" 
+        srcset="product-small.webp 400w, 
+                product-medium.webp 800w, 
+                product-large.webp 1200w"
+        sizes="(max-width: 600px) 100vw, 
+               (max-width: 1200px) 50vw, 
+               33vw"&gt;
+&lt;source type="image/jpeg" 
+        srcset="product-small.jpg 400w, 
+                product-medium.jpg 800w, 
+                product-large.jpg 1200w"
+        sizes="(max-width: 600px) 100vw, 
+               (max-width: 1200px) 50vw, 
+               33vw"&gt;
+&lt;img src="product-medium.jpg" alt="Product" 
+     loading="lazy" 
+     width="800" height="600"&gt;
+&lt;/picture&gt;</code></pre>
+              </div>
+          </div>
+          
+          <div class="case-study">
+              <h3>News Website Performance Improvement</h3>
+              <p><strong>Challenge:</strong> A news website was struggling with poor Core Web Vitals scores, particularly Largest Contentful Paint (LCP) and Cumulative Layout Shift (CLS). This was affecting both user experience and search rankings.</p>
+              
+              <p><strong>Key Optimizations:</strong></p>
+              <ul>
+                  <li><strong>Font optimization:</strong> Preloaded custom fonts and used font-display: swap</li>
+                  <li><strong>Layout stability:</strong> Set explicit dimensions for all ads, embeds, and images</li>
+                  <li><strong>Resource prioritization:</strong> Used resource hints (preconnect, preload) for critical resources</li>
+                  <li><strong>JavaScript optimization:</strong> Deferred non-critical scripts and reduced third-party impact</li>
+                  <li><strong>Server optimization:</strong> Improved TTFB with server-side caching and database query optimization</li>
+              </ul>
+              
+              <p><strong>Results:</strong></p>
+              <ul>
+                  <li>LCP improved from 4.2s to 1.9s</li>
+                  <li>CLS reduced from 0.25 to 0.05</li>
+                  <li>Pages passing Core Web Vitals increased from 22% to 87%</li>
+                  <li>User engagement (time on site) increased by 17%</li>
+              </ul>
+              
+              <div class="code-example">
+                  <h4>Key Implementation: Preventing Layout Shifts</h4>
+                  <pre><code>&lt;!-- Before - ad causing layout shift --&gt;
+&lt;div class="ad-container"&gt;
+&lt;!-- Ad script inserts content here --&gt;
+&lt;/div&gt;
+
+&lt;!-- After - reserved space prevents layout shift --&gt;
+&lt;div class="ad-container" style="min-height: 250px; min-width: 300px;"&gt;
+&lt;!-- Ad script inserts content here --&gt;
+&lt;/div&gt;
+
+/* CSS for images to prevent layout shifts */
+.article-image {
+aspect-ratio: 16 / 9;
+width: 100%;
+background-color: #f0f0f0; /* Placeholder color */
+}
+
+/* CSS for web fonts to prevent layout shifts */
+html {
+font-display: optional; /* Or use swap if necessary */
+}
+
+/* Ensure consistent spacing even before custom fonts load */
+body {
+font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 
+             Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}</code></pre>
+              </div>
+          </div>
+          
+          <div class="case-study">
+              <h3>Single Page Application (SPA) Optimization</h3>
+              <p><strong>Challenge:</strong> A React-based dashboard application was taking over 6 seconds to become interactive, leading to poor user experience, especially for users with slower devices.</p>
+              
+              <p><strong>Key Optimizations:</strong></p>
+              <ul>
+                  <li><strong>Bundle analysis and reduction:</strong> Identified and removed unused dependencies</li>
+                  <li><strong>Component-level code splitting:</strong> Loaded components on demand</li>
+                  <li><strong>Server-side rendering (SSR):</strong> Implemented initial server rendering for faster First Contentful Paint</li>
+                  <li><strong>Runtime performance:</strong> Optimized React rendering with memoization and virtualizing long lists</li>
+                  <li><strong>Progressive enhancement:</strong> Showed usable content before JavaScript loaded completely</li>
+              </ul>
+              
+              <p><strong>Results:</strong></p>
+              <ul>
+                  <li>Time to Interactive reduced from 6.2s to 2.3s</li>
+                  <li>JavaScript bundle size reduced by 45%</li>
+                  <li>CPU usage during interaction reduced by 30%</li>
+                  <li>User-reported satisfaction increased by 40%</li>
+              </ul>
+              
+              <div class="code-example">
+                  <h4>Key Implementation: Component-Level Code Splitting</h4>
+                  <pre><code>// Before optimization - importing everything upfront
+import Dashboard from './components/Dashboard';
+import Reports from './components/Reports';
+import Analytics from './components/Analytics';
+import Settings from './components/Settings';
+
+// After optimization - dynamic imports
+import React, { lazy, Suspense } from 'react';
+
+// Only the initial route component is loaded eagerly
+import Dashboard from './components/Dashboard';
+
+// Other components are loaded on demand
+const Reports = lazy(() => import('./components/Reports'));
+const Analytics = lazy(() => import('./components/Analytics'));
+const Settings = lazy(() => import('./components/Settings'));
+
+function App() {
+return (
+  &lt;Router&gt;
+    &lt;Suspense fallback={&lt;div&gt;Loading...&lt;/div&gt;}&gt;
+      &lt;Switch&gt;
+        &lt;Route path="/" exact component={Dashboard} /&gt;
+        &lt;Route path="/reports" component={Reports} /&gt;
+        &lt;Route path="/analytics" component={Analytics} /&gt;
+        &lt;Route path="/settings" component={Settings} /&gt;
+      &lt;/Switch&gt;
+    &lt;/Suspense&gt;
+  &lt;/Router&gt;
+);
+}</code></pre>
+              </div>
+          </div>
+      </section>
+
+      <section class="performance-checklist">
+          <h2>Web Performance Checklist</h2>
+          
+          <p>Use this comprehensive checklist to evaluate and improve the performance of your web applications. This can serve as a guide during development or as an audit tool for existing projects.</p>
+          
+          <div class="checklist-section">
+              <h3>Initial Loading Performance</h3>
+              <div class="checklist">
+                  <h4>Resource Optimization</h4>
+                  <ul>
+                      <li>☐ <strong>Minify and compress</strong> HTML, CSS, and JavaScript</li>
+                      <li>☐ <strong>Optimize images</strong> using modern formats and proper sizing</li>
+                      <li>☐ <strong>Implement responsive images</strong> with srcset and sizes</li>
+                      <li>☐ <strong>Use lazy loading</strong> for below-the-fold images and iframes</li>
+                      <li>☐ <strong>Optimize fonts</strong> with proper format selection and font-display</li>
+                      <li>☐ <strong>Remove unused CSS and JavaScript</strong> from the bundle</li>
+                  </ul>
+                  
+                  <h4>Critical Rendering Path</h4>
+                  <ul>
+                      <li>☐ <strong>Minimize render-blocking resources</strong> by deferring or asynchronously loading non-critical scripts</li>
+                      <li>☐ <strong>Inline critical CSS</strong> for above-the-fold content</li>
+                      <li>☐ <strong>Use server-side rendering</strong> or pre-rendering where appropriate</li>
+                      <li>☐ <strong>Implement resource hints</strong> (preload, preconnect, prefetch) for critical resources</li>
+                      <li>☐ <strong>Ensure efficient order of loading</strong> for critical resources</li>
+                  </ul>
+                  
+                  <h4>Delivery Optimization</h4>
+                  <ul>
+                      <li>☐ <strong>Enable compression</strong> (Gzip or Brotli) for text-based resources</li>
+                      <li>☐ <strong>Implement proper caching</strong> with appropriate headers</li>
+                      <li>☐ <strong>Use a CDN</strong> for static assets</li>
+                      <li>☐ <strong>Enable HTTP/2 or HTTP/3</strong> for multiplexing and reduced latency</li>
+                      <li>☐ <strong>Optimize server response time</strong> (TTFB)</li>
+                  </ul>
+                  
+                  <h4>JavaScript Delivery</h4>
+                  <ul>
+                      <li>☐ <strong>Split code</strong> into smaller bundles</li>
+                      <li>☐ <strong>Implement tree shaking</strong> to remove unused code</li>
+                      <li>☐ <strong>Use modern script loading attributes</strong> (async/defer) appropriately</li>
+                      <li>☐ <strong>Prioritize critical JavaScript</strong> execution</li>
+                      <li>☐ <strong>Consider module/nomodule pattern</strong> for differential serving</li>
+                  </ul>
+              </div>
+          </div>
+          
+          <div class="checklist-section">
+              <h3>Runtime Performance</h3>
+              <div class="checklist">
+                  <h4>JavaScript Efficiency</h4>
+                  <ul>
+                      <li>☐ <strong>Optimize long-running JavaScript</strong> tasks</li>
+                      <li>☐ <strong>Use Web Workers</strong> for CPU-intensive operations</li>
+                      <li>☐ <strong>Implement virtualization</strong> for long lists</li>
+                      <li>☐ <strong>Throttle and debounce</strong> event listeners appropriately</li>
+                      <li>☐ <strong>Use passive event listeners</strong> for scroll and touch events</li>
+                      <li>☐ <strong>Avoid memory leaks</strong> by cleaning up event listeners and references</li>
+                  </ul>
+                  
+                  <h4>Rendering Performance</h4>
+                  <ul>
+                      <li>☐ <strong>Minimize layout thrashing</strong> by batching DOM reads and writes</li>
+                      <li>☐ <strong>Use CSS transforms and opacity</strong> for animations</li>
+                      <li>☐ <strong>Avoid forced synchronous layouts</strong></li>
+                      <li>☐ <strong>Use requestAnimationFrame</strong> for visual updates</li>
+                      <li>☐ <strong>Reduce paint complexity</strong> and paint areas</li>
+                      <li>☐ <strong>Use will-change</strong> appropriately (but sparingly)</li>
+                  </ul>
+                  
+                  <h4>Layout Stability</h4>
+                  <ul>
+                      <li>☐ <strong>Set explicit dimensions</strong> for images and media</li>
+                      <li>☐ <strong>Reserve space for dynamic content</strong> like ads and embeds</li>
+                      <li>☐ <strong>Avoid inserting content above existing content</strong></li>
+                      <li>☐ <strong>Use transform animations</strong> instead of animating properties that trigger layout</li>
+                  </ul>
+              </div>
+          </div>
+          
+          <div class="checklist-section">
+              <h3>Performance Monitoring</h3>
+              <div class="checklist">
+                  <h4>Metrics and Measurement</h4>
+                  <ul>
+                      <li>☐ <strong>Track Core Web Vitals</strong> (LCP, FID, CLS)</li>
+                      <li>☐ <strong>Implement Real User Monitoring</strong> (RUM) for field data</li>
+                      <li>☐ <strong>Set up synthetic testing</strong> for lab data</li>
+                      <li>☐ <strong>Create performance dashboards</strong> for visibility</li>
+                      <li>☐ <strong>Establish performance budgets</strong> and enforce them</li>
+                  </ul>
+                  
+                  <h4>Continuous Improvement</h4>
+                  <ul>
+                      <li>☐ <strong>Include performance testing</strong> in CI/CD pipeline</li>
+                      <li>☐ <strong>Set up performance regression alerts</strong></li>
+                      <li>☐ <strong>Review performance metrics</strong> regularly</li>
+                      <li>☐ <strong>Conduct performance audits</strong> before major releases</li>
+                      <li>☐ <strong>Foster a performance culture</strong> within the development team</li>
+                  </ul>
+              </div>
+          </div>
+      </section>
+
+      <section class="mobile-first">
+          <h2>Mobile-First Performance Strategy</h2>
+          
+          <p>With mobile traffic dominating for many websites, a mobile-first approach to performance is essential. This means optimizing for mobile constraints first, then enhancing the experience for more capable devices and connections.</p>
+          
+          <div class="strategy">
+              <h3>Understanding Mobile Constraints</h3>
+              <p>Mobile devices face unique challenges:</p>
+              <ul>
+                  <li><strong>Network variability:</strong> Mobile connections can range from fast 5G to spotty 2G or worse</li>
+                  <li><strong>CPU limitations:</strong> Mobile processors are typically less powerful than desktop CPUs</li>
+                  <li><strong>Memory constraints:</strong> Less RAM means more aggressive background tab handling</li>
+                  <li><strong>Battery concerns:</strong> Performance-intensive websites drain batteries faster</li>
+                  <li><strong>Input methods:</strong> Touch interfaces have different interaction patterns than mouse/keyboard</li>
+              </ul>
+          </div>
+          
+          <div class="technique">
+              <h3>Progressive Enhancement</h3>
+              <p>Start with a minimal but functional experience, then enhance it for more capable devices:</p>
+              <div class="code-example">
+                  <pre><code>/* Base styles for all devices */
+.card {
+padding: 1rem;
+margin-bottom: 1rem;
+background-color: #fff;
+border: 1px solid #ddd;
+}
+
+/* Enhanced styles for devices with hover capability */
+@media (hover: hover) {
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+}
+
+/* Enhanced styles for larger screens with more capabilities */
+@media (min-width: 768px) and (min-resolution: 2dppx) {
+.card {
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+}</code></pre>
+              </div>
+          </div>
+          
+          <div class="technique">
+              <h3>Adaptive Loading</h3>
+              <p>Adjust the experience based on the user's device capabilities and network conditions:</p>
+              <div class="code-example">
+                  <pre><code>// Detect network conditions and capabilities
+function getExperienceLevel() {
+// Start with the assumption of a constrained experience
+let level = 'lite';
+
+// Check for device memory
+if (navigator.deviceMemory > 4) {
+  level = 'medium';
+}
+
+// Check for network conditions
+if (navigator.connection) {
+  const connection = navigator.connection;
+  
+  // Low data mode
+  if (connection.saveData) {
+    return 'lite'; // Override with lite experience
+  }
+  
+  // Fast connection
+  if (connection.effectiveType === '4g' && !connection.saveData) {
+    level = level === 'medium' ? 'full' : 'medium';
+  }
+}
+
+return level;
+}
+
+// Adjust the experience based on capabilities
+function loadAppropriateExperience() {
+const experienceLevel = getExperienceLevel();
+
+switch (experienceLevel) {
+  case 'lite':
+    // Load minimal assets
+    loadLiteAssets();
+    break;
+  case 'medium':
+    // Load standard assets
+    loadMediumAssets();
+    break;
+  case 'full':
+    // Load enhanced assets
+    loadFullAssets();
+    break;
+}
+}
+
+// Example implementations
+function loadLiteAssets() {
+// Load low-resolution images
+document.querySelectorAll('[data-src-lite]').forEach(img => {
+  img.src = img.getAttribute('data-src-lite');
+});
+
+// Load essential scripts only
+import('./essential.js');
+}
+
+function loadMediumAssets() {
+// Load standard resolution images
+document.querySelectorAll('[data-src-medium]').forEach(img => {
+  img.src = img.getAttribute('data-src-medium');
+});
+
+// Load standard features
+import('./essential.js').then(() => import('./standard.js'));
+}
+
+function loadFullAssets() {
+// Load high-resolution images
+document.querySelectorAll('[data-src-full]').forEach(img => {
+  img.src = img.getAttribute('data-src-full');
+});
+
+// Load all features
+import('./essential.js')
+  .then(() => import('./standard.js'))
+  .then(() => import('./enhanced.js'));
+}</code></pre>
+              </div>
+          </div>
+          
+          <div class="technique">
+              <h3>Offline Support with Service Workers</h3>
+              <p>Service workers enable offline functionality and can significantly improve perceived performance:</p>
+              <div class="code-example">
+                  <pre><code>// Register a service worker
+if ('serviceWorker' in navigator) {
+window.addEventListener('load', () => {
+  navigator.serviceWorker.register('/sw.js')
+    .then(registration => {
+      console.log('ServiceWorker registered:', registration.scope);
+    })
+    .catch(error => {
+      console.error('ServiceWorker registration failed:', error);
+    });
+});
+}
+
+// In sw.js (Service Worker file)
+const CACHE_NAME = 'v1-cache';
+const URLS_TO_CACHE = [
+'/',
+'/index.html',
+'/styles/main.css',
+'/scripts/main.js',
+'/offline.html',
+'/images/logo.svg'
+];
+
+// Install event - cache critical assets
+self.addEventListener('install', event => {
+event.waitUntil(
+  caches.open(CACHE_NAME)
+    .then(cache => {
+      return cache.addAll(URLS_TO_CACHE);
+    })
+);
+});
+
+// Fetch event - serve from cache or network
+self.addEventListener('fetch', event => {
+event.respondWith(
+  caches.match(event.request)
+    .then(response => {
+      // Cache hit - return the response from cache
+      if (response) {
+        return response;
+      }
+      
+      // No cache match - fetch from network
+      return fetch(event.request)
+        .then(response => {
+          // Check if we received a valid response
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
+          
+          // Clone the response as it can only be used once
+          const responseToCache = response.clone();
+          
+          // Open the cache and store the response
+          caches.open(CACHE_NAME)
+            .then(cache => {
+              cache.put(event.request, responseToCache);
+            });
+          
+          return response;
+        })
+        .catch(() => {
+          // Network failed - serve offline page for HTML requests
+          if (event.request.mode === 'navigate') {
+            return caches.match('/offline.html');
+          }
+        });
+    })
+);
+});</code></pre>
+              </div>
+          </div>
+          
+          <div class="technique">
+              <h3>Touch Optimization</h3>
+              <p>Optimize for touch interactions to improve perceived performance:</p>
+              <ul>
+                  <li><strong>Make touch targets at least 44×44 pixels</strong> for easy interaction</li>
+                  <li><strong>Implement 'instant' visual feedback</strong> for touch actions</li>
+                  <li><strong>Minimize touch delay</strong> by avoiding unnecessary event listeners</li>
+                  <li><strong>Ensure smooth scrolling</strong> with optimized event handlers</li>
+              </ul>
+              <div class="code-example">
+                  <pre><code>/* CSS for touch-friendly targets */
+.button {
+min-width: 44px;
+min-height: 44px;
+padding: 12px 16px;
+/* Visual padding can be smaller than the actual touch target */
+}
+
+/* CSS for instant touch feedback */
+.button {
+transition: background-color 0.1s;
+}
+
+.button:active {
+background-color: #e0e0e0;
+/* Fast transition for active state */
+}
+
+/* JavaScript for smoother scrolling */
+// Use passive listeners for scroll events
+document.addEventListener('scroll', function() {
+// Scroll handling code
+}, { passive: true });</code></pre>
+              </div>
+          </div>
+      </section>
+
+      <section class="future-trends">
+          <h2>Future Trends in Web Performance</h2>
+          
+          <p>The web performance landscape continually evolves. Here are some trends to watch and prepare for:</p>
+          
+          <div class="trend">
+              <h3>Core Web Vitals Evolution</h3>
+              <p>Google's Core Web Vitals will continue to evolve, with new metrics focusing on different aspects of user experience:</p>
+              <ul>
+                  <li><strong>Interaction to Next Paint (INP):</strong> Measures overall responsiveness to user interactions</li>
+                  <li><strong>Smoothness:</strong> Measures animation and scrolling fluidity</li>
+                  <li><strong>Visibility metrics:</strong> Focusing on actual visibility of content to users</li>
+              </ul>
+              <p>Staying ahead means preparing your site for these metrics before they become ranking factors.</p>
+          </div>
+          
+          <div class="trend">
+              <h3>Machine Learning for Performance Optimization</h3>
+              <p>ML and AI are becoming more prevalent in performance optimization:</p>
+              <ul>
+                  <li><strong>Predictive preloading:</strong> ML models that predict which resources a user will need next</li>
+                  <li><strong>Adaptive delivery:</strong> Automatically optimizing content based on device, network, and user patterns</li>
+                  <li><strong>Intelligent caching:</strong> Beyond simple rules to learning-based caching strategies</li>
+              </ul>
+          </div>
+          
+          <div class="trend">
+              <h3>WebAssembly Adoption</h3>
+              <p>WebAssembly (Wasm) enables near-native performance for CPU-intensive tasks:</p>
+              <ul>
+                  <li><strong>Image and video processing</strong> on the client side</li>
+                  <li><strong>Complex calculations</strong> and simulations</li>
+                  <li><strong>Games and interactive applications</strong> with high performance requirements</li>
+                  <li><strong>Porting existing C/C++/Rust applications</strong> to the web</li>
+              </ul>
+              <div class="code-example">
+                  <pre><code>// Loading and using a WebAssembly module
+async function loadWasmModule() {
+try {
+  // Fetch and instantiate the WebAssembly module
+  const response = await fetch('image_processing.wasm');
+  const bytes = await response.arrayBuffer();
+  const { instance } = await WebAssembly.instantiate(bytes);
+  
+  // Access the exported functions
+  const { grayscale, blur, sharpen } = instance.exports;
+  
+  // Example: Process an image with WebAssembly
+  function processImage(imageData) {
+    // Get raw pixel data
+    const pixels = new Uint8Array(imageData.data.buffer);
+    
+    // Call WebAssembly function for image processing
+    // This will be much faster than JavaScript equivalent
+    grayscale(pixels.byteOffset, pixels.length);
+    
+    return imageData;
+  }
+  
+  return {
+    processImage
+  };
+} catch (err) {
+  console.error('WebAssembly module loading failed:', err);
+  
+  // Fallback to JavaScript implementation
+  return {
+    processImage: processImageJS
+  };
+}
+}</code></pre>
+              </div>
+          </div>
+          
+          <div class="trend">
+              <h3>New Browser APIs and Capabilities</h3>
+              <p>Emerging APIs will enable new optimization strategies:</p>
+              <ul>
+                  <li><strong>Portals:</strong> For seamless navigations with iframe-like previews</li>
+                  <li><strong>Scheduler API:</strong> For more granular control over task scheduling</li>
+                  <li><strong>Display Locking:</strong> To prevent rendering of off-screen content</li>
+                  <li><strong>Lazy loading for iframes and JavaScript modules:</strong> To defer loading non-critical resources</li>
+              </ul>
+              <div class="code-example">
+                  <pre><code>// Example of the Scheduler API (proposed)
+scheduler.postTask(() => {
+// Non-urgent work here
+}, { 
+priority: 'background',
+delay: 0 
+});
+
+// Example of Portals API for seamless navigation (experimental)
+// Create a portal to the target page
+const portal = document.createElement('portal');
+portal.src = 'https://example.com/next-page';
+document.body.appendChild(portal);
+
+// When ready to navigate, activate the portal
+someButton.addEventListener('click', () => {
+portal.activate().then(() => {
+  console.log('Navigation completed');
+});
+});</code></pre>
+              </div>
+          </div>
+          
+          <div class="trend">
+              <h3>Edge Computing</h3>
+              <p>Moving computation closer to the user through edge functions and CDN-integrated computing:</p>
+              <ul>
+                  <li><strong>Dynamic edge caching:</strong> Tailoring cached content at the edge</li>
+                  <li><strong>Personalization at the edge:</strong> Customizing content without round-trips to origin servers</li>
+                  <li><strong>Edge rendering:</strong> Server-side rendering at edge locations for faster delivery</li>
+              </ul>
+          </div>
+      </section>
+
+      <section class="practical-exercise">
+          <h2>Practical Exercise: Performance Audit and Optimization</h2>
+          
+          <p>Let's apply what we've learned with a hands-on exercise. In this exercise, you'll audit a web page for performance issues and implement optimizations to improve its speed and user experience.</p>
+          
+          <div class="exercise-steps">
+              <h3>Step 1: Initial Performance Analysis</h3>
+              <ol>
+                  <li>Choose a web page to optimize (your own project or a sample page)</li>
+                  <li>Run a Lighthouse audit in Chrome DevTools (Lighthouse tab)</li>
+                  <li>Note the key performance metrics and opportunities for improvement</li>
+                  <li>Use the Network panel to identify slow-loading resources</li>
+                  <li>Use the Performance panel to identify JavaScript and rendering bottlenecks</li>
+              </ol>
+          </div>
+          
+          <div class="exercise-steps">
+              <h3>Step 2: Create a Performance Improvement Plan</h3>
+              <p>Based on your analysis, create a prioritized list of optimizations to implement. Focus on:</p>
+              <ol>
+                  <li>Quick wins with high impact</li>
+                  <li>Critical rendering path optimizations</li>
+                  <li>Resource optimizations (images, scripts, styles)</li>
+                  <li>Runtime performance improvements</li>
+              </ol>
+          </div>
+          
+          <div class="exercise-steps">
+              <h3>Step 3: Implement Optimizations</h3>
+              <p>Implement the planned optimizations. Here are some examples:</p>
+              
+              <div class="optimization-example">
+                  <h4>Image Optimization</h4>
+                  <pre><code>&lt;!-- Before --&gt;
+&lt;img src="large-image.jpg" alt="Description"&gt;
+
+&lt;!-- After --&gt;
+&lt;img src="large-image.jpg" 
+   srcset="small-image.jpg 400w, medium-image.jpg 800w, large-image.jpg 1200w" 
+   sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw" 
+   alt="Description" 
+   loading="lazy" 
+   width="800" 
+   height="600"&gt;</code></pre>
+              </div>
+              
+              <div class="optimization-example">
+                  <h4>Critical CSS Extraction</h4>
+                  <pre><code>&lt;!-- Before --&gt;
+&lt;link rel="stylesheet" href="styles.css"&gt;
+
+&lt;!-- After --&gt;
+&lt;style&gt;
+/* Critical CSS inlined */
+body { font-family: sans-serif; margin: 0; }
+.header { background: #f5f5f5; padding: 1rem; }
+.hero { height: 50vh; background: linear-gradient(#1a2a6c, #b21f1f); color: white; display: flex; align-items: center; justify-content: center; }
+/* End critical CSS */
+&lt;/style&gt;
+
+&lt;!-- Defer non-critical CSS --&gt;
+&lt;link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'"&gt;
+&lt;noscript&gt;&lt;link rel="stylesheet" href="styles.css"&gt;&lt;/noscript&gt;</code></pre>
+              </div>
+              
+              <div class="optimization-example">
+                  <h4>JavaScript Optimization</h4>
+                  <pre><code>&lt;!-- Before --&gt;
+&lt;script src="app.js"&gt;&lt;/script&gt;
+
+&lt;!-- After --&gt;
+&lt;script src="critical.js"&gt;&lt;/script&gt;
+&lt;script src="app.js" defer&gt;&lt;/script&gt;
+
+// In app.js - use dynamic imports for non-critical features
+document.getElementById('feature-button').addEventListener('click', async () => {
+const { initFeature } = await import('./feature.js');
+initFeature();
+});</code></pre>
+              </div>
+          </div>
+          
+          <div class="exercise-steps">
+              <h3>Step 4: Measure Improvement</h3>
+              <ol>
+                  <li>Run another Lighthouse audit after implementing your optimizations</li>
+                  <li>Compare before and after metrics</li>
+                  <li>Identify remaining opportunities for improvement</li>
+                  <li>Document what worked best and what didn't make a significant difference</li>
+              </ol>
+          </div>
+          
+          <div class="exercise-steps">
+              <h3>Step 5: Advanced Optimizations</h3>
+              <p>If time permits, implement more advanced optimizations:</p>
+              <ul>
+                  <li>Set up a simple service worker for caching</li>
+                  <li>Implement resource hints (preconnect, preload) for critical resources</li>
+                  <li>Add performance monitoring with the Performance API</li>
+                  <li>Optimize third-party script loading</li>
+              </ul>
+              
+              <div class="optimization-example">
+                  <h4>Simple Performance Monitoring</h4>
+                  <pre><code>// Add to your main JavaScript file
+window.addEventListener('load', () => {
+// Wait for all resources to finish loading
+setTimeout(() => {
+  // Get performance metrics
+  const perfEntries = performance.getEntriesByType('navigation')[0];
+  const paintEntries = performance.getEntriesByType('paint');
+  
+  // Calculate key metrics
+  const metrics = {
+    // Time to First Byte (TTFB)
+    ttfb: perfEntries.responseStart - perfEntries.requestStart,
+    
+    // DOM Content Loaded
+    domContentLoaded: perfEntries.domContentLoadedEventEnd - perfEntries.startTime,
+    
+    // Load Time
+    loadTime: perfEntries.loadEventEnd - perfEntries.startTime,
+    
+    // First Paint
+    firstPaint: findMetric(paintEntries, 'first-paint'),
+    
+    // First Contentful Paint
+    firstContentfulPaint: findMetric(paintEntries, 'first-contentful-paint')
+  };
+  
+  // Log metrics
+  console.table(metrics);
+  
+  // Send to analytics if needed
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon('/analytics', JSON.stringify(metrics));
+  }
+}, 0);
+});
+
+function findMetric(entries, name) {
+const entry = entries.find(entry => entry.name === name);
+return entry ? entry.startTime : 0;
+}</code></pre>
+              </div>
+          </div>
+      </section>
+
+      <section class="conclusion">
+          <h2>Conclusion</h2>
+          
+          <p>Web performance is a cornerstone of exceptional user experience. By understanding the principles, measuring the right metrics, and implementing appropriate optimizations, you can create web applications that load quickly, respond immediately, and provide a smooth experience across all devices and networks.</p>
+          
+          <div class="key-takeaways">
+              <h3>Key Takeaways</h3>
+              <ul>
+                  <li><strong>Performance matters</strong> for user experience, business metrics, and SEO</li>
+                  <li><strong>Measure before optimizing</strong> to identify the most impactful improvements</li>
+                  <li><strong>Focus on the critical rendering path</strong> to improve perceived performance</li>
+                  <li><strong>Optimize resource loading</strong> with proper sizing, formats, and delivery strategies</li>
+                  <li><strong>Consider all users</strong>, especially those on mobile and slow connections</li>
+                  <li><strong>Establish a performance culture</strong> with ongoing monitoring and maintenance</li>
+              </ul>
+          </div>
+          
+          <div class="continuing-education">
+              <h3>Continuing Your Performance Journey</h3>
+              <p>Web performance is a deep field with much to explore. Here are resources to continue your learning:</p>
+              <ul>
+                  <li><a href="https://web.dev/performance-how-to/" target="_blank">web.dev Performance Guides</a></li>
+                  <li><a href="https://developers.google.com/web/fundamentals/performance/get-started" target="_blank">Google Web Fundamentals: Performance</a></li>
+                  <li><a href="https://www.webpagetest.org/learn/" target="_blank">WebPageTest Learning Resources</a></li>
+                  <li><a href="https://frontendmasters.com/courses/web-performance/" target="_blank">Frontend Masters: Web Performance Courses</a></li>
+                  <li><a href="https://developer.mozilla.org/en-US/docs/Web/Performance" target="_blank">MDN Web Performance Resources</a></li>
+              </ul>
+          </div>
+          
+          <p>Remember, performance optimization is a continuous process, not a one-time task. As web technologies evolve and user expectations increase, the pursuit of better performance will remain a worthy investment of your time and effort. The skills you've learned in this session form a foundation that will serve you well throughout your career as a web developer.</p>
+      </section>
+  </main>
+
+  <footer>
+      <p>&copy; 2025 Python Full Stack Developer Course</p>
+  </footer>
+</body>
+</html>

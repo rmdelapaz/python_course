@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dockerizing a Frontend Environment | Web Fundamentals</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" href="/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Dockerizing a Frontend Environment</h1>
+        <p>Week 4: Web Fundamentals - Friday Afternoon Session</p>
+    </header>
+
+    <main>
+        <section class="intro">
+            <h2>Introduction to Dockerizing Frontend Applications</h2>
+            <p>When we think about containerization with Docker, backend services often come to mind first. However, containerizing frontend applications offers equally powerful benefits for development, testing, and deployment workflows. Today, we'll explore how to effectively dockerize a frontend environment.</p>
+            
+            <p>Think of a dockerized frontend environment as a portable art studio. Just as an artist can set up their portable studio with the exact brushes, paints, and canvas they need to create consistent work anywhere, a dockerized frontend ensures that your development environment is consistent across all developers' machines and deployment targets.</p>
+            
+            <div class="key-points">
+                <h3>In this session, you'll learn:</h3>
+                <ul>
+                    <li>Why containerizing frontend applications is valuable</li>
+                    <li>How to create efficient Docker images for frontend development</li>
+                    <li>Techniques for optimizing the development experience with Docker</li>
+                    <li>Building multi-stage production images for frontend deployment</li>
+                    <li>Integrating with containerized backend services</li>
+                    <li>Common challenges and best practices</li>
+                </ul>
+            </div>
+            
+            <div class="prerequisites">
+                <h3>Prerequisites</h3>
+                <p>To follow along with this session, you should have:</p>
+                <ul>
+                    <li>Basic understanding of Docker concepts (covered in Week 1)</li>
+                    <li>Knowledge of frontend development with HTML, CSS, and JavaScript</li>
+                    <li>Docker and Docker Compose installed on your machine</li>
+                    <li>A code editor (VS Code recommended)</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="benefits">
+            <h2>Benefits of Dockerizing Frontend Applications</h2>
+            
+            <p>Containerizing frontend environments offers numerous advantages for both development teams and deployment pipelines. Let's explore why you might want to dockerize your frontend applications:</p>
+            
+            <div class="benefit">
+                <h3>Consistent Development Environment</h3>
+                <p>One of the most common development frustrations is the "it works on my machine" syndrome. With dockerized frontends, every developer works with identical dependencies, Node.js versions, and tools, eliminating environment-specific bugs.</p>
+                <p><strong>Real-world scenario:</strong> A team has developers using Windows, macOS, and Linux. Without Docker, each developer might have slightly different versions of Node.js, npm packages, or environment variables, leading to inconsistent behavior. With Docker, the development environment is identical regardless of the host OS.</p>
+            </div>
+            
+            <div class="benefit">
+                <h3>Simplified Onboarding</h3>
+                <p>New team members can get up and running with a single command, without having to follow lengthy setup instructions or install specific versions of tools locally.</p>
+                <p><strong>Real-world scenario:</strong> A new developer joins your team. Instead of spending a day configuring their local environment, they simply clone the repository, run <code>docker-compose up</code>, and are ready to contribute within minutes.</p>
+            </div>
+            
+            <div class="benefit">
+                <h3>Isolation from Host System</h3>
+                <p>Containerization creates a clear boundary between your development environment and your local system, preventing conflicts with other projects or system-wide dependencies.</p>
+                <p><strong>Real-world scenario:</strong> You're working on multiple projects simultaneously, each requiring different versions of Node.js and global npm packages. Docker containers isolate each project, allowing them to use different versions without interference.</p>
+            </div>
+            
+            <div class="benefit">
+                <h3>Production Parity</h3>
+                <p>Using Docker in development creates an environment that more closely resembles production, reducing "works in development but fails in production" issues.</p>
+                <p><strong>Real-world scenario:</strong> Your production environment uses Nginx to serve static assets. By using the same Nginx configuration in development, you can catch path issues, CORS problems, or performance bottlenecks before they reach production.</p>
+            </div>
+            
+            <div class="benefit">
+                <h3>Simplified CI/CD Integration</h3>
+                <p>Since your application already runs in containers, it's much easier to integrate with CI/CD pipelines that also use containerization.</p>
+                <p><strong>Real-world scenario:</strong> Your CI system can use the same Docker image used in development to run tests, ensuring that tests run in the same environment where the code was developed. The CD pipeline can then build a production-optimized image for deployment.</p>
+            </div>
+            
+            <div class="benefit">
+                <h3>Better Team Collaboration</h3>
+                <p>Dockerizing your frontend ensures that all team members, including backend developers who might need to run the frontend occasionally, can do so without fighting with setup issues.</p>
+                <p><strong>Real-world scenario:</strong> Backend developers working on API endpoints can easily spin up the frontend in a container to test their endpoints without needing to understand frontend build tools or dependencies.</p>
+            </div>
+        </section>
+
+        <section class="development-images">
+            <h2>Creating Effective Development Images</h2>
+            
+            <p>For frontend development with Docker, there are two primary approaches: development-focused images that support hot reloading and other development tools, and production-focused images optimized for performance and security. Let's start with development images.</p>
+            
+            <div class="node-based">
+                <h3>Node-Based Development Images</h3>
+                <p>Most modern frontend frameworks (React, Vue, Angular, etc.) use Node.js for development servers with features like hot reloading. A Node-based development image provides these capabilities within a container.</p>
+                
+                <div class="dockerfile">
+                    <h4>Basic Development Dockerfile</h4>
+                    <pre><code># Use a specific Node.js version as the base image
+FROM node:18-alpine
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy package.json and package-lock.json to the working directory
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the application code
+COPY . .
+
+# Expose the port the development server runs on
+EXPOSE 3000
+
+# Command to start the development server
+CMD ["npm", "start"]</code></pre>
+                    
+                    <p>Let's break down this Dockerfile:</p>
+                    <ul>
+                        <li><code>FROM node:18-alpine</code>: Uses the lightweight Alpine-based Node.js image</li>
+                        <li><code>WORKDIR /app</code>: Sets a dedicated directory for your application</li>
+                        <li><code>COPY package*.json ./</code>: Copies only the package files first to leverage Docker's caching</li>
+                        <li><code>RUN npm install</code>: Installs dependencies</li>
+                        <li><code>COPY . .</code>: Copies the remaining application code</li>
+                        <li><code>EXPOSE 3000</code>: Documents that the application uses port 3000</li>
+                        <li><code>CMD ["npm", "start"]</code>: Specifies the command to run when the container starts</li>
+                    </ul>
+                </div>
+                
+                <div class="volume-mounting">
+                    <h4>Volume Mounting for Development</h4>
+                    <p>For development, you'll want to use volume mounting to reflect code changes immediately in the container without rebuilding the image. This can be done using Docker Compose:</p>
+                    
+                    <pre><code># docker-compose.yml
+version: '3'
+
+services:
+  frontend:
+    build: .
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - NODE_ENV=development</code></pre>
+                    
+                    <p>Key points about this configuration:</p>
+                    <ul>
+                        <li><code>./:/app</code>: Mounts your local directory to /app in the container</li>
+                        <li><code>/app/node_modules</code>: Creates an anonymous volume for node_modules to prevent it from being overwritten by the mount</li>
+                        <li><code>"3000:3000"</code>: Maps port 3000 from the container to port 3000 on your host</li>
+                        <li><code>CHOKIDAR_USEPOLLING=true</code>: Enables file watching in certain environments where inotify doesn't work properly</li>
+                    </ul>
+                </div>
+                
+                <div class="framework-examples">
+                    <h4>Framework-Specific Examples</h4>
+                    
+                    <div class="react">
+                        <h5>React (Create React App)</h5>
+                        <pre><code># Dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
+
+# docker-compose.yml
+version: '3'
+
+services:
+  react-app:
+    build: .
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      - FAST_REFRESH=true</code></pre>
+                    </div>
+                    
+                    <div class="vue">
+                        <h5>Vue.js (Vue CLI)</h5>
+                        <pre><code># Dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 8080
+
+CMD ["npm", "run", "serve"]
+
+# docker-compose.yml
+version: '3'
+
+services:
+  vue-app:
+    build: .
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "8080:8080"
+    environment:
+      - CHOKIDAR_USEPOLLING=true</code></pre>
+                    </div>
+                    
+                    <div class="angular">
+                        <h5>Angular</h5>
+                        <pre><code># Dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 4200
+
+# Add host option to allow access from outside the container
+CMD ["npm", "run", "start", "--", "--host", "0.0.0.0"]
+
+# docker-compose.yml
+version: '3'
+
+services:
+  angular-app:
+    build: .
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "4200:4200"
+    environment:
+      - CHOKIDAR_USEPOLLING=true</code></pre>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="performance-tips">
+                <h3>Optimizing Development Performance</h3>
+                <p>Docker containers can sometimes be slower than local development, especially on non-Linux hosts. Here are some tips to improve performance:</p>
+                
+                <div class="tip">
+                    <h4>Use Bind Mounts Selectively</h4>
+                    <p>Instead of mounting the entire project directory, consider mounting only the specific directories that contain source files:</p>
+                    <pre><code>volumes:
+  - ./src:/app/src
+  - ./public:/app/public
+  - ./package.json:/app/package.json
+  - /app/node_modules</code></pre>
+                </div>
+                
+                <div class="tip">
+                    <h4>Leverage Docker's Build Cache</h4>
+                    <p>Structure your Dockerfile to take advantage of layer caching:</p>
+                    <pre><code># Copy only files needed for installation first
+COPY package.json package-lock.json ./
+
+# Install dependencies - this layer will be cached unless the package files change
+RUN npm install
+
+# Then copy the rest of the code
+COPY . .</code></pre>
+                </div>
+                
+                <div class="tip">
+                    <h4>Use Alpine-Based Images</h4>
+                    <p>Alpine-based Node.js images are significantly smaller and start faster:</p>
+                    <pre><code>FROM node:18-alpine</code></pre>
+                    <p>However, be aware that Alpine images use musl libc instead of glibc, which might cause compatibility issues with some native modules.</p>
+                </div>
+                
+                <div class="tip">
+                    <h4>Optimize Volume Performance on macOS/Windows</h4>
+                    <p>On macOS and Windows, Docker's volume performance can be slower. Some options to improve this include:</p>
+                    <ul>
+                        <li>Using Docker's delegated or cached volume mount options</li>
+                        <li>Using docker-sync or similar tools for improved volume performance</li>
+                        <li>Considering alternatives like mutagen for specific performance-critical situations</li>
+                    </ul>
+                    <pre><code>volumes:
+  - ./src:/app/src:delegated
+  - ./public:/app/public:delegated</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="production-images">
+            <h2>Building Production-Ready Images</h2>
+            
+            <p>While development images focus on developer experience and hot reloading, production images should optimize for performance, security, and size. Multi-stage builds are perfect for this purpose.</p>
+            
+            <div class="multi-stage">
+                <h3>Multi-Stage Builds</h3>
+                <p>Multi-stage builds allow you to use one image to build your application and another to run it, resulting in a much smaller final image that contains only what's necessary for production.</p>
+                
+                <pre><code># Build stage
+FROM node:18-alpine AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+# Build the application for production
+RUN npm run build
+
+# Production stage
+FROM nginx:alpine
+
+# Copy the built assets from the build stage
+COPY --from=build /app/build /usr/share/nginx/html
+
+# Copy custom nginx config if needed
+# COPY ./nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]</code></pre>
+                
+                <p>This Dockerfile has two stages:</p>
+                <ol>
+                    <li><strong>Build stage</strong>: Uses Node.js to install dependencies and build the production-optimized bundle</li>
+                    <li><strong>Production stage</strong>: Uses Nginx to serve the static files, resulting in a much smaller image without Node.js or npm packages</li>
+                </ol>
+                
+                <p>Benefits of this approach:</p>
+                <ul>
+                    <li>Significantly smaller image size (often 10-20x smaller)</li>
+                    <li>Improved security (fewer components mean fewer potential vulnerabilities)</li>
+                    <li>Better performance (Nginx is optimized for serving static files)</li>
+                    <li>Clear separation between build tools and runtime environment</li>
+                </ul>
+            </div>
+            
+            <div class="framework-examples">
+                <h3>Framework-Specific Production Examples</h3>
+                
+                <div class="react">
+                    <h4>React (Create React App)</h4>
+                    <pre><code># Build stage
+FROM node:18-alpine AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+# Production stage
+FROM nginx:alpine
+
+COPY --from=build /app/build /usr/share/nginx/html
+
+# Optional: Add configuration for client-side routing (SPA)
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]</code></pre>
+                    
+                    <p>For React applications with client-side routing (React Router), you'll need a custom Nginx configuration to properly handle all routes:</p>
+                    
+                    <pre><code># nginx/nginx.conf
+server {
+    listen 80;
+    server_name _;
+    
+    root /usr/share/nginx/html;
+    index index.html;
+    
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+    
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000";
+    }
+}</code></pre>
+                </div>
+                
+                <div class="vue">
+                    <h4>Vue.js</h4>
+                    <pre><code># Build stage
+FROM node:18-alpine AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+# Production stage
+FROM nginx:alpine
+
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# For Vue Router in history mode
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]</code></pre>
+                    
+                    <p>Similar to React, Vue.js applications with Vue Router in history mode need a custom Nginx configuration:</p>
+                    
+                    <pre><code># nginx/nginx.conf
+server {
+    listen 80;
+    server_name _;
+    
+    root /usr/share/nginx/html;
+    index index.html;
+    
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+    
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000";
+    }
+}</code></pre>
+                </div>
+                
+                <div class="angular">
+                    <h4>Angular</h4>
+                    <pre><code># Build stage
+FROM node:18-alpine AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+RUN npm run build -- --configuration production
+
+# Production stage
+FROM nginx:alpine
+
+COPY --from=build /app/dist/[project-name] /usr/share/nginx/html
+
+# For Angular routing
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]</code></pre>
+                    
+                    <p>Note: Replace <code>[project-name]</code> with your actual Angular project name, as that's the default output directory structure for Angular builds.</p>
+                </div>
+            </div>
+            
+            <div class="optimization">
+                <h3>Additional Production Optimizations</h3>
+                
+                <div class="optimization-tip">
+                    <h4>Environment-Specific Configuration</h4>
+                    <p>Many frontend frameworks use environment variables during the build process. With Docker, you can inject these at build time:</p>
+                    <pre><code># Build with environment variables
+FROM node:18-alpine AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+# Pass environment variables at build time
+ARG API_URL
+ENV REACT_APP_API_URL=${API_URL}
+
+RUN npm run build</code></pre>
+                    <p>Then when building the image, you can pass the value:</p>
+                    <pre><code>docker build --build-arg API_URL=https://api.example.com -t my-frontend .</code></pre>
+                </div>
+                
+                <div class="optimization-tip">
+                    <h4>Security Scanning</h4>
+                    <p>Scan your production images for vulnerabilities:</p>
+                    <pre><code>docker scan my-frontend:latest</code></pre>
+                </div>
+                
+                <div class="optimization-tip">
+                    <h4>Image Size Optimization</h4>
+                    <p>Further reduce your production image size:</p>
+                    <ul>
+                        <li>Use the <code>nginx:alpine</code> base image instead of the default Nginx image</li>
+                        <li>Consider using more specialized web servers like <code>caddy</code> or <code>lighttpd</code> for even smaller images</li>
+                        <li>Remove unnecessary files from the build output before copying to the production image</li>
+                    </ul>
+                    <pre><code># Example with additional size optimization
+FROM node:18-alpine AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+# Intermediate stage to prepare files
+FROM node:18-alpine AS prepare
+
+WORKDIR /app
+
+COPY --from=build /app/build .
+
+# Remove source maps in production for reduced size and improved security
+RUN find . -name "*.map" -type f -delete
+
+# Final production stage
+FROM nginx:alpine
+
+COPY --from=prepare /app /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="integration">
+            <h2>Integration with Backend Services</h2>
+            
+            <p>In a full-stack application, you'll often need to connect your dockerized frontend with backend services. Docker Compose is perfect for orchestrating this multi-container environment.</p>
+            
+            <div class="docker-compose">
+                <h3>Full-Stack Docker Compose Setup</h3>
+                <p>Here's an example of a Docker Compose configuration for a typical full-stack application:</p>
+                
+                <pre><code># docker-compose.yml
+version: '3'
+
+services:
+  # Frontend service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+  
+  # Backend service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=app_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    depends_on:
+      - db
+  
+  # Database service
+  db:
+    image: postgres:13-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=app_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:</code></pre>
+                
+                <p>This configuration sets up three services:</p>
+                <ol>
+                    <li><strong>frontend</strong>: A React application running on port 3000</li>
+                    <li><strong>backend</strong>: A Node.js API server running on port 5000</li>
+                    <li><strong>db</strong>: A PostgreSQL database</li>
+                </ol>
+                
+                <p>Key features of this setup:</p>
+                <ul>
+                    <li>Frontend can communicate with the backend using the environment variable <code>REACT_APP_API_URL</code></li>
+                    <li>Services have defined dependencies using <code>depends_on</code></li>
+                    <li>Volume mounts enable development with hot reloading for both frontend and backend</li>
+                    <li>Database data persists between container restarts using a named volume</li>
+                </ul>
+            </div>
+            
+            <div class="api-communication">
+                <h3>Handling API Communication</h3>
+                <p>In the development environment, your frontend typically needs to communicate with your backend API. There are several approaches to handle this:</p>
+                
+                <div class="approach">
+                    <h4>Environment Variables</h4>
+                    <p>Set the API URL as an environment variable that the frontend can access:</p>
+                    <pre><code>// In React (must be prefixed with REACT_APP_)
+environment:
+  - REACT_APP_API_URL=http://localhost:5000
+
+// In Vue
+environment:
+  - VUE_APP_API_URL=http://localhost:5000
+
+// In Angular
+environment:
+  - NG_APP_API_URL=http://localhost:5000</code></pre>
+                    <p>Then in your frontend code:</p>
+                    <pre><code>// React example
+const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+fetch(`${apiUrl}/api/data`);</code></pre>
+                </div>
+                
+                <div class="approach">
+                    <h4>Proxy Configuration</h4>
+                    <p>Many frontend development servers support proxying API requests:</p>
+                    <pre><code>// For Create React App - in package.json
+{
+  "proxy": "http://backend:5000"
+}
+
+// For Vue.js - in vue.config.js
+module.exports = {
+  devServer: {
+    proxy: {
+      '/api': {
+        target: 'http://backend:5000',
+        changeOrigin: true
+      }
+    }
+  }
+}
+
+// For Angular - in proxy.conf.json
+{
+  "/api": {
+    "target": "http://backend:5000",
+    "secure": false,
+    "changeOrigin": true
+  }
+}</code></pre>
+                    <p>With this approach, requests to paths like <code>/api/users</code> from your frontend will be automatically proxied to your backend service.</p>
+                </div>
+            </div>
+            
+            <div class="internal-network">
+                <h3>Docker's Internal Networking</h3>
+                <p>One of Docker's powerful features is its internal network. Services in the same Docker Compose network can communicate using service names as hostnames:</p>
+                <pre><code>// Inside the frontend container, these are equivalent:
+fetch('http://backend:5000/api/data');
+fetch('http://localhost:5000/api/data'); // When ports are mapped</code></pre>
+                
+                <p>This internal networking is especially useful for service-to-service communication that shouldn't be exposed to the host system.</p>
+            </div>
+        </section>
+
+        <section class="common-challenges">
+            <h2>Common Challenges and Solutions</h2>
+            
+            <div class="challenge">
+                <h3>Hot Reloading Issues</h3>
+                <p>Hot reloading can sometimes be problematic in Docker containers, especially on Windows and macOS.</p>
+                
+                <div class="solution">
+                    <h4>Solution: Enable File Polling</h4>
+                    <p>Most development servers have options for file polling instead of file watchers:</p>
+                    <pre><code>// For React (Create React App)
+environment:
+  - CHOKIDAR_USEPOLLING=true
+  - WATCHPACK_POLLING=true
+
+// For Vue CLI
+environment:
+  - CHOKIDAR_USEPOLLING=true
+
+// For Angular
+environment:
+  - CHOKIDAR_USEPOLLING=true</code></pre>
+                </div>
+                
+                <div class="solution">
+                    <h4>Solution: Use Consistent Line Endings</h4>
+                    <p>Inconsistent line endings between Windows and Linux can cause issues. Configure Git to use consistent line endings:</p>
+                    <pre><code># .gitattributes
+* text=auto eol=lf</code></pre>
+                </div>
+            </div>
+            
+            <div class="challenge">
+                <h3>Slow Volume Performance</h3>
+                <p>Docker's bind mounts can be slow, especially on non-Linux hosts.</p>
+                
+                <div class="solution">
+                    <h4>Solution: Use Volume Mount Flags</h4>
+                    <pre><code>volumes:
+  - ./src:/app/src:delegated</code></pre>
+                </div>
+                
+                <div class="solution">
+                    <h4>Solution: Mount Selectively</h4>
+                    <p>Only mount the directories you need for development:</p>
+                    <pre><code>volumes:
+  - ./src:/app/src
+  - ./public:/app/public
+  - ./package.json:/app/package.json</code></pre>
+                </div>
+                
+                <div class="solution">
+                    <h4>Solution: Consider Volume Sync Tools</h4>
+                    <p>For extreme performance requirements, tools like docker-sync or mutagen can help:</p>
+                    <pre><code># Using docker-sync (first install docker-sync gem)
+# docker-sync.yml
+version: '2'
+syncs:
+  frontend-sync:
+    src: './'
+    sync_strategy: 'native_osx'
+    sync_excludes: ['node_modules', 'build', 'dist']
+
+# Then in docker-compose.yml
+services:
+  frontend:
+    volumes:
+      - frontend-sync:/app</code></pre>
+                </div>
+            </div>
+            
+            <div class="challenge">
+                <h3>Environment-Specific Configuration</h3>
+                <p>Handling different configurations for development, staging, and production environments.</p>
+                
+                <div class="solution">
+                    <h4>Solution: Multiple Docker Compose Files</h4>
+                    <p>Use multiple compose files for different environments:</p>
+                    <pre><code># docker-compose.yml (base configuration)
+version: '3'
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+
+# docker-compose.override.yml (development overrides, applied automatically)
+version: '3'
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend/src:/app/src
+
+# docker-compose.prod.yml (production overrides)
+version: '3'
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        - API_URL=https://api.example.com
+    ports:
+      - "80:80"</code></pre>
+                    <p>Run with:</p>
+                    <pre><code># Development (uses docker-compose.yml + docker-compose.override.yml)
+docker-compose up
+
+# Production
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up</code></pre>
+                </div>
+                
+                <div class="solution">
+                    <h4>Solution: Build-time Arguments</h4>
+                    <p>Pass environment-specific values at build time:</p>
+                    <pre><code># Dockerfile
+ARG API_URL
+ENV REACT_APP_API_URL=${API_URL}
+
+# Build command
+docker build --build-arg API_URL=https://api.example.com -t my-frontend .</code></pre>
+                </div>
+            </div>
+            
+            <div class="challenge">
+                <h3>Security Considerations</h3>
+                <p>Ensuring your dockerized frontend is secure in production.</p>
+                
+                <div class="solution">
+                    <h4>Solution: Use Official and Minimal Base Images</h4>
+                    <p>Prefer official, well-maintained base images and use minimal variants when possible:</p>
+                    <pre><code>FROM nginx:alpine  # Instead of the full nginx image</code></pre>
+                </div>
+                
+                <div class="solution">
+                    <h4>Solution: Don't Run as Root</h4>
+                    <p>Avoid running your container as the root user:</p>
+                    <pre><code># In your Nginx-based Dockerfile
+FROM nginx:alpine
+
+# Create a non-root user
+RUN addgroup -g 1000 appuser && \
+    adduser -u 1000 -G appuser -h /home/appuser -D appuser
+
+# Configure Nginx to use that user
+COPY nginx.conf /etc/nginx/nginx.conf
+RUN chown -R appuser:appuser /var/cache/nginx && \
+    chown -R appuser:appuser /var/log/nginx && \
+    chown -R appuser:appuser /etc/nginx/conf.d && \
+    touch /var/run/nginx.pid && \
+    chown -R appuser:appuser /var/run/nginx.pid
+
+# Switch to the non-root user
+USER appuser
+
+# ...rest of Dockerfile</code></pre>
+                    <p>Your nginx.conf file would need to be adjusted to work with non-root permissions.</p>
+                </div>
+                
+                <div class="solution">
+                    <h4>Solution: Scan Images for Vulnerabilities</h4>
+                    <pre><code>docker scan frontend-image:latest</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="practical-exercise">
+            <h2>Practical Exercise: Dockerizing a React Application</h2>
+            
+            <p>Let's put all these concepts together with a practical exercise. We'll dockerize a simple React application for both development and production.</p>
+            
+            <div class="prerequisites">
+                <h3>Prerequisites</h3>
+                <ul>
+                    <li>Docker and Docker Compose installed</li>
+                    <li>Node.js installed (for creating the initial React app)</li>
+                    <li>Code editor (VS Code recommended)</li>
+                </ul>
+            </div>
+            
+            <div class="step">
+                <h3>Step 1: Create a React Application</h3>
+                <p>First, let's create a new React application using Create React App:</p>
+                <pre><code>npx create-react-app docker-react-demo
+cd docker-react-demo</code></pre>
+            </div>
+            
+            <div class="step">
+                <h3>Step 2: Create Development Dockerfile</h3>
+                <p>Create a file named <code>Dockerfile.dev</code> in the root of your project:</p>
+                <pre><code>FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "start"]</code></pre>
+            </div>
+            
+            <div class="step">
+                <h3>Step 3: Create Production Dockerfile</h3>
+                <p>Create a file named <code>Dockerfile.prod</code>:</p>
+                <pre><code>FROM node:18-alpine AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+FROM nginx:alpine
+
+COPY --from=build /app/build /usr/share/nginx/html
+
+# Add configuration for React Router
+RUN rm /etc/nginx/conf.d/default.conf
+COPY nginx/nginx.conf /etc/nginx/conf.d
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]</code></pre>
+            </div>
+            
+            <div class="step">
+                <h3>Step 4: Create Nginx Configuration</h3>
+                <p>Create a directory named <code>nginx</code> and a file inside it named <code>nginx.conf</code>:</p>
+                <pre><code>mkdir -p nginx
+</code></pre>
+
+                <p>Add this content to <code>nginx/nginx.conf</code>:</p>
+                <pre><code>server {
+    listen 80;
+    
+    location / {
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+        try_files $uri $uri/ /index.html;
+    }
+}
+</code></pre>
+            </div>
+            
+            <div class="step">
+                <h3>Step 5: Create Docker Compose Configuration</h3>
+                <p>Create a file named <code>docker-compose.yml</code>:</p>
+                <pre><code>version: '3'
+
+services:
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+  
+  app-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    ports:
+      - "8080:80"</code></pre>
+            </div>
+            
+            <div class="step">
+                <h3>Step 6: Run in Development Mode</h3>
+                <p>Start the development container:</p>
+                <pre><code>docker-compose up app-dev</code></pre>
+                <p>Your React application should now be running in development mode at <a href="http://localhost:3000" target="_blank">http://localhost:3000</a>. Try making a change to the <code>src/App.js</code> file—you should see the changes reflected immediately!</p>
+            </div>
+            
+            <div class="step">
+                <h3>Step 7: Build and Run in Production Mode</h3>
+                <p>To build and run the production version:</p>
+                <pre><code>docker-compose up app-prod</code></pre>
+                <p>Your production-optimized application should now be running at <a href="http://localhost:8080" target="_blank">http://localhost:8080</a>, served by Nginx.</p>
+            </div>
+            
+            <div class="step">
+                <h3>Step 8: Explore and Experiment</h3>
+                <p>Now that you have both development and production environments set up, try the following:</p>
+                <ul>
+                    <li>Compare the size of the development vs. production Docker images</li>
+                    <li>Add environment variables and use them in your React application</li>
+                    <li>Add additional services like a mock API server</li>
+                    <li>Experiment with different volume mounting strategies for performance</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="advanced-topics">
+            <h2>Advanced Topics</h2>
+            
+            <div class="topic">
+                <h3>CI/CD Integration</h3>
+                <p>Integrating your dockerized frontend with continuous integration and deployment pipelines.</p>
+                
+                <div class="example">
+                    <h4>GitHub Actions Example</h4>
+                    <pre><code># .github/workflows/deploy.yml
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Build the production Docker image
+      run: |
+        docker build -f Dockerfile.prod -t my-frontend:latest .
+        
+    - name: Run tests
+      run: |
+        docker run --rm my-frontend:latest npm test -- --watchAll=false
+        
+    - name: Login to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_TOKEN }}
+        
+    - name: Push to Docker Hub
+      run: |
+        docker tag my-frontend:latest yourusername/my-frontend:latest
+        docker push yourusername/my-frontend:latest</code></pre>
+                </div>
+            </div>
+            
+            <div class="topic">
+                <h3>Automated Testing in Docker</h3>
+                <p>Running frontend tests within Docker containers.</p>
+                
+                <div class="example">
+                    <h4>Test-Specific Dockerfile</h4>
+                    <pre><code># Dockerfile.test
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+# Run tests
+CMD ["npm", "test"]</code></pre>
+                </div>
+                
+                <div class="example">
+                    <h4>Add to Docker Compose</h4>
+                    <pre><code># Add to your docker-compose.yml
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      - ./src:/app/src</code></pre>
+                </div>
+                
+                <div class="example">
+                    <h4>Run Tests</h4>
+                    <pre><code>docker-compose run --rm test</code></pre>
+                </div>
+            </div>
+            
+            <div class="topic">
+                <h3>Frontend Monitoring in Containers</h3>
+                <p>Setting up monitoring for containerized frontend applications.</p>
+                
+                <div class="example">
+                    <h4>Adding Sentry for Error Tracking</h4>
+                    <pre><code># Install Sentry in your application
+npm install @sentry/react @sentry/tracing
+
+# Initialize in your React application
+// index.js
+import * as Sentry from "@sentry/react";
+import { BrowserTracing } from "@sentry/tracing";
+
+Sentry.init({
+  dsn: process.env.REACT_APP_SENTRY_DSN,
+  integrations: [new BrowserTracing()],
+  tracesSampleRate: 1.0,
+});
+
+# Pass DSN as an environment variable in Docker
+environment:
+  - REACT_APP_SENTRY_DSN=https://your-sentry-dsn</code></pre>
+                </div>
+            </div>
+            
+            <div class="topic">
+                <h3>Optimizing for Performance and SEO</h3>
+                <p>Additional configurations for production performance.</p>
+                
+                <div class="example">
+                    <h4>Nginx Caching and Compression</h4>
+                    <pre><code># Enhanced nginx.conf
+server {
+    listen 80;
+    
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 10240;
+    gzip_proxied expired no-cache no-store private auth;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml;
+    gzip_disable "MSIE [1-6]\.";
+    
+    location / {
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+        try_files $uri $uri/ /index.html;
+    }
+    
+    # Cache static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        root /usr/share/nginx/html;
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000";
+    }
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="conclusion">
+            <h2>Conclusion and Best Practices</h2>
+            
+            <div class="summary">
+                <h3>Key Takeaways</h3>
+                <ul>
+                    <li>Dockerizing frontend applications provides consistent environments across development, testing, and production</li>
+                    <li>Development images should prioritize developer experience with hot reloading and debugging capabilities</li>
+                    <li>Production images should focus on security, performance, and minimizing size using multi-stage builds</li>
+                    <li>Docker Compose enables orchestrating frontend, backend, and database services together</li>
+                    <li>Common challenges like hot reloading and volume performance can be addressed with specific strategies</li>
+                </ul>
+            </div>
+            
+            <div class="best-practices">
+                <h3>Best Practices</h3>
+                <ol>
+                    <li><strong>Use specific image tags</strong> rather than <code>latest</code> to ensure reproducible builds</li>
+                    <li><strong>Structure Dockerfiles for efficient caching</strong> by placing less frequently changing instructions earlier</li>
+                    <li><strong>Keep production images small</strong> by using multi-stage builds and Alpine-based images</li>
+                    <li><strong>Don't run containers as root</strong> in production environments</li>
+                    <li><strong>Use environment-specific configurations</strong> to handle different deployment scenarios</li>
+                    <li><strong>Document your Docker setup</strong> to help team members understand the infrastructure</li>
+                    <li><strong>Regularly scan images for vulnerabilities</strong> and keep base images updated</li>
+                    <li><strong>Use health checks</strong> to ensure your containerized applications are actually working properly</li>
+                </ol>
+            </div>
+            
+            <div class="next-steps">
+                <h3>Next Steps</h3>
+                <p>To further enhance your skills with dockerized frontend environments:</p>
+                <ul>
+                    <li>Explore container orchestration with Kubernetes for larger deployments</li>
+                    <li>Implement advanced monitoring and observability solutions</li>
+                    <li>Study serverless deployment options for frontend applications</li>
+                    <li>Investigate micro-frontend architectures with Docker</li>
+                </ul>
+            </div>
+            
+            <div class="resources">
+                <h3>Additional Resources</h3>
+                <ul>
+                    <li><a href="https://docs.docker.com/get-started/overview/" target="_blank">Docker Documentation</a></li>
+                    <li><a href="https://docs.docker.com/compose/" target="_blank">Docker Compose Documentation</a></li>
+                    <li><a href="https://www.nginx.com/resources/wiki/" target="_blank">Nginx Wiki</a></li>
+                    <li><a href="https://nodejs.org/en/docs/" target="_blank">Node.js Documentation</a></li>
+                    <li><a href="https://create-react-app.dev/docs/using-the-public-folder/" target="_blank">Create React App Documentation</a></li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Python Full Stack Developer Course</p>
+    </footer>
+</body>
+</html>
